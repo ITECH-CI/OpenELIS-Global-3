@@ -35,10 +35,10 @@ const Index = () => {
 
   const firstPageNumber = 0;
   const lastPageNumber = 4;
-  const patientInfoPageNumber = firstPageNumber;
-  const programPageNumber = firstPageNumber + 1;
+  const programPageNumber = firstPageNumber;
+  const orderPageNumber = firstPageNumber + 1;
   const samplePageNumber = firstPageNumber + 2;
-  const orderPageNumber = firstPageNumber + 3;
+  const patientInfoPageNumber = firstPageNumber + 3;
   const successMsgPageNumber = lastPageNumber;
   const [changed, setChanged] = useState({
     "sampleOrderItems.providerFirstName": false,
@@ -734,7 +734,7 @@ const Index = () => {
             <h2>
               <FormattedMessage id="order.test.request.heading" />
             </h2>
-            {page <= orderPageNumber && (
+            {page <= patientInfoPageNumber && (
               <ProgressIndicator
                 currentIndex={page}
                 className="ProgressIndicator"
@@ -742,19 +742,19 @@ const Index = () => {
                 onChange={(e) => handleTabClickHandler(e)}
               >
                 <ProgressStep
-                  complete
-                  label={intl.formatMessage({ id: "order.step.patient.info" })}
-                />
-                <ProgressStep
                   label={intl.formatMessage({
                     id: "order.step.program.selection",
                   })}
                 />
                 <ProgressStep
+                  label={intl.formatMessage({ id: "order.label.add" })}
+                />
+                 <ProgressStep
                   label={intl.formatMessage({ id: "sample.add.action" })}
                 />
                 <ProgressStep
-                  label={intl.formatMessage({ id: "order.label.add" })}
+                  complete
+                  label={intl.formatMessage({ id: "order.step.patient.info" })}
                 />
               </ProgressIndicator>
             )}
@@ -801,13 +801,13 @@ const Index = () => {
               />
             )}
             <div className="navigationButtonsLayout">
-              {page !== firstPageNumber && page <= orderPageNumber && (
+              {page !== firstPageNumber && page <= patientInfoPageNumber && (
                 <Button kind="tertiary" onClick={() => navigateBackWards()}>
                   <FormattedMessage id="back.action.button" />
                 </Button>
               )}
 
-              {page < orderPageNumber && (
+              {page < patientInfoPageNumber && (
                 <Button
                   kind="primary"
                   className="forwardButton"
@@ -817,7 +817,7 @@ const Index = () => {
                 </Button>
               )}
 
-              {page === orderPageNumber && (
+              {page === patientInfoPageNumber && (
                 <Button
                   kind="primary"
                   className="forwardButton"
