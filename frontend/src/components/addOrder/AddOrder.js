@@ -705,38 +705,6 @@ const AddOrder = (props) => {
             </Column>
             <Column lg={8} md={4} sm={4}>
               <TextInput
-                name="requesterFirstName"
-                placeholder={intl.formatMessage({
-                  id: "input.placeholder.requesterFirstName",
-                })}
-                labelText={
-                  <>
-                    <FormattedMessage id="order.requester.firstName.label" />
-                    <span className="requiredlabel">*</span>
-                  </>
-                }
-                disabled={
-                  configurationProperties.restrictFreeTextProviderEntry ===
-                  "true"
-                }
-                onChange={handleRequesterFirstName}
-                onClick={() =>
-                  handleChange("sampleOrderItems.providerFirstName")
-                }
-                value={orderFormValues.sampleOrderItems.providerFirstName}
-                invalid={
-                  changed["sampleOrderItems.providerFirstName"] &&
-                  error("sampleOrderItems.providerFirstName")
-                    ? true
-                    : false
-                }
-                invalidText={error("sampleOrderItems.providerFirstName")}
-                id="requesterFirstName"
-              />
-            </Column>
-
-            <Column lg={8} md={4} sm={4}>
-              <TextInput
                 name="requesterLastName"
                 placeholder={intl.formatMessage({
                   id: "input.placeholder.requesterLastName",
@@ -764,6 +732,37 @@ const AddOrder = (props) => {
                     : false
                 }
                 invalidText={error("sampleOrderItems.providerLastName")}
+              />
+            </Column>
+                 <Column lg={8} md={4} sm={4}>
+              <TextInput
+                name="requesterFirstName"
+                placeholder={intl.formatMessage({
+                  id: "input.placeholder.requesterFirstName",
+                })}
+                labelText={
+                  <>
+                    <FormattedMessage id="order.requester.firstName.label" />
+                    <span className="requiredlabel">*</span>
+                  </>
+                }
+                disabled={
+                  configurationProperties.restrictFreeTextProviderEntry ===
+                  "true"
+                }
+                onChange={handleRequesterFirstName}
+                onClick={() =>
+                  handleChange("sampleOrderItems.providerFirstName")
+                }
+                value={orderFormValues.sampleOrderItems.providerFirstName}
+                invalid={
+                  changed["sampleOrderItems.providerFirstName"] &&
+                  error("sampleOrderItems.providerFirstName")
+                    ? true
+                    : false
+                }
+                invalidText={error("sampleOrderItems.providerFirstName")}
+                id="requesterFirstName"
               />
             </Column>
             <Column lg={16} md={8} sm={3}>

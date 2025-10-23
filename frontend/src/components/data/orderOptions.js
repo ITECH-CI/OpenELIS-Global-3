@@ -5,18 +5,18 @@ export const priorities = [
   },
   {
     value: "ASAP",
-    label: "ASAP",
+    label: "URGENT",
   },
   {
     value: "STAT",
-    label: "STAT",
+    label: "IMMEDIAT",
   },
-  {
+ /* {
     value: "Timed",
     label: "Timed",
   },
   {
     value: "FUTURE_STAT",
     label: "Future STAT",
-  },
+  },*/
 ];

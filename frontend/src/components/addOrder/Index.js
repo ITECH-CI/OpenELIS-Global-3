@@ -742,6 +742,7 @@ const Index = () => {
                 onChange={(e) => handleTabClickHandler(e)}
               >
                 <ProgressStep
+                complete
                   label={intl.formatMessage({
                     id: "order.step.program.selection",
                   })}
@@ -753,7 +754,6 @@ const Index = () => {
                   label={intl.formatMessage({ id: "sample.add.action" })}
                 />
                 <ProgressStep
-                  complete
                   label={intl.formatMessage({ id: "order.step.patient.info" })}
                 />
               </ProgressIndicator>

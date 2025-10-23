@@ -82,6 +82,10 @@ public class PatientManagementInfo implements Serializable {
             SamplePatientEntryBatch.class })
     private String nationalId;
 
+    @SafeHtml(level = SafeHtml.SafeListLevel.NONE, groups = { SamplePatientEntryForm.SamplePatientEntry.class,
+            SamplePatientEntryBatch.class })
+    private String otherIdentifier;
+
     @Pattern(regexp = ValidationHelper.PATIENT_ID_REGEX, groups = { SamplePatientEntryForm.SamplePatientEntry.class,
             SamplePatientEntryBatch.class })
     private String guid;
@@ -257,6 +261,14 @@ public class PatientManagementInfo implements Serializable {
 
     public void setNationalId(String nationalId) {
         this.nationalId = nationalId;
+    }
+
+    public String getOtherIdentifier() {
+        return otherIdentifier;
+    }
+
+     public void setOtherIdentifier(String otherIdentifier) {
+        this.otherIdentifier = otherIdentifier;
     }
 
     public String getLastName() {
