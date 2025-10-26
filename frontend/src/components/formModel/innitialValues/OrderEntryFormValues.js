@@ -22,6 +22,7 @@ export const SampleOrderFormValues = {
     stnumber: null,
     subjectNumber: "",
     nationalId: "",
+    otherIdentifier : "",
     guid: "",
     lastName: "",
     firstName: "",

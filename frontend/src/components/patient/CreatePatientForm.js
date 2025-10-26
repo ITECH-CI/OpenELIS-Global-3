@@ -584,7 +584,24 @@ function CreatePatientForm(props) {
                   <ErrorMessage name="nationalId"></ErrorMessage>
                 </div>
               </Column>
-              <Column lg={16} md={8} sm={4}>
+                <Column lg={8} md={4} sm={4}>
+                <Field name="otherIdentifier">
+                  {({ field }) => (
+                    <TextInput
+                      value={values.otherIdentifier || ""}
+                      name={field.name}
+                      labelText={intl.formatMessage({
+                        id: "patient.other.identifier",
+                      })}
+                      id={field.name}
+                      placeholder={intl.formatMessage({
+                        id: "patient.information.otheridentifier",
+                      })}
+                    />
+                  )}
+                </Field>
+              </Column>
+               <Column lg={16} md={8} sm={4}>
                 {" "}
                 <br></br>
               </Column>
@@ -908,6 +925,65 @@ function CreatePatientForm(props) {
                         {" "}
                         <br></br>
                       </Column>
+                                          <Column lg={16} md={8} sm={4}>
+                        {" "}
+                        <br></br>
+                      </Column>
+
+                      <Column lg={8} md={4} sm={4}>
+                        <Field name="healthDistrict">
+                          {({ field }) => (
+                            <Select
+                              id="health_district"
+                              value={values.healthDistrict || ""}
+                              name={field.name}
+                              labelText={intl.formatMessage({
+                                id: "patient.address.healthdistrict",
+                              })}
+                              onChange={() => {}}
+                              helperText={intl.formatMessage({
+                                id: "patient.emergency.additional.district",
+                              })}
+                            >
+                              <SelectItem text="" value="" />
+                              {healthDistricts.map((district, index) => (
+                                <SelectItem
+                                  text={district.value}
+                                  value={district.value}
+                                  key={index}
+                                />
+                              ))}
+                            </Select>
+                          )}
+                        </Field>
+                      </Column>
+                      <Column lg={8} md={4} sm={4}>
+                        <Field name="healthRegion">
+                          {({ field }) => (
+                            <Select
+                              id="health_region"
+                              value={values.healthRegion || ""}
+                              name={field.name}
+                              labelText={intl.formatMessage({
+                                id: "patient.address.healthregion",
+                              })}
+                              onChange={(e) => handleRegionSelection(e, values)}
+                              helperText={intl.formatMessage({
+                                id: "patient.emergency.additional.region",
+                              })}
+                            >
+                              <SelectItem text="" value="" />
+                              {healthRegions?.map((region, index) => (
+                                <SelectItem
+                                  text={region.value}
+                                  value={region.id}
+                                  key={index}
+                                />
+                              ))}
+                            </Select>
+                          )}
+                        </Field>
+                      </Column>
                       <Column lg={8} md={4} sm={4}>
                         <Field name="city">
                           {({ field }) => (
@@ -963,65 +1039,8 @@ function CreatePatientForm(props) {
                           )}
                         </Field>
                       </Column>
-                      <Column lg={16} md={8} sm={4}>
-                        {" "}
-                        <br></br>
-                      </Column>
-                      <Column lg={8} md={4} sm={4}>
-                        <Field name="healthRegion">
-                          {({ field }) => (
-                            <Select
-                              id="health_region"
-                              value={values.healthRegion || ""}
-                              name={field.name}
-                              labelText={intl.formatMessage({
-                                id: "patient.address.healthregion",
-                              })}
-                              onChange={(e) => handleRegionSelection(e, values)}
-                              helperText={intl.formatMessage({
-                                id: "patient.emergency.additional.region",
-                              })}
-                            >
-                              <SelectItem text="" value="" />
-                              {healthRegions?.map((region, index) => (
-                                <SelectItem
-                                  text={region.value}
-                                  value={region.id}
-                                  key={index}
-                                />
-                              ))}
-                            </Select>
-                          )}
-                        </Field>
-                      </Column>
+  
 
-                      <Column lg={8} md={4} sm={4}>
-                        <Field name="healthDistrict">
-                          {({ field }) => (
-                            <Select
-                              id="health_district"
-                              value={values.healthDistrict || ""}
-                              name={field.name}
-                              labelText={intl.formatMessage({
-                                id: "patient.address.healthdistrict",
-                              })}
-                              onChange={() => {}}
-                              helperText={intl.formatMessage({
-                                id: "patient.emergency.additional.district",
-                              })}
-                            >
-                              <SelectItem text="" value="" />
-                              {healthDistricts.map((district, index) => (
-                                <SelectItem
-                                  text={district.value}
-                                  value={district.value}
-                                  key={index}
-                                />
-                              ))}
-                            </Select>
-                          )}
-                        </Field>
-                      </Column>
                       <Column lg={16} md={8} sm={4}>
                         {" "}
                         <br></br>

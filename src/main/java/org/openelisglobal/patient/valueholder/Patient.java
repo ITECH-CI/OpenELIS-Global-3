@@ -64,6 +64,8 @@ public class Patient extends BaseObject<String> {
 
     private String ethnicity;
 
+    private String otherIdentifier;
+
     private String schoolAttend;
 
     private String medicareId;
@@ -86,6 +88,13 @@ public class Patient extends BaseObject<String> {
 
     private UUID fhirUuid;
 
+    public String getOtherIdentifier() {
+        return otherIdentifier;
+    }
+    
+    public void setOtherIdentifier(String otherIdentifier) {
+        this.otherIdentifier = otherIdentifier;
+    }
     public String getChartNumber() {
         return chartNumber;
     }

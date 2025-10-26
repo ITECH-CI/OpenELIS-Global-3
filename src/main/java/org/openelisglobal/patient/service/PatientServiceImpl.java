@@ -614,7 +614,6 @@ public class PatientServiceImpl extends AuditableBaseObjectServiceImpl<Patient, 
             personService.update(patient.getPerson());
         }
         patient.setPerson(patient.getPerson());
-
         if (patientInfo.getPatientUpdateStatus() == PatientUpdateStatus.ADD) {
             UUID uuid = UUID.randomUUID();
             // patientInfo.setFhirUuid(uuid);
@@ -825,5 +824,10 @@ public class PatientServiceImpl extends AuditableBaseObjectServiceImpl<Patient, 
     @Override
     public Patient getByExternalId(String id) {
         return baseObjectDAO.getByExternalId(id);
+    }
+
+    @Override
+    public String getOtherIdentifier(Patient patient) {
+        return patient.getOtherIdentifier();  
     }
 }
