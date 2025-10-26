@@ -36,7 +36,6 @@ import { AlertDialog, NotificationKinds } from "../common/CustomNotification";
 import { NotificationContext, ConfigurationContext } from "../layout/Layout";
 import CreatePatientValidationSchema from "../formModel/validationSchema/CreatePatientValidationShema";
 import CustomDatePicker from "../common/CustomDatePicker";
-import { ProgramSelect } from "../addOrder/OrderEntryAdditionalQuestions";
 function CreatePatientForm(props) {
   const componentMounted = useRef(false);
 

@@ -45,6 +45,8 @@ public interface PatientService extends BaseObjectService<Patient, String> {
 
     String getFirstName(Patient patient);
 
+    String getOtherIdentifier(Patient patient);
+
     String getLastName(Patient patient);
 
     String getLastFirstName(Patient patient);

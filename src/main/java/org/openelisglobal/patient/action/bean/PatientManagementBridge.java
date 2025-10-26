@@ -72,6 +72,7 @@ public class PatientManagementBridge {
             info.setSTnumber(patientService.getSTNumber(patient));
             info.setSubjectNumber(patientService.getSubjectNumber(patient));
             info.setEducation(patientService.getEducation(patient));
+            info.setOtherIdentifier(patientService.getOtherIdentifier(patient));
 
             info.setMaritialStatus(patientService.getMaritalStatus(patient));
             info.setEducation(patientService.getEducation(patient));
