@@ -910,6 +910,7 @@ const AddOrder = (props) => {
             </Column>
           </Grid>
         </div>
+         {/*
         <div className="orderLegendBody">
           <h3>
             <FormattedMessage id="order.result.reporting.heading" />
@@ -930,7 +931,7 @@ const AddOrder = (props) => {
               );
             }
           })}
-        </div>
+        </div>*/}
       </Stack>
     </>
   );
