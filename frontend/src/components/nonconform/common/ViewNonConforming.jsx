@@ -37,10 +37,10 @@ export const initialReportFormValues = {
 export const selectOptions = [
   {
     value: "nceNumber",
-    text: "NCE Number",
+    text: "Numéro de non conformité",
   },
   {
-    text: "Lab Number",
+    text: "Numéro laboratoire",
     value: "labNumber",
   },
 ];

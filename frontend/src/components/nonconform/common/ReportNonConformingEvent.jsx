@@ -142,19 +142,19 @@ export const ReportNonConformingEvent = () => {
 
   const selectOptions = [
     {
-      text: "Last Name",
+      text: "Nom de famille",
       value: "lastName",
     },
     {
-      text: "First Name",
+      text: "Prénom",
       value: "firstName",
     },
     {
       value: "STNumber",
-      text: "Patient Identification Code",
+      text: "Code patient",
     },
     {
-      text: "Lab Number",
+      text: "Numéro de laboratoire",
       value: "labNumber",
     },
   ];
@@ -162,7 +162,7 @@ export const ReportNonConformingEvent = () => {
   const headers = [
     {
       key: "labOrderNumber",
-      value: "Lab Number",
+      value: "Numéro de laboratoire",
     },
     {
       key: "type",

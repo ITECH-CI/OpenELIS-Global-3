@@ -3,6 +3,7 @@ import { Column, Grid, Select, SelectItem } from "@carbon/react";
 import { FormattedMessage, injectIntl, useIntl } from "react-intl";
 import "../Style.css";
 import { getFromOpenElisServer } from "../utils/Utils";
+import { priorities } from "../data/orderOptions";
 
 function PanelSelectForm(props) {
   const mounted = useRef(false);
@@ -28,8 +29,8 @@ function PanelSelectForm(props) {
       "priority",
     );
     priorityId = priorityId ? priorityId : "";
-    getFromOpenElisServer("/rest/priorities", (fetchedPriorities) => {
-      let priority = fetchedPriorities.find(
+  //  getFromOpenElisServer("/rest/priorities", (fetchedPriorities) => {
+      let priority = priorities.find(
         (priority) => priority.id === priorityId,
       );
       let priorityLabel = priority
@@ -38,8 +39,8 @@ function PanelSelectForm(props) {
       setDefaultPriorityId(priorityId);
       setDefaultPriorityLabel(priorityLabel);
       props.value(priorityId, priorityLabel);
-      getTests(fetchedPriorities);
-    });
+      getTests(priorities);
+   // });
     return () => {
       mounted.current = false;
     };
@@ -61,10 +62,10 @@ function PanelSelectForm(props) {
           >
             <SelectItem text={defaultPriorityLabel} value={defaultPriorityId} />
             {tests
-              .filter((item) => item.id !== defaultPriorityId)
+              .filter((item) => item.value !== defaultPriorityId)
               .map((item, idx) => {
                 return (
-                  <SelectItem key={idx} text={item.value} value={item.id} />
+                  <SelectItem key={idx} text={item.label} value={item.value} />
                 );
               })}
           </Select>
