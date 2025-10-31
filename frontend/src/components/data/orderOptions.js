@@ -1,6 +1,6 @@
 export const priorities = [
   {
-    value: "Routine",
+    value: "ROUTINE",
     label: "ROUTINE",
   },
   {

@@ -4,10 +4,10 @@ import { TextInput } from "@carbon/react";
 const CustomTextInput = (props) => {
   const { id, defaultValue, onChange, labelText } = props;
   const [inputText, setInputText] = useState(props.value ? props.value : "");
-
+  
   const handleInputChange = (e) => {
     if (onChange != null) {
-      let value = e.target.value;
+      let value = e.target.value.toUpperCase();
       setInputText(value);
       onChange(value);
     }

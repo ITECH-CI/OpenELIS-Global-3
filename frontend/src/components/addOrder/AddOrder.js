@@ -20,6 +20,7 @@ import AutoComplete from "../common/AutoComplete";
 import OrderResultReporting from "./OrderResultReporting";
 import { FormattedMessage, useIntl } from "react-intl";
 import { ConfigurationContext } from "../layout/Layout";
+import CustomTextInput from "../common/CustomTextInput";
 const AddOrder = (props) => {
   const { setNotificationVisible, addNotification } =
     useContext(NotificationContext);
@@ -45,6 +46,8 @@ const AddOrder = (props) => {
   const [siteNames, setSiteNames] = useState([]);
   const [innitialized, setInnitialized] = useState(false);
   const [departments, setDepartments] = useState([]);
+  const [value, setValue] = useState("");
+  
 
   useEffect(() => {
     componentMounted.current = true;
@@ -55,6 +58,11 @@ const AddOrder = (props) => {
     };
   }, []);
 
+
+  const handleChangeUpper = (e) => {
+      const upperValue = e.target.value.toUpperCase();
+    setValue(upperValue);
+  };
   const handleDatePickerChange = (datePicker, date) => {
     let obj = null;
     switch (datePicker) {
@@ -894,6 +902,16 @@ const AddOrder = (props) => {
                 disabled={!otherSamplingVisible}
                 id="testLocationCodeOtherId"
               />
+            </Column>
+             <Column lg={8} md={4} sm={4}>
+                <CustomTextInput
+                  id={"clinicalInformations"}
+                  value={value}
+                  style={{ textTransform: "uppercase" }}
+                  onChange={handleChangeUpper}
+                  labelText="Renseignements cliniques"
+                  className="uppercase-input"
+                />
             </Column>
             <Column lg={16} md={8} sm={3}>
               {" "}
