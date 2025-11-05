@@ -21,6 +21,7 @@ import OrderResultReporting from "./OrderResultReporting";
 import { FormattedMessage, useIntl } from "react-intl";
 import { ConfigurationContext } from "../layout/Layout";
 import CustomTextInput from "../common/CustomTextInput";
+import { CustomSelect, CustomSelectItem } from "../common/CustomSelectWithIcon";
 const AddOrder = (props) => {
   const { setNotificationVisible, addNotification } =
     useContext(NotificationContext);
@@ -537,24 +538,23 @@ const AddOrder = (props) => {
               </div>
             </Column>
             <Column lg={8} md={4} sm={4}>
-              <Select
-                id="priorityId"
-                name="priority"
-                labelText={intl.formatMessage({ id: "workplan.priority.list" })}
-                value={orderFormValues.sampleOrderItems.priority}
-                onChange={handlePriority}
-                required
-              >
-                {priorities.map((priority, index) => {
-                  return (
-                    <SelectItem
-                      key={index}
-                      text={priority.label}
-                      value={priority.value}
-                    />
-                  );
-                })}
-              </Select>
+          <CustomSelect
+              id="priorityId"
+              name="priority"
+              labelText={intl.formatMessage({ id: "workplan.priority.list" })}
+              value={orderFormValues.sampleOrderItems.priority}
+              onChange={handlePriority}
+              required
+            >
+              {priorities.map((priority, index) => (
+                <CustomSelectItem
+                  key={index}
+                  text={priority.label}
+                  value={priority.value}
+                  icon={priority.icon}
+                />
+              ))}
+            </CustomSelect>
             </Column>
             <Column lg={16} md={8} sm={3}>
               {" "}

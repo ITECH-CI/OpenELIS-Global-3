@@ -119,6 +119,8 @@
   "sample.entry.nextVisit.date": "Date of next visit",
   "sample.entry.project.testName": "Test Name",
   "result.nonconforming.item": "Sample or order is nonconforming OR test has been rejected",
+  "result.priority.asap": "The sample priority is ASAP",
+  "result.priority.stat": "he sample priority is STAT",
   "sample.entry.project.patient.and.testName": "Name/Code of patient {br} Test Name",
   "label.button.remove": "Remove",
   "reject.order.sample.notification": "You are rejecting a sample. This sample will be rejected and not appear in workplans once saved,no results can be entered for this order.",

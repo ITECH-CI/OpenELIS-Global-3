@@ -155,6 +155,7 @@ public class WorkplanByTestSectionRestController extends WorkplanRestController 
                 testResultItem.setReceivedDate(getReceivedDateDisplay(sample));
                 testResultItem.setSampleGroupingNumber(sampleGroupingNumber);
                 testResultItem.setTestId(analysis.getTest().getId());
+                testResultItem.setPriority(sample.getPriority() != null ? sample.getPriority().toString() : "");
                 boolean nonConforming = QAService.isAnalysisParentNonConforming(analysis);
                 if (FormFields.getInstance().useField(Field.QaEventsBySection)) {
                     nonConforming = nonConforming || getQaEventByTestSection(analysis);

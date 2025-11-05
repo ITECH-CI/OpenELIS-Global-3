@@ -1,15 +1,21 @@
-export const priorities = [
+ import { WarningAltFilled, InProgress} from "@carbon/icons-react";
+
+
+ export const priorities = [
   {
     value: "ROUTINE",
     label: "ROUTINE",
+    icon :  <></>
   },
   {
     value: "ASAP",
     label: "URGENT",
+    icon : <WarningAltFilled size={18} style={{ color: '#da1e28' }} />,
   },
   {
     value: "STAT",
     label: "IMMEDIAT",
+    icon: <InProgress size={18} style={{ color: '#f1b605ff' }} />
   },
  /* {
     value: "Timed",
