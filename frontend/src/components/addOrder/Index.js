@@ -1,19 +1,19 @@
+import React, { useContext, useEffect, useState } from "react";
 import { Button, ProgressIndicator, ProgressStep, Stack } from "@carbon/react";
-import { useContext, useEffect, useState } from "react";
-import { FormattedMessage, useIntl } from "react-intl";
-import config from "../../config.json";
-import { AlertDialog, NotificationKinds } from "../common/CustomNotification";
-import PageBreadCrumb from "../common/PageBreadCrumb";
-import { SampleOrderFormValues } from "../formModel/innitialValues/OrderEntryFormValues";
-import OrderEntryValidationSchema from "../formModel/validationSchema/OrderEntryValidationSchema";
-import { ConfigurationContext, NotificationContext } from "../layout/Layout";
-import { getFromOpenElisServer, postToOpenElisServer } from "../utils/Utils";
-import AddOrder from "./AddOrder";
+import PatientInfo from "./PatientInfo";
 import AddSample from "./AddSample";
+import AddOrder from "./AddOrder";
+import "./add-order.scss";
+import { SampleOrderFormValues } from "../formModel/innitialValues/OrderEntryFormValues";
+import { NotificationContext, ConfigurationContext } from "../layout/Layout";
+import { AlertDialog, NotificationKinds } from "../common/CustomNotification";
+import { getFromOpenElisServer, postToOpenElisServer } from "../utils/Utils";
 import OrderEntryAdditionalQuestions from "./OrderEntryAdditionalQuestions";
 import OrderSuccessMessage from "./OrderSuccessMessage";
-import PatientInfo from "./PatientInfo";
-import "./add-order.scss";
+import { FormattedMessage, useIntl } from "react-intl";
+import OrderEntryValidationSchema from "../formModel/validationSchema/OrderEntryValidationSchema";
+import config from "../../config.json";
+import PageBreadCrumb from "../common/PageBreadCrumb";
 let breadcrumbs = [
   { label: "home.label", link: "/" },
   { label: "sidenav.label.addorder", link: "/SamplePatientEntry" },
@@ -35,11 +35,12 @@ const Index = () => {
 
   const firstPageNumber = 0;
   const lastPageNumber = 4;
-  const patientInfoPageNumber = firstPageNumber;
-  const programPageNumber = firstPageNumber + 1;
+  const programPageNumber = firstPageNumber;
+  const orderPageNumber = firstPageNumber + 1;
   const samplePageNumber = firstPageNumber + 2;
-  const orderPageNumber = firstPageNumber + 3;
+  const patientInfoPageNumber = firstPageNumber + 3;
   const successMsgPageNumber = lastPageNumber;
+  const TB_PROGRAM_ID = "9999";
   const [changed, setChanged] = useState({
     "sampleOrderItems.providerFirstName": false,
     "sampleOrderItems.providerLastName": false,
@@ -487,8 +488,6 @@ const Index = () => {
       sampleXML: {
         collectionDate: "",
         collector: "",
-        quantity: "",
-        uom: "",
         rejected: false,
         rejectionReason: "",
         collectionTime: "",
@@ -666,7 +665,7 @@ const Index = () => {
                 })
                 .join(",");
             }
-            sampleXmlString += `<sample sampleID='${sampleItem.sampleTypeId}' date='${sampleItem.sampleXML.collectionDate}' time='${sampleItem.sampleXML.collectionTime}' collector='${sampleItem.sampleXML.collector}' quantity='${sampleItem.sampleXML.quantity}' uom='${sampleItem.sampleXML.uom}' tests='${tests}' testSectionMap='' testSampleTypeMap='' panels='${panels}' rejected='${sampleItem.sampleXML.rejected}' rejectReasonId='${sampleItem.sampleXML.rejectionReason}' initialConditionIds=''/>`;
+            sampleXmlString += `<sample sampleID='${sampleItem.sampleTypeId}' date='${sampleItem.sampleXML.collectionDate}' time='${sampleItem.sampleXML.collectionTime}' collector='${sampleItem.sampleXML.collector}' tests='${tests}' testSectionMap='' testSampleTypeMap='' panels='${panels}' rejected='${sampleItem.sampleXML.rejected}' rejectReasonId='${sampleItem.sampleXML.rejectionReason}' initialConditionIds=''/>`;
           }
           if (sampleItem.referralItems.length > 0) {
             const referredInstitutes = Object.keys(sampleItem.referralItems)
@@ -704,11 +703,22 @@ const Index = () => {
         sampleXmlString += "</samples>";
       }
     }
+
+    // Collect TB data from samples (typically from first sample with TB data)
+    let tbData = null;
+    for (let sampleItem of samples) {
+      if (sampleItem.tbData) {
+        tbData = sampleItem.tbData;
+        break; // Use TB data from first sample that has it
+      }
+    }
+
     setOrderFormValues({
       ...orderFormValues,
       useReferral: true,
       sampleXML: sampleXmlString,
       referralItems: referralItems,
+      patientTbInfo: tbData || orderFormValues.patientTbInfo,
     });
   };
 
@@ -733,11 +743,12 @@ const Index = () => {
       <Stack gap={10}>
         <div className="pageContent">
           {notificationVisible === true ? <AlertDialog /> : ""}
+          {/* <div>{JSON.stringify(orderFormValues)}</div> */}
           <div className="orderWorkFlowDiv">
             <h2>
               <FormattedMessage id="order.test.request.heading" />
             </h2>
-            {page <= orderPageNumber && (
+            {page <= patientInfoPageNumber && (
               <ProgressIndicator
                 currentIndex={page}
                 className="ProgressIndicator"
@@ -746,9 +757,6 @@ const Index = () => {
               >
                 <ProgressStep
                   complete
-                  label={intl.formatMessage({ id: "order.step.patient.info" })}
-                />
-                <ProgressStep
                   label={intl.formatMessage({
                     id: "order.step.program.selection",
                   })}
@@ -760,7 +768,7 @@ const Index = () => {
                   label={intl.formatMessage({ id: "sample.add.action" })}
                 />
                 <ProgressStep
-                  label={intl.formatMessage({ id: "order.label.add" })}
+                  label={intl.formatMessage({ id: "order.step.patient.info" })}
                 />
               </ProgressIndicator>
             )}
@@ -784,6 +792,9 @@ const Index = () => {
                 error={elementError}
                 setSamples={setSamples}
                 samples={samples}
+                isTb={
+                  orderFormValues.sampleOrderItems.programId === TB_PROGRAM_ID
+                }
               />
             )}
             {page === orderPageNumber && (
@@ -807,13 +818,13 @@ const Index = () => {
               />
             )}
             <div className="navigationButtonsLayout">
-              {page !== firstPageNumber && page <= orderPageNumber && (
+              {page !== firstPageNumber && page <= patientInfoPageNumber && (
                 <Button kind="tertiary" onClick={() => navigateBackWards()}>
                   <FormattedMessage id="back.action.button" />
                 </Button>
               )}
 
-              {page < orderPageNumber && (
+              {page < patientInfoPageNumber && (
                 <Button
                   kind="primary"
                   className="forwardButton"
@@ -823,7 +834,7 @@ const Index = () => {
                 </Button>
               )}
 
-              {page === orderPageNumber && (
+              {page === patientInfoPageNumber && (
                 <Button
                   kind="primary"
                   className="forwardButton"

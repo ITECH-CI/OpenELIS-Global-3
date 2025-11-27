@@ -1873,7 +1873,6 @@
   "uom.new": "Create a new Unit of Measure",
   "uom.new.added": "New Unit of Measure will get added",
   "uom.notification.duplicate": "Unit of Measure already exists",
-<<<<<<< HEAD
   "uom.notification.save": "New Unit Of Measure has been saved.",
   "uom.uomName": "Unit Of Measure Name",
   "user.select.instruction": "Select a User to Modify or to Deactivate . You can set a Filter ,Search for users, or Add a User along with the controls at the top.",
@@ -1899,8 +1898,7 @@
   "workplan.title": "Workplan",
   "workplan.unit.title": "Workplan By Unit",
   "workplan.unit.types": "Unit Type",
-  "yes.option": "Yes"
-=======
+  "yes.option": "Yes",
   "instructions.test.activation.sort": "Display Order: Lists of sample types which have newly activated tests. Sort the tests to indicate how they will be displayed in the order entry screen. Sorting can be done by dragging items to the desired position.",
   "label.test.activate": "The following tests will be activated:",
   "label.test.deactivate": "The following tests will be deactivated:",
@@ -1960,5 +1958,4 @@
   "program.IHC.name": "Immunohistochemistry",
   "program.PATH.name": "Histopathology",
   "program.RTN_BACTER.name": "Routine Bacteriology"
->>>>>>> 0ce00dfef (Add entry for bacterio program and localizations for program entries)
 }

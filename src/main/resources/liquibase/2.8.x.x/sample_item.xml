@@ -32,9 +32,10 @@
         <addColumn tableName="sample_item">
             <column name="voided" type="boolean" defaultValueBoolean="false" />
         </addColumn>
-        <update tableName="sample_item">
-            <column name="voided" valueBoolean="false" />
-        </update>
+<!-- The execution hangs at the changeset below -->
+<!--         <update tableName="sample_item"> -->
+<!--             <column name="voided" valueBoolean="false" /> -->
+<!--         </update> -->
     </changeSet>
 
     <changeSet id="add-void-reason-23-10-2025" author="reagan-meant">
