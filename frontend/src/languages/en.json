@@ -558,7 +558,7 @@
   "search.label.sample": "Select Sample Status",
   "pathology.label.report": "Pathology Report",
   "patient.natioanalid": "CMU number",
-  "patient.other.identifier" : "Other patient ID",
+  "patient.other.identifier": "Other patient ID",
   "patient.dataSourceName": "Data Source Name",
   "patient.label.additionalInfo": "Additional Information",
   "sample.entry.available.tests": "Available Tests",
@@ -1462,5 +1462,16 @@
   "test.modify.en": "en",
   "test.modify.fr": "fr",
   "test.show.guide": "Show Guide",
-  "input.placeholder.searchTestName": "Search testName Here"
+  "input.placeholder.searchTestName": "Search testName Here",
+  "tb.section.title": "Tuberculosis (TB) Information",
+  "tb.subject.number": "TB Subject Number",
+  "tb.order.reason": "TB Order Reason",
+  "tb.diagnostic.reason": "TB Diagnostic Reason",
+  "tb.followup.reason": "TB Followup Reason",
+  "tb.followup.period.line1": "TB Followup Period (Line 1)",
+  "tb.followup.period.line2": "TB Followup Period (Line 2)",
+  "tb.diagnostic.method": "TB Diagnostic Method",
+  "tb.aspect": "TB Sample Aspect",
+  "tb.specimen.nature": "TB Specimen Nature",
+  "label.select.option": "Select an option"
 }

@@ -2,14 +2,12 @@ package org.openelisglobal.sample.controller;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.constraints.Pattern;
-
 import java.lang.reflect.InvocationTargetException;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.validator.GenericValidator;
 import org.hibernate.StaleObjectStateException;
@@ -77,10 +75,9 @@ import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.web.servlet.support.RequestContextUtils;
 
-import liquibase.pro.packaged.in;
-
 @Controller
-@CrossOrigin(origins = "*", allowedHeaders = "*", methods = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE, RequestMethod.OPTIONS})
+@CrossOrigin(origins = "*", allowedHeaders = "*", methods = { RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT,
+        RequestMethod.DELETE, RequestMethod.OPTIONS })
 public class SamplePatientEntryController extends BaseSampleEntryController {
 
     // @Value("${org.openelisglobal.requester.lastName:}")

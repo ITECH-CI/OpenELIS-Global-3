@@ -5,7 +5,7 @@ import { getFromOpenElisServer } from "../utils/Utils";
 import SampleType from "./SampleType";
 import { FormattedMessage } from "react-intl";
 const AddSample = (props) => {
-  const { samples, setSamples, error } = props;
+  const { samples, setSamples, error, isTb } = props;
   const componentMounted = useRef(false);
 
   const [rejectSampleReasons, setRejectSampleReasons] = useState([]);
@@ -61,6 +61,9 @@ const AddSample = (props) => {
         object.referralItems.length > 0:
         newState[object.sampleObjectIndex].referralItems = object.referralItems;
         break;
+      case object.tbData !== undefined && object.tbData !== null:
+        newState[object.sampleObjectIndex].tbData = object.tbData;
+        break;
       default:
         console.debug(JSON.stringify(newState));
         props.setSamples(newState);
@@ -111,6 +114,7 @@ const AddSample = (props) => {
           {samples.map((sample, i) => {
             return (
               <div className="sampleType" key={i}>
+                {/* <div>{JSON.stringify(orderFormValues)}</div>*/}
                 <h4>
                   <FormattedMessage id="label.button.sample" /> {i + 1}
                   <span className="requiredlabel">*</span>
@@ -123,6 +127,8 @@ const AddSample = (props) => {
                   rejectSampleReasons={rejectSampleReasons}
                   removeSample={removeSample}
                   sample={sample}
+                  isTb={isTb}
+                  showTBSection={isTb}
                   setSample={(newSample) => {
                     let newSamples = [...samples];
                     newSamples[i] = newSample;

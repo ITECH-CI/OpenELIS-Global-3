@@ -584,7 +584,7 @@ function CreatePatientForm(props) {
                   <ErrorMessage name="nationalId"></ErrorMessage>
                 </div>
               </Column>
-                <Column lg={8} md={4} sm={4}>
+              <Column lg={8} md={4} sm={4}>
                 <Field name="otherIdentifier">
                   {({ field }) => (
                     <TextInput
@@ -601,7 +601,7 @@ function CreatePatientForm(props) {
                   )}
                 </Field>
               </Column>
-               <Column lg={16} md={8} sm={4}>
+              <Column lg={16} md={8} sm={4}>
                 {" "}
                 <br></br>
               </Column>
@@ -925,7 +925,7 @@ function CreatePatientForm(props) {
                         {" "}
                         <br></br>
                       </Column>
-                                          <Column lg={16} md={8} sm={4}>
+                      <Column lg={16} md={8} sm={4}>
                         {" "}
                         <br></br>
                       </Column>
@@ -1039,7 +1039,6 @@ function CreatePatientForm(props) {
                           )}
                         </Field>
                       </Column>
-  
 
                       <Column lg={16} md={8} sm={4}>
                         {" "}

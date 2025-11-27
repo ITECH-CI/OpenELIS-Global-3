@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog/1.9"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog/1.9 http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-1.9.xsd">
+
+
+    <changeSet author="azmac" id="1">
+        <comment>Add TB (Tuberculose) to program</comment>
+
+        <!-- Insertion du programme TB avec un ID fixe -->
+        <insert tableName="program">
+            <column name="id" valueNumeric="9999"/>
+            <column name="name" value="Tuberculose"/>
+            <column name="code" value="TB"/>
+            <column name="lastupdated" valueDate="now()"/>
+        </insert>
+    </changeSet>
+
+</databaseChangeLog>

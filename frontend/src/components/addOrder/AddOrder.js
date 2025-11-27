@@ -48,7 +48,6 @@ const AddOrder = (props) => {
   const [innitialized, setInnitialized] = useState(false);
   const [departments, setDepartments] = useState([]);
   const [value, setValue] = useState("");
-  
 
   useEffect(() => {
     componentMounted.current = true;
@@ -59,9 +58,8 @@ const AddOrder = (props) => {
     };
   }, []);
 
-
   const handleChangeUpper = (e) => {
-      const upperValue = e.target.value.toUpperCase();
+    const upperValue = e.target.value.toUpperCase();
     setValue(upperValue);
   };
   const handleDatePickerChange = (datePicker, date) => {
@@ -538,23 +536,23 @@ const AddOrder = (props) => {
               </div>
             </Column>
             <Column lg={8} md={4} sm={4}>
-          <CustomSelect
-              id="priorityId"
-              name="priority"
-              labelText={intl.formatMessage({ id: "workplan.priority.list" })}
-              value={orderFormValues.sampleOrderItems.priority}
-              onChange={handlePriority}
-              required
-            >
-              {priorities.map((priority, index) => (
-                <CustomSelectItem
-                  key={index}
-                  text={priority.label}
-                  value={priority.value}
-                  icon={priority.icon}
-                />
-              ))}
-            </CustomSelect>
+              <CustomSelect
+                id="priorityId"
+                name="priority"
+                labelText={intl.formatMessage({ id: "workplan.priority.list" })}
+                value={orderFormValues.sampleOrderItems.priority}
+                onChange={handlePriority}
+                required
+              >
+                {priorities.map((priority, index) => (
+                  <CustomSelectItem
+                    key={index}
+                    text={priority.label}
+                    value={priority.value}
+                    icon={priority.icon}
+                  />
+                ))}
+              </CustomSelect>
             </Column>
             <Column lg={16} md={8} sm={3}>
               {" "}
@@ -742,7 +740,7 @@ const AddOrder = (props) => {
                 invalidText={error("sampleOrderItems.providerLastName")}
               />
             </Column>
-                 <Column lg={8} md={4} sm={4}>
+            <Column lg={8} md={4} sm={4}>
               <TextInput
                 name="requesterFirstName"
                 placeholder={intl.formatMessage({
@@ -903,15 +901,15 @@ const AddOrder = (props) => {
                 id="testLocationCodeOtherId"
               />
             </Column>
-             <Column lg={8} md={4} sm={4}>
-                <CustomTextInput
-                  id={"clinicalInformations"}
-                  value={value}
-                  style={{ textTransform: "uppercase" }}
-                  onChange={handleChangeUpper}
-                  labelText="Renseignements cliniques"
-                  className="uppercase-input"
-                />
+            <Column lg={8} md={4} sm={4}>
+              <CustomTextInput
+                id={"clinicalInformations"}
+                value={value}
+                style={{ textTransform: "uppercase" }}
+                onChange={handleChangeUpper}
+                labelText="Renseignements cliniques"
+                className="uppercase-input"
+              />
             </Column>
             <Column lg={16} md={8} sm={3}>
               {" "}
@@ -928,7 +926,7 @@ const AddOrder = (props) => {
             </Column>
           </Grid>
         </div>
-         {/*
+        {/*
         <div className="orderLegendBody">
           <h3>
             <FormattedMessage id="order.result.reporting.heading" />

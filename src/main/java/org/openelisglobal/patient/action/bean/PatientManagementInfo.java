@@ -267,7 +267,7 @@ public class PatientManagementInfo implements Serializable {
         return otherIdentifier;
     }
 
-     public void setOtherIdentifier(String otherIdentifier) {
+    public void setOtherIdentifier(String otherIdentifier) {
         this.otherIdentifier = otherIdentifier;
     }
 

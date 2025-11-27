@@ -35,11 +35,15 @@ import org.openelisglobal.notification.valueholder.NotificationConfigOption.Noti
 import org.openelisglobal.notification.valueholder.TestNotificationConfig;
 import org.openelisglobal.observationhistory.service.ObservationHistoryService;
 import org.openelisglobal.observationhistory.valueholder.ObservationHistory;
+import org.openelisglobal.observationhistory.valueholder.ObservationHistory.ValueType;
+import org.openelisglobal.observationhistorytype.service.ObservationHistoryTypeService;
+import org.openelisglobal.observationhistorytype.valueholder.ObservationHistoryType;
 import org.openelisglobal.organization.service.OrganizationService;
 import org.openelisglobal.organization.valueholder.Organization;
 import org.openelisglobal.organization.valueholder.OrganizationType;
 import org.openelisglobal.panel.valueholder.Panel;
 import org.openelisglobal.patient.action.bean.PatientManagementInfo;
+import org.openelisglobal.patient.action.bean.PatientTbInfo;
 import org.openelisglobal.person.service.PersonService;
 import org.openelisglobal.program.service.ImmunohistochemistrySampleService;
 import org.openelisglobal.program.service.PathologySampleService;
@@ -79,6 +83,8 @@ public class SamplePatientEntryServiceImpl implements SamplePatientEntryService 
     private ElectronicOrderService electronicOrderService;
     @Autowired
     private ObservationHistoryService observationHistoryService;
+    @Autowired
+    private ObservationHistoryTypeService observationHistoryTypeService;
     @Autowired
     private PersonService personService;
     @Autowired
@@ -136,6 +142,12 @@ public class SamplePatientEntryServiceImpl implements SamplePatientEntryService 
         }
 
         persistObservations(updateData);
+
+        // Persist TB data if present
+        if (form.getPatientTbInfo() != null) {
+            persistTbObservations(form.getPatientTbInfo(), updateData.getSample().getId(), updateData.getPatientId(),
+                    updateData.getCurrentUserId());
+        }
 
         request.getSession().setAttribute("lastAccessionNumber", updateData.getAccessionNumber());
         request.getSession().setAttribute("lastPatientId", updateData.getPatientId());
@@ -436,5 +448,143 @@ public class SamplePatientEntryServiceImpl implements SamplePatientEntryService 
         // this will be used as an identifier for the service request as well
         analysis.setFhirUuid(UUID.randomUUID());
         return analysis;
+    }
+
+    private void persistTbObservations(PatientTbInfo tbInfo, String sampleId, String patientId, String sysUserId) {
+        if (tbInfo == null) {
+            return;
+        }
+
+        List<ObservationHistory> observations = new ArrayList<>();
+
+        // TB Order Reason
+        if (!GenericValidator.isBlankOrNull(tbInfo.getTbOrderReason())) {
+            ObservationHistory orderReason = new ObservationHistory();
+            orderReason.setSampleId(sampleId);
+            orderReason.setPatientId(patientId);
+            orderReason.setLastupdated(DateUtil.getNowAsTimestamp());
+            orderReason.setSysUserId(sysUserId);
+            orderReason.setValueType(ValueType.DICTIONARY);
+            orderReason.setValue(tbInfo.getTbOrderReason());
+            orderReason.setObservationHistoryTypeId(getObservationHistoryTypeId("TbOrderReason"));
+            observations.add(orderReason);
+        }
+
+        // TB Diagnostic Reason
+        if (!GenericValidator.isBlankOrNull(tbInfo.getTbDiagnosticReason())) {
+            ObservationHistory diagnosticReason = new ObservationHistory();
+            diagnosticReason.setSampleId(sampleId);
+            diagnosticReason.setPatientId(patientId);
+            diagnosticReason.setLastupdated(DateUtil.getNowAsTimestamp());
+            diagnosticReason.setSysUserId(sysUserId);
+            diagnosticReason.setValueType(ValueType.DICTIONARY);
+            diagnosticReason.setValue(tbInfo.getTbDiagnosticReason());
+            diagnosticReason.setObservationHistoryTypeId(getObservationHistoryTypeId("TbDiagnosticReason"));
+            observations.add(diagnosticReason);
+        }
+
+        // TB Followup Reason
+        if (!GenericValidator.isBlankOrNull(tbInfo.getTbFollowupReason())) {
+            ObservationHistory followupReason = new ObservationHistory();
+            followupReason.setSampleId(sampleId);
+            followupReason.setPatientId(patientId);
+            followupReason.setLastupdated(DateUtil.getNowAsTimestamp());
+            followupReason.setSysUserId(sysUserId);
+            followupReason.setValueType(ValueType.DICTIONARY);
+            followupReason.setValue(tbInfo.getTbFollowupReason());
+            followupReason.setObservationHistoryTypeId(getObservationHistoryTypeId("TbFollowupReason"));
+            observations.add(followupReason);
+        }
+
+        // TB Aspect
+        if (!GenericValidator.isBlankOrNull(tbInfo.getTbAspect())) {
+            ObservationHistory aspect = new ObservationHistory();
+            aspect.setSampleId(sampleId);
+            aspect.setPatientId(patientId);
+            aspect.setLastupdated(DateUtil.getNowAsTimestamp());
+            aspect.setSysUserId(sysUserId);
+            aspect.setValueType(ValueType.DICTIONARY);
+            aspect.setValue(tbInfo.getTbAspect());
+            aspect.setObservationHistoryTypeId(getObservationHistoryTypeId("TbSampleAspects"));
+            observations.add(aspect);
+        }
+
+        // TB Followup Period Line 1
+        if (!GenericValidator.isBlankOrNull(tbInfo.getTbFollowupPeriodLine1())) {
+            ObservationHistory periodLine1 = new ObservationHistory();
+            periodLine1.setSampleId(sampleId);
+            periodLine1.setPatientId(patientId);
+            periodLine1.setLastupdated(DateUtil.getNowAsTimestamp());
+            periodLine1.setSysUserId(sysUserId);
+            periodLine1.setValueType(ValueType.LITERAL);
+            periodLine1.setValue(tbInfo.getTbFollowupPeriodLine1());
+            periodLine1.setObservationHistoryTypeId(getObservationHistoryTypeId("TbFollowupReasonPeriodLine1"));
+            observations.add(periodLine1);
+        }
+
+        // TB Followup Period Line 2
+        if (!GenericValidator.isBlankOrNull(tbInfo.getTbFollowupPeriodLine2())) {
+            ObservationHistory periodLine2 = new ObservationHistory();
+            periodLine2.setSampleId(sampleId);
+            periodLine2.setPatientId(patientId);
+            periodLine2.setLastupdated(DateUtil.getNowAsTimestamp());
+            periodLine2.setSysUserId(sysUserId);
+            periodLine2.setValueType(ValueType.LITERAL);
+            periodLine2.setValue(tbInfo.getTbFollowupPeriodLine2());
+            periodLine2.setObservationHistoryTypeId(getObservationHistoryTypeId("TbFollowupReasonPeriodLine2"));
+            observations.add(periodLine2);
+        }
+
+        // TB Specimen Nature
+        if (!GenericValidator.isBlankOrNull(tbInfo.getTbSpecimenNature())) {
+            ObservationHistory specimenNature = new ObservationHistory();
+            specimenNature.setSampleId(sampleId);
+            specimenNature.setPatientId(patientId);
+            specimenNature.setLastupdated(DateUtil.getNowAsTimestamp());
+            specimenNature.setSysUserId(sysUserId);
+            specimenNature.setValueType(ValueType.DICTIONARY);
+            specimenNature.setValue(tbInfo.getTbSpecimenNature());
+            specimenNature.setObservationHistoryTypeId(getObservationHistoryTypeId("TbSpecimenNature"));
+            observations.add(specimenNature);
+        }
+
+        // TB Analysis Method
+        if (!GenericValidator.isBlankOrNull(tbInfo.getSelectedTbMethod())) {
+            ObservationHistory analysisMethod = new ObservationHistory();
+            analysisMethod.setSampleId(sampleId);
+            analysisMethod.setPatientId(patientId);
+            analysisMethod.setLastupdated(DateUtil.getNowAsTimestamp());
+            analysisMethod.setSysUserId(sysUserId);
+            analysisMethod.setValueType(ValueType.DICTIONARY);
+            analysisMethod.setValue(tbInfo.getSelectedTbMethod());
+            analysisMethod.setObservationHistoryTypeId(getObservationHistoryTypeId("TbAnalysisMethod"));
+            observations.add(analysisMethod);
+        }
+
+        // TB Subject Number
+        if (!GenericValidator.isBlankOrNull(tbInfo.getTbSubjectNumber())) {
+            ObservationHistory subjectNumber = new ObservationHistory();
+            subjectNumber.setSampleId(sampleId);
+            subjectNumber.setPatientId(patientId);
+            subjectNumber.setLastupdated(DateUtil.getNowAsTimestamp());
+            subjectNumber.setSysUserId(sysUserId);
+            subjectNumber.setValueType(ValueType.LITERAL);
+            subjectNumber.setValue(tbInfo.getTbSubjectNumber());
+            subjectNumber.setObservationHistoryTypeId(getObservationHistoryTypeId("TbSubjectNumber"));
+            observations.add(subjectNumber);
+        }
+
+        // Persist all observations
+        for (ObservationHistory observation : observations) {
+            observationHistoryService.insert(observation);
+        }
+    }
+
+    private String getObservationHistoryTypeId(String name) {
+        ObservationHistoryType oht = observationHistoryTypeService.getByName(name);
+        if (oht != null) {
+            return oht.getId();
+        }
+        return null;
     }
 }

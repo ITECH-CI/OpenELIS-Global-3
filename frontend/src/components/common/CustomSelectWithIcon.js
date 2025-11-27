@@ -1,18 +1,26 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { ChevronDown } from '@carbon/icons-react';
-import './CustomSelect.css';
+import React, { useState, useRef, useEffect } from "react";
+import { ChevronDown } from "@carbon/icons-react";
+import "./CustomSelect.css";
 
-const CustomSelect = ({ id, name, labelText, value, onChange, required, children }) => {
+const CustomSelect = ({
+  id,
+  name,
+  labelText,
+  value,
+  onChange,
+  required,
+  children,
+}) => {
   const [isOpen, setIsOpen] = useState(false);
   const selectRef = useRef(null);
 
-  const options = React.Children.toArray(children).map(child => ({
+  const options = React.Children.toArray(children).map((child) => ({
     text: child.props.text,
     value: child.props.value,
-    icon: child.props.icon
+    icon: child.props.icon,
   }));
 
-  const selected = options.find(opt => opt.value === value);
+  const selected = options.find((opt) => opt.value === value);
 
   useEffect(() => {
     const handleClick = (e) => {
@@ -20,8 +28,8 @@ const CustomSelect = ({ id, name, labelText, value, onChange, required, children
         setIsOpen(false);
       }
     };
-    document.addEventListener('mousedown', handleClick);
-    return () => document.removeEventListener('mousedown', handleClick);
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
   }, []);
 
   const handleSelect = (option) => {
@@ -31,12 +39,17 @@ const CustomSelect = ({ id, name, labelText, value, onChange, required, children
 
   return (
     <div className="custom-select-wrapper" ref={selectRef}>
-      {labelText && <label htmlFor={id}>{labelText}{required && '*'}</label>}
-      
+      {labelText && (
+        <label htmlFor={id}>
+          {labelText}
+          {required && "*"}
+        </label>
+      )}
+
       <div className="custom-select" onClick={() => setIsOpen(!isOpen)}>
         <div className="custom-select-value">
           {selected?.icon}
-          <span>{selected?.text || 'Sélectionner...'}</span>
+          <span>{selected?.text || "Sélectionner..."}</span>
         </div>
         <ChevronDown size={16} />
       </div>
@@ -46,7 +59,7 @@ const CustomSelect = ({ id, name, labelText, value, onChange, required, children
           {options.map((option, i) => (
             <li key={i} onClick={() => handleSelect(option)}>
               <span>{option.text}</span>
-               {option.icon}
+              {option.icon}
             </li>
           ))}
         </ul>
