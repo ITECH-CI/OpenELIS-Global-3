@@ -205,6 +205,7 @@ public class TestResultItem implements ResultItem, Serializable {
     private boolean isChildReflex = false;
     private boolean displayResultAsLog = false;
     private String qualifiedDictionaryId = null;
+    private String priority = "";
 
     @SafeHtml(level = SafeHtml.SafeListLevel.NONE, groups = { LogbookResultsForm.LogbookResults.class })
     private String qualifiedResultValue = "";
@@ -975,5 +976,13 @@ public class TestResultItem implements ResultItem, Serializable {
 
     public void setReferralItem(ReferralItem referralItem) {
         this.referralItem = referralItem;
+    }
+
+    public String getPriority() {
+        return priority;
+    }
+
+    public void setPriority(String priority) {
+        this.priority = priority;
     }
 }

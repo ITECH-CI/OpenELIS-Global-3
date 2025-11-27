@@ -14,6 +14,7 @@ import org.openelisglobal.patient.action.bean.PatientClinicalInfo;
 import org.openelisglobal.patient.action.bean.PatientEnhancedSearch;
 import org.openelisglobal.patient.action.bean.PatientManagementInfo;
 import org.openelisglobal.patient.action.bean.PatientSearch;
+import org.openelisglobal.patient.action.bean.PatientTbInfo;
 import org.openelisglobal.project.valueholder.Project;
 import org.openelisglobal.referral.action.beanitems.ReferralItem;
 import org.openelisglobal.sample.bean.SampleOrderItem;
@@ -73,6 +74,9 @@ public class SamplePatientEntryForm extends BaseForm {
 
     @Valid
     private PatientClinicalInfo patientClinicalProperties;
+
+    @Valid
+    private PatientTbInfo patientTbInfo;
 
     @Valid
     private SampleOrderItem sampleOrderItems;
@@ -200,6 +204,14 @@ public class SamplePatientEntryForm extends BaseForm {
 
     public void setPatientClinicalProperties(PatientClinicalInfo patientClinicalProperties) {
         this.patientClinicalProperties = patientClinicalProperties;
+    }
+
+    public PatientTbInfo getPatientTbInfo() {
+        return patientTbInfo;
+    }
+
+    public void setPatientTbInfo(PatientTbInfo patientTbInfo) {
+        this.patientTbInfo = patientTbInfo;
     }
 
     public SampleOrderItem getSampleOrderItems() {

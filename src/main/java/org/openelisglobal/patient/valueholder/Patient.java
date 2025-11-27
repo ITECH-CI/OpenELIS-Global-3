@@ -91,10 +91,11 @@ public class Patient extends BaseObject<String> {
     public String getOtherIdentifier() {
         return otherIdentifier;
     }
-    
+
     public void setOtherIdentifier(String otherIdentifier) {
         this.otherIdentifier = otherIdentifier;
     }
+
     public String getChartNumber() {
         return chartNumber;
     }

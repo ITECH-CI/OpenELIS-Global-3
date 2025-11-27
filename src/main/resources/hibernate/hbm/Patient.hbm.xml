@@ -28,7 +28,7 @@
         <property name="gender" type="java.lang.String">
             <column name="GENDER" length="1" />
         </property>
-         <property name="otherIdentifier" type="java.lang.String">
+        <property name="otherIdentifier" type="java.lang.String">
             <column name="OTHER_IDENTIFIER" length="100" />
         </property>
 

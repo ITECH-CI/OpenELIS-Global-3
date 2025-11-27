@@ -50,6 +50,7 @@ import org.openelisglobal.sample.form.SamplePatientEntryForm;
 import org.openelisglobal.sample.service.PatientManagementUpdate;
 import org.openelisglobal.sample.service.SamplePatientEntryService;
 import org.openelisglobal.sample.service.SampleService;
+import org.openelisglobal.sample.service.TbSampleService;
 import org.openelisglobal.sample.validator.SamplePatientEntryFormValidator;
 import org.openelisglobal.sample.valueholder.OrderPriority;
 import org.openelisglobal.sample.valueholder.SampleAdditionalField;
@@ -137,8 +138,12 @@ public class SamplePatientEntryRestController extends BaseSampleEntryController 
             "referralItems*.referredResultType", "referralItems*.modified", "referralItems*.inLabResultId",
             "referralItems*.referralReasonId", "referralItems*.referrer", "referralItems*.referredInstituteId",
             "referralItems*.referredSendDate", "referralItems*.referredTestId", "referralItems*.referredReportDate",
-            "referralItems*.note", "useReferral", "sampleOrderItems.additionalQuestions",
-            "sampleOrderItems.programId" };
+            "referralItems*.note", "useReferral", "sampleOrderItems.additionalQuestions", "sampleOrderItems.programId",
+            // TB Info
+            "patientTbInfo.tbOrderReason", "patientTbInfo.tbDiagnosticReason", "patientTbInfo.tbFollowupReason",
+            "patientTbInfo.tbFollowupPeriodLine1", "patientTbInfo.tbFollowupPeriodLine2", "patientTbInfo.tbAspect",
+            "patientTbInfo.tbSpecimenNature", "patientTbInfo.tbSubjectNumber", "patientTbInfo.selectedTbMethod",
+            "patientTbInfo.selectedMethodToRemove" };
 
     @Autowired
     private SamplePatientEntryFormValidator formValidator;
@@ -171,6 +176,8 @@ public class SamplePatientEntryRestController extends BaseSampleEntryController 
     private SystemUserService systemUserService;
     @Autowired
     private SampleService sampleService;
+    @Autowired
+    private TbSampleService tbSampleService;
 
     @Autowired
     private ApplicationEventPublisher eventPublisher;

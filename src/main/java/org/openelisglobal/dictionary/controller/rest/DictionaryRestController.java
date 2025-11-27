@@ -16,6 +16,7 @@ import org.openelisglobal.common.form.BaseForm;
 import org.openelisglobal.common.log.LogEvent;
 import org.openelisglobal.common.services.DisplayListService;
 import org.openelisglobal.common.util.ConfigurationProperties;
+import org.openelisglobal.common.util.IdValuePair;
 import org.openelisglobal.common.util.StringUtil;
 import org.openelisglobal.common.validator.BaseErrors;
 import org.openelisglobal.common.validator.ValidationHelper;
@@ -53,6 +54,8 @@ public class DictionaryRestController extends BaseController {
     private DictionaryService dictionaryService;
     @Autowired
     private DictionaryCategoryService dictionaryCategoryService;
+    @Autowired
+    private DisplayListService displayListService;
 
     @ModelAttribute("form")
     public DictionaryForm form() {
@@ -295,6 +298,24 @@ public class DictionaryRestController extends BaseController {
     public ResponseEntity<?> cancelDictionary(HttpServletRequest request, SessionStatus status) {
         status.setComplete();
         return ResponseEntity.status(HttpStatus.OK).body("Cancellation successful");
+    }
+
+    @RequestMapping(value = "/Dictionary-by-ByCategory", method = RequestMethod.GET)
+    public List<IdValuePair> getDictionayByCategory(@RequestParam("category") String category) {
+        List<IdValuePair> dictList = new ArrayList<>();
+        if (category.equals("1405")) {
+            return displayListService.createTBFollowupLine1List();
+        }
+        if (category.equals("1406")) {
+            return displayListService.createTBFollowupLine2List();
+        }
+        List<Dictionary> dictionaries = dictionaryService.getDictionaryEntrysByCategoryAbbreviation("categoryName",
+                category, false);
+        for (Dictionary dictionary : dictionaries) {
+            IdValuePair ivp = new IdValuePair(dictionary.getId(), dictionary.getDictEntry());
+            dictList.add(ivp);
+        }
+        return dictList;
     }
 
     @Override

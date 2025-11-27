@@ -828,6 +828,6 @@ public class PatientServiceImpl extends AuditableBaseObjectServiceImpl<Patient, 
 
     @Override
     public String getOtherIdentifier(Patient patient) {
-        return patient.getOtherIdentifier();  
+        return patient.getOtherIdentifier();
     }
 }

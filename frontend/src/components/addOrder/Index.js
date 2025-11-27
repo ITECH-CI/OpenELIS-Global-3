@@ -40,6 +40,7 @@ const Index = () => {
   const samplePageNumber = firstPageNumber + 2;
   const patientInfoPageNumber = firstPageNumber + 3;
   const successMsgPageNumber = lastPageNumber;
+  const TB_PROGRAM_ID = "9999";
   const [changed, setChanged] = useState({
     "sampleOrderItems.providerFirstName": false,
     "sampleOrderItems.providerLastName": false,
@@ -702,11 +703,22 @@ const Index = () => {
         sampleXmlString += "</samples>";
       }
     }
+
+    // Collect TB data from samples (typically from first sample with TB data)
+    let tbData = null;
+    for (let sampleItem of samples) {
+      if (sampleItem.tbData) {
+        tbData = sampleItem.tbData;
+        break; // Use TB data from first sample that has it
+      }
+    }
+
     setOrderFormValues({
       ...orderFormValues,
       useReferral: true,
       sampleXML: sampleXmlString,
       referralItems: referralItems,
+      patientTbInfo: tbData || orderFormValues.patientTbInfo,
     });
   };
 
@@ -731,6 +743,7 @@ const Index = () => {
       <Stack gap={10}>
         <div className="pageContent">
           {notificationVisible === true ? <AlertDialog /> : ""}
+          {/* <div>{JSON.stringify(orderFormValues)}</div> */}
           <div className="orderWorkFlowDiv">
             <h2>
               <FormattedMessage id="order.test.request.heading" />
@@ -743,7 +756,7 @@ const Index = () => {
                 onChange={(e) => handleTabClickHandler(e)}
               >
                 <ProgressStep
-                complete
+                  complete
                   label={intl.formatMessage({
                     id: "order.step.program.selection",
                   })}
@@ -751,7 +764,7 @@ const Index = () => {
                 <ProgressStep
                   label={intl.formatMessage({ id: "order.label.add" })}
                 />
-                 <ProgressStep
+                <ProgressStep
                   label={intl.formatMessage({ id: "sample.add.action" })}
                 />
                 <ProgressStep
@@ -779,6 +792,9 @@ const Index = () => {
                 error={elementError}
                 setSamples={setSamples}
                 samples={samples}
+                isTb={
+                  orderFormValues.sampleOrderItems.programId === TB_PROGRAM_ID
+                }
               />
             )}
             {page === orderPageNumber && (
