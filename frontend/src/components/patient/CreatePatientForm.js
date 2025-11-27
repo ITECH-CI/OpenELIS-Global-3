@@ -1,41 +1,41 @@
-import React, { useState, useRef, useEffect, useContext } from "react";
+import {
+  addMonths,
+  addYears,
+  differenceInDays,
+  differenceInMonths,
+  differenceInYears,
+} from "date-fns";
+import format from "date-fns/format";
+import { useContext, useEffect, useRef, useState } from "react";
 import { FormattedMessage, injectIntl, useIntl } from "react-intl";
+import { nationalityList } from "../data/countries";
 import "../Style.css";
 import { getFromOpenElisServer, postToOpenElisServer } from "../utils/Utils";
-import { nationalityList } from "../data/countries";
-import format from "date-fns/format";
-import {
-  differenceInYears,
-  differenceInMonths,
-  differenceInDays,
-  addYears,
-  addMonths,
-} from "date-fns";
 
 import {
-  Heading,
+  Accordion,
+  AccordionItem,
+  Button,
+  Column,
   Form,
   FormLabel,
-  TextInput,
-  Button,
+  Grid,
+  Heading,
   RadioButton,
   RadioButtonGroup,
   Section,
   Select,
   SelectItem,
-  Accordion,
-  AccordionItem,
-  Grid,
-  Column,
+  TextInput,
 } from "@carbon/react";
 
-import { Formik, Field, ErrorMessage } from "formik";
-import CreatePatientFormValues from "../formModel/innitialValues/CreatePatientFormValues";
-import PatientFormObserver from "./PatientFormObserver";
-import { AlertDialog, NotificationKinds } from "../common/CustomNotification";
-import { NotificationContext, ConfigurationContext } from "../layout/Layout";
-import CreatePatientValidationSchema from "../formModel/validationSchema/CreatePatientValidationShema";
+import { ErrorMessage, Field, Formik } from "formik";
 import CustomDatePicker from "../common/CustomDatePicker";
+import { AlertDialog, NotificationKinds } from "../common/CustomNotification";
+import CreatePatientFormValues from "../formModel/innitialValues/CreatePatientFormValues";
+import CreatePatientValidationSchema from "../formModel/validationSchema/CreatePatientValidationShema";
+import { ConfigurationContext, NotificationContext } from "../layout/Layout";
+import PatientFormObserver from "./PatientFormObserver";
 function CreatePatientForm(props) {
   const componentMounted = useRef(false);
 
@@ -584,6 +584,23 @@ function CreatePatientForm(props) {
                   <ErrorMessage name="nationalId"></ErrorMessage>
                 </div>
               </Column>
+              <Column lg={8} md={4} sm={4}>
+                <Field name="otherIdentifier">
+                  {({ field }) => (
+                    <TextInput
+                      value={values.otherIdentifier || ""}
+                      name={field.name}
+                      labelText={intl.formatMessage({
+                        id: "patient.other.identifier",
+                      })}
+                      id={field.name}
+                      placeholder={intl.formatMessage({
+                        id: "patient.information.otheridentifier",
+                      })}
+                    />
+                  )}
+                </Field>
+              </Column>
               <Column lg={16} md={8} sm={4}>
                 {" "}
                 <br></br>
@@ -1022,6 +1039,62 @@ function CreatePatientForm(props) {
                           )}
                         </Field>
                       </Column>
+                      <Column lg={8} md={4} sm={4}>
+                        <Field name="city">
+                          {({ field }) => (
+                            <TextInput
+                              value={values.city || ""}
+                              name={field.name}
+                              labelText={intl.formatMessage({
+                                id: "patient.address.town",
+                              })}
+                              id={field.name}
+                              placeholder={intl.formatMessage({
+                                id: "patient.emergency.additional.town",
+                              })}
+                            />
+                          )}
+                        </Field>
+                      </Column>
+                      <Column lg={8} md={4} sm={4}>
+                        <Field name="streetAddress">
+                          {({ field }) => (
+                            <TextInput
+                              value={values.streetAddress || ""}
+                              name={field.name}
+                              labelText={intl.formatMessage({
+                                id: "patient.address.street",
+                              })}
+                              id={field.name}
+                              placeholder={intl.formatMessage({
+                                id: "patient.emergency.additional.street",
+                              })}
+                            />
+                          )}
+                        </Field>
+                      </Column>
+                      <Column lg={16} md={8} sm={4}>
+                        {" "}
+                        <br></br>
+                      </Column>
+                      <Column lg={8} md={4} sm={4}>
+                        <Field name="commune">
+                          {({ field }) => (
+                            <TextInput
+                              value={values.commune || ""}
+                              name={field.name}
+                              labelText={intl.formatMessage({
+                                id: "patient.address.camp",
+                              })}
+                              id={field.name}
+                              placeholder={intl.formatMessage({
+                                id: "patient.emergency.additional.camp",
+                              })}
+                            />
+                          )}
+                        </Field>
+                      </Column>
+
                       <Column lg={16} md={8} sm={4}>
                         {" "}
                         <br></br>

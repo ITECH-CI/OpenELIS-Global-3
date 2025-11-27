@@ -25,6 +25,19 @@
         <property name="manuallyChanged" type="java.lang.Boolean">
             <column name="manually_changed" length="1" not-null="true" />
         </property>
+        <property name="active" type="java.lang.Boolean">
+            <column name="is_active" length="1" />
+        </property>
+        <property name="sortOrder" column="sort_order" type="integer" />
+        <many-to-one name="localization"
+            class="org.openelisglobal.localization.valueholder.Localization"
+            fetch="select" lazy="false">
+            <column name="name_localization_id" precision="10" scale="0" />
+        </many-to-one>
+
+        <property name="nameKey" type="java.lang.String">
+            <column name="display_key" length="60" />
+        </property>
         <property name="questionnaireUUID" type="java.util.UUID">
             <column name="questionnaire_fhir_uuid" />
         </property>

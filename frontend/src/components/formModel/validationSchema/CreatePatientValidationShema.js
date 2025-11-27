@@ -1,7 +1,11 @@
 import * as Yup from "yup";
 
 const CreatePatientValidationSchema = Yup.object().shape({
-  nationalId: Yup.string().required("National ID Required"),
+
+  nationalId: Yup.string()
+    .min(13)
+    .max(13, "Le numero CMU doit contenir 13 chiffres")
+    .required("Numéro CMU requis "),
   birthDateForDisplay: Yup.string()
     .required("Patient Birth date Required")
     .test("valid-date", "Invalid date format", function (value) {

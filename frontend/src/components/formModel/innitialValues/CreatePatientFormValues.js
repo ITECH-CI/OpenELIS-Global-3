@@ -2,6 +2,7 @@ const CreatePatientFormValues = {
   patientUpdateStatus: "ADD",
   nationalId: "",
   subjectNumber: "",
+  otherIdentifier: "",
   lastName: "",
   firstName: "",
   streetAddress: "",

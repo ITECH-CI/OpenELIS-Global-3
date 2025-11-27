@@ -11,7 +11,7 @@ export const priorities = [
     value: "STAT",
     label: "STAT",
   },
-  {
+  /* {
     value: "Timed",
     label: "Timed",
   },
@@ -19,4 +19,5 @@ export const priorities = [
     value: "FUTURE_STAT",
     label: "Future STAT",
   },
+  */
 ];

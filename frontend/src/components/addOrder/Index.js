@@ -1,19 +1,19 @@
-import React, { useContext, useEffect, useState } from "react";
 import { Button, ProgressIndicator, ProgressStep, Stack } from "@carbon/react";
-import PatientInfo from "./PatientInfo";
-import AddSample from "./AddSample";
-import AddOrder from "./AddOrder";
-import "./add-order.scss";
-import { SampleOrderFormValues } from "../formModel/innitialValues/OrderEntryFormValues";
-import { NotificationContext, ConfigurationContext } from "../layout/Layout";
+import { useContext, useEffect, useState } from "react";
+import { FormattedMessage, useIntl } from "react-intl";
+import config from "../../config.json";
 import { AlertDialog, NotificationKinds } from "../common/CustomNotification";
+import PageBreadCrumb from "../common/PageBreadCrumb";
+import { SampleOrderFormValues } from "../formModel/innitialValues/OrderEntryFormValues";
+import OrderEntryValidationSchema from "../formModel/validationSchema/OrderEntryValidationSchema";
+import { ConfigurationContext, NotificationContext } from "../layout/Layout";
 import { getFromOpenElisServer, postToOpenElisServer } from "../utils/Utils";
+import AddOrder from "./AddOrder";
+import AddSample from "./AddSample";
 import OrderEntryAdditionalQuestions from "./OrderEntryAdditionalQuestions";
 import OrderSuccessMessage from "./OrderSuccessMessage";
-import { FormattedMessage, useIntl } from "react-intl";
-import OrderEntryValidationSchema from "../formModel/validationSchema/OrderEntryValidationSchema";
-import config from "../../config.json";
-import PageBreadCrumb from "../common/PageBreadCrumb";
+import PatientInfo from "./PatientInfo";
+import "./add-order.scss";
 let breadcrumbs = [
   { label: "home.label", link: "/" },
   { label: "sidenav.label.addorder", link: "/SamplePatientEntry" },
@@ -752,6 +752,9 @@ const Index = () => {
                   label={intl.formatMessage({
                     id: "order.step.program.selection",
                   })}
+                />
+                <ProgressStep
+                  label={intl.formatMessage({ id: "order.label.add" })}
                 />
                 <ProgressStep
                   label={intl.formatMessage({ id: "sample.add.action" })}

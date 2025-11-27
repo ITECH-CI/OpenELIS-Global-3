@@ -38,6 +38,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+
+
 @Service
 public class PatientServiceImpl extends AuditableBaseObjectServiceImpl<Patient, String> implements PatientService {
 
@@ -825,5 +827,10 @@ public class PatientServiceImpl extends AuditableBaseObjectServiceImpl<Patient, 
     @Override
     public Patient getByExternalId(String id) {
         return baseObjectDAO.getByExternalId(id);
+    }
+
+    @Override
+    public String getOtherIdentifier(Patient patient) {
+        return patient.getOtherIdentifier();
     }
 }

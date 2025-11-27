@@ -1,8 +1,7 @@
-import React, { useEffect, useRef, useState } from "react";
 import { Column, Grid, Select, SelectItem } from "@carbon/react";
+import { useEffect, useRef, useState } from "react";
 import { FormattedMessage, injectIntl, useIntl } from "react-intl";
 import "../Style.css";
-import { getFromOpenElisServer } from "../utils/Utils";
 
 function PanelSelectForm(props) {
   const mounted = useRef(false);
@@ -28,18 +27,16 @@ function PanelSelectForm(props) {
       "priority",
     );
     priorityId = priorityId ? priorityId : "";
-    getFromOpenElisServer("/rest/priorities", (fetchedPriorities) => {
-      let priority = fetchedPriorities.find(
-        (priority) => priority.id === priorityId,
-      );
-      let priorityLabel = priority
-        ? priority.value
-        : intl.formatMessage({ id: "input.placeholder.selectPriority" });
-      setDefaultPriorityId(priorityId);
-      setDefaultPriorityLabel(priorityLabel);
-      props.value(priorityId, priorityLabel);
-      getTests(fetchedPriorities);
-    });
+    //  getFromOpenElisServer("/rest/priorities", (fetchedPriorities) => {
+    let priority = priorities.find((priority) => priority.id === priorityId);
+    let priorityLabel = priority
+      ? priority.value
+      : intl.formatMessage({ id: "input.placeholder.selectPriority" });
+    setDefaultPriorityId(priorityId);
+    setDefaultPriorityLabel(priorityLabel);
+    props.value(priorityId, priorityLabel);
+    getTests(priorities);
+    // });
     return () => {
       mounted.current = false;
     };

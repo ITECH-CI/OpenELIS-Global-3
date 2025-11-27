@@ -1,25 +1,24 @@
-import React, { useContext, useEffect, useRef, useState } from "react";
 import {
   Checkbox,
+  Column,
+  Grid,
   Link,
   Select,
   SelectItem,
   Stack,
   TextInput,
   TimePicker,
-  Column,
-  Grid,
 } from "@carbon/react";
-import CustomLabNumberInput from "../common/CustomLabNumberInput";
-import CustomDatePicker from "../common/CustomDatePicker";
-import { getFromOpenElisServer } from "../utils/Utils";
-import { NotificationContext } from "../layout/Layout";
-import { priorities } from "../data/orderOptions";
-import { NotificationKinds } from "../common/CustomNotification";
-import AutoComplete from "../common/AutoComplete";
-import OrderResultReporting from "./OrderResultReporting";
+import { useContext, useEffect, useRef, useState } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
-import { ConfigurationContext } from "../layout/Layout";
+import AutoComplete from "../common/AutoComplete";
+import CustomDatePicker from "../common/CustomDatePicker";
+import CustomLabNumberInput from "../common/CustomLabNumberInput";
+import { NotificationKinds } from "../common/CustomNotification";
+import CustomTextInput from "../common/CustomTextInput";
+import { priorities } from "../data/orderOptions";
+import { ConfigurationContext, NotificationContext } from "../layout/Layout";
+import { getFromOpenElisServer } from "../utils/Utils";
 const AddOrder = (props) => {
   const { setNotificationVisible, addNotification } =
     useContext(NotificationContext);
@@ -45,6 +44,7 @@ const AddOrder = (props) => {
   const [siteNames, setSiteNames] = useState([]);
   const [innitialized, setInnitialized] = useState(false);
   const [departments, setDepartments] = useState([]);
+  const [value, setValue] = useState("");
 
   useEffect(() => {
     componentMounted.current = true;
@@ -55,6 +55,10 @@ const AddOrder = (props) => {
     };
   }, []);
 
+  const handleChangeUpper = (e) => {
+    const upperValue = e.target.value.toUpperCase();
+    setValue(upperValue);
+  };
   const handleDatePickerChange = (datePicker, date) => {
     let obj = null;
     switch (datePicker) {
@@ -705,6 +709,37 @@ const AddOrder = (props) => {
             </Column>
             <Column lg={8} md={4} sm={4}>
               <TextInput
+                name="requesterLastName"
+                placeholder={intl.formatMessage({
+                  id: "input.placeholder.requesterLastName",
+                })}
+                labelText={
+                  <>
+                    <FormattedMessage id="order.requester.lastName.label" />
+                    <span className="requiredlabel">*</span>
+                  </>
+                }
+                disabled={
+                  configurationProperties.restrictFreeTextProviderEntry ===
+                  "true"
+                }
+                value={orderFormValues.sampleOrderItems.providerLastName}
+                onClick={() =>
+                  handleChange("sampleOrderItems.providerLastName")
+                }
+                onChange={handleRequesterLastName}
+                id="requesterLastName"
+                invalid={
+                  changed["sampleOrderItems.providerLastName"] &&
+                  error("sampleOrderItems.providerLastName")
+                    ? true
+                    : false
+                }
+                invalidText={error("sampleOrderItems.providerLastName")}
+              />
+            </Column>
+            <Column lg={8} md={4} sm={4}>
+              <TextInput
                 name="requesterFirstName"
                 placeholder={intl.formatMessage({
                   id: "input.placeholder.requesterFirstName",
@@ -896,6 +931,16 @@ const AddOrder = (props) => {
                 id="testLocationCodeOtherId"
               />
             </Column>
+            <Column lg={8} md={4} sm={4}>
+              <CustomTextInput
+                id={"clinicalInformations"}
+                value={value}
+                style={{ textTransform: "uppercase" }}
+                onChange={handleChangeUpper}
+                labelText="Renseignements cliniques"
+                className="uppercase-input"
+              />
+            </Column>
             <Column lg={16} md={8} sm={3}>
               {" "}
               &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;{" "}
@@ -911,6 +956,7 @@ const AddOrder = (props) => {
             </Column>
           </Grid>
         </div>
+        {/*
         <div className="orderLegendBody">
           <h3>
             <FormattedMessage id="order.result.reporting.heading" />
@@ -931,7 +977,7 @@ const AddOrder = (props) => {
               );
             }
           })}
-        </div>
+        </div> */}
       </Stack>
     </>
   );
