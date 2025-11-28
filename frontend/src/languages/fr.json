@@ -1490,5 +1490,6 @@
   "program.IHC.name": "Immunohistochimie",
   "program.PATH.name": "Anatomopathologie",
   "program.RTN_BACTER.name": "Bactériologie Classique",
-  "label.select.option": "Sélectionner une option"
+  "label.select.option": "Sélectionner une option",
+  "program.TB.name": "Tuberculose"
 }

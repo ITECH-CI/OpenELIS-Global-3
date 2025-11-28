@@ -2071,5 +2071,6 @@
   "tb.diagnostic.method": "TB Diagnostic Method",
   "tb.aspect": "TB Sample Aspect",
   "tb.specimen.nature": "TB Specimen Nature",
-  "label.select.option": "Select an option"
+  "label.select.option": "Select an option",
+  "program.TB.name": "Tuberculosis"
 }

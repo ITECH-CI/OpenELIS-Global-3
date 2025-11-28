@@ -112,5 +112,4 @@ public interface PatientService extends BaseObjectService<Patient, String> {
 
     Patient getByExternalId(String idPart);
 
-    String getOtherIdentifier(Patient patient);
 }
