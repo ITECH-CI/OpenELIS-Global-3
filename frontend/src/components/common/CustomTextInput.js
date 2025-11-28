@@ -7,7 +7,7 @@ const CustomTextInput = (props) => {
 
   const handleInputChange = (e) => {
     if (onChange != null) {
-      let value = e.target.value;
+      let value = e.target.value.toUpperCase();
       setInputText(value);
       onChange(value);
     }

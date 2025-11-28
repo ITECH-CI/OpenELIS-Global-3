@@ -63,6 +63,17 @@ export const SampleOrderFormValues = {
   patientSearch: null,
   patientEnhancedSearch: null,
   patientClinicalProperties: null,
+  patientTbInfo: {
+    tbOrderReason: "",
+    tbDiagnosticReason: "",
+    tbFollowupReason: "",
+    tbFollowupPeriodLine1: "",
+    tbFollowupPeriodLine2: "",
+    tbAspect: "",
+    tbSpecimenNature: "",
+    tbSubjectNumber: "",
+    selectedTbMethod: "",
+  },
   sampleOrderItems: {
     newRequesterName: "",
     orderTypes: [],

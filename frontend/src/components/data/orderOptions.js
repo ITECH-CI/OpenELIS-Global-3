@@ -1,15 +1,20 @@
+import { WarningAltFilled } from "@carbon/icons-react";
+
 export const priorities = [
   {
-    value: "Routine",
+    value: "ROUTINE",
     label: "ROUTINE",
+    icon: <></>,
   },
   {
     value: "ASAP",
-    label: "ASAP",
+    label: "URGENT",
+    icon: <WarningAltFilled size={18} style={{ color: "#f1b605ff" }} />,
   },
   {
     value: "STAT",
-    label: "STAT",
+    label: "IMMEDIAT",
+    icon: <WarningAltFilled size={18} style={{ color: "#da1e28" }} />,
   },
   /* {
     value: "Timed",
@@ -18,6 +23,5 @@ export const priorities = [
   {
     value: "FUTURE_STAT",
     label: "Future STAT",
-  },
-  */
+  },*/
 ];

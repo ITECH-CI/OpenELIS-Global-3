@@ -616,7 +616,6 @@ public class PatientServiceImpl extends AuditableBaseObjectServiceImpl<Patient, 
             personService.update(patient.getPerson());
         }
         patient.setPerson(patient.getPerson());
-
         if (patientInfo.getPatientUpdateStatus() == PatientUpdateStatus.ADD) {
             UUID uuid = UUID.randomUUID();
             // patientInfo.setFhirUuid(uuid);

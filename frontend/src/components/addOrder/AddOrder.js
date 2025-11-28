@@ -15,6 +15,7 @@ import AutoComplete from "../common/AutoComplete";
 import CustomDatePicker from "../common/CustomDatePicker";
 import CustomLabNumberInput from "../common/CustomLabNumberInput";
 import { NotificationKinds } from "../common/CustomNotification";
+import { CustomSelect, CustomSelectItem } from "../common/CustomSelectWithIcon";
 import CustomTextInput from "../common/CustomTextInput";
 import { priorities } from "../data/orderOptions";
 import { ConfigurationContext, NotificationContext } from "../layout/Layout";
@@ -533,7 +534,7 @@ const AddOrder = (props) => {
               </div>
             </Column>
             <Column lg={8} md={4} sm={4}>
-              <Select
+              <CustomSelect
                 id="priorityId"
                 name="priority"
                 labelText={intl.formatMessage({ id: "workplan.priority.list" })}
@@ -541,16 +542,15 @@ const AddOrder = (props) => {
                 onChange={handlePriority}
                 required
               >
-                {priorities.map((priority, index) => {
-                  return (
-                    <SelectItem
-                      key={index}
-                      text={priority.label}
-                      value={priority.value}
-                    />
-                  );
-                })}
-              </Select>
+                {priorities.map((priority, index) => (
+                  <CustomSelectItem
+                    key={index}
+                    text={priority.label}
+                    value={priority.value}
+                    icon={priority.icon}
+                  />
+                ))}
+              </CustomSelect>
             </Column>
             <Column lg={16} md={8} sm={3}>
               {" "}
@@ -799,6 +799,37 @@ const AddOrder = (props) => {
                     : false
                 }
                 invalidText={error("sampleOrderItems.providerLastName")}
+              />
+            </Column>
+            <Column lg={8} md={4} sm={4}>
+              <TextInput
+                name="requesterFirstName"
+                placeholder={intl.formatMessage({
+                  id: "input.placeholder.requesterFirstName",
+                })}
+                labelText={
+                  <>
+                    <FormattedMessage id="order.requester.firstName.label" />
+                    <span className="requiredlabel">*</span>
+                  </>
+                }
+                disabled={
+                  configurationProperties.restrictFreeTextProviderEntry ===
+                  "true"
+                }
+                onChange={handleRequesterFirstName}
+                onClick={() =>
+                  handleChange("sampleOrderItems.providerFirstName")
+                }
+                value={orderFormValues.sampleOrderItems.providerFirstName}
+                invalid={
+                  changed["sampleOrderItems.providerFirstName"] &&
+                  error("sampleOrderItems.providerFirstName")
+                    ? true
+                    : false
+                }
+                invalidText={error("sampleOrderItems.providerFirstName")}
+                id="requesterFirstName"
               />
             </Column>
             <Column lg={16} md={8} sm={3}>

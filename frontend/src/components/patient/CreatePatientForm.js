@@ -925,61 +925,6 @@ function CreatePatientForm(props) {
                         {" "}
                         <br></br>
                       </Column>
-                      <Column lg={8} md={4} sm={4}>
-                        <Field name="city">
-                          {({ field }) => (
-                            <TextInput
-                              value={values.city || ""}
-                              name={field.name}
-                              labelText={intl.formatMessage({
-                                id: "patient.address.town",
-                              })}
-                              id={field.name}
-                              placeholder={intl.formatMessage({
-                                id: "patient.emergency.additional.town",
-                              })}
-                            />
-                          )}
-                        </Field>
-                      </Column>
-                      <Column lg={8} md={4} sm={4}>
-                        <Field name="streetAddress">
-                          {({ field }) => (
-                            <TextInput
-                              value={values.streetAddress || ""}
-                              name={field.name}
-                              labelText={intl.formatMessage({
-                                id: "patient.address.street",
-                              })}
-                              id={field.name}
-                              placeholder={intl.formatMessage({
-                                id: "patient.emergency.additional.street",
-                              })}
-                            />
-                          )}
-                        </Field>
-                      </Column>
-                      <Column lg={16} md={8} sm={4}>
-                        {" "}
-                        <br></br>
-                      </Column>
-                      <Column lg={8} md={4} sm={4}>
-                        <Field name="commune">
-                          {({ field }) => (
-                            <TextInput
-                              value={values.commune || ""}
-                              name={field.name}
-                              labelText={intl.formatMessage({
-                                id: "patient.address.camp",
-                              })}
-                              id={field.name}
-                              placeholder={intl.formatMessage({
-                                id: "patient.emergency.additional.camp",
-                              })}
-                            />
-                          )}
-                        </Field>
-                      </Column>
                       <Column lg={16} md={8} sm={4}>
                         {" "}
                         <br></br>

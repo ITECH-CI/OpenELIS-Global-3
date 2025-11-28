@@ -26,6 +26,7 @@ import { NotificationContext } from "../layout/Layout";
 import { AlertDialog, NotificationKinds } from "../common/CustomNotification";
 import { ConfigurationContext } from "../layout/Layout";
 import PageBreadCrumb from "../common/PageBreadCrumb";
+import { priorities } from "../data/orderOptions";
 
 export default function Workplan(props) {
   const { configurationProperties } = useContext(ConfigurationContext);
@@ -168,6 +169,10 @@ export default function Workplan(props) {
     }
   };
 
+  const findPriorityByValue = (searchValue) => {
+    return priorities.find((item) => item.value === searchValue);
+  };
+
   let rowColorIndex = 2;
   let showAccessionNumber = false;
   let currentAccessionNumber = "";
@@ -226,6 +231,12 @@ export default function Workplan(props) {
                   src={`images/nonconforming.gif`}
                   alt="nonconforming"
                 /> = <FormattedMessage id="result.nonconforming.item" />
+                {" , "}
+                {findPriorityByValue("ASAP").icon} ={" "}
+                <FormattedMessage id="result.priority.asap" />
+                {" , "}
+                {findPriorityByValue("STAT").icon} ={" "}
+                <FormattedMessage id="result.priority.stat" />
                 <br />
                 <br />
               </Column>
@@ -317,19 +328,25 @@ export default function Workplan(props) {
                               )}
                               <TableCell>
                                 {showAccessionNumber && (
-                                  <Link
-                                    style={{ color: "blue" }}
-                                    href={
-                                      `/result?type=order&doRange=false&source=${sourceTitle}&accessionNumber=` +
-                                      row.accessionNumber
-                                    }
-                                  >
-                                    <u>
-                                      {convertAlphaNumLabNumForDisplay(
-                                        row.accessionNumber,
-                                      )}
-                                    </u>
-                                  </Link>
+                                  <>
+                                    <Link
+                                      style={{ color: "blue" }}
+                                      href={
+                                        `/result?type=order&doRange=false&source=${sourceTitle}&accessionNumber=` +
+                                        row.accessionNumber
+                                      }
+                                    >
+                                      <u>
+                                        {convertAlphaNumLabNumForDisplay(
+                                          row.accessionNumber,
+                                        )}
+                                      </u>
+                                    </Link>
+                                    <span>
+                                      {" "}
+                                      {findPriorityByValue(row.priority)?.icon}
+                                    </span>
+                                  </>
                                 )}
                               </TableCell>
                               {subjectOnWorkplan?.toLowerCase() === "true" && (

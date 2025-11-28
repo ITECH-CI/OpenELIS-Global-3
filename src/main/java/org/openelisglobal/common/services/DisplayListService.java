@@ -1063,7 +1063,7 @@ public class DisplayListService implements LocaleChangeListener {
         return recurrenceList;
     }
 
-    private List<IdValuePair> createTBFollowupLine1List() {
+    public List<IdValuePair> createTBFollowupLine1List() {
         List<IdValuePair> tbFollowupLine1List = new ArrayList<>();
         tbFollowupLine1List.add(new IdValuePair("M2", MessageUtil.getMessage("dictionary.tb.order.followup") + " M2"));
         tbFollowupLine1List.add(new IdValuePair("M5", MessageUtil.getMessage("dictionary.tb.order.followup") + " M5"));
@@ -1071,7 +1071,7 @@ public class DisplayListService implements LocaleChangeListener {
         return tbFollowupLine1List;
     }
 
-    private List<IdValuePair> createTBFollowupLine2List() {
+    public List<IdValuePair> createTBFollowupLine2List() {
         List<IdValuePair> tbFollowupLine2List = new ArrayList<>();
         for (int i = 0; i <= 24; i++) {
             tbFollowupLine2List

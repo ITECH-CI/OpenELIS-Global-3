@@ -3,6 +3,8 @@ import { useEffect, useRef, useState } from "react";
 import { FormattedMessage, injectIntl, useIntl } from "react-intl";
 import "../Style.css";
 
+import { priorities } from "../data/orderOptions";
+
 function PanelSelectForm(props) {
   const mounted = useRef(false);
   const [tests, setTests] = useState([]);
@@ -58,10 +60,10 @@ function PanelSelectForm(props) {
           >
             <SelectItem text={defaultPriorityLabel} value={defaultPriorityId} />
             {tests
-              .filter((item) => item.id !== defaultPriorityId)
+              .filter((item) => item.value !== defaultPriorityId)
               .map((item, idx) => {
                 return (
-                  <SelectItem key={idx} text={item.value} value={item.id} />
+                  <SelectItem key={idx} text={item.label} value={item.value} />
                 );
               })}
           </Select>
