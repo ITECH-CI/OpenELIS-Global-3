@@ -18,8 +18,6 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
-
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import org.apache.commons.validator.GenericValidator;
@@ -47,6 +45,10 @@ import org.openelisglobal.validation.annotations.SafeHtml;
 import org.openelisglobal.validation.annotations.ValidDate;
 import org.openelisglobal.validation.annotations.ValidName;
 import org.openelisglobal.validation.constraintvalidator.NameValidator.NameType;
+
+
+
+
 
 public class PatientManagementInfo implements Serializable {
 
@@ -207,8 +209,6 @@ public class PatientManagementInfo implements Serializable {
     private boolean readOnly = false;
 
     private List<PatientIdentity> patientIdentities;
-
-    private String otherIdentifier;
 
     public String getCurrentDate() {
         return currentDate;
