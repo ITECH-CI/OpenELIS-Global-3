@@ -27,6 +27,8 @@ import org.openelisglobal.common.valueholder.ValueHolder;
 import org.openelisglobal.common.valueholder.ValueHolderInterface;
 import org.openelisglobal.person.valueholder.Person;
 
+
+
 @Indexed
 public class Patient extends BaseObject<String> {
 
@@ -64,8 +66,6 @@ public class Patient extends BaseObject<String> {
 
     private String ethnicity;
 
-    private String otherIdentifier;
-
     private String schoolAttend;
 
     private String medicareId;
@@ -88,6 +88,7 @@ public class Patient extends BaseObject<String> {
 
     private UUID fhirUuid;
 
+    private String otherIdentifier;
     public String getOtherIdentifier() {
         return otherIdentifier;
     }

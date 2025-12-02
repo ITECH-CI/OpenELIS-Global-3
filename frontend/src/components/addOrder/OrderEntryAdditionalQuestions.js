@@ -1,11 +1,11 @@
-import React, { useEffect, useRef, useState } from "react";
 import { Select, SelectItem, Stack } from "@carbon/react";
+import { useEffect, useRef, useState } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
-import "../../index.css";
 import "../../App.css";
+import "../../index.css";
+import Questionnaire from "../common/Questionnaire";
 import "../Style.css";
 import { getFromOpenElisServer } from "../utils/Utils";
-import Questionnaire from "../common/Questionnaire";
 
 export const ProgramSelect = ({
   programChange = () => {

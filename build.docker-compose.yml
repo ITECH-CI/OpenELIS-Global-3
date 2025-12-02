@@ -42,7 +42,8 @@ services:
     build:
       context: .
     container_name: openelisglobal-webapp
-    image: openelisglobal-webapp.build
+    image: openelisglobal-webapp-oe3
+    platform: linux/amd64
     depends_on:
       - database
       - certs
@@ -104,10 +105,11 @@ services:
       - source: hapi_application.yaml 
       
   frontend.openelis.org:
-    image: frontend
+    image: frontend-oe3
+    platform: linux/amd64
     build:
       context: ./frontend
-      dockerfile: ./Dockerfile
+      dockerfile: ./Dockerfile.prod
     container_name: openelisglobal-front-end  
     # ports:
     #   - 3000:3000

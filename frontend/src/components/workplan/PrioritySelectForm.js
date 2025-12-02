@@ -1,8 +1,8 @@
-import React, { useEffect, useRef, useState } from "react";
 import { Column, Grid, Select, SelectItem } from "@carbon/react";
+import { useEffect, useRef, useState } from "react";
 import { FormattedMessage, injectIntl, useIntl } from "react-intl";
 import "../Style.css";
-import { getFromOpenElisServer } from "../utils/Utils";
+
 import { priorities } from "../data/orderOptions";
 
 function PanelSelectForm(props) {

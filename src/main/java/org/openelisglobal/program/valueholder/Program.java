@@ -20,6 +20,7 @@ import jakarta.validation.constraints.Pattern;
 import java.util.UUID;
 import org.openelisglobal.common.validator.ValidationHelper;
 import org.openelisglobal.common.valueholder.BaseObject;
+import org.openelisglobal.localization.valueholder.Localization;
 import org.openelisglobal.test.valueholder.TestSection;
 
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, setterVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, creatorVisibility = Visibility.NONE)
@@ -36,6 +37,14 @@ public class Program extends BaseObject<String> {
     @JsonProperty("programName")
     @Pattern(regexp = "(?i)^[a-z0-9-_ ]*$")
     private String programName;
+
+    @JsonProperty("active")
+    private Boolean active;
+
+    @JsonProperty("sortOrder")
+    private Integer sortOrder;
+
+    private Localization localization;
 
     @JsonProperty("questionnaireUUID")
     private UUID questionnaireUUID;
@@ -79,12 +88,36 @@ public class Program extends BaseObject<String> {
         return questionnaireUUID;
     }
 
+    public Boolean getActive() {
+        return active;
+    }
+
+    public void setActive(Boolean active) {
+        this.active = active;
+    }
+
+    public Integer getSortOrder() {
+        return sortOrder;
+    }
+
+    public void setSortOrder(Integer sortOrder) {
+        this.sortOrder = sortOrder;
+    }
+
     public void setQuestionnaireUUID(UUID questionnaireUUID) {
         this.questionnaireUUID = questionnaireUUID;
     }
 
     public TestSection getTestSection() {
         return testSection;
+    }
+
+    public Localization getLocalization() {
+        return localization;
+    }
+
+    public void setLocalization(Localization localization) {
+        this.localization = localization;
     }
 
     public void setTestSection(TestSection testSection) {
@@ -97,5 +130,16 @@ public class Program extends BaseObject<String> {
 
     public void setManuallyChanged(Boolean manuallyChanged) {
         this.manuallyChanged = manuallyChanged;
+    }
+
+    @Override
+    protected String getDefaultLocalizedName() {
+        if (localization != null) {
+            String localizedValue = localization.getLocalizedValue();
+            if (localizedValue != null && !localizedValue.isEmpty()) {
+                return localizedValue;
+            }
+        }
+        return programName;
     }
 }

@@ -1,27 +1,25 @@
-import React, { useContext, useEffect, useRef, useState } from "react";
 import {
   Checkbox,
+  Column,
+  Grid,
   Link,
   Select,
   SelectItem,
   Stack,
   TextInput,
   TimePicker,
-  Column,
-  Grid,
 } from "@carbon/react";
-import CustomLabNumberInput from "../common/CustomLabNumberInput";
-import CustomDatePicker from "../common/CustomDatePicker";
-import { getFromOpenElisServer } from "../utils/Utils";
-import { NotificationContext } from "../layout/Layout";
-import { priorities } from "../data/orderOptions";
-import { NotificationKinds } from "../common/CustomNotification";
-import AutoComplete from "../common/AutoComplete";
-import OrderResultReporting from "./OrderResultReporting";
+import { useContext, useEffect, useRef, useState } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
-import { ConfigurationContext } from "../layout/Layout";
-import CustomTextInput from "../common/CustomTextInput";
+import AutoComplete from "../common/AutoComplete";
+import CustomDatePicker from "../common/CustomDatePicker";
+import CustomLabNumberInput from "../common/CustomLabNumberInput";
+import { NotificationKinds } from "../common/CustomNotification";
 import { CustomSelect, CustomSelectItem } from "../common/CustomSelectWithIcon";
+import CustomTextInput from "../common/CustomTextInput";
+import { priorities } from "../data/orderOptions";
+import { ConfigurationContext, NotificationContext } from "../layout/Layout";
+import { getFromOpenElisServer } from "../utils/Utils";
 const AddOrder = (props) => {
   const { setNotificationVisible, addNotification } =
     useContext(NotificationContext);
@@ -771,6 +769,69 @@ const AddOrder = (props) => {
                 id="requesterFirstName"
               />
             </Column>
+
+            <Column lg={8} md={4} sm={4}>
+              <TextInput
+                name="requesterLastName"
+                placeholder={intl.formatMessage({
+                  id: "input.placeholder.requesterLastName",
+                })}
+                labelText={
+                  <>
+                    <FormattedMessage id="order.requester.lastName.label" />
+                    <span className="requiredlabel">*</span>
+                  </>
+                }
+                disabled={
+                  configurationProperties.restrictFreeTextProviderEntry ===
+                  "true"
+                }
+                value={orderFormValues.sampleOrderItems.providerLastName}
+                onClick={() =>
+                  handleChange("sampleOrderItems.providerLastName")
+                }
+                onChange={handleRequesterLastName}
+                id="requesterLastName"
+                invalid={
+                  changed["sampleOrderItems.providerLastName"] &&
+                  error("sampleOrderItems.providerLastName")
+                    ? true
+                    : false
+                }
+                invalidText={error("sampleOrderItems.providerLastName")}
+              />
+            </Column>
+            <Column lg={8} md={4} sm={4}>
+              <TextInput
+                name="requesterFirstName"
+                placeholder={intl.formatMessage({
+                  id: "input.placeholder.requesterFirstName",
+                })}
+                labelText={
+                  <>
+                    <FormattedMessage id="order.requester.firstName.label" />
+                    <span className="requiredlabel">*</span>
+                  </>
+                }
+                disabled={
+                  configurationProperties.restrictFreeTextProviderEntry ===
+                  "true"
+                }
+                onChange={handleRequesterFirstName}
+                onClick={() =>
+                  handleChange("sampleOrderItems.providerFirstName")
+                }
+                value={orderFormValues.sampleOrderItems.providerFirstName}
+                invalid={
+                  changed["sampleOrderItems.providerFirstName"] &&
+                  error("sampleOrderItems.providerFirstName")
+                    ? true
+                    : false
+                }
+                invalidText={error("sampleOrderItems.providerFirstName")}
+                id="requesterFirstName"
+              />
+            </Column>
             <Column lg={16} md={8} sm={3}>
               {" "}
               &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;{" "}
@@ -947,7 +1008,7 @@ const AddOrder = (props) => {
               );
             }
           })}
-        </div>*/}
+        </div> */}
       </Stack>
     </>
   );

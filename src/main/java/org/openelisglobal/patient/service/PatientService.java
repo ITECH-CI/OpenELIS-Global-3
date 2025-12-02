@@ -9,6 +9,7 @@ import org.openelisglobal.patient.valueholder.Patient;
 import org.openelisglobal.patientidentity.valueholder.PatientIdentity;
 import org.openelisglobal.person.valueholder.Person;
 
+
 public interface PatientService extends BaseObjectService<Patient, String> {
 
     void getData(Patient patient);
@@ -110,4 +111,5 @@ public interface PatientService extends BaseObjectService<Patient, String> {
     List<Patient> getAllMissingFhirUuid();
 
     Patient getByExternalId(String idPart);
+
 }

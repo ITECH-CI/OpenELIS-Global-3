@@ -1,29 +1,29 @@
-import React, { useContext, useEffect, useRef, useState } from "react";
 import {
   Checkbox,
+  Column,
   FormGroup,
   Layer,
+  Loading,
   Search,
   Select,
   SelectItem,
   Tag,
-  Tile,
-  Loading,
-  Column,
   TextInput,
+  Tile
 } from "@carbon/react";
-import CustomCheckBox from "../common/CustomCheckBox";
-import CustomSelect from "../common/CustomSelect";
-import CustomDatePicker from "../common/CustomDatePicker";
-import CustomTimePicker from "../common/CustomTimePicker";
-import { NotificationKinds } from "../common/CustomNotification";
+import { useContext, useEffect, useRef, useState } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
-import { getFromOpenElisServer } from "../utils/Utils";
-import { NotificationContext, ConfigurationContext } from "../layout/Layout";
-import { sampleTypeTestsStructure } from "../data/SampleEntryTestsForTypeProvider";
-import CustomTextInput from "../common/CustomTextInput";
-import OrderReferralRequest from "../addOrder/OrderReferralRequest";
 import UserSessionDetailsContext from "../../UserSessionDetailsContext";
+import OrderReferralRequest from "../addOrder/OrderReferralRequest";
+import CustomCheckBox from "../common/CustomCheckBox";
+import CustomDatePicker from "../common/CustomDatePicker";
+import { NotificationKinds } from "../common/CustomNotification";
+import CustomSelect from "../common/CustomSelect";
+import CustomTextInput from "../common/CustomTextInput";
+import CustomTimePicker from "../common/CustomTimePicker";
+import { sampleTypeTestsStructure } from "../data/SampleEntryTestsForTypeProvider";
+import { ConfigurationContext, NotificationContext } from "../layout/Layout";
+import { getFromOpenElisServer } from "../utils/Utils";
 
 const SampleType = (props) => {
   const { userSessionDetails } = useContext(UserSessionDetailsContext);
@@ -65,6 +65,7 @@ const SampleType = (props) => {
   const [selectedPanels, setSelectedPanels] = useState([]);
   const [panelSearchTerm, setPanelSearchTerm] = useState("");
   const [searchBoxPanels, setSearchBoxPanels] = useState([]);
+  const [uomList, setUomList] = useState([]);
   const [sampleXml, setSampleXml] = useState(
     sample?.sampleXML != null
       ? sample.sampleXML
@@ -74,6 +75,8 @@ const SampleType = (props) => {
               ? configurationProperties.currentDateAsText
               : "",
           collector: "",
+          quantity: "",
+          uom: "",
           rejected: false,
           rejectionReason: "",
           collectionTime:
@@ -143,6 +146,20 @@ const SampleType = (props) => {
     setSampleXml({
       ...sampleXml,
       collector: value,
+    });
+  }
+
+  function handleQuantity(value) {
+    setSampleXml({
+      ...sampleXml,
+      quantity: value.target.value,
+    });
+  }
+
+  function handleUom(value) {
+    setSampleXml({
+      ...sampleXml,
+      uom: value,
     });
   }
 
@@ -557,6 +574,16 @@ const SampleType = (props) => {
   }, [tbData.selectedTbMethod]);
 
   useEffect(() => {
+    getFromOpenElisServer(`/rest/UomCreate`, fetchUomCreate);
+  }, []);
+
+  const fetchUomCreate = (res) => {
+    if (componentMounted.current) {
+      setUomList(res.existingUomList || []);
+    }
+  };
+
+useEffect(() => {
     componentMounted.current = true;
     if (selectedTbSampleMethod.id !== "" && selectedTbSampleMethod.id != null) {
       if (isTb) {
@@ -688,7 +715,31 @@ const SampleType = (props) => {
             onChange={(e) => handleReasons(e)}
           />
         )}
+        <div className="inlineDiv" style={{ display: "flex", gap: "1rem" }}>
+          <TextInput
+            value={sampleXml.quantity}
+            name="quantity"
+            labelText={intl.formatMessage({
+              id: "sample.quantity.label",
+            })}
+            id="quantity"
+            type="number"
+            min="0"
+            onChange={(value) => handleQuantity(value)}
+            placeholder={intl.formatMessage({
+              id: "sample.quantity.label",
+            })}
+          />
 
+          <CustomSelect
+            id={"uomId_" + index}
+            labelText={intl.formatMessage({ id: "sample.uom.label" })}
+            options={uomList}
+            disabled={false}
+            value={sampleXml.uom}
+            onChange={(value) => handleUom(value)}
+          />
+        </div>
         <div className="inlineDiv">
           <CustomDatePicker
             id={"collectionDate_" + index}

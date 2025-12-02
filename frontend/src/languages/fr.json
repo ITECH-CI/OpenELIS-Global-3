@@ -1487,4 +1487,14 @@
   "banner.menu.resultvalidation.tb": "Tuberculose",
   "banner.menu.microbiology": "Microbiologie",
   "banner.menu.microbiology_classic": "Bactériologie Classique"
+  "dictionary.program.bacteriology": "Bactériologie Classique",
+  "program.ROUTINE.name": "Analyses de routine",
+  "program.HIV_INIT.name": "Programme VIH - Bilan initial",
+  "program.HIV_FOLLOW.name": "Programme VIH - Bilan de suivi",
+  "program.CYTO.name": "Cytologie",
+  "program.IHC.name": "Immunohistochimie",
+  "program.PATH.name": "Anatomopathologie",
+  "program.RTN_BACTER.name": "Bactériologie Classique",
+  "label.select.option": "Sélectionner une option",
+  "program.TB.name": "Tuberculose"
 }
