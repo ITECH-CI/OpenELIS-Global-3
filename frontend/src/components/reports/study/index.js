@@ -78,6 +78,13 @@ export const StudyReports = (props) => {
         />
       )}
 
+      {type === "patient" && report === "TBPatientReport" && (
+        <PatientStatusReport
+          report="TBPatientReport"
+          id="banner.menu.resultvalidation.tb"
+        />
+      )}
+
       {type === "patient" && report === "patientIndeterminate1" && (
         <ReportByLabNo
           report="patientIndeterminate1"
