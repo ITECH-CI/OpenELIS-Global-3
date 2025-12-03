@@ -34,20 +34,4 @@
 			<column name="french" value="Tuberculose" />
 		</insert>
 	</changeSet>
-
-	<changeSet author="CIV Developer - Pk"
-		id="update-tb-program-2025-11-28">
-		<comment>Update TB Program entry </comment>
-		<update schemaName="clinlims" tableName="program"
-			where="code = 'TB'">
-			<column name="sort_order" valueNumeric="50" />
-			<column name="is_active" valueBoolean="true" />
-			<column name="manually_changed" valueBoolean="true" />
-			<column name="lastupdated" valueDate="now()" />
-			<column name="name_localization_id"
-				valueComputed="(select id from localization where english = 'Tuberculosis' and description = 'Tuberculosis analysis' limit 1)" />
-			<column name="display_key" value="program.TB.name" />
-		</update>
-	</changeSet>
-
 </databaseChangeLog>
