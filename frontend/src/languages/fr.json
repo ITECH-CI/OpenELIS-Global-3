@@ -1482,6 +1482,11 @@
   "tb.aspect": "Aspect de l'Échantillon TB",
   "tb.specimen.nature": "Nature du Spécimen TB",
   "label.select.option": "Sélectionner une option",
+  "banner.menu.microbiology_tb": "Tuberculose",
+  "sample.tb.followup.period": " Lignes",
+  "banner.menu.resultvalidation.tb": "Tuberculose",
+  "banner.menu.microbiology": "Microbiologie",
+  "banner.menu.microbiology_classic": "Bactériologie Classique"
   "dictionary.program.bacteriology": "Bactériologie Classique",
   "program.ROUTINE.name": "Analyses de routine",
   "program.HIV_INIT.name": "Programme VIH - Bilan initial",

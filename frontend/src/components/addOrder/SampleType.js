@@ -87,6 +87,7 @@ const SampleType = (props) => {
   );
   const [loading, setLoading] = useState(true);
   const [tbReason, setTbResaon] = useState("");
+  const [tbOrderReasons, setTbOrderReasons] = useState([]);
   const [reasons, setReasons] = useState([]);
   const [tbDiagnosticMethods, setTbDiagnosticMethods] = useState([]);
   const [tbSampleAspect, setTbSampleAspect] = useState([]);
@@ -104,20 +105,17 @@ const SampleType = (props) => {
     tbSubjectNumber: "",
     selectedTbMethod: "",
   });
+  const [tbReasonDiagnostic, setTbReasonDiagnostic] = useState("");
+  const [tbReasonFollowUp, setTbReasonFollowUp] = useState("");
 
-  const TbReason = [
-    {
-      value: "diagnostic",
-      label: "Diagnostic",
-    },
-    {
-      value: "follow-up",
-      label: "Suivi",
-    },
-  ];
-  const MicroscopieTB = "1408";
-  const followupLine1 = "1405";
-  const followupLine2 = "1406";
+  const [tbFollowUpLine1, setTbFollowUpLine1] = useState("");
+  const [tbFollowUpLine2, setTbFollowUpLine2] = useState("");
+
+  var MicroscopieTB = "1368";
+  var followupLine1 = "1405";
+  var followupLine2 = "1406";
+
+  // const item = data.find(item => item.value === "Diagnostic");
 
   function handleCollectionDate(date) {
     setSampleXml({
@@ -407,6 +405,18 @@ const SampleType = (props) => {
     }
   };
 
+  const displayTbOrderResonOptions = (res) => {
+    if (res) {
+      setTbReasonDiagnostic(
+        res.find((item) => item.value === "Diagnostic")?.id ?? null,
+      );
+      setTbReasonFollowUp(
+        res.find((item) => item.value === "Follow up")?.id ?? null,
+      );
+      setTbOrderReasons(res);
+    }
+  };
+
   function handleRejection(checked) {
     if (checked) {
       addNotification({
@@ -478,16 +488,21 @@ const SampleType = (props) => {
 
   function handleFollowupreason(e) {
     const value = e.target.value;
+    const selectedOption = e.target.options[e.target.selectedIndex];
+    const label =
+      selectedOption.text === "Examen de suivi 1ère ligne (TB Sensible)"
+        ? followupLine1
+        : followupLine2;
     setFollowupReason(value);
     getFromOpenElisServer(
-      `/rest/Dictionary-by-ByCategory?category=${encodeURIComponent(value)}`,
+      `/rest/Dictionary-by-ByCategory?category=${encodeURIComponent(label)}`,
       displayTbFollowupLinesOptions,
     );
   }
 
   useEffect(() => {
     const category =
-      tbReason === "diagnostic"
+      tbData.tbDiagnosticReason === tbReasonDiagnostic
         ? "TB Diagnostic Reasons"
         : "TB Followup Reasons";
 
@@ -495,11 +510,22 @@ const SampleType = (props) => {
       `/rest/Dictionary-by-ByCategory?category=${encodeURIComponent(category)}`,
       fetTbReasons,
     );
-  }, [tbReason]);
+  }, [tbData.tbDiagnosticReason]);
 
   function fetTbReasons(res) {
     if (res) {
       setReasons(res);
+      setTbFollowUpLine1(
+        res.find(
+          (item) => item.value === "Examen de suivi 1ère ligne (TB Sensible)",
+        )?.id ?? null,
+      );
+      setTbFollowUpLine2(
+        res.find(
+          (item) =>
+            item.value === "Examen de suivi 2ième ligne (TB/RR ; TBXDR)",
+        )?.id ?? null,
+      );
     }
   }
 
@@ -523,13 +549,13 @@ const SampleType = (props) => {
 
   useEffect(() => {
     componentMounted.current = true;
-    if (selectedSampleType.id !== "" && selectedSampleType.id != null) {
+    if (tbData.selectedTbMethod !== "" && tbData.selectedTbMethod != null) {
       if (isTb) {
         getFromOpenElisServer(
-          `/MicrobiologyTb/panel_test?method=${selectedSampleType.id}`,
+          `/MicrobiologyTb/panel_test?method=${tbData.selectedTbMethod}`,
           fetchSampleTypeTests,
         );
-        if (selectedSampleType.id === MicroscopieTB) {
+        if (tbData.selectedTbMethod === MicroscopieTB) {
           getFromOpenElisServer(
             `/rest/Dictionary-by-ByCategory?category=TB Sample Aspects`,
             fetchTbSampleAspects,
@@ -537,7 +563,7 @@ const SampleType = (props) => {
         }
       } else {
         getFromOpenElisServer(
-          `/rest/sample-type-tests?sampleType=${selectedSampleType.id}`,
+          `/rest/sample-type-tests?sampleType=${tbData.selectedTbMethod}`,
           fetchSampleTypeTests,
         );
       }
@@ -545,7 +571,7 @@ const SampleType = (props) => {
     return () => {
       componentMounted.current = false;
     };
-  }, [selectedSampleType.id]);
+  }, [tbData.selectedTbMethod]);
 
   useEffect(() => {
     getFromOpenElisServer(`/rest/UomCreate`, fetchUomCreate);
@@ -639,6 +665,10 @@ useEffect(() => {
     getFromOpenElisServer(
       "/rest/Dictionary-by-ByCategory?category=TB Analysis Methods",
       displayTbAnalysisMethodOptions,
+    );
+    getFromOpenElisServer(
+      "/rest/Dictionary-by-ByCategory?category=TB Order Reasons",
+      displayTbOrderResonOptions,
     );
     repopulateUI();
     getFromOpenElisServer("/rest/user-sample-types", fetchSamplesTypes);
@@ -756,18 +786,18 @@ useEffect(() => {
                 labelText={<FormattedMessage id="sample.tb.examen.reason" />}
               >
                 <SelectItem value="" text="" />
-                {TbReason.map((option) => {
+                {tbOrderReasons.map((option) => {
                   return (
                     <SelectItem
-                      key={option.value}
-                      value={option.value}
-                      text={option.label}
+                      key={option.id}
+                      value={option.id}
+                      text={option.value}
                     />
                   );
                 })}
               </Select>
             </Column>
-            {tbData.tbDiagnosticReason === "follow-up" && (
+            {tbData.tbDiagnosticReason === tbReasonFollowUp && (
               <>
                 <Column lg={8} md={4} sm={4}>
                   <TextInput
@@ -804,7 +834,7 @@ useEffect(() => {
                       );
                     })}
                   </Select>
-                  {followupReason === followupLine1 && (
+                  {tbData.tbFollowupReason === tbFollowUpLine1 && (
                     <Select
                       id="testLocationCodeId"
                       name="testLocationCode"
@@ -828,7 +858,7 @@ useEffect(() => {
                       })}
                     </Select>
                   )}
-                  {followupReason === followupLine2 && (
+                  {tbData.tbFollowupReason === tbFollowUpLine2 && (
                     <div className="inlineDiv">
                       <Select
                         id="testLocationCodeId"
@@ -852,7 +882,7 @@ useEffect(() => {
                           );
                         })}
                       </Select>
-                      {selectedSampleType.id === MicroscopieTB && (
+                      {selectedTbSampleMethod.id === MicroscopieTB && (
                         <Column lg={8} md={4} sm={4}>
                           <Select
                             id={"tbAspect_" + index}
@@ -883,7 +913,7 @@ useEffect(() => {
                 </Column>
               </>
             )}
-            {tbData.tbDiagnosticReason === "diagnostic" && (
+            {tbData.tbDiagnosticReason === tbReasonDiagnostic && (
               <Column lg={8} md={4} sm={4}>
                 <Select
                   id={"tbDiagnosticReason_" + index}

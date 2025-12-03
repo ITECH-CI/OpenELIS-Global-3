@@ -857,4 +857,47 @@ public class ReportForm extends BaseForm {
         this.codedConclusions = codedConclusions;
     }
 
+    /**
+     * Method to display all properties of the ReportForm Useful for debugging and
+     * logging purposes
+     *
+     * @return String representation of all form properties
+     */
+    @Override
+    public String toString() {
+        return "ReportForm{" + "type='" + type + '\'' + ", reportName='" + reportName + '\'' + ", report='" + report
+                + '\'' + ", noRequestSpecifications=" + noRequestSpecifications + ", useAccessionDirect="
+                + useAccessionDirect + ", accessionDirect='" + accessionDirect + '\'' + ", useHighAccessionDirect="
+                + useHighAccessionDirect + ", highAccessionDirect='" + highAccessionDirect + '\''
+                + ", usePatientNumberDirect=" + usePatientNumberDirect + ", patientNumberDirect='" + patientNumberDirect
+                + '\'' + ", useUpperPatientNumberDirect=" + useUpperPatientNumberDirect + ", patientUpperNumberDirect='"
+                + patientUpperNumberDirect + '\'' + ", useLowerDateRange=" + useLowerDateRange + ", lowerDateRange='"
+                + lowerDateRange + '\'' + ", useUpperDateRange=" + useUpperDateRange + ", upperDateRange='"
+                + upperDateRange + '\'' + ", useLocationCode=" + useLocationCode + ", locationCode='" + locationCode
+                + '\'' + ", useProjectCode=" + useProjectCode + ", useDashboard=" + useDashboard
+                + ", useExportDateType=" + useExportDateType + ", projectCode='" + projectCode + '\''
+                + ", vlStudyType='" + vlStudyType + '\'' + ", usePredefinedDateRanges=" + usePredefinedDateRanges
+                + ", datePeriod='" + datePeriod + '\'' + ", lowerMonth='" + lowerMonth + '\'' + ", lowerYear='"
+                + lowerYear + '\'' + ", upperMonth='" + upperMonth + '\'' + ", upperYear='" + upperYear + '\''
+                + ", instructions='" + instructions + '\'' + ", experimentId=" + experimentId + ", usePatientSearch="
+                + usePatientSearch + ", selPatient='" + selPatient + '\'' + ", useSiteSearch=" + useSiteSearch
+                + ", useArvOrganizationSearch=" + useArvOrganizationSearch + ", referringSiteId='" + referringSiteId
+                + '\'' + ", arvSiteId='" + arvSiteId + '\'' + ", referringSiteDepartmentId='"
+                + referringSiteDepartmentId + '\'' + ", onlyResults=" + onlyResults + ", dateType=" + dateType
+                + ", useStatisticsParams=" + useStatisticsParams + ", programSampleId='" + programSampleId + '\''
+                + ", erPercent='" + erPercent + '\'' + ", erIntensity='" + erIntensity + '\'' + ", erScore='" + erScore
+                + '\'' + ", prPercent='" + prPercent + '\'' + ", prIntensity='" + prIntensity + '\'' + ", prScore='"
+                + prScore + '\'' + ", mib='" + mib + '\'' + ", pattern='" + pattern + '\'' + ", herAssesment='"
+                + herAssesment + '\'' + ", herScore='" + herScore + '\'' + ", diagnosis='" + diagnosis + '\''
+                + ", molecularSubType='" + molecularSubType + '\'' + ", conclusion='" + conclusion + '\''
+                + ", ihcScore='" + ihcScore + '\'' + ", ihcRatio='" + ihcRatio + '\'' + ", averageChrom='"
+                + averageChrom + '\'' + ", averageHer2='" + averageHer2 + '\'' + ", numberOfcancerNuclei='"
+                + numberOfcancerNuclei + '\'' + ", analysisIds="
+                + (analysisIds != null ? analysisIds.size() + " items" : "null") + ", labSections="
+                + (labSections != null ? labSections.size() + " items" : "null") + ", priority="
+                + (priority != null ? priority.size() + " items" : "null") + ", receptionTime="
+                + (receptionTime != null ? receptionTime.size() + " items" : "null") + ", codedConclusions="
+                + (codedConclusions != null ? codedConclusions.size() + " items" : "null") + '}';
+    }
+
 }

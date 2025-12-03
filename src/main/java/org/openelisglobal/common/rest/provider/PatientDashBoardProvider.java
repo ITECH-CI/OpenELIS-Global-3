@@ -84,12 +84,15 @@ public class PatientDashBoardProvider {
 
         List<Long> hours = new ArrayList<>();
         analyses.forEach(analysis -> {
-            // Convert java.sql.Date to java.time.LocalDate
-            LocalDate localStartDate = analysis.getStartedDate().toLocalDate();
-            LocalDate localEndDate = analysis.getReleasedDate().toLocalDate();
-            // Calculate time difference in hours
-            Long hoursDiff = Duration.between(localStartDate.atStartOfDay(), localEndDate.atStartOfDay()).toHours();
-            hours.add(hoursDiff);
+            // Check for null dates before converting
+            if (analysis.getStartedDate() != null && analysis.getReleasedDate() != null) {
+                // Convert java.sql.Date to java.time.LocalDate
+                LocalDate localStartDate = analysis.getStartedDate().toLocalDate();
+                LocalDate localEndDate = analysis.getReleasedDate().toLocalDate();
+                // Calculate time difference in hours
+                Long hoursDiff = Duration.between(localStartDate.atStartOfDay(), localEndDate.atStartOfDay()).toHours();
+                hours.add(hoursDiff);
+            }
         });
 
         long sum = 0;
@@ -109,12 +112,15 @@ public class PatientDashBoardProvider {
 
         List<Long> hours = new ArrayList<>();
         analyses.forEach(analysis -> {
-            // Convert java.sql.Date to java.time.LocalDate
-            LocalDate localStartDate = analysis.getStartedDate().toLocalDate();
-            LocalDate localEndDate = analysis.getCompletedDate().toLocalDate();
-            // Calculate time difference in hours
-            Long hoursDiff = Duration.between(localStartDate.atStartOfDay(), localEndDate.atStartOfDay()).toHours();
-            hours.add(hoursDiff);
+            // Check for null dates before converting
+            if (analysis.getStartedDate() != null && analysis.getCompletedDate() != null) {
+                // Convert java.sql.Date to java.time.LocalDate
+                LocalDate localStartDate = analysis.getStartedDate().toLocalDate();
+                LocalDate localEndDate = analysis.getCompletedDate().toLocalDate();
+                // Calculate time difference in hours
+                Long hoursDiff = Duration.between(localStartDate.atStartOfDay(), localEndDate.atStartOfDay()).toHours();
+                hours.add(hoursDiff);
+            }
         });
 
         long sum = 0;
@@ -132,12 +138,15 @@ public class PatientDashBoardProvider {
 
         List<Long> hours = new ArrayList<>();
         analyses.forEach(analysis -> {
-            // Convert java.sql.Date to java.time.LocalDate
-            LocalDate localStartDate = analysis.getCompletedDate().toLocalDate();
-            LocalDate localEndDate = analysis.getReleasedDate().toLocalDate();
-            // Calculate time difference in hours
-            Long hoursDiff = Duration.between(localStartDate.atStartOfDay(), localEndDate.atStartOfDay()).toHours();
-            hours.add(hoursDiff);
+            // Check for null dates before converting
+            if (analysis.getCompletedDate() != null && analysis.getReleasedDate() != null) {
+                // Convert java.sql.Date to java.time.LocalDate
+                LocalDate localStartDate = analysis.getCompletedDate().toLocalDate();
+                LocalDate localEndDate = analysis.getReleasedDate().toLocalDate();
+                // Calculate time difference in hours
+                Long hoursDiff = Duration.between(localStartDate.atStartOfDay(), localEndDate.atStartOfDay()).toHours();
+                hours.add(hoursDiff);
+            }
         });
 
         long sum = 0;
@@ -155,13 +164,16 @@ public class PatientDashBoardProvider {
 
         List<Analysis> delayedAnalyses = new ArrayList<>();
         analyses.forEach(analysis -> {
-            // Convert java.sql.Date to java.time.LocalDate
-            LocalDate localStartDate = analysis.getStartedDate().toLocalDate();
-            LocalDate localEndDate = analysis.getReleasedDate().toLocalDate();
-            // Calculate time difference in hours
-            Long hoursDiff = Duration.between(localStartDate.atStartOfDay(), localEndDate.atStartOfDay()).toHours();
-            if (hoursDiff > 96) {
-                delayedAnalyses.add(analysis);
+            // Check for null dates before converting
+            if (analysis.getStartedDate() != null && analysis.getReleasedDate() != null) {
+                // Convert java.sql.Date to java.time.LocalDate
+                LocalDate localStartDate = analysis.getStartedDate().toLocalDate();
+                LocalDate localEndDate = analysis.getReleasedDate().toLocalDate();
+                // Calculate time difference in hours
+                Long hoursDiff = Duration.between(localStartDate.atStartOfDay(), localEndDate.atStartOfDay()).toHours();
+                if (hoursDiff > 96) {
+                    delayedAnalyses.add(analysis);
+                }
             }
         });
         return delayedAnalyses;

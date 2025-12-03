@@ -112,8 +112,11 @@ public class TBPatientReport extends PatientReport implements IReportCreator, IR
                 if (analysis.getTest() != null) {
                     currentAnalysis = analysis;
                     ClinicalPatientData resultsData = buildClinicalPatientData(hasParentResult);
-                    Organization referringOrg = sampleOrganizationService.getDataBySample(currentSample)
-                            .getOrganization();
+                    Organization referringOrg = null;
+                    var sampleOrganization = sampleOrganizationService.getDataBySample(currentSample);
+                    if (sampleOrganization != null) {
+                        referringOrg = sampleOrganization.getOrganization();
+                    }
                     currentSiteInfo = referringOrg == null ? "" : referringOrg.getOrganizationName();
                     resultsData.setSiteInfo(currentSiteInfo);
                     if (isConfirmationSample) {
