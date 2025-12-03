@@ -1,13 +1,18 @@
-import React, { useEffect, useRef, useState } from "react";
-import { Button, Stack, Grid, Column } from "@carbon/react";
-import SearchPatientForm from "../patient/SearchPatientForm";
-import CreatePatientForm from "../patient/CreatePatientForm";
+import { Button, Column, Grid, Stack } from "@carbon/react";
+import { useEffect, useRef, useState } from "react";
 import { FormattedMessage } from "react-intl";
+import CreatePatientForm from "../patient/CreatePatientForm";
+import SearchPatientForm from "../patient/SearchPatientForm";
 import { getFromOpenElisServer } from "../utils/Utils";
 
 const PatientInfo = (props) => {
-  const { orderFormValues, setOrderFormValues, error, setPhoneValidation } =
+  const { orderFormValues, setOrderFormValues, error, setPhoneValidation, isBacterio } =
     props;
+  const bacterioSelected =
+    typeof isBacterio === "boolean"
+      ? isBacterio
+      : orderFormValues?.sampleOrderItems?.programCode ===
+        BACTERIOLOGY_PROGRAM_CODE;
   const componentMounted = useRef(false);
   const [searchPatientTab, setSearchPatientTab] = useState({
     kind: "primary",
@@ -29,6 +34,10 @@ const PatientInfo = (props) => {
         ...orderFormValues,
         patientUpdateStatus: "UPDATE",
         patientProperties: patient,
+        patientRoutineBacterioInfo:
+          orderFormValues.patientRoutineBacterioInfo ||
+          orderFormValues?.patientRoutineBacterioInfo ||
+          {},
       });
     }
     handleNewPatientTab();
@@ -124,6 +133,7 @@ const PatientInfo = (props) => {
                   setOrderFormValues={setOrderFormValues}
                   error={error}
                   setPhoneValidation={setPhoneValidation}
+                  showBacterioFields={bacterioSelected}
                 />
               )}
             </Column>

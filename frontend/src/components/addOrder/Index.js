@@ -1,19 +1,19 @@
-import React, { useContext, useEffect, useState } from "react";
 import { Button, ProgressIndicator, ProgressStep, Stack } from "@carbon/react";
-import PatientInfo from "./PatientInfo";
-import AddSample from "./AddSample";
-import AddOrder from "./AddOrder";
-import "./add-order.scss";
-import { SampleOrderFormValues } from "../formModel/innitialValues/OrderEntryFormValues";
-import { NotificationContext, ConfigurationContext } from "../layout/Layout";
+import { useContext, useEffect, useState } from "react";
+import { FormattedMessage, useIntl } from "react-intl";
+import config from "../../config.json";
 import { AlertDialog, NotificationKinds } from "../common/CustomNotification";
+import PageBreadCrumb from "../common/PageBreadCrumb";
+import { SampleOrderFormValues } from "../formModel/innitialValues/OrderEntryFormValues";
+import OrderEntryValidationSchema from "../formModel/validationSchema/OrderEntryValidationSchema";
+import { ConfigurationContext, NotificationContext } from "../layout/Layout";
 import { getFromOpenElisServer, postToOpenElisServer } from "../utils/Utils";
+import AddOrder from "./AddOrder";
+import AddSample from "./AddSample";
 import OrderEntryAdditionalQuestions from "./OrderEntryAdditionalQuestions";
 import OrderSuccessMessage from "./OrderSuccessMessage";
-import { FormattedMessage, useIntl } from "react-intl";
-import OrderEntryValidationSchema from "../formModel/validationSchema/OrderEntryValidationSchema";
-import config from "../../config.json";
-import PageBreadCrumb from "../common/PageBreadCrumb";
+import PatientInfo from "./PatientInfo";
+import "./add-order.scss";
 let breadcrumbs = [
   { label: "home.label", link: "/" },
   { label: "sidenav.label.addorder", link: "/SamplePatientEntry" },
@@ -40,7 +40,8 @@ const Index = () => {
   const samplePageNumber = firstPageNumber + 2;
   const patientInfoPageNumber = firstPageNumber + 3;
   const successMsgPageNumber = lastPageNumber;
-  const TB_PROGRAM_ID = "9999";
+  const BACTERIOLOGY_PROGRAM_CODE = "RTN_BACTER";
+  const TB_PROGRAM_CODE = "TB";
   const [changed, setChanged] = useState({
     "sampleOrderItems.providerFirstName": false,
     "sampleOrderItems.providerLastName": false,
@@ -591,6 +592,10 @@ const Index = () => {
     if ("questionnaire" in orderFormValues.sampleOrderItems) {
       delete orderFormValues.sampleOrderItems.questionnaire;
     }
+    // programCode is used client-side only; do not submit to backend
+    if ("programCode" in orderFormValues.sampleOrderItems) {
+      delete orderFormValues.sampleOrderItems.programCode;
+    }
     //remove display Lists rom the form
     orderFormValues.sampleOrderItems.priorityList = [];
     orderFormValues.sampleOrderItems.programList = [];
@@ -651,6 +656,7 @@ const Index = () => {
         let tests = null;
         let panels = "";
         samples.map((sampleItem) => {
+
           if (sampleItem.tests.length > 0) {
             tests = Object.keys(sampleItem.tests)
               .map(function (i) {
@@ -779,6 +785,9 @@ const Index = () => {
                 setOrderFormValues={setOrderFormValues}
                 error={elementError}
                 setPhoneValidation={setPhoneValidation}
+                isBacterio={
+                  orderFormValues.sampleOrderItems.programCode ===
+                  BACTERIOLOGY_PROGRAM_CODE                }
               />
             )}
             {page === programPageNumber && (
@@ -793,7 +802,11 @@ const Index = () => {
                 setSamples={setSamples}
                 samples={samples}
                 isTb={
-                  orderFormValues.sampleOrderItems.programId === TB_PROGRAM_ID
+                  orderFormValues.sampleOrderItems.programCode === TB_PROGRAM_CODE
+                }
+                isBacterio={
+                  orderFormValues.sampleOrderItems.programCode ===
+                  BACTERIOLOGY_PROGRAM_CODE
                 }
               />
             )}
@@ -806,6 +819,10 @@ const Index = () => {
                 isModifyOrder={false}
                 changed={changed}
                 setChanged={setChanged}
+                isBacterio={
+                  orderFormValues.sampleOrderItems.programCode ===
+                  BACTERIOLOGY_PROGRAM_CODE
+                }
               />
             )}
 

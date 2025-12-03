@@ -217,6 +217,9 @@ public class SampleOrderItem implements Serializable {
 
     // for display
     private List<IdValuePair> priorityList;
+    
+    @SafeHtml(level = SafeHtml.SafeListLevel.NONE)
+    private String epidemiologicalWeek;
 
     public List<IdValuePair> getPriorityList() {
         return priorityList;
@@ -595,4 +598,12 @@ public class SampleOrderItem implements Serializable {
     public void setProgramId(String programId) {
         this.programId = programId;
     }
+
+	public String getEpidemiologicalWeek() {
+		return epidemiologicalWeek;
+	}
+
+	public void setEpidemiologicalWeek(String epidemiologicalWeek) {
+		this.epidemiologicalWeek = epidemiologicalWeek;
+	}
 }

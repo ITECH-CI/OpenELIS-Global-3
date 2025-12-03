@@ -13,6 +13,7 @@ import org.openelisglobal.patient.action.IPatientUpdate.PatientUpdateStatus;
 import org.openelisglobal.patient.action.bean.PatientClinicalInfo;
 import org.openelisglobal.patient.action.bean.PatientEnhancedSearch;
 import org.openelisglobal.patient.action.bean.PatientManagementInfo;
+import org.openelisglobal.patient.action.bean.PatientRoutineBacterioInfo;
 import org.openelisglobal.patient.action.bean.PatientSearch;
 import org.openelisglobal.patient.action.bean.PatientTbInfo;
 import org.openelisglobal.project.valueholder.Project;
@@ -77,6 +78,9 @@ public class SamplePatientEntryForm extends BaseForm {
 
     @Valid
     private PatientTbInfo patientTbInfo;
+    
+    @Valid
+    private PatientRoutineBacterioInfo patientRoutineBacterioInfo;
 
     @Valid
     private SampleOrderItem sampleOrderItems;
@@ -309,4 +313,12 @@ public class SamplePatientEntryForm extends BaseForm {
     public void setRememberSiteAndRequester(Boolean rememberSiteAndRequester) {
         this.rememberSiteAndRequester = rememberSiteAndRequester;
     }
+
+	public PatientRoutineBacterioInfo getPatientRoutineBacterioInfo() {
+		return patientRoutineBacterioInfo;
+	}
+
+	public void setPatientRoutineBacterioInfo(PatientRoutineBacterioInfo patientRoutineBacterioInfo) {
+		this.patientRoutineBacterioInfo = patientRoutineBacterioInfo;
+	}
 }

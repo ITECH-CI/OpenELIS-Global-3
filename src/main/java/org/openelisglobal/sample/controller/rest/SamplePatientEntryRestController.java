@@ -39,6 +39,7 @@ import org.openelisglobal.organization.valueholder.Organization;
 import org.openelisglobal.patient.action.IPatientUpdate;
 import org.openelisglobal.patient.action.IPatientUpdate.PatientUpdateStatus;
 import org.openelisglobal.patient.action.bean.PatientManagementInfo;
+import org.openelisglobal.patient.action.bean.PatientRoutineBacterioInfo;
 import org.openelisglobal.patient.action.bean.PatientSearch;
 import org.openelisglobal.provider.service.ProviderService;
 import org.openelisglobal.provider.valueholder.Provider;
@@ -130,7 +131,7 @@ public class SamplePatientEntryRestController extends BaseSampleEntryController 
             "sampleOrderItems.paymentOptionSelection", "sampleOrderItems.billingReferenceNumber",
             "sampleOrderItems.testLocationCode", "sampleOrderItems.otherLocationCode",
             "sampleOrderItems.contactTracingIndexName", "sampleOrderItems.contactTracingIndexRecordNumber",
-            "sampleOrderItems.priority",
+            "sampleOrderItems.priority","sampleOrderItems.epidemiologicalWeek",
             //
             "currentDate", "sampleOrderItems.newRequesterName", "sampleOrderItems.externalOrderNumber",
             // referral
@@ -143,7 +144,16 @@ public class SamplePatientEntryRestController extends BaseSampleEntryController 
             "patientTbInfo.tbOrderReason", "patientTbInfo.tbDiagnosticReason", "patientTbInfo.tbFollowupReason",
             "patientTbInfo.tbFollowupPeriodLine1", "patientTbInfo.tbFollowupPeriodLine2", "patientTbInfo.tbAspect",
             "patientTbInfo.tbSpecimenNature", "patientTbInfo.tbSubjectNumber", "patientTbInfo.selectedTbMethod",
-            "patientTbInfo.selectedMethodToRemove" };
+            "patientTbInfo.selectedMethodToRemove",
+            //Routine Bacteriology
+            "patientRoutineBacteriology.currentHospitalization", "patientRoutineBacteriology.roomNumber",
+            "patientRoutineBacteriology.clinicalInformations", "patientRoutineBacteriology.clinicalInformationOther",
+            "patientRoutineBacteriology.recentAntibiotherapy", "patientRoutineBacteriology.recentAntibiotherapyList",
+            "patientRoutineBacteriology.currentAntibiotherapy", "patientRoutineBacteriology.currentAntibiotherapyList",
+            "patientRoutineBacteriology.currentAntibiotherapyDuration", "patientRoutineBacteriology.recentHospitalization",
+            "patientRoutineBacteriology.recentHospitalizationCount", "patientRoutineBacteriology.recentInvasiveGestures",
+            "patientRoutineBacteriology.indwellingDevice"
+            };
 
     @Autowired
     private SamplePatientEntryFormValidator formValidator;
@@ -245,6 +255,8 @@ public class SamplePatientEntryRestController extends BaseSampleEntryController 
 
         PatientManagementInfo patientInfo = form.getPatientProperties();
         SampleOrderItem sampleOrder = form.getSampleOrderItems();
+        
+        PatientRoutineBacterioInfo patientRoutineBacteriology = form.getPatientRoutineBacterioInfo();
 
         boolean trackPayments = ConfigurationProperties.getInstance()
                 .isPropertyValueEqual(Property.TRACK_PATIENT_PAYMENT, "true");

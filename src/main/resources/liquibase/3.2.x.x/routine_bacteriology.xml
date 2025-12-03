@@ -1,250 +1,873 @@
 <?xml version="1.0" encoding="utf-8"?>
 <databaseChangeLog
-    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
-    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+	xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
 
-    <property name="now" value="now()" dbms="postgresql" />
-    <changeSet author="CIV developer"
-        id="add-routine-bacteriology-test-section">
-        <preConditions onFail="CONTINUE">
-            <sqlCheck expectedResult="0">select count(*) from
-                clinlims.test_section where name = 'Routine Bacteriology';
-            </sqlCheck>
-        </preConditions>
-        <comment>Add routine Bacteriology test_section</comment>
-        <insert schemaName="clinlims" tableName="localization">
-            <column name="id" valueSequenceNext="localization_seq" />
-            <column name="lastupdated" valueComputed="${now}" />
-            <column name="description"
-                value="Routine Bacteriology test section" />
-            <column name="english" value="Routine Bacteriology" />
-            <column name="french" value="Bactériologie Classique" />
-        </insert>
-        <insert tableName="test_section" schemaName="clinlims">
-            <column name="id" valueSequenceNext="test_section_seq" />
-            <column name="name" value="Routine Bacteriology" />
-            <column name="description"
-                value="Routine Bacteriology Department" />
-            <column name="is_external" value="N" />
-            <column name="lastupdated" valueComputed="${now}" />
-            <column name="sort_order" value="80" />
-            <column name="is_active" value="Y" />
-            <column name="name_localization_id"
-                valueComputed="(select id from localization where description = 'Routine Bacteriology test section' and english = 'Routine Bacteriology' limit 1)" />
-            <column name="display_key"
-                value="testsection.RoutineBacteriology" />
-        </insert>
-    </changeSet>
+	<property name="now" value="now()" dbms="postgresql" />
+	<changeSet author="CIV developer"
+		id="add-routine-bacteriology-test-section">
+		<preConditions onFail="CONTINUE">
+			<sqlCheck expectedResult="0">select count(*) from
+				clinlims.test_section where name = 'Routine Bacteriology';
+			</sqlCheck>
+		</preConditions>
+		<comment>Add routine Bacteriology test_section</comment>
+		<insert schemaName="clinlims" tableName="localization">
+			<column name="id" valueSequenceNext="localization_seq" />
+			<column name="lastupdated" valueComputed="${now}" />
+			<column name="description"
+				value="Routine Bacteriology test section" />
+			<column name="english" value="Routine Bacteriology" />
+			<column name="french" value="Bactériologie Classique" />
+		</insert>
+		<insert tableName="test_section" schemaName="clinlims">
+			<column name="id" valueSequenceNext="test_section_seq" />
+			<column name="name" value="Routine Bacteriology" />
+			<column name="description"
+				value="Routine Bacteriology Department" />
+			<column name="is_external" value="N" />
+			<column name="lastupdated" valueComputed="${now}" />
+			<column name="sort_order" value="80" />
+			<column name="is_active" value="Y" />
+			<column name="name_localization_id"
+				valueComputed="(select id from localization where description = 'Routine Bacteriology test section' and english = 'Routine Bacteriology' limit 1)" />
+			<column name="display_key"
+				value="testsection.RoutineBacteriology" />
+		</insert>
+	</changeSet>
 
-    <changeSet author="CIV developer"
-        id="add-programs-for-routine-bacteriology">
-        <preConditions onFail="CONTINUE">
-            <sqlCheck expectedResult="0">select count(*) from
-                clinlims.program where code = 'RTN_BACTER';
-            </sqlCheck>
-        </preConditions>
-        <insert schemaName="clinlims" tableName="program">
-            <column name="id" valueSequenceNext="program_seq" />
-            <column name="lastupdated" valueComputed="${now}" />
-            <column name="code" value="RTN_BACTER" />
-            <column name="name" value="Routine Bacteriology Testing" />
-            <column name="questionnaire_fhir_uuid"
-                value="09e0e980-562d-4dac-9ba3-fc1e66c0ee81" />
-            <column name="test_section_id"
-                valueComputed="(select id from test_section where name = 'Routine Bacteriology' limit 1)" />
-        </insert>
-    </changeSet>
+	<changeSet author="CIV developer"
+		id="add-programs-for-routine-bacteriology">
+		<preConditions onFail="CONTINUE">
+			<sqlCheck expectedResult="0">select count(*) from
+				clinlims.program where code = 'RTN_BACTER';
+			</sqlCheck>
+		</preConditions>
+		<insert schemaName="clinlims" tableName="program">
+			<column name="id" valueSequenceNext="program_seq" />
+			<column name="lastupdated" valueComputed="${now}" />
+			<column name="code" value="RTN_BACTER" />
+			<column name="name" value="Routine Bacteriology Testing" />
+			<column name="questionnaire_fhir_uuid"
+				value="09e0e980-562d-4dac-9ba3-fc1e66c0ee81" />
+			<column name="test_section_id"
+				valueComputed="(select id from test_section where name = 'Routine Bacteriology' limit 1)" />
+		</insert>
+	</changeSet>
 
-    <changeSet author="CIV developer"
-        id="add-program-is-active">
-        <preConditions onFail="MARK_RAN">
-            <tableExists schemaName="clinlims" tableName="program" />
-            <not>
-                <columnExists schemaName="clinlims" tableName="program" columnName="is_active" />
-            </not>
-        </preConditions>
-        <comment>Add is_active flag to program table</comment>
-        <addColumn schemaName="clinlims" tableName="program">
-            <column name="is_active" type="boolean" defaultValueBoolean="true" />
-        </addColumn>
-    </changeSet>
+	<changeSet author="CIV developer" id="add-program-is-active">
+		<preConditions onFail="MARK_RAN">
+			<tableExists schemaName="clinlims" tableName="program" />
+			<not>
+				<columnExists schemaName="clinlims" tableName="program"
+					columnName="is_active" />
+			</not>
+		</preConditions>
+		<comment>Add is_active flag to program table</comment>
+		<addColumn schemaName="clinlims" tableName="program">
+			<column name="is_active" type="boolean"
+				defaultValueBoolean="true" />
+		</addColumn>
+	</changeSet>
 
-    <changeSet author="CIV developer"
-        id="add-program-sort-order">
-        <preConditions onFail="MARK_RAN">
-            <tableExists schemaName="clinlims" tableName="program" />
-            <not>
-                <columnExists schemaName="clinlims" tableName="program" columnName="sort_order" />
-            </not>
-        </preConditions>
-        <comment>Add sort_order to program table</comment>
-        <addColumn schemaName="clinlims" tableName="program">
-            <column name="sort_order" type="integer" defaultValueNumeric="2147483647" />
-        </addColumn>
-    </changeSet>
+	<changeSet author="CIV developer" id="add-program-sort-order">
+		<preConditions onFail="MARK_RAN">
+			<tableExists schemaName="clinlims" tableName="program" />
+			<not>
+				<columnExists schemaName="clinlims" tableName="program"
+					columnName="sort_order" />
+			</not>
+		</preConditions>
+		<comment>Add sort_order to program table</comment>
+		<addColumn schemaName="clinlims" tableName="program">
+			<column name="sort_order" type="integer"
+				defaultValueNumeric="2147483647" />
+		</addColumn>
+	</changeSet>
 
-    <changeSet author="CIV developer"
-        id="add-program-name-localization-id">
-        <preConditions onFail="MARK_RAN">
-            <tableExists schemaName="clinlims" tableName="program" />
-            <not>
-                <columnExists schemaName="clinlims" tableName="program" columnName="name_localization_id" />
-            </not>
-        </preConditions>
-        <comment>Add name_localization_id to program table</comment>
-        <addColumn schemaName="clinlims" tableName="program">
-            <column name="name_localization_id" type="numeric(10,0)" />
-        </addColumn>
-    </changeSet>
+	<changeSet author="CIV developer"
+		id="add-program-name-localization-id">
+		<preConditions onFail="MARK_RAN">
+			<tableExists schemaName="clinlims" tableName="program" />
+			<not>
+				<columnExists schemaName="clinlims" tableName="program"
+					columnName="name_localization_id" />
+			</not>
+		</preConditions>
+		<comment>Add name_localization_id to program table</comment>
+		<addColumn schemaName="clinlims" tableName="program">
+			<column name="name_localization_id" type="numeric(10,0)" />
+		</addColumn>
+	</changeSet>
 
-    <changeSet author="CIV developer"
-        id="add-program-display-key">
-        <preConditions onFail="MARK_RAN">
-            <tableExists schemaName="clinlims" tableName="program" />
-            <not>
-                <columnExists schemaName="clinlims" tableName="program" columnName="display_key" />
-            </not>
-        </preConditions>
-        <comment>Add display_key to program table</comment>
-        <addColumn schemaName="clinlims" tableName="program">
-            <column name="display_key" type="varchar(60)" />
-        </addColumn>
-    </changeSet>
+	<changeSet author="CIV developer"
+		id="add-program-display-key">
+		<preConditions onFail="MARK_RAN">
+			<tableExists schemaName="clinlims" tableName="program" />
+			<not>
+				<columnExists schemaName="clinlims" tableName="program"
+					columnName="display_key" />
+			</not>
+		</preConditions>
+		<comment>Add display_key to program table</comment>
+		<addColumn schemaName="clinlims" tableName="program">
+			<column name="display_key" type="varchar(60)" />
+		</addColumn>
+	</changeSet>
 
-    <changeSet author="CIV developer"
-        id="populate-program-activation-and-sort-order">
-        <preConditions onFail="MARK_RAN">
-            <tableExists schemaName="clinlims" tableName="program" />
-            <columnExists schemaName="clinlims" tableName="program" columnName="is_active" />
-            <columnExists schemaName="clinlims" tableName="program" columnName="sort_order" />
-        </preConditions>
-        <comment>Populate activation and sort order defaults for programs</comment>
-        <update schemaName="clinlims" tableName="program" where="code = 'ROUTINE'">
-            <column name="sort_order" valueNumeric="10" />
-            <column name="is_active" valueBoolean="true" />
-            <column name="manually_changed" valueBoolean="true" />
-        </update>
-        <update schemaName="clinlims" tableName="program" where="code = 'HIV_INIT'">
-            <column name="sort_order" valueNumeric="20" />
-            <column name="is_active" valueBoolean="true" />
-            <column name="manually_changed" valueBoolean="true" />
-        </update>
-        <update schemaName="clinlims" tableName="program" where="code = 'HIV_FOLLOW'">
-            <column name="sort_order" valueNumeric="30" />
-            <column name="is_active" valueBoolean="true" />
-            <column name="manually_changed" valueBoolean="true" />
-        </update>
-        <update schemaName="clinlims" tableName="program" where="code = 'RTN_BACTER'">
-            <column name="sort_order" valueNumeric="100" />
-            <column name="is_active" valueBoolean="true" />
-            <column name="manually_changed" valueBoolean="true" />
-        </update>
+	<changeSet author="CIV developer"
+		id="populate-program-activation-and-sort-order">
+		<preConditions onFail="MARK_RAN">
+			<tableExists schemaName="clinlims" tableName="program" />
+			<columnExists schemaName="clinlims" tableName="program"
+				columnName="is_active" />
+			<columnExists schemaName="clinlims" tableName="program"
+				columnName="sort_order" />
+		</preConditions>
+		<comment>Populate activation and sort order defaults for programs</comment>
+		<update schemaName="clinlims" tableName="program"
+			where="code = 'ROUTINE'">
+			<column name="sort_order" valueNumeric="10" />
+			<column name="is_active" valueBoolean="true" />
+			<column name="manually_changed" valueBoolean="true" />
+		</update>
+		<update schemaName="clinlims" tableName="program"
+			where="code = 'HIV_INIT'">
+			<column name="sort_order" valueNumeric="20" />
+			<column name="is_active" valueBoolean="true" />
+			<column name="manually_changed" valueBoolean="true" />
+		</update>
+		<update schemaName="clinlims" tableName="program"
+			where="code = 'HIV_FOLLOW'">
+			<column name="sort_order" valueNumeric="30" />
+			<column name="is_active" valueBoolean="true" />
+			<column name="manually_changed" valueBoolean="true" />
+		</update>
+		<update schemaName="clinlims" tableName="program"
+			where="code = 'RTN_BACTER'">
+			<column name="sort_order" valueNumeric="100" />
+			<column name="is_active" valueBoolean="true" />
+			<column name="manually_changed" valueBoolean="true" />
+		</update>
 
-        <update schemaName="clinlims" tableName="program" where="code = 'CYTO'">
-            <column name="sort_order" valueNumeric="200" />
-            <column name="is_active" valueBoolean="true" />
-            <column name="manually_changed" valueBoolean="true" />
-        </update>
-        <update schemaName="clinlims" tableName="program" where="code = 'IHC'">
-            <column name="sort_order" valueNumeric="300" />
-            <column name="is_active" valueBoolean="true" />
-            <column name="manually_changed" valueBoolean="true" />
-        </update>
-        <update schemaName="clinlims" tableName="program" where="code = 'PATH'">
-            <column name="sort_order" valueNumeric="400" />
-            <column name="is_active" valueBoolean="true" />
-            <column name="manually_changed" valueBoolean="true" />
-        </update>
-    </changeSet>
+		<update schemaName="clinlims" tableName="program"
+			where="code = 'CYTO'">
+			<column name="sort_order" valueNumeric="200" />
+			<column name="is_active" valueBoolean="true" />
+			<column name="manually_changed" valueBoolean="true" />
+		</update>
+		<update schemaName="clinlims" tableName="program"
+			where="code = 'IHC'">
+			<column name="sort_order" valueNumeric="300" />
+			<column name="is_active" valueBoolean="true" />
+			<column name="manually_changed" valueBoolean="true" />
+		</update>
+		<update schemaName="clinlims" tableName="program"
+			where="code = 'PATH'">
+			<column name="sort_order" valueNumeric="400" />
+			<column name="is_active" valueBoolean="true" />
+			<column name="manually_changed" valueBoolean="true" />
+		</update>
+	</changeSet>
 
-    <changeSet author="CIV developer - Pkom"
-           id="add-program-localizations-and-display-keys">
+	<changeSet author="CIV developer - Pkom"
+		id="add-program-localizations-and-display-keys">
+		<preConditions onFail="MARK_RAN">
+			<tableExists schemaName="clinlims" tableName="program" />
+			<tableExists schemaName="clinlims"
+				tableName="localization" />
+			<columnExists schemaName="clinlims" tableName="program"
+				columnName="name_localization_id" />
+			<columnExists schemaName="clinlims" tableName="program"
+				columnName="display_key" />
+		</preConditions>
+		<insert schemaName="clinlims" tableName="localization">
+			<column name="id" valueSequenceNext="localization_seq" />
+			<column name="lastupdated" valueComputed="${now}" />
+			<column name="description"
+				value="Routine testing program name" />
+			<column name="english" value="Routine Testing" />
+			<column name="french" value="Analyses de routine" />
+		</insert>
+		<insert schemaName="clinlims" tableName="localization">
+			<column name="id" valueSequenceNext="localization_seq" />
+			<column name="lastupdated" valueComputed="${now}" />
+			<column name="description"
+				value="HIV program initial visit name" />
+			<column name="english" value="HIV Program - Initial Visit" />
+			<column name="french" value="Programme VIH - Bilan initial" />
+		</insert>
+		<insert schemaName="clinlims" tableName="localization">
+			<column name="id" valueSequenceNext="localization_seq" />
+			<column name="lastupdated" valueComputed="${now}" />
+			<column name="description"
+				value="HIV program follow-up visit name" />
+			<column name="english" value="HIV Program - Follow-up Visit" />
+			<column name="french" value="Programme VIH - Bilan de suivi" />
+		</insert>
+		<insert schemaName="clinlims" tableName="localization">
+			<column name="id" valueSequenceNext="localization_seq" />
+			<column name="lastupdated" valueComputed="${now}" />
+			<column name="description" value="Cytology program name" />
+			<column name="english" value="Cytology" />
+			<column name="french" value="Cytologie" />
+		</insert>
+		<insert schemaName="clinlims" tableName="localization">
+			<column name="id" valueSequenceNext="localization_seq" />
+			<column name="lastupdated" valueComputed="${now}" />
+			<column name="description"
+				value="Immunohistochemistry program name" />
+			<column name="english" value="Immunohistochemistry" />
+			<column name="french" value="Immunohistochimie" />
+		</insert>
+		<insert schemaName="clinlims" tableName="localization">
+			<column name="id" valueSequenceNext="localization_seq" />
+			<column name="lastupdated" valueComputed="${now}" />
+			<column name="description" value="Histopathology program name" />
+			<column name="english" value="Histopathology" />
+			<column name="french" value="Anatomopathologie" />
+		</insert>
+		<update schemaName="clinlims" tableName="program"
+			where="code = 'ROUTINE'">
+			<column name="name_localization_id"
+				valueComputed="(select id from localization where english = 'Routine Testing' and description = 'Routine testing program name' limit 1)" />
+			<column name="display_key" value="program.ROUTINE.name" />
+		</update>
+		<update schemaName="clinlims" tableName="program"
+			where="code = 'HIV_INIT'">
+			<column name="name_localization_id"
+				valueComputed="(select id from localization where english = 'HIV Program - Initial Visit' and description = 'HIV program initial visit name' limit 1)" />
+			<column name="display_key" value="program.HIV_INIT.name" />
+		</update>
+		<update schemaName="clinlims" tableName="program"
+			where="code = 'HIV_FOLLOW'">
+			<column name="name_localization_id"
+				valueComputed="(select id from localization where english = 'HIV Program - Follow-up Visit' and description = 'HIV program follow-up visit name' limit 1)" />
+			<column name="display_key" value="program.HIV_FOLLOW.name" />
+		</update>
+		<update schemaName="clinlims" tableName="program"
+			where="code = 'CYTO'">
+			<column name="name_localization_id"
+				valueComputed="(select id from localization where english = 'Cytology' and description = 'Cytology program name' limit 1)" />
+			<column name="display_key" value="program.CYTO.name" />
+		</update>
+		<update schemaName="clinlims" tableName="program"
+			where="code = 'IHC'">
+			<column name="name_localization_id"
+				valueComputed="(select id from localization where english = 'Immunohistochemistry' and description = 'Immunohistochemistry program name' limit 1)" />
+			<column name="display_key" value="program.IHC.name" />
+		</update>
+		<update schemaName="clinlims" tableName="program"
+			where="code = 'PATH'">
+			<column name="name_localization_id"
+				valueComputed="(select id from localization where english = 'Histopathology' and description = 'Histopathology program name' limit 1)" />
+			<column name="display_key" value="program.PATH.name" />
+		</update>
+		<update schemaName="clinlims" tableName="program"
+			where="code = 'RTN_BACTER'">
+			<column name="name_localization_id"
+				valueComputed="(select id from localization where english = 'Routine Bacteriology' and french = 'Bactériologie Classique' limit 1)" />
+			<column name="display_key" value="program.RTN_BACTER.name" />
+		</update>
+
+	</changeSet>
+
+	<!-- Adding dictionary categories for clinical information, invasive gestures, 
+		and indwelling devices -->
+
+	<changeSet author="CIV developer Group - pk"
+		id="add-dict-category-for-clinical-info-2025-12-01">
+		<preConditions onFail="MARK_RAN">
+			<sqlCheck expectedResult="0">SELECT count(*) FROM
+				clinlims.dictionary_category WHERE description = 'clinical Informations'
+			</sqlCheck>
+		</preConditions>
+		<insert tableName="dictionary_category" schemaName="clinlims">
+			<column name="id" valueSequenceNext="dictionary_category_seq" />
+			<column name="description" value="clinical Informations" />
+			<column name="lastupdated" valueDate="now()" />
+			<column name="local_abbrev" value="ClinInfos" />
+			<column name="name" value="clinical Informations" />
+		</insert>
+	</changeSet>
+
+	<changeSet author="CIV developer Group - pk"
+		id="add-dict-category-for-invasive-gestures-2025-12-01">
+		<preConditions onFail="MARK_RAN">
+			<sqlCheck expectedResult="0">SELECT count(*) FROM
+				clinlims.dictionary_category WHERE description = 'Invasive Gestures'
+			</sqlCheck>
+		</preConditions>
+		<insert tableName="dictionary_category" schemaName="clinlims">
+			<column name="id" valueSequenceNext="dictionary_category_seq" />
+			<column name="description" value="Invasive Gestures" />
+			<column name="lastupdated" valueDate="now()" />
+			<column name="local_abbrev" value="InvGest" />
+			<column name="name" value="Invasive Gestures" />
+		</insert>
+	</changeSet>
+
+	<changeSet author="CIV developer Group - pk"
+		id="add-dict-category-for-indwelling-devices-2025-12-01">
+		<preConditions onFail="MARK_RAN">
+			<sqlCheck expectedResult="0">SELECT count(*) FROM
+				clinlims.dictionary_category WHERE description = 'Indwelling
+				Devices'
+			</sqlCheck>
+		</preConditions>
+		<insert tableName="dictionary_category" schemaName="clinlims">
+			<column name="id" valueSequenceNext="dictionary_category_seq" />
+			<column name="description" value="Indwelling Devices" />
+			<column name="lastupdated" valueDate="now()" />
+			<column name="local_abbrev" value="InDevices" />
+			<column name="name" value="Indwelling Devices" />
+		</insert>
+	</changeSet>
+
+	<!-- add dictionary elements -->
+
+	<changeSet author="CIV developer Group - Pk"
+		id="add-bacteriology-dictionary-entries-001-2025-12-01">
+		<preConditions onFail="MARK_RAN">
+			<tableExists tableName="dictionary" schemaName="clinlims" />
+			<sqlCheck expectedResult="1">
+				SELECT count(*) FROM clinlims.dictionary_category
+				WHERE description = 'clinical Informations' LIMIT 1
+			</sqlCheck>
+			<sqlCheck expectedResult="0">
+				SELECT count(*) FROM clinlims.dictionary
+				WHERE dict_entry = 'Cough'
+			</sqlCheck>
+		</preConditions>
+
+		<comment>Add dictionary entries for clinical informations</comment>
+
+		<!-- Cough -->
+		<insert schemaName="clinlims" tableName="dictionary">
+			<column name="id" valueSequenceNext="dictionary_seq" />
+			<column name="is_active" value="Y" />
+			<column name="dict_entry" value="Cough" />
+			<column name="lastupdated" valueComputed="${now}" />
+			<column name="local_abbrev" value="Cough" />
+			<column name="dictionary_category_id"
+				valueComputed="(SELECT id FROM clinlims.dictionary_category WHERE description = 'clinical Informations' LIMIT 1)" />
+			<column name="display_key"
+				value="dictionary.patient.clinical_infos.cough" />
+			<column name="sort_order" valueNumeric="1000" />
+		</insert>
+
+		<!-- Fever -->
+		<insert schemaName="clinlims" tableName="dictionary">
+			<column name="id" valueSequenceNext="dictionary_seq" />
+			<column name="is_active" value="Y" />
+			<column name="dict_entry" value="Fever" />
+			<column name="lastupdated" valueComputed="${now}" />
+			<column name="local_abbrev" value="Fever" />
+			<column name="dictionary_category_id"
+				valueComputed="(SELECT id FROM clinlims.dictionary_category WHERE description = 'clinical Informations' LIMIT 1)" />
+			<column name="display_key"
+				value="dictionary.patient.clinical_infos.fever" />
+			<column name="sort_order" valueNumeric="1100" />
+		</insert>
+
+		<!-- Diarrhea -->
+		<insert schemaName="clinlims" tableName="dictionary">
+			<column name="id" valueSequenceNext="dictionary_seq" />
+			<column name="is_active" value="Y" />
+			<column name="dict_entry" value="Diarrhea" />
+			<column name="lastupdated" valueComputed="${now}" />
+			<column name="local_abbrev" value="Diarrhea" />
+			<column name="dictionary_category_id"
+				valueComputed="(SELECT id FROM clinlims.dictionary_category WHERE description = 'clinical Informations' LIMIT 1)" />
+			<column name="display_key"
+				value="dictionary.patient.clinical_infos.diarrhea" />
+			<column name="sort_order" valueNumeric="1200" />
+		</insert>
+
+		<!-- Dysuria -->
+		<insert schemaName="clinlims" tableName="dictionary">
+			<column name="id" valueSequenceNext="dictionary_seq" />
+			<column name="is_active" value="Y" />
+			<column name="dict_entry" value="Dysuria" />
+			<column name="lastupdated" valueComputed="${now}" />
+			<column name="local_abbrev" value="Dysuria" />
+			<column name="dictionary_category_id"
+				valueComputed="(SELECT id FROM clinlims.dictionary_category WHERE description = 'clinical Informations' LIMIT 1)" />
+			<column name="display_key"
+				value="dictionary.patient.clinical_infos.dysuria" />
+			<column name="sort_order" valueNumeric="1300" />
+		</insert>
+
+		<!-- Jaundice -->
+		<insert schemaName="clinlims" tableName="dictionary">
+			<column name="id" valueSequenceNext="dictionary_seq" />
+			<column name="is_active" value="Y" />
+			<column name="dict_entry" value="Jaundice" />
+			<column name="lastupdated" valueComputed="${now}" />
+			<column name="local_abbrev" value="Jaundice" />
+			<column name="dictionary_category_id"
+				valueComputed="(SELECT id FROM clinlims.dictionary_category WHERE description = 'clinical Informations' LIMIT 1)" />
+			<column name="display_key"
+				value="dictionary.patient.clinical_infos.jaundice" />
+			<column name="sort_order" valueNumeric="1400" />
+		</insert>
+
+		<!-- Urethral discharge -->
+		<insert schemaName="clinlims" tableName="dictionary">
+			<column name="id" valueSequenceNext="dictionary_seq" />
+			<column name="is_active" value="Y" />
+			<column name="dict_entry" value="Urethral discharge" />
+			<column name="lastupdated" valueComputed="${now}" />
+			<column name="local_abbrev" value="Uretdisc" />
+			<column name="dictionary_category_id"
+				valueComputed="(SELECT id FROM clinlims.dictionary_category WHERE description = 'clinical Informations' LIMIT 1)" />
+			<column name="display_key"
+				value="dictionary.patient.clinical_infos.urethral_discharge" />
+			<column name="sort_order" valueNumeric="1500" />
+		</insert>
+
+		<!-- Fertility assessment -->
+		<insert schemaName="clinlims" tableName="dictionary">
+			<column name="id" valueSequenceNext="dictionary_seq" />
+			<column name="is_active" value="Y" />
+			<column name="dict_entry" value="Fertility assessment" />
+			<column name="lastupdated" valueComputed="${now}" />
+			<column name="local_abbrev" value="FertAsses" />
+			<column name="dictionary_category_id"
+				valueComputed="(SELECT id FROM clinlims.dictionary_category WHERE description = 'clinical Informations' LIMIT 1)" />
+			<column name="display_key"
+				value="dictionary.patient.clinical_infos.fertility_assess" />
+			<column name="sort_order" valueNumeric="1600" />
+		</insert>
+
+		<!-- Leukorrhea -->
+		<insert schemaName="clinlims" tableName="dictionary">
+			<column name="id" valueSequenceNext="dictionary_seq" />
+			<column name="is_active" value="Y" />
+			<column name="dict_entry" value="Leukorrhea" />
+			<column name="lastupdated" valueComputed="${now}" />
+			<column name="local_abbrev" value="Leukorrh" />
+			<column name="dictionary_category_id"
+				valueComputed="(SELECT id FROM clinlims.dictionary_category WHERE description = 'clinical Informations' LIMIT 1)" />
+			<column name="display_key"
+				value="dictionary.patient.clinical_infos.leukorrhea" />
+			<column name="sort_order" valueNumeric="1700" />
+		</insert>
+
+		<!-- Pus -->
+		<insert schemaName="clinlims" tableName="dictionary">
+			<column name="id" valueSequenceNext="dictionary_seq" />
+			<column name="is_active" value="Y" />
+			<column name="dict_entry" value="Pus" />
+			<column name="lastupdated" valueComputed="${now}" />
+			<column name="local_abbrev" value="Pus" />
+			<column name="dictionary_category_id"
+				valueComputed="(SELECT id FROM clinlims.dictionary_category WHERE description = 'clinical Informations' LIMIT 1)" />
+			<column name="display_key"
+				value="dictionary.patient.clinical_infos.pus" />
+			<column name="sort_order" valueNumeric="1800" />
+		</insert>
+
+		<!-- Pruritus -->
+		<insert schemaName="clinlims" tableName="dictionary">
+			<column name="id" valueSequenceNext="dictionary_seq" />
+			<column name="is_active" value="Y" />
+			<column name="dict_entry" value="Pruritus" />
+			<column name="lastupdated" valueComputed="${now}" />
+			<column name="local_abbrev" value="Pruritus" />
+			<column name="dictionary_category_id"
+				valueComputed="(SELECT id FROM clinlims.dictionary_category WHERE description = 'clinical Informations' LIMIT 1)" />
+			<column name="display_key"
+				value="dictionary.patient.clinical_infos.pruritus" />
+			<column name="sort_order" valueNumeric="1900" />
+		</insert>
+
+		<!-- Abdominal pain -->
+		<insert schemaName="clinlims" tableName="dictionary">
+			<column name="id" valueSequenceNext="dictionary_seq" />
+			<column name="is_active" value="Y" />
+			<column name="dict_entry" value="Abdominal pain" />
+			<column name="lastupdated" valueComputed="${now}" />
+			<column name="local_abbrev" value="AbdoPain" />
+			<column name="dictionary_category_id"
+				valueComputed="(SELECT id FROM clinlims.dictionary_category WHERE description = 'clinical Informations' LIMIT 1)" />
+			<column name="display_key"
+				value="dictionary.patient.clinical_infos.abdo_pain" />
+			<column name="sort_order" valueNumeric="2000" />
+		</insert>
+
+		<!-- Vaginal infection -->
+		<insert schemaName="clinlims" tableName="dictionary">
+			<column name="id" valueSequenceNext="dictionary_seq" />
+			<column name="is_active" value="Y" />
+			<column name="dict_entry" value="Vaginal infection" />
+			<column name="lastupdated" valueComputed="${now}" />
+			<column name="local_abbrev" value="VaginInf" />
+			<column name="dictionary_category_id"
+				valueComputed="(SELECT id FROM clinlims.dictionary_category WHERE description = 'clinical Informations' LIMIT 1)" />
+			<column name="display_key"
+				value="dictionary.patient.clinical_infos.vaginal_infection" />
+			<column name="sort_order" valueNumeric="2100" />
+		</insert>
+
+		<!-- Others -->
+		<insert schemaName="clinlims" tableName="dictionary">
+			<column name="id" valueSequenceNext="dictionary_seq" />
+			<column name="is_active" value="Y" />
+			<column name="dict_entry" value="Others" />
+			<column name="lastupdated" valueComputed="${now}" />
+			<column name="local_abbrev" value="Others" />
+			<column name="dictionary_category_id"
+				valueComputed="(SELECT id FROM clinlims.dictionary_category WHERE description = 'clinical Informations' LIMIT 1)" />
+			<column name="display_key"
+				value="dictionary.patient.clinical_infos.others" />
+			<column name="sort_order" valueNumeric="2200" />
+		</insert>
+
+	</changeSet>
+
+    <changeSet author="CIV developer Group - Pk"
+           id="add-bacteriology-dictionary-entries-002-2025-12-01">
     <preConditions onFail="MARK_RAN">
-        <tableExists schemaName="clinlims" tableName="program"/>
-        <tableExists schemaName="clinlims" tableName="localization"/>
-        <columnExists schemaName="clinlims" tableName="program" columnName="name_localization_id"/>
-        <columnExists schemaName="clinlims" tableName="program" columnName="display_key"/>
+        <tableExists tableName="dictionary" schemaName="clinlims"/>
+        <sqlCheck expectedResult="1">
+            SELECT count(*) FROM clinlims.dictionary_category
+            WHERE description = 'Invasive Gestures' LIMIT 1
+        </sqlCheck>
+        <sqlCheck expectedResult="0">
+            SELECT count(*) FROM clinlims.dictionary
+            WHERE dict_entry = 'Catheterization'
+        </sqlCheck>
     </preConditions>
-    <insert schemaName="clinlims" tableName="localization">
-        <column name="id" valueSequenceNext="localization_seq"/>
+
+    <comment>Add dictionary entries for Invasive Gestures</comment>
+
+    <!-- Catheterization -->
+    <insert schemaName="clinlims" tableName="dictionary">
+        <column name="id" valueSequenceNext="dictionary_seq"/>
+        <column name="is_active" value="Y"/>
+        <column name="dict_entry" value="Catheterization"/>
         <column name="lastupdated" valueComputed="${now}"/>
-        <column name="description" value="Routine testing program name"/>
-        <column name="english" value="Routine Testing"/>
-        <column name="french" value="Analyses de routine"/>
+        <column name="local_abbrev" value="Catheter"/>
+        <column name="dictionary_category_id"
+                valueComputed="(SELECT id FROM clinlims.dictionary_category WHERE description = 'Invasive Gestures' LIMIT 1)"/>
+        <column name="display_key" value="dictionary.patient.invasive_gestures.catheter"/>
+        <column name="sort_order" valueNumeric="1000"/>
     </insert>
-    <insert schemaName="clinlims" tableName="localization">
-        <column name="id" valueSequenceNext="localization_seq"/>
+
+    <!-- Urinary catheterization -->
+    <insert schemaName="clinlims" tableName="dictionary">
+        <column name="id" valueSequenceNext="dictionary_seq"/>
+        <column name="is_active" value="Y"/>
+        <column name="dict_entry" value="Urinary catheterization"/>
         <column name="lastupdated" valueComputed="${now}"/>
-        <column name="description" value="HIV program initial visit name"/>
-        <column name="english" value="HIV Program - Initial Visit"/>
-        <column name="french" value="Programme VIH - Bilan initial"/>
+        <column name="local_abbrev" value="UrinCath"/>
+        <column name="dictionary_category_id"
+                valueComputed="(SELECT id FROM clinlims.dictionary_category WHERE description = 'Invasive Gestures' LIMIT 1)"/>
+        <column name="display_key" value="dictionary.patient.invasive_gestures.urincath"/>
+        <column name="sort_order" valueNumeric="1100"/>
     </insert>
-    <insert schemaName="clinlims" tableName="localization">
-        <column name="id" valueSequenceNext="localization_seq"/>
+
+    <!-- Drain -->
+    <insert schemaName="clinlims" tableName="dictionary">
+        <column name="id" valueSequenceNext="dictionary_seq"/>
+        <column name="is_active" value="Y"/>
+        <column name="dict_entry" value="Drain"/>
         <column name="lastupdated" valueComputed="${now}"/>
-        <column name="description" value="HIV program follow-up visit name"/>
-        <column name="english" value="HIV Program - Follow-up Visit"/>
-        <column name="french" value="Programme VIH - Bilan de suivi"/>
+        <column name="local_abbrev" value="Drain"/>
+        <column name="dictionary_category_id"
+                valueComputed="(SELECT id FROM clinlims.dictionary_category WHERE description = 'Invasive Gestures' LIMIT 1)"/>
+        <column name="display_key" value="dictionary.patient.invasive_gestures.drain"/>
+        <column name="sort_order" valueNumeric="1200"/>
     </insert>
-    <insert schemaName="clinlims" tableName="localization">
-        <column name="id" valueSequenceNext="localization_seq"/>
+
+    <!-- Surgery -->
+    <insert schemaName="clinlims" tableName="dictionary">
+        <column name="id" valueSequenceNext="dictionary_seq"/>
+        <column name="is_active" value="Y"/>
+        <column name="dict_entry" value="Surgery"/>
         <column name="lastupdated" valueComputed="${now}"/>
-        <column name="description" value="Cytology program name"/>
-        <column name="english" value="Cytology"/>
-        <column name="french" value="Cytologie"/>
+        <column name="local_abbrev" value="Surgery"/>
+        <column name="dictionary_category_id"
+                valueComputed="(SELECT id FROM clinlims.dictionary_category WHERE description = 'Invasive Gestures' LIMIT 1)"/>
+        <column name="display_key" value="dictionary.patient.invasive_gestures.surgery"/>
+        <column name="sort_order" valueNumeric="1300"/>
     </insert>
-    <insert schemaName="clinlims" tableName="localization">
-        <column name="id" valueSequenceNext="localization_seq"/>
-        <column name="lastupdated" valueComputed="${now}"/>
-        <column name="description" value="Immunohistochemistry program name"/>
-        <column name="english" value="Immunohistochemistry"/>
-        <column name="french" value="Immunohistochimie"/>
-    </insert>
-    <insert schemaName="clinlims" tableName="localization">
-        <column name="id" valueSequenceNext="localization_seq"/>
-        <column name="lastupdated" valueComputed="${now}"/>
-        <column name="description" value="Histopathology program name"/>
-        <column name="english" value="Histopathology"/>
-        <column name="french" value="Anatomopathologie"/>
-    </insert>
-    <update schemaName="clinlims" tableName="program" where="code = 'ROUTINE'">
-        <column name="name_localization_id"
-                valueComputed="(select id from localization where english = 'Routine Testing' and description = 'Routine testing program name' limit 1)"/>
-        <column name="display_key" value="program.ROUTINE.name"/>
-    </update>
-    <update schemaName="clinlims" tableName="program" where="code = 'HIV_INIT'">
-        <column name="name_localization_id"
-                valueComputed="(select id from localization where english = 'HIV Program - Initial Visit' and description = 'HIV program initial visit name' limit 1)"/>
-        <column name="display_key" value="program.HIV_INIT.name"/>
-    </update>
-    <update schemaName="clinlims" tableName="program" where="code = 'HIV_FOLLOW'">
-        <column name="name_localization_id"
-                valueComputed="(select id from localization where english = 'HIV Program - Follow-up Visit' and description = 'HIV program follow-up visit name' limit 1)"/>
-        <column name="display_key" value="program.HIV_FOLLOW.name"/>
-    </update>
-    <update schemaName="clinlims" tableName="program" where="code = 'CYTO'">
-        <column name="name_localization_id"
-                valueComputed="(select id from localization where english = 'Cytology' and description = 'Cytology program name' limit 1)"/>
-        <column name="display_key" value="program.CYTO.name"/>
-    </update>
-    <update schemaName="clinlims" tableName="program" where="code = 'IHC'">
-        <column name="name_localization_id"
-                valueComputed="(select id from localization where english = 'Immunohistochemistry' and description = 'Immunohistochemistry program name' limit 1)"/>
-        <column name="display_key" value="program.IHC.name"/>
-    </update>
-    <update schemaName="clinlims" tableName="program" where="code = 'PATH'">
-        <column name="name_localization_id"
-                valueComputed="(select id from localization where english = 'Histopathology' and description = 'Histopathology program name' limit 1)"/>
-        <column name="display_key" value="program.PATH.name"/>
-    </update>
-    <update schemaName="clinlims" tableName="program" where="code = 'RTN_BACTER'">
-        <column name="name_localization_id"
-                valueComputed="(select id from localization where english = 'Routine Bacteriology' and french = 'Bactériologie Classique' limit 1)"/>
-        <column name="display_key" value="program.RTN_BACTER.name"/>
-    </update>
 
 </changeSet>
+
+<changeSet author="CIV Developer Group - Pk"
+           id="add-bacteriology-dictionary-entries-003-2025-12-01">
+    <preConditions onFail="MARK_RAN">
+        <tableExists tableName="dictionary" schemaName="clinlims"/>
+        <sqlCheck expectedResult="1">
+            SELECT count(*) FROM clinlims.dictionary_category
+            WHERE description = 'Indwelling Devices' LIMIT 1
+        </sqlCheck>
+        <sqlCheck expectedResult="0">
+            SELECT count(*) FROM clinlims.dictionary
+            WHERE dict_entry = 'Venous catheter'
+        </sqlCheck>
+    </preConditions>
+
+    <comment>Add dictionary entries for Indwelling Devices</comment>
+
+    <!-- Venous catheter -->
+    <insert schemaName="clinlims" tableName="dictionary">
+        <column name="id" valueSequenceNext="dictionary_seq"/>
+        <column name="is_active" value="Y"/>
+        <column name="dict_entry" value="Venous catheter"/>
+        <column name="lastupdated" valueComputed="${now}"/>
+        <column name="local_abbrev" value="VenCathet"/>
+        <column name="dictionary_category_id"
+                valueComputed="(SELECT id FROM clinlims.dictionary_category WHERE description = 'Indwelling Devices' LIMIT 1)"/>
+        <column name="display_key" value="dictionary.patient.indwelling_devices.venous_catheter"/>
+        <column name="sort_order" valueNumeric="1000"/>
+    </insert>
+
+    <!-- Prosthesis -->
+    <insert schemaName="clinlims" tableName="dictionary">
+        <column name="id" valueSequenceNext="dictionary_seq"/>
+        <column name="is_active" value="Y"/>
+        <column name="dict_entry" value="Prosthesis"/>
+        <column name="lastupdated" valueComputed="${now}"/>
+        <column name="local_abbrev" value="Prosthes"/>
+        <column name="dictionary_category_id"
+                valueComputed="(SELECT id FROM clinlims.dictionary_category WHERE description = 'Indwelling Devices' LIMIT 1)"/>
+        <column name="display_key" value="dictionary.patient.indwelling_devices.prosthesis"/>
+        <column name="sort_order" valueNumeric="1100"/>
+    </insert>
+
+    <!-- Urinary catheter -->
+    <insert schemaName="clinlims" tableName="dictionary">
+        <column name="id" valueSequenceNext="dictionary_seq"/>
+        <column name="is_active" value="Y"/>
+        <column name="dict_entry" value="Urinary catheter"/>
+        <column name="lastupdated" valueComputed="${now}"/>
+        <column name="local_abbrev" value="UrinCathet"/>
+        <column name="dictionary_category_id"
+                valueComputed="(SELECT id FROM clinlims.dictionary_category WHERE description = 'Indwelling Devices' LIMIT 1)"/>
+        <column name="display_key" value="dictionary.patient.indwelling_devices.urinary-catheter"/>
+        <column name="sort_order" valueNumeric="1200"/>
+    </insert>
+
+    <!-- Surgical material -->
+    <insert schemaName="clinlims" tableName="dictionary">
+        <column name="id" valueSequenceNext="dictionary_seq"/>
+        <column name="is_active" value="Y"/>
+        <column name="dict_entry" value="Surgical material"/>
+        <column name="lastupdated" valueComputed="${now}"/>
+        <column name="local_abbrev" value="SurgMater"/>
+        <column name="dictionary_category_id"
+                valueComputed="(SELECT id FROM clinlims.dictionary_category WHERE description = 'Indwelling Devices' LIMIT 1)"/>
+        <column name="display_key" value="dictionary.patient.indwelling_devices.surgical-material"/>
+        <column name="sort_order" valueNumeric="1300"/>
+    </insert>
+
+</changeSet>
+
+<changeSet author="CIV Developer Group - Pk"
+           id="add-observation-history-types-microbio-001-2025-12-02">
+    <preConditions onFail="MARK_RAN">
+        <tableExists tableName="observation_history_type" schemaName="clinlims"/>
+    </preConditions>
+
+    <comment>Add observation_history_type entries for microbiology request metadata</comment>
+
+    <!-- CLINICAL_INFOS -->
+    <insert schemaName="clinlims" tableName="observation_history_type">
+        <column name="id" valueSequenceNext="observation_history_type_seq"/>
+        <column name="type_name" value="CLINICAL_INFOS"/>
+        <column name="description"
+                value="Renseignements cliniques (liste principale) / Clinical information (main list)"/>
+        <column name="lastupdated" valueComputed="${now}"/>
+    </insert>
+
+    <!-- CLINICAL_INFOS_OTHER -->
+    <insert schemaName="clinlims" tableName="observation_history_type">
+        <column name="id" valueSequenceNext="observation_history_type_seq"/>
+        <column name="type_name" value="CLINICAL_INFOS_OTHER"/>
+        <column name="description"
+                value="Autres renseignements cliniques (texte libre) / Clinical information - other (free text)"/>
+        <column name="lastupdated" valueComputed="${now}"/>
+    </insert>
+
+    <!-- INVASIVE_GESTURE -->
+    <insert schemaName="clinlims" tableName="observation_history_type">
+        <column name="id" valueSequenceNext="observation_history_type_seq"/>
+        <column name="type_name" value="INVASIVE_GESTURE"/>
+        <column name="description"
+                value="Gestes invasifs (30 derniers jours) / Invasive gestures (last 30 days)"/>
+        <column name="lastupdated" valueComputed="${now}"/>
+    </insert>
+
+    <!-- INDWELLING_DEVICES -->
+    <insert schemaName="clinlims" tableName="observation_history_type">
+        <column name="id" valueSequenceNext="observation_history_type_seq"/>
+        <column name="type_name" value="INDWELLING_DEVICES"/>
+        <column name="description"
+                value="Dispositifs à demeure / Indwelling devices"/>
+        <column name="lastupdated" valueComputed="${now}"/>
+    </insert>
+
+    <!-- PREV3M_ATB -->
+    <insert schemaName="clinlims" tableName="observation_history_type">
+        <column name="id" valueSequenceNext="observation_history_type_seq"/>
+        <column name="type_name" value="PREV3M_ATB"/>
+        <column name="description"
+                value="Antibiothérapie dans les 3 derniers mois (Oui/Non) / Antibiotherapy in the last 3 months (Yes/No)"/>
+        <column name="lastupdated" valueComputed="${now}"/>
+    </insert>
+
+    <!-- PREV3M_ATB_LIST -->
+    <insert schemaName="clinlims" tableName="observation_history_type">
+        <column name="id" valueSequenceNext="observation_history_type_seq"/>
+        <column name="type_name" value="PREV3M_ATB_LIST"/>
+        <column name="description"
+                value="Liste des antibiotiques utilisés dans les 3 derniers mois / Antibiotics used in the last 3 months"/>
+        <column name="lastupdated" valueComputed="${now}"/>
+    </insert>
+
+    <!-- CURR_ATB -->
+    <insert schemaName="clinlims" tableName="observation_history_type">
+        <column name="id" valueSequenceNext="observation_history_type_seq"/>
+        <column name="type_name" value="CURR_ATB"/>
+        <column name="description"
+                value="Antibiothérapie en cours (Oui/Non) / Ongoing antibiotherapy (Yes/No)"/>
+        <column name="lastupdated" valueComputed="${now}"/>
+    </insert>
+
+    <!-- CURR_ATB_LIST -->
+    <insert schemaName="clinlims" tableName="observation_history_type">
+        <column name="id" valueSequenceNext="observation_history_type_seq"/>
+        <column name="type_name" value="CURR_ATB_LIST"/>
+        <column name="description"
+                value="Liste des antibiotiques de l'antibiothérapie en cours / Antibiotics in ongoing antibiotherapy"/>
+        <column name="lastupdated" valueComputed="${now}"/>
+    </insert>
+
+    <!-- CURR_ATB_DUR -->
+    <insert schemaName="clinlims" tableName="observation_history_type">
+        <column name="id" valueSequenceNext="observation_history_type_seq"/>
+        <column name="type_name" value="CURR_ATB_DUR"/>
+        <column name="description"
+                value="Durée (en jours) de l'antibiothérapie en cours / Duration (days) of ongoing antibiotherapy"/>
+        <column name="lastupdated" valueComputed="${now}"/>
+    </insert>
+
+    <!-- HOSP_3M -->
+    <insert schemaName="clinlims" tableName="observation_history_type">
+        <column name="id" valueSequenceNext="observation_history_type_seq"/>
+        <column name="type_name" value="HOSP_3M"/>
+        <column name="description"
+                value="Antécédent d'hospitalisation dans les 3 derniers mois (Oui/Non) / Hospitalization in the last 3 months (Yes/No)"/>
+        <column name="lastupdated" valueComputed="${now}"/>
+    </insert>
+
+    <!-- HOSP_3M_COUNT -->
+    <insert schemaName="clinlims" tableName="observation_history_type">
+        <column name="id" valueSequenceNext="observation_history_type_seq"/>
+        <column name="type_name" value="HOSP_3M_COUNT"/>
+        <column name="description"
+                value="Nombre d'hospitalisations dans les 3 derniers mois / Number of hospitalizations in the last 3 months"/>
+        <column name="lastupdated" valueComputed="${now}"/>
+    </insert>
+
+    <!-- EPIDEMIO_WEEK -->
+    <insert schemaName="clinlims" tableName="observation_history_type">
+        <column name="id" valueSequenceNext="observation_history_type_seq"/>
+        <column name="type_name" value="EPIDEMIO_WEEK"/>
+        <column name="description"
+                value="Semaine épidémiologique (S1 à S52) / Epidemiological week (W1 to W52)"/>
+        <column name="lastupdated" valueComputed="${now}"/>
+    </insert>
+
+</changeSet>
+
+<changeSet author="CIV Developer Group - Pk"
+           id="add-dictionary-category-antibiotics-002-2025-12-02">
+    <preConditions onFail="MARK_RAN">
+        <tableExists tableName="dictionary_category" schemaName="clinlims"/>
+                <sqlCheck expectedResult="0">
+            SELECT count(*) FROM clinlims.dictionary_category
+            WHERE description = 'Bacteriology Antibiotics'
+        </sqlCheck>
+        <sqlCheck expectedResult="0">
+            SELECT count(*) FROM clinlims.dictionary_category
+            WHERE description = 'Therapeutic Antibiotics'
+        </sqlCheck>
+    </preConditions>
+    <comment>Create dictionary categories for bacteriology and therapeutic antibiotics</comment>
+    <!-- Bacteriology antibiotics -->
+    <insert schemaName="clinlims" tableName="dictionary_category">
+        <column name="id" valueSequenceNext="dictionary_category_seq"/>
+        <column name="description" value="Bacteriology Antibiotics"/>
+        <column name="lastupdated" valueComputed="${now}"/>
+        <column name="local_abbrev" value="BacterATB"/>
+        <column name="name" value="Bacteriology Antibiotics"/>
+    </insert>
+    <!-- Therapeutic antibiotics -->
+    <insert schemaName="clinlims" tableName="dictionary_category">
+        <column name="id" valueSequenceNext="dictionary_category_seq"/>
+        <column name="description" value="Therapeutic Antibiotics"/>
+        <column name="lastupdated" valueComputed="${now}"/>
+        <column name="local_abbrev" value="TherapATB"/>
+        <column name="name" value="Therapeutic Antibiotics"/>
+    </insert>
+
+</changeSet>
+
+<changeSet author="CIV Developer Group - Pk"
+           id="add-bacteriology-antibiotics-dictionary-002-2025-12-02">
+    <preConditions onFail="MARK_RAN">
+        <tableExists tableName="dictionary" schemaName="clinlims"/>
+        <sqlCheck expectedResult="1">
+            SELECT count(*) FROM clinlims.dictionary_category
+            WHERE name = 'Bacteriology Antibiotics'
+        </sqlCheck>
+        <sqlCheck expectedResult="0">
+            SELECT count(*) FROM clinlims.dictionary
+            WHERE local_abbrev = 'amakacin'
+        </sqlCheck>
+    </preConditions>
+
+    <comment>Add dictionary entries for bacteriology antibiotics (AST)</comment>
+
+    <sqlFile
+        path="sql/bacteriology_antibiotics_002_2025_12_02.sql"
+        relativeToChangelogFile="true"
+        splitStatements="true"
+        endDelimiter=";"
+        encoding="UTF-8"/>
+</changeSet>
+
+
+<changeSet author="CIV Developer Group - Pk"
+           id="add-therapeutic-antibiotics-dictionary-001-2025-12-02">
+    <preConditions onFail="MARK_RAN">
+        <tableExists tableName="dictionary" schemaName="clinlims"/>
+        <sqlCheck expectedResult="1">
+            SELECT count(*) FROM clinlims.dictionary_category
+            WHERE name = 'Therapeutic Antibiotics'
+        </sqlCheck>
+        <sqlCheck expectedResult="0">
+            SELECT count(*) FROM clinlims.dictionary
+            WHERE dict_entry = 'AMOXICILLIN'
+        </sqlCheck>
+    </preConditions>
+
+    <comment>Add therapeutic antibiotics</comment>
+
+    <sqlFile
+        path="sql/therapeutic_antibiotics_001_2025_12_02.sql"
+        relativeToChangelogFile="true"
+        splitStatements="true"
+        endDelimiter=";"
+        encoding="UTF-8"/>
+</changeSet>
+
+
 
 </databaseChangeLog>

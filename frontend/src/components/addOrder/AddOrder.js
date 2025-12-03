@@ -37,6 +37,7 @@ const AddOrder = (props) => {
     isModifyOrder,
     changed,
     setChanged,
+    isBacterio = false,
   } = props;
   const [otherSamplingVisible, setOtherSamplingVisible] = useState(false);
   const [providers, setProviders] = useState([]);
@@ -46,6 +47,13 @@ const AddOrder = (props) => {
   const [innitialized, setInnitialized] = useState(false);
   const [departments, setDepartments] = useState([]);
   const [value, setValue] = useState("");
+  const epiWeekOptions = Array.from({ length: 52 }, (_, index) => {
+    const weekNumber = index + 1;
+    return {
+      id: `S${weekNumber}`,
+      value: `S${weekNumber}`,
+    };
+  });
 
   useEffect(() => {
     componentMounted.current = true;
@@ -59,7 +67,7 @@ const AddOrder = (props) => {
   const handleChangeUpper = (e) => {
     const upperValue = e.target.value.toUpperCase();
     setValue(upperValue);
-  };
+    };
   const handleDatePickerChange = (datePicker, date) => {
     let obj = null;
     switch (datePicker) {
@@ -183,6 +191,16 @@ const AddOrder = (props) => {
       sampleOrderItems: {
         ...orderFormValues.sampleOrderItems,
         otherLocationCode: e.target.value,
+      },
+    });
+  }
+
+  function handleEpiWeekChange(e) {
+    setOrderFormValues({
+      ...orderFormValues,
+      sampleOrderItems: {
+        ...orderFormValues.sampleOrderItems,
+        epidemiologicalWeek: e.target.value,
       },
     });
   }
@@ -769,69 +787,6 @@ const AddOrder = (props) => {
                 id="requesterFirstName"
               />
             </Column>
-
-            <Column lg={8} md={4} sm={4}>
-              <TextInput
-                name="requesterLastName"
-                placeholder={intl.formatMessage({
-                  id: "input.placeholder.requesterLastName",
-                })}
-                labelText={
-                  <>
-                    <FormattedMessage id="order.requester.lastName.label" />
-                    <span className="requiredlabel">*</span>
-                  </>
-                }
-                disabled={
-                  configurationProperties.restrictFreeTextProviderEntry ===
-                  "true"
-                }
-                value={orderFormValues.sampleOrderItems.providerLastName}
-                onClick={() =>
-                  handleChange("sampleOrderItems.providerLastName")
-                }
-                onChange={handleRequesterLastName}
-                id="requesterLastName"
-                invalid={
-                  changed["sampleOrderItems.providerLastName"] &&
-                  error("sampleOrderItems.providerLastName")
-                    ? true
-                    : false
-                }
-                invalidText={error("sampleOrderItems.providerLastName")}
-              />
-            </Column>
-            <Column lg={8} md={4} sm={4}>
-              <TextInput
-                name="requesterFirstName"
-                placeholder={intl.formatMessage({
-                  id: "input.placeholder.requesterFirstName",
-                })}
-                labelText={
-                  <>
-                    <FormattedMessage id="order.requester.firstName.label" />
-                    <span className="requiredlabel">*</span>
-                  </>
-                }
-                disabled={
-                  configurationProperties.restrictFreeTextProviderEntry ===
-                  "true"
-                }
-                onChange={handleRequesterFirstName}
-                onClick={() =>
-                  handleChange("sampleOrderItems.providerFirstName")
-                }
-                value={orderFormValues.sampleOrderItems.providerFirstName}
-                invalid={
-                  changed["sampleOrderItems.providerFirstName"] &&
-                  error("sampleOrderItems.providerFirstName")
-                    ? true
-                    : false
-                }
-                invalidText={error("sampleOrderItems.providerFirstName")}
-                id="requesterFirstName"
-              />
-            </Column>
             <Column lg={16} md={8} sm={3}>
               {" "}
               &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;{" "}
@@ -855,29 +810,6 @@ const AddOrder = (props) => {
                 id="providerWorkPhoneId"
               />
             </Column>
-
-            <Column lg={8} md={4} sm={4}>
-              <TextInput
-                name="providerFax"
-                placeholder={intl.formatMessage({
-                  id: "input.placeholder.providerFax",
-                })}
-                labelText={intl.formatMessage({
-                  id: "order.requester.fax.label",
-                })}
-                disabled={
-                  configurationProperties.restrictFreeTextProviderEntry ===
-                  "true"
-                }
-                onChange={handleRequesterFax}
-                value={orderFormValues.sampleOrderItems.providerFax}
-                id="providerFaxId"
-              />
-            </Column>
-            <Column lg={16} md={8} sm={3}>
-              {" "}
-              &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;{" "}
-            </Column>
             <Column lg={8} md={4} sm={4}>
               <TextInput
                 name="providerEmail"
@@ -900,7 +832,64 @@ const AddOrder = (props) => {
                 })}
               />
             </Column>
-
+{/*
+            <Column lg={8} md={4} sm={4}>
+              <TextInput
+                name="providerFax"
+                placeholder={intl.formatMessage({
+                  id: "input.placeholder.providerFax",
+                })}
+                labelText={intl.formatMessage({
+                  id: "order.requester.fax.label",
+                })}
+                disabled={
+                  configurationProperties.restrictFreeTextProviderEntry ===
+                  "true"
+                }
+                onChange={handleRequesterFax}
+                value={orderFormValues.sampleOrderItems.providerFax}
+                id="providerFaxId"
+              />
+            </Column> 
+            
+            <Column lg={16} md={8} sm={3}>
+              {" "}
+              &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;{" "}
+            </Column>
+            */}   
+            {isBacterio && (
+              <>
+                <Column lg={16} md={8} sm={3}>
+                  {" "}
+                  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;{" "}
+                </Column>
+                <Column lg={8} md={4} sm={4}>
+                  <CustomSelect
+                    id="epidemiologicalWeek"
+                    name="epidemiologicalWeek"
+                    labelText={intl.formatMessage({
+                      id: "order.epi.week.label",
+                      defaultMessage: "Semaine épidémiologique",
+                    })}
+                    value={orderFormValues.sampleOrderItems.epidemiologicalWeek}
+                    onChange={handleEpiWeekChange}
+                  >
+                    <CustomSelectItem value="" text="" />
+                    {epiWeekOptions.map((option) => (
+                      <CustomSelectItem
+                        key={option.id}
+                        value={option.id}
+                        text={option.value}
+                      />
+                    ))}
+                  </CustomSelect>
+                </Column>
+              </>
+            )}
+            <Column lg={16} md={8} sm={3}>
+              {" "}
+              &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;{" "}
+            </Column>
             <Column lg={8} md={4} sm={4}>
               <Select
                 id="paymentOptionSelectionId"
@@ -962,16 +951,18 @@ const AddOrder = (props) => {
                 id="testLocationCodeOtherId"
               />
             </Column>
+            {!isBacterio && (
             <Column lg={8} md={4} sm={4}>
-              <CustomTextInput
+            <CustomTextInput
                 id={"clinicalInformations"}
                 value={value}
                 style={{ textTransform: "uppercase" }}
                 onChange={handleChangeUpper}
-                labelText="Renseignements cliniques"
+                labelText={intl.formatMessage({ id: "patient.clinical.info" })}
                 className="uppercase-input"
               />
             </Column>
+          )}
             <Column lg={16} md={8} sm={3}>
               {" "}
               &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;{" "}

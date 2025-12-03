@@ -17,6 +17,7 @@ import {
   AccordionItem,
   Button,
   Column,
+  FilterableMultiSelect,
   Form,
   FormLabel,
   Grid,
@@ -26,6 +27,7 @@ import {
   Section,
   Select,
   SelectItem,
+  Tag,
   TextInput,
 } from "@carbon/react";
 
@@ -36,7 +38,48 @@ import CreatePatientFormValues from "../formModel/innitialValues/CreatePatientFo
 import CreatePatientValidationSchema from "../formModel/validationSchema/CreatePatientValidationShema";
 import { ConfigurationContext, NotificationContext } from "../layout/Layout";
 import PatientFormObserver from "./PatientFormObserver";
+
+const OTHER_MATCHER = (opt) =>
+  opt &&
+  typeof opt.value === "string" &&
+  opt.value.toLowerCase().startsWith("autre");
+
+const CLINICAL_INFO_FALLBACK = [
+  "Toux",
+  "Fièvre",
+  "Diarrhée",
+  "Brûlure mictionnelle",
+  "Ictère",
+  "Ecoulement urétrale",
+  "Bilan de fertilité",
+  "Leucorrhées",
+  "Pus",
+  "Prurit",
+  "Douleur abdominale",
+  "Infection vaginale",
+  "Autres",
+].map((value) => ({ id: value, value }));
+
+const INVASIVE_GESTURES_FALLBACK = [
+  "cathétérisme",
+  "sondage urinaire",
+  "drain",
+  "Intervention Chirurgicale",
+].map((value) => ({ id: value, value }));
+
+const INDWELLING_DEVICE_FALLBACK = [
+  "Cathéter veineux",
+  "Prothèse",
+  "Sonde Urinaire",
+  "matériel de chirurgie",
+].map((value) => ({ id: value, value }));
+
+const ANTIBIOTHERAPY_CATEGORY = "THERAPEUTIC_ANTIBIOTICS";
+const CLINICAL_INFO_CATEGORY = "CLINICAL_INFOS";
+const INVASIVE_GESTURES_CATEGORY = "INVASIVE_GESTURES";
+const INDWELLING_DEVICE_CATEGORY = "INDWELLING_DEVICES";
 function CreatePatientForm(props) {
+  const { showBacterioFields = false } = props;
   const componentMounted = useRef(false);
 
   const { notificationVisible, setNotificationVisible, addNotification } =
@@ -72,6 +115,101 @@ function CreatePatientForm(props) {
     primaryPhone: { body: "", status: true },
     contactPhone: { body: "", status: true },
   });
+  const [clinicalInfoOptions, setClinicalInfoOptions] = useState([]);
+  const [antibiotherapyOptions, setAntibiotherapyOptions] = useState([]);
+  const [invasiveGesturesOptions, setInvasiveGesturesOptions] = useState([]);
+  const [indwellingDeviceOptions, setIndwellingDeviceOptions] = useState([]);
+
+  const normalizeDictionaryOptions = (items, fallback) => {
+    const mapped = (Array.isArray(items) ? items : [])
+      .map((item) => ({
+        id: item.id || item.value,
+        value: item.value || item.name || "",
+      }))
+      .filter((item) => item.value);
+    if (mapped.length > 0) {
+      return mapped;
+    }
+    return fallback;
+  };
+
+  const buildSelectedItems = (values, options) =>
+    (values || [])
+      .map((val) => options.find((opt) => opt.id === val || opt.value === val))
+      .filter(Boolean);
+
+  const renderSelectedTags = (selectedItems, keyPrefix) => {
+    if (!selectedItems || selectedItems.length === 0) {
+      return null;
+    }
+    return (
+      <div className="selected-tags">
+        {selectedItems.map((item, index) => (
+          <Tag
+            key={`${keyPrefix}-${item.id || item.value || index}`}
+            type="gray"
+          >
+            {item.value}
+          </Tag>
+        ))}
+      </div>
+    );
+  };
+
+  const isOtherSelected = (selectedValues, options) => {
+    return (selectedValues || []).some((val) => {
+      const opt = options.find((o) => {
+        if (o.id === val || o.value === val) {
+          return true;
+        }
+        // Also match by name to tolerate translated labels when ID is numeric
+        return o.name === val;
+      });
+      return OTHER_MATCHER(opt);
+    });
+  };
+
+  useEffect(() => {
+    getFromOpenElisServer(
+      `/rest/displayList/${encodeURIComponent(
+        CLINICAL_INFO_CATEGORY,
+      )}`,
+      (res) =>
+        setClinicalInfoOptions(
+          normalizeDictionaryOptions(res, CLINICAL_INFO_FALLBACK),
+        ),
+    );
+  }, [props.orderFormValues?.sampleOrderItems?.programId]);
+
+  useEffect(() => {
+    if (!showBacterioFields) {
+      return;
+    }
+    getFromOpenElisServer(
+      `/rest/displayList/${encodeURIComponent(
+        ANTIBIOTHERAPY_CATEGORY,
+      )}`,
+      (res) => setAntibiotherapyOptions(normalizeDictionaryOptions(res, [])),
+    );
+    getFromOpenElisServer(
+      `/rest/displayList/${encodeURIComponent(
+        INVASIVE_GESTURES_CATEGORY,
+      )}`,
+      (res) =>
+        setInvasiveGesturesOptions(
+          normalizeDictionaryOptions(res, INVASIVE_GESTURES_FALLBACK),
+        ),
+    );
+    getFromOpenElisServer(
+      `/rest/displayList/${encodeURIComponent(
+        INDWELLING_DEVICE_CATEGORY,
+      )}`,
+      (res) =>
+        setIndwellingDeviceOptions(
+          normalizeDictionaryOptions(res, INDWELLING_DEVICE_FALLBACK),
+        ),
+    );
+  }, [showBacterioFields, props.orderFormValues?.sampleOrderItems?.programId]);
 
   const handleNationalIdChange = (event) => {
     const newValue = event.target.value;
@@ -315,6 +453,7 @@ function CreatePatientForm(props) {
         ...patientDetails,
         ...patient,
         patientContact: patientContact,
+        ...props.orderFormValues?.patientRoutineBacterioInfo,
       };
       setPatientDetails({
         ...patientDetails,
@@ -328,14 +467,19 @@ function CreatePatientForm(props) {
 
   const repopulatePatientInfo = () => {
     if (props.orderFormValues != null) {
-      if (
-        props.orderFormValues.patientProperties.firstName !== "" ||
-        props.orderFormValues.patientProperties.guid !== ""
-      ) {
-        setPatientDetails(props.orderFormValues.patientProperties);
-        getYearsMonthsDaysFromDOB(
-          props.orderFormValues.patientProperties.birthDateForDisplay,
-        );
+      const patientProps = props.orderFormValues.patientProperties || {};
+      const bacterioInfo =
+        props.orderFormValues.patientRoutineBacterioInfo || {};
+      const mergedPatient = {
+        ...CreatePatientFormValues,
+        ...patientProps,
+        ...bacterioInfo,
+      };
+      if (patientProps.firstName !== "" || patientProps.guid !== "") {
+        setPatientDetails(mergedPatient);
+        if (patientProps.birthDateForDisplay) {
+          getYearsMonthsDaysFromDOB(patientProps.birthDateForDisplay);
+        }
       }
     }
   };
@@ -479,6 +623,7 @@ function CreatePatientForm(props) {
           handleChange,
           handleBlur,
           handleSubmit,
+          setFieldValue,
         }) => (
           <Form
             onSubmit={handleSubmit}
@@ -795,6 +940,392 @@ function CreatePatientForm(props) {
                 {" "}
                 <br></br>
               </Column>
+              {showBacterioFields && (
+                <>
+                  <Column lg={8} md={4} sm={4}>
+                    <RadioButtonGroup
+                      legendText={intl.formatMessage({
+                        id: "patient.hospitalization.current",
+                        defaultMessage: "Hospitalisation en cours",
+                      })}
+                      valueSelected={
+                        values.currentHospitalization ? "true" : "false"
+                      }
+                      name="currentHospitalization"
+                      onChange={(val) => {
+                        const boolVal = val === "true";
+                        setFieldValue("currentHospitalization", boolVal);
+                        if (!boolVal) {
+                          setFieldValue("roomNumber", "");
+                        }
+                      }}
+                    >
+                      <RadioButton
+                        id="currentHospYes"
+                        value="true"
+                        labelText="Oui"
+                      />
+                      <RadioButton
+                        id="currentHospNo"
+                        value="false"
+                        labelText="Non"
+                      />
+                    </RadioButtonGroup>
+                  </Column>
+                  <Column lg={8} md={4} sm={4}>
+                    {values.currentHospitalization && (
+                      <TextInput
+                        name="roomNumber"
+                        value={values.roomNumber || ""}
+                        labelText={intl.formatMessage({
+                          id: "patient.room.number",
+                          defaultMessage: "Numéro de chambre",
+                        })}
+                        id="roomNumber"
+                        onChange={handleChange}
+                        placeholder={intl.formatMessage({
+                          id: "patient.room.number",
+                          defaultMessage: "Numéro de chambre",
+                        })}
+                      />
+                    )}
+                  </Column>
+                  <Column lg={16} md={8} sm={4}>
+                    {" "}
+                    <br></br>
+                  </Column>
+              <Column lg={8} md={4} sm={4}>
+                <FilterableMultiSelect
+                  id="clinicalInformation"
+                  titleText={intl.formatMessage({
+                    id: "patient.clinical.info",
+                    defaultMessage: "Renseignements cliniques",
+                  })}
+                  items={clinicalInfoOptions}
+                  itemToString={(item) => (item ? item.value : "")}
+                  selectedItems={buildSelectedItems(
+                    values.clinicalInformation,
+                    clinicalInfoOptions,
+                  )}
+                  onChange={(changes) => {
+                    setFieldValue(
+                      "clinicalInformation",
+                      changes.selectedItems.map(
+                        (item) => item.id || item.value,
+                      ),
+                    );
+                  }}
+                  selectionFeedback="top-after-reopen"
+                />
+                {renderSelectedTags(
+                  buildSelectedItems(
+                    values.clinicalInformation,
+                    clinicalInfoOptions,
+                  ),
+                  "clinicalInformationTags",
+                )}
+              </Column>
+              <Column lg={8} md={4} sm={4}>
+                {isOtherSelected(
+                  values.clinicalInformation,
+                  clinicalInfoOptions,
+                ) && (
+                  <TextInput
+                    name="clinicalInformationOther"
+                    value={values.clinicalInformationOther || ""}
+                    labelText={intl.formatMessage({
+                      id: "patient.clinical.info.other",
+                      defaultMessage: "Autres renseignements cliniques",
+                    })}
+                    id="clinicalInformationOther"
+                    onChange={handleChange}
+                    placeholder={intl.formatMessage({
+                      id: "patient.clinical.info.other.placeholder",
+                      defaultMessage: "Préciser",
+                    })}
+                  />
+                )}
+              </Column>
+              <Column lg={16} md={8} sm={4}>
+                {" "}
+                <br></br>
+              </Column>
+                  <Column lg={8} md={4} sm={4}>
+                    <RadioButtonGroup
+                      legendText={intl.formatMessage({
+                        id: "patient.antibiotherapy.recent",
+                        defaultMessage: "Antibiothérapie dans les 3 derniers mois",
+                      })}
+                      valueSelected={
+                        values.recentAntibiotherapy ? "true" : "false"
+                      }
+                      name="recentAntibiotherapy"
+                      onChange={(val) => {
+                        const boolVal = val === "true";
+                        setFieldValue("recentAntibiotherapy", boolVal);
+                        if (!boolVal) {
+                          setFieldValue("recentAntibiotherapyList", []);
+                        }
+                      }}
+                    >
+                      <RadioButton
+                        id="recentAtbYes"
+                        value="true"
+                        labelText="Oui"
+                      />
+                      <RadioButton
+                        id="recentAtbNo"
+                        value="false"
+                        labelText="Non"
+                      />
+                    </RadioButtonGroup>
+                  </Column>
+                  <Column lg={8} md={4} sm={4}>
+                    {values.recentAntibiotherapy && (
+                      <FilterableMultiSelect
+                        id="recentAntibiotherapyList"
+                        titleText={intl.formatMessage({
+                          id: "patient.antibiotherapy.label",
+                          defaultMessage: "Antibiothérapie",
+                        })}
+                        items={antibiotherapyOptions}
+                        itemToString={(item) => (item ? item.value : "")}
+                        selectedItems={buildSelectedItems(
+                          values.recentAntibiotherapyList,
+                          antibiotherapyOptions,
+                        )}
+                        onChange={(changes) => {
+                          setFieldValue(
+                            "recentAntibiotherapyList",
+                            changes.selectedItems.map(
+                              (item) => item.id || item.value,
+                            ),
+                          );
+                        }}
+                        selectionFeedback="top-after-reopen"
+                      />
+                    )}
+                    {values.recentAntibiotherapy &&
+                      renderSelectedTags(
+                        buildSelectedItems(
+                          values.recentAntibiotherapyList,
+                          antibiotherapyOptions,
+                        ),
+                        "recentAntibiotherapyListTags",
+                      )}
+                  </Column>
+                  <Column lg={16} md={8} sm={4}>
+                    {" "}
+                    <br></br>
+                  </Column>
+                  <Column lg={8} md={4} sm={4}>
+                    <RadioButtonGroup
+                      legendText={intl.formatMessage({
+                        id: "patient.antibiotherapy.current",
+                        defaultMessage: "Antibiothérapie en cours",
+                      })}
+                      valueSelected={
+                        values.currentAntibiotherapy ? "true" : "false"
+                      }
+                      name="currentAntibiotherapy"
+                      onChange={(val) => {
+                        const boolVal = val === "true";
+                        setFieldValue("currentAntibiotherapy", boolVal);
+                        if (!boolVal) {
+                          setFieldValue("currentAntibiotherapyList", []);
+                          setFieldValue("currentAntibiotherapyDuration", "");
+                        }
+                      }}
+                    >
+                      <RadioButton
+                        id="currentAtbYes"
+                        value="true"
+                        labelText="Oui"
+                      />
+                      <RadioButton
+                        id="currentAtbNo"
+                        value="false"
+                        labelText="Non"
+                      />
+                    </RadioButtonGroup>
+                  </Column>
+                  <Column lg={8} md={4} sm={4}>
+                    {values.currentAntibiotherapy && (
+                      <>
+                        <FilterableMultiSelect
+                          id="currentAntibiotherapyList"
+                          titleText={intl.formatMessage({
+                            id: "patient.antibiotherapy.label",
+                            defaultMessage: "Antibiothérapie",
+                          })}
+                          items={antibiotherapyOptions}
+                          itemToString={(item) => (item ? item.value : "")}
+                          selectedItems={buildSelectedItems(
+                            values.currentAntibiotherapyList,
+                            antibiotherapyOptions,
+                          )}
+                          onChange={(changes) => {
+                            setFieldValue(
+                              "currentAntibiotherapyList",
+                              changes.selectedItems.map(
+                                (item) => item.id || item.value,
+                              ),
+                            );
+                          }}
+                          selectionFeedback="top-after-reopen"
+                        />
+                        {renderSelectedTags(
+                          buildSelectedItems(
+                            values.currentAntibiotherapyList,
+                            antibiotherapyOptions,
+                          ),
+                          "currentAntibiotherapyListTags",
+                        )}
+                        <TextInput
+                          name="currentAntibiotherapyDuration"
+                          value={values.currentAntibiotherapyDuration || ""}
+                          labelText={intl.formatMessage({
+                            id: "patient.antibiotherapy.duration",
+                            defaultMessage: "Durée du traitement (jours)",
+                          })}
+                          id="currentAntibiotherapyDuration"
+                          type="number"
+                          min="0"
+                          onChange={handleChange}
+                          placeholder={intl.formatMessage({
+                            id: "patient.antibiotherapy.duration.placeholder",
+                            defaultMessage: "Durée du traitement",
+                          })}
+                        />
+                      </>
+                    )}
+                  </Column>
+                  <Column lg={16} md={8} sm={4}>
+                    {" "}
+                    <br></br>
+                  </Column>
+                  <Column lg={8} md={4} sm={4}>
+                    <RadioButtonGroup
+                      legendText={intl.formatMessage({
+                        id: "patient.hospitalization.recent",
+                        defaultMessage: "Antécédent hospitalisation dans les 3 derniers mois",
+                      })}
+                      valueSelected={
+                        values.recentHospitalization ? "true" : "false"
+                      }
+                      name="recentHospitalization"
+                      onChange={(val) => {
+                        const boolVal = val === "true";
+                        setFieldValue("recentHospitalization", boolVal);
+                        if (!boolVal) {
+                          setFieldValue("recentHospitalizationCount", "");
+                        }
+                      }}
+                    >
+                      <RadioButton
+                        id="recentHospYes"
+                        value="true"
+                        labelText="Oui"
+                      />
+                      <RadioButton
+                        id="recentHospNo"
+                        value="false"
+                        labelText="Non"
+                      />
+                    </RadioButtonGroup>
+                  </Column>
+                  <Column lg={8} md={4} sm={4}>
+                    {values.recentHospitalization && (
+                      <TextInput
+                        name="recentHospitalizationCount"
+                        value={values.recentHospitalizationCount || ""}
+                        labelText={intl.formatMessage({
+                          id: "patient.hospitalization.recent.count",
+                          defaultMessage: "Nombre d'hospitalisations",
+                        })}
+                        id="recentHospitalizationCount"
+                        type="number"
+                        min="0"
+                        onChange={handleChange}
+                        placeholder={intl.formatMessage({
+                          id: "patient.hospitalization.recent.count",
+                          defaultMessage: "Nombre d'hospitalisations",
+                        })}
+                      />
+                    )}
+                  </Column>
+                  <Column lg={16} md={8} sm={4}>
+                    {" "}
+                    <br></br>
+                  </Column>
+                  <Column lg={8} md={4} sm={4}>
+                    <FilterableMultiSelect
+                      id="recentInvasiveGestures"
+                      titleText={intl.formatMessage({
+                        id: "patient.invasive.gestures",
+                        defaultMessage: "Antécédents des gestes invasifs (<30 jours)",
+                      })}
+                      items={invasiveGesturesOptions}
+                      itemToString={(item) => (item ? item.value : "")}
+                      selectedItems={buildSelectedItems(
+                        values.recentInvasiveGestures,
+                        invasiveGesturesOptions,
+                      )}
+                      onChange={(changes) => {
+                        setFieldValue(
+                          "recentInvasiveGestures",
+                          changes.selectedItems.map(
+                            (item) => item.id || item.value,
+                          ),
+                        );
+                      }}
+                      selectionFeedback="top-after-reopen"
+                    />
+                    {renderSelectedTags(
+                      buildSelectedItems(
+                        values.recentInvasiveGestures,
+                        invasiveGesturesOptions,
+                      ),
+                      "recentInvasiveGesturesTags",
+                    )}
+                  </Column>
+                  <Column lg={8} md={4} sm={4}>
+                    <FilterableMultiSelect
+                      id="indwellingDevice"
+                      titleText={intl.formatMessage({
+                        id: "patient.indwelling.device",
+                        defaultMessage: "Dispositif à demeure",
+                      })}
+                      items={indwellingDeviceOptions}
+                      itemToString={(item) => (item ? item.value : "")}
+                      selectedItems={buildSelectedItems(
+                        values.indwellingDevice,
+                        indwellingDeviceOptions,
+                      )}
+                      onChange={(changes) => {
+                        setFieldValue(
+                          "indwellingDevice",
+                          changes.selectedItems.map(
+                            (item) => item.id || item.value,
+                          ),
+                        );
+                      }}
+                      selectionFeedback="top-after-reopen"
+                    />
+                    {renderSelectedTags(
+                      buildSelectedItems(
+                        values.indwellingDevice,
+                        indwellingDeviceOptions,
+                      ),
+                      "indwellingDeviceTags",
+                    )}
+                  </Column>
+                  <Column lg={16} md={8} sm={4}>
+                    {" "}
+                    <br></br>
+                  </Column>
+                </>
+              )}
               <Column lg={16} md={8} sm={4}>
                 <Accordion>
                   <AccordionItem

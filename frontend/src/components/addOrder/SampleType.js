@@ -35,7 +35,14 @@ const SampleType = (props) => {
   const sampleTypesRef = useRef(null);
   const sampleMethodsRef = useRef(null);
 
-  const { index, rejectSampleReasons, removeSample, sample, isTb } = props;
+  const {
+    index,
+    rejectSampleReasons,
+    removeSample,
+    sample,
+    isTb,
+    isBacterio = false,
+  } = props;
 
   const [sampleTypes, setSampleTypes] = useState([]);
   const [selectedSampleType, setSelectedSampleType] = useState({
@@ -93,7 +100,13 @@ const SampleType = (props) => {
   const [tbSampleAspect, setTbSampleAspect] = useState([]);
   const [followupReason, setFollowupReason] = useState("");
   const [followupLines, setFollowupLines] = useState([]);
+
   const defaultSelect = { id: "", value: "Choose Rejection Reason" };
+  const mapDictionaryToOptions = (list) =>
+    (Array.isArray(list) ? list : []).map((item) => ({
+      id: item.id || item.value,
+      value: item.value || item.name || "",
+    }));
   const [tbData, setTbData] = useState({
     tbOrderReason: "",
     tbDiagnosticReason: "",
@@ -583,7 +596,7 @@ const SampleType = (props) => {
     }
   };
 
-useEffect(() => {
+  useEffect(() => {
     componentMounted.current = true;
     if (selectedTbSampleMethod.id !== "" && selectedTbSampleMethod.id != null) {
       if (isTb) {
@@ -603,6 +616,7 @@ useEffect(() => {
       componentMounted.current = false;
     };
   }, [selectedTbSampleMethod.id]);
+
 
   useEffect(() => {
     props.sampleTypeObject({
@@ -641,6 +655,13 @@ useEffect(() => {
       });
     }
   }, [tbData, isTb]);
+  useEffect(() => {
+    if (isBacterio) {
+      props.sampleTypeObject({
+        sampleObjectIndex: index,
+      });
+    }
+  }, [isBacterio]);
 
   const repopulateUI = () => {
     if (props.sample !== null) {

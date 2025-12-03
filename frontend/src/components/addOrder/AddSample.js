@@ -5,7 +5,7 @@ import { getFromOpenElisServer } from "../utils/Utils";
 import SampleType from "./SampleType";
 import { FormattedMessage } from "react-intl";
 const AddSample = (props) => {
-  const { samples, setSamples, error, isTb } = props;
+  const { samples, setSamples, error, isTb, isBacterio = false } = props;
   const componentMounted = useRef(false);
 
   const [rejectSampleReasons, setRejectSampleReasons] = useState([]);
@@ -22,6 +22,7 @@ const AddSample = (props) => {
       sampleXML: null,
       panels: [],
       tests: [],
+      nonConformityNature: "",
     });
     console.debug(JSON.stringify(updateSamples));
     setSamples(updateSamples);
@@ -41,6 +42,10 @@ const AddSample = (props) => {
         object.rejectionReason !== null:
         newState[object.sampleObjectIndex].rejectionReason =
           object.rejectionReason;
+        break;
+      case object.nonConformityNature !== undefined:
+        newState[object.sampleObjectIndex].nonConformityNature =
+          object.nonConformityNature;
         break;
       case object.selectedTests !== undefined &&
         object.selectedTests.length > 0:
@@ -125,15 +130,16 @@ const AddSample = (props) => {
                 <SampleType
                   index={i}
                   rejectSampleReasons={rejectSampleReasons}
-                  removeSample={removeSample}
-                  sample={sample}
-                  isTb={isTb}
-                  showTBSection={isTb}
-                  setSample={(newSample) => {
-                    let newSamples = [...samples];
-                    newSamples[i] = newSample;
-                    setSamples(newSamples);
-                  }}
+                removeSample={removeSample}
+                sample={sample}
+                isTb={isTb}
+                showTBSection={isTb}
+                isBacterio={isBacterio}
+                setSample={(newSample) => {
+                  let newSamples = [...samples];
+                  newSamples[i] = newSample;
+                  setSamples(newSamples);
+                }}
                   sampleTypeObject={sampleTypeObject}
                   error={error}
                 />

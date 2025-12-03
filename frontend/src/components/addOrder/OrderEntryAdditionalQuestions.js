@@ -12,6 +12,7 @@ export const ProgramSelect = ({
     console.debug("default programChange function does nothing");
   },
   orderFormValues,
+  setOrderFormValues = () => {},
   editable,
 }) => {
   const componentMounted = useRef(false);
@@ -19,32 +20,99 @@ export const ProgramSelect = ({
   const intl = useIntl();
 
   const [programs, setPrograms] = useState([]);
+  const [programCodes, setProgramCodes] = useState({});
 
   const fetchPrograms = (programsList) => {
     if (componentMounted.current) {
       setPrograms(programsList);
     }
   };
-
-  useEffect(() => {
-    if (!orderFormValues?.sampleOrderItems?.programId) {
-      programChange({
-        target: {
-          value: programs.find((program) => {
-            return program.value === "Routine Testing";
-          })?.id,
+  const fetchProgramCodes = (programCodesList) => {
+    if (!componentMounted.current) {
+      return;
+    }
+    // Build id -> code map; fall back to provided shape if available.
+    const codeMap = (programCodesList || []).reduce((acc, item) => {
+      if (item?.id) {
+        acc[item.id] = item.code || item.programCode || item.value || "";
+      }
+      return acc;
+    }, {});
+    setProgramCodes(codeMap);
+    // If a program is already selected but code missing, fill it
+    if (
+      orderFormValues?.sampleOrderItems?.programId &&
+      !orderFormValues?.sampleOrderItems?.programCode
+    ) {
+      const code =
+        codeMap[orderFormValues.sampleOrderItems.programId] ||
+        orderFormValues.sampleOrderItems.programCode ||
+        "";
+      setOrderFormValues({
+        ...orderFormValues,
+        sampleOrderItems: {
+          ...orderFormValues.sampleOrderItems,
+          programCode: code,
         },
       });
     }
-  }, [programs]);
+  };
+
+  useEffect(() => {
+    if (!orderFormValues?.sampleOrderItems?.programId) {
+      const defaultProgram = programs.find((program) => {
+        return program.value === "Routine Testing";
+      });
+      const defaultCode =
+        (defaultProgram && programCodes[defaultProgram.id]) ||
+        defaultProgram?.code ||
+        "";
+      if (defaultProgram?.id) {
+        const syntheticEvent = {
+          target: {
+            value: defaultProgram.id,
+          },
+        };
+        // Update local form values so the select shows the selection immediately.
+        setOrderFormValues({
+          ...orderFormValues,
+          sampleOrderItems: {
+            ...orderFormValues.sampleOrderItems,
+            programId: defaultProgram.id,
+            programCode: defaultCode,
+          },
+        });
+        programChange(syntheticEvent, defaultProgram, defaultCode);
+      }
+    }
+  }, [programs, programCodes]);
 
   useEffect(() => {
     componentMounted.current = true;
     getFromOpenElisServer("/rest/user-programs", fetchPrograms);
+    getFromOpenElisServer("/rest/program_codes", fetchProgramCodes);
     return () => {
       componentMounted.current = false;
     };
   }, []);
+
+  useEffect(() => {
+    if (
+      programs.length > 0 &&
+      orderFormValues?.sampleOrderItems?.programId &&
+      !orderFormValues?.sampleOrderItems?.programCode
+    ) {
+      const code =
+        programCodes[orderFormValues.sampleOrderItems.programId] || "";
+      setOrderFormValues({
+        ...orderFormValues,
+        sampleOrderItems: {
+          ...orderFormValues.sampleOrderItems,
+          programCode: code,
+        },
+      });
+    }
+  }, [programs, programCodes, orderFormValues?.sampleOrderItems?.programId]);
 
   return (
     <>
@@ -54,7 +122,23 @@ export const ProgramSelect = ({
             <Select
               id="additionalQuestionsSelect"
               labelText={intl.formatMessage({ id: "label.program" })}
-              onChange={programChange}
+              onChange={(e) => {
+                const selectedProgram = programs.find(
+                  (program) => program.id === e.target.value,
+                );
+                const selectedProgramCode =
+                  programCodes[e.target.value] || selectedProgram?.code || "";
+                // Update selection locally so the value is reflected in the UI immediately.
+                setOrderFormValues({
+                  ...orderFormValues,
+                  sampleOrderItems: {
+                    ...orderFormValues.sampleOrderItems,
+                    programId: e.target.value,
+                    programCode: selectedProgramCode,
+                  },
+                });
+                programChange(e, selectedProgram, selectedProgramCode);
+              }}
               value={orderFormValues?.sampleOrderItems?.programId}
               disabled={editable ? editable : false}
             >
@@ -89,7 +173,7 @@ const OrderEntryAdditionalQuestions = ({
     orderFormValues?.sampleOrderItems?.additionalQuestions,
   );
 
-  const handleProgramSelection = (event) => {
+  const handleProgramSelection = (event, selectedProgram, programCode) => {
     if (!event?.target?.value) {
       setAdditionalQuestions({});
       setOrderFormValues({
@@ -97,6 +181,7 @@ const OrderEntryAdditionalQuestions = ({
         sampleOrderItems: {
           ...orderFormValues.sampleOrderItems,
           programId: "",
+          programCode: "",
         },
       });
     } else {
@@ -105,6 +190,7 @@ const OrderEntryAdditionalQuestions = ({
         sampleOrderItems: {
           ...orderFormValues.sampleOrderItems,
           programId: event.target.value,
+          programCode: programCode || selectedProgram?.code || "",
         },
       });
       getFromOpenElisServer(
@@ -282,6 +368,7 @@ const OrderEntryAdditionalQuestions = ({
           <ProgramSelect
             programChange={handleProgramSelection}
             orderFormValues={orderFormValues}
+            setOrderFormValues={setOrderFormValues}
           />
           <Questionnaire
             questionnaire={questionnaire}

@@ -2072,5 +2072,21 @@
   "tb.aspect": "TB Sample Aspect",
   "tb.specimen.nature": "TB Specimen Nature",
   "label.select.option": "Select an option",
-  "program.TB.name": "Tuberculosis"
+  "program.TB.name": "Tuberculosis",
+  "order.epi.week.label": "Epidemiological Week",
+  "patient.hospitalization.current": "Current hospitalization",
+  "patient.room.number": "Room number",
+  "patient.clinical.info": "Clinical information",
+  "patient.clinical.info.other": "Other clinical information",
+  "patient.clinical.info.other.placeholder": "Specify",
+  "patient.antibiotherapy.recent": "Antibiotic therapy in the last 3 months",
+  "patient.antibiotherapy.label": "Antibiotic therapy",
+  "patient.antibiotherapy.current": "Current antibiotic therapy",
+  "patient.antibiotherapy.duration": "Treatment duration (days)",
+  "patient.antibiotherapy.duration.placeholder": "Treatment duration",
+  "patient.hospitalization.recent": "Hospitalization in the last 3 months",
+  "patient.hospitalization.recent.count": "Number of hospitalizations",
+  "patient.invasive.gestures": "Invasive procedures (<30 days)",
+  "patient.indwelling.device": "Indwelling device",
+  "patient.clinical.info": "Clinical informations"
 }

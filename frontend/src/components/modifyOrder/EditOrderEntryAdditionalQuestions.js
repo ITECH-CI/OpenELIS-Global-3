@@ -1,19 +1,15 @@
-import React, { useEffect, useRef, useState } from "react";
 import {
-  FilterableMultiSelect,
-  Select,
-  SelectItem,
-  TextInput,
-  Stack,
   InlineLoading,
+  Stack
 } from "@carbon/react";
-import { FormattedMessage, useIntl } from "react-intl";
-import "../../index.css";
+import { useEffect, useState } from "react";
+import { FormattedMessage } from "react-intl";
 import "../../App.css";
-import "../Style.css";
-import { getFromOpenElisServer } from "../utils/Utils";
+import "../../index.css";
 import { ProgramSelect } from "../addOrder/OrderEntryAdditionalQuestions";
 import Questionnaire from "../common/Questionnaire";
+import "../Style.css";
+import { getFromOpenElisServer } from "../utils/Utils";
 
 const EditOrderEntryAdditionalQuestions = ({
   orderFormValues,
@@ -41,7 +37,7 @@ const EditOrderEntryAdditionalQuestions = ({
     }
   }, [orderFormValues]);
 
-  const handleProgramSelection = (event) => {
+  const handleProgramSelection = (event, _selectedProgram, programCode) => {
     if (!event.target.value) {
       setAdditionalQuestions(null);
       setOrderFormValues({
@@ -49,6 +45,7 @@ const EditOrderEntryAdditionalQuestions = ({
         sampleOrderItems: {
           ...orderFormValues.sampleOrderItems,
           programId: "",
+          programCode: "",
         },
       });
     } else {
@@ -61,6 +58,7 @@ const EditOrderEntryAdditionalQuestions = ({
         sampleOrderItems: {
           ...orderFormValues.sampleOrderItems,
           programId: event.target.value,
+          programCode: programCode || "",
         },
       });
     }
@@ -157,6 +155,7 @@ const EditOrderEntryAdditionalQuestions = ({
           <ProgramSelect
             orderFormValues={orderFormValues}
             programChange={handleProgramSelection}
+            setOrderFormValues={setOrderFormValues}
             editable={true}
           />
           <Questionnaire questionnaire={questionnaire} getAnswer={getAnswer} />

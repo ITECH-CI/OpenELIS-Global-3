@@ -1495,6 +1495,20 @@
   "program.IHC.name": "Immunohistochimie",
   "program.PATH.name": "Anatomopathologie",
   "program.RTN_BACTER.name": "Bactériologie Classique",
-  "label.select.option": "Sélectionner une option",
-  "program.TB.name": "Tuberculose"
+  "program.TB.name": "Tuberculose",
+  "order.epi.week.label": "Semaine épidémiologique",
+  "patient.hospitalization.current": "Hospitalisation en cours",
+  "patient.room.number": "Numéro de chambre",
+  "patient.clinical.info": "Renseignements cliniques",
+  "patient.clinical.info.other": "Autres renseignements cliniques",
+  "patient.clinical.info.other.placeholder": "Préciser",
+  "patient.antibiotherapy.recent": "Antibiothérapie dans les 3 derniers mois",
+  "patient.antibiotherapy.label": "Antibiothérapie",
+  "patient.antibiotherapy.current": "Antibiothérapie en cours",
+  "patient.antibiotherapy.duration": "Durée du traitement (jours)",
+  "patient.antibiotherapy.duration.placeholder": "Durée du traitement",
+  "patient.hospitalization.recent": "Hospitalisation dans les 3 derniers mois",
+  "patient.hospitalization.recent.count": "Nombre d'hospitalisations",
+  "patient.invasive.gestures": "Antécédants gestes invasifs (<30 jours)",
+  "patient.indwelling.device": "Dispositif à demeure"
 }
