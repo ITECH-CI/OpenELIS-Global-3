@@ -214,6 +214,9 @@ public class SampleOrderItem implements Serializable {
     private QuestionnaireResponse additionalQuestions;
 
     private String programId;
+    
+	@SafeHtml(level = SafeHtml.SafeListLevel.NONE)
+    private String clinicalInformations;
 
     // for display
     private List<IdValuePair> priorityList;
@@ -229,7 +232,15 @@ public class SampleOrderItem implements Serializable {
         this.priorityList = priorityList;
     }
 
-    private OrderPriority priority;
+    public String getClinicalInformations() {
+		return clinicalInformations;
+	}
+
+	public void setClinicalInformations(String clinicalInformations) {
+		this.clinicalInformations = clinicalInformations;
+	}
+
+	private OrderPriority priority;
 
     public OrderPriority getPriority() {
         return priority;

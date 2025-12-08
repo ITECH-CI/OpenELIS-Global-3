@@ -41,6 +41,7 @@ import org.openelisglobal.patient.action.IPatientUpdate.PatientUpdateStatus;
 import org.openelisglobal.patient.action.bean.PatientManagementInfo;
 import org.openelisglobal.patient.action.bean.PatientRoutineBacterioInfo;
 import org.openelisglobal.patient.action.bean.PatientSearch;
+import org.openelisglobal.patient.action.bean.PatientTbInfo;
 import org.openelisglobal.provider.service.ProviderService;
 import org.openelisglobal.provider.valueholder.Provider;
 import org.openelisglobal.sample.action.util.SamplePatientUpdateData;
@@ -131,7 +132,7 @@ public class SamplePatientEntryRestController extends BaseSampleEntryController 
             "sampleOrderItems.paymentOptionSelection", "sampleOrderItems.billingReferenceNumber",
             "sampleOrderItems.testLocationCode", "sampleOrderItems.otherLocationCode",
             "sampleOrderItems.contactTracingIndexName", "sampleOrderItems.contactTracingIndexRecordNumber",
-            "sampleOrderItems.priority","sampleOrderItems.epidemiologicalWeek",
+            "sampleOrderItems.priority","sampleOrderItems.epidemiologicalWeek","sampleOrderItems.clinicalInformations",
             //
             "currentDate", "sampleOrderItems.newRequesterName", "sampleOrderItems.externalOrderNumber",
             // referral
@@ -254,9 +255,7 @@ public class SamplePatientEntryRestController extends BaseSampleEntryController 
         SamplePatientUpdateData updateData = new SamplePatientUpdateData(getSysUserId(request));
 
         PatientManagementInfo patientInfo = form.getPatientProperties();
-        SampleOrderItem sampleOrder = form.getSampleOrderItems();
-        
-        PatientRoutineBacterioInfo patientRoutineBacteriology = form.getPatientRoutineBacterioInfo();
+        SampleOrderItem sampleOrder = form.getSampleOrderItems();                
 
         boolean trackPayments = ConfigurationProperties.getInstance()
                 .isPropertyValueEqual(Property.TRACK_PATIENT_PAYMENT, "true");
