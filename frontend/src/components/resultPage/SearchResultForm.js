@@ -34,6 +34,7 @@ import ReferredOutTests from "./resultsReferredOut/ReferredOutTests";
 import { ConfigurationContext } from "../layout/Layout";
 import config from "../../config.json";
 import CustomDatePicker from "../common/CustomDatePicker";
+import { priorities } from "../data/orderOptions";
 
 function ResultSearchPage() {
   const [originalResultForm, setOriginalResultForm] = useState({
@@ -895,6 +896,16 @@ export function SearchResults(props) {
   };
 
   var columns = [
+      {
+      id: "priority",
+      name: intl.formatMessage({ id: "column.name.priority" }),
+      cell: (row, index, column, id) => {
+        return renderCell(row, index, column, id);
+      },
+      sortable: true,
+      selector: (row) => row.priority,
+      width: "5rem",
+    },
     {
       id: "sampleInfo",
       name: intl.formatMessage({ id: "column.name.sampleInfo" }),
@@ -1031,6 +1042,13 @@ export function SearchResults(props) {
               </picture>
             )}
           </>
+        );
+      case "priority":
+        const priorityObj = priorities.find(p => p.value === row.priority);
+        return (
+          <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100%" }}>
+            {priorityObj ? priorityObj.icon : null}
+          </div>
         );
       case "testName":
         return (

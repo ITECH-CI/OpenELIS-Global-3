@@ -193,6 +193,8 @@ public class AnalysisItem implements Serializable {
 
     private boolean isNormal;
 
+    private String priority;
+
     public String getRejectReasonId() {
         return rejectReasonId;
     }
@@ -818,5 +820,13 @@ public class AnalysisItem implements Serializable {
 
     public void setPatientInfo(String patientInfo) {
         this.patientInfo = patientInfo;
+    }
+
+    public String getPriority() {
+        return priority;
+    }
+
+    public void setPriority(String priority) {
+        this.priority = priority;
     }
 }

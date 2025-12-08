@@ -758,6 +758,11 @@ public class ResultsLoadUtility {
         if (test.getDefaultTestResult() != null) {
             testItem.setDefaultResultValue(test.getDefaultTestResult().getValue());
         }
+
+        if (currSample != null && currSample.getPriority() != null) {
+            testItem.setPriority(currSample.getPriority().name());
+        }
+
         return testItem;
     }
 

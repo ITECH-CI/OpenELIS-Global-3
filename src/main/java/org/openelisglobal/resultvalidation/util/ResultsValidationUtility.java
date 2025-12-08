@@ -687,6 +687,11 @@ public class ResultsValidationUtility {
         analysisResultItem.setQualifiedResultId(testResultItem.getQualificationResultId());
         analysisResultItem.setHasQualifiedResult(testResultItem.isHasQualifiedResult());
 
+        Sample sample = testResultItem.getAnalysis().getSampleItem().getSample();
+        if (sample != null && sample.getPriority() != null) {
+            analysisResultItem.setPriority(sample.getPriority().toString());
+        }
+
         return analysisResultItem;
     }
 

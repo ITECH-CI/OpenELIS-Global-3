@@ -2088,5 +2088,6 @@
   "patient.hospitalization.recent.count": "Number of hospitalizations",
   "patient.invasive.gestures": "Invasive procedures (<30 days)",
   "patient.indwelling.device": "Indwelling device",
-  "patient.clinical.info": "Clinical informations"
+  "patient.clinical.info": "Clinical informations",
+  "column.name.priority":"Priority"
 }
