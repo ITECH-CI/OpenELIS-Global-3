@@ -1510,5 +1510,6 @@
   "patient.hospitalization.recent": "Hospitalisation dans les 3 derniers mois",
   "patient.hospitalization.recent.count": "Nombre d'hospitalisations",
   "patient.invasive.gestures": "Antécédants gestes invasifs (<30 jours)",
-  "patient.indwelling.device": "Dispositif à demeure"
+  "patient.indwelling.device": "Dispositif à demeure",
+  "column.name.priority":"Priorité"
 }

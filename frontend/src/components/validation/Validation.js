@@ -23,6 +23,7 @@ import { getFromOpenElisServer } from "../utils/Utils";
 import { ConfigurationContext } from "../layout/Layout";
 import { convertAlphaNumLabNumForDisplay } from "../utils/Utils";
 import config from "../../config.json";
+import { priorities } from "../data/orderOptions";
 
 const Validation = (props) => {
   const componentMounted = useRef(false);
@@ -45,6 +46,16 @@ const Validation = (props) => {
   }, []);
 
   const columns = [
+    {
+      id: "priority",
+      name: intl.formatMessage({ id: "column.name.priority" }),
+      cell: (row, index, column, id) => {
+        return renderCell(row, index, column, id);
+      },
+      sortable: true,
+      selector: (row) => row.priority,
+      width: "5rem",
+    },
     {
       id: "sampleInfo",
       name: intl.formatMessage({ id: "column.name.sampleInfo" }),
@@ -188,6 +199,13 @@ const Validation = (props) => {
     const testName = fullTestName.substring(0, splitIndex);
     const sampleType = fullTestName.substring(splitIndex);
     switch (column.id) {
+      case "priority":
+        const priorityObj = priorities.find(p => p.value === row.priority);
+        return (
+          <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100%" }}>
+            {priorityObj ? priorityObj.icon : null}
+          </div>
+        );
       case "sampleInfo":
         return (
           <>
