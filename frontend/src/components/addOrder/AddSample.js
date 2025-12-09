@@ -23,6 +23,7 @@ const AddSample = (props) => {
       panels: [],
       tests: [],
       nonConformityNature: "",
+      tbData: null,
     });
     console.debug(JSON.stringify(updateSamples));
     setSamples(updateSamples);

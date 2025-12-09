@@ -1,10 +1,13 @@
 package org.openelisglobal.sample.service;
 
 import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+
+import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.validator.GenericValidator;
 import org.openelisglobal.address.service.OrganizationAddressService;
 import org.openelisglobal.address.valueholder.OrganizationAddress;
@@ -44,6 +47,9 @@ import org.openelisglobal.organization.valueholder.OrganizationType;
 import org.openelisglobal.panel.valueholder.Panel;
 import org.openelisglobal.patient.action.bean.PatientManagementInfo;
 import org.openelisglobal.patient.action.bean.PatientTbInfo;
+import org.openelisglobal.patientidentity.service.PatientIdentityService;
+import org.openelisglobal.patientidentity.valueholder.PatientIdentity;
+import org.openelisglobal.patientidentitytype.util.PatientIdentityTypeMap;
 import org.openelisglobal.person.service.PersonService;
 import org.openelisglobal.program.service.ImmunohistochemistrySampleService;
 import org.openelisglobal.program.service.PathologySampleService;
@@ -55,6 +61,7 @@ import org.openelisglobal.requester.service.SampleRequesterService;
 import org.openelisglobal.requester.valueholder.SampleRequester;
 import org.openelisglobal.sample.action.util.SamplePatientUpdateData;
 import org.openelisglobal.sample.form.SamplePatientEntryForm;
+import org.openelisglobal.sample.form.SampleTbEntryForm;
 import org.openelisglobal.sample.valueholder.SampleAdditionalField;
 import org.openelisglobal.samplehuman.service.SampleHumanService;
 import org.openelisglobal.sampleitem.service.SampleItemService;
@@ -115,6 +122,8 @@ public class SamplePatientEntryServiceImpl implements SamplePatientEntryService 
     private ImmunohistochemistrySampleService immunohistochemistrySampleService;
     @Autowired
     private ProgramSampleService programSampleService;
+    @Autowired
+    private PatientIdentityService patientIdentityService;
 
     @Transactional
     @Override
@@ -145,8 +154,10 @@ public class SamplePatientEntryServiceImpl implements SamplePatientEntryService 
 
         // Persist TB data if present
         if (form.getPatientTbInfo() != null) {
+            createPatientIdentity(form.getPatientTbInfo(),updateData.getPatientId() );
             persistTbObservations(form.getPatientTbInfo(), updateData.getSample().getId(), updateData.getPatientId(),
                     updateData.getCurrentUserId());
+
         }
 
         request.getSession().setAttribute("lastAccessionNumber", updateData.getAccessionNumber());
@@ -560,20 +571,6 @@ public class SamplePatientEntryServiceImpl implements SamplePatientEntryService 
             analysisMethod.setObservationHistoryTypeId(getObservationHistoryTypeId("TbAnalysisMethod"));
             observations.add(analysisMethod);
         }
-
-        // TB Subject Number
-        if (!GenericValidator.isBlankOrNull(tbInfo.getTbSubjectNumber())) {
-            ObservationHistory subjectNumber = new ObservationHistory();
-            subjectNumber.setSampleId(sampleId);
-            subjectNumber.setPatientId(patientId);
-            subjectNumber.setLastupdated(DateUtil.getNowAsTimestamp());
-            subjectNumber.setSysUserId(sysUserId);
-            subjectNumber.setValueType(ValueType.LITERAL);
-            subjectNumber.setValue(tbInfo.getTbSubjectNumber());
-            subjectNumber.setObservationHistoryTypeId(getObservationHistoryTypeId("TbSubjectNumber"));
-            observations.add(subjectNumber);
-        }
-
         // Persist all observations
         for (ObservationHistory observation : observations) {
             observationHistoryService.insert(observation);
@@ -586,5 +583,21 @@ public class SamplePatientEntryServiceImpl implements SamplePatientEntryService 
             return oht.getId();
         }
         return null;
+    }
+
+        private String createPatientIdentity(PatientTbInfo tbInfo, String patientId) {
+        String typeID = PatientIdentityTypeMap.getInstance().getIDForType("SUBJECT");
+        PatientIdentity patientIdentity = patientIdentityService.getPatitentIdentityForPatientAndType(patientId,
+                typeID);
+        if (ObjectUtils.isEmpty(patientIdentity)) {
+            patientIdentity = new PatientIdentity();
+            patientIdentity.setPatientId(patientId);
+            patientIdentity.setIdentityData(tbInfo.getTbSubjectNumber());
+            patientIdentity.setLastupdated(DateUtil.getNowAsTimestamp());
+            patientIdentity.setIdentityTypeId(typeID);
+            return patientIdentityService.insert(patientIdentity);
+        } else {
+            return patientIdentity.getId();
+        }
     }
 }

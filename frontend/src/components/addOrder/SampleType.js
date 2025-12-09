@@ -51,7 +51,7 @@ const SampleType = (props) => {
     element_index: 0,
   });
   const [selectedTbSampleMethod, setSelectedTbSampleMethod] = useState({
-    id: null,
+    id: sample?.tbData?.selectedTbMethod || null,
     name: "",
     element_index: 0,
   });
@@ -74,7 +74,7 @@ const SampleType = (props) => {
   const [searchBoxPanels, setSearchBoxPanels] = useState([]);
   const [uomList, setUomList] = useState([]);
   const [sampleXml, setSampleXml] = useState(
-    sample?.sampleXML != null
+    sample?.sampleXML != null && Object.keys(sample.sampleXML).length > 0
       ? sample.sampleXML
       : {
           collectionDate:
@@ -107,17 +107,21 @@ const SampleType = (props) => {
       id: item.id || item.value,
       value: item.value || item.name || "",
     }));
-  const [tbData, setTbData] = useState({
-    tbOrderReason: "",
-    tbDiagnosticReason: "",
-    tbFollowupReason: "",
-    tbFollowupPeriodLine1: "",
-    tbFollowupPeriodLine2: "",
-    tbAspect: "",
-    tbSpecimenNature: "",
-    tbSubjectNumber: "",
-    selectedTbMethod: "",
-  });
+  const [tbData, setTbData] = useState(
+    sample?.tbData != null
+      ? sample.tbData
+      : {
+          tbOrderReason: "",
+          tbDiagnosticReason: "",
+          tbFollowupReason: "",
+          tbFollowupPeriodLine1: "",
+          tbFollowupPeriodLine2: "",
+          tbAspect: "",
+          tbSpecimenNature: "",
+          tbSubjectNumber: "",
+          selectedTbMethod: "",
+        }
+  );
   const [tbReasonDiagnostic, setTbReasonDiagnostic] = useState("");
   const [tbReasonFollowUp, setTbReasonFollowUp] = useState("");
 
@@ -261,6 +265,21 @@ const SampleType = (props) => {
     }));
   };
 
+  const handleSubjectNumberChange = (e) => {
+    let value = e.target.value.replace(/[^A-Z0-9]/gi, "").toUpperCase();
+
+    if (value.length > 7) {
+      value = value.slice(0, 7);
+    }
+
+    if (value.length > 2) {
+      value = value.slice(0, 2) + "-" + value.slice(2);
+    }
+
+    handleChange("tbSubjectNumber", value);
+  };
+
+  
   const triggerPanelCheckBoxChange = (isChecked, testIds) => {
     if (!testIds) {
       console.warn("testIds is undefined or null");
@@ -587,6 +606,22 @@ const SampleType = (props) => {
   }, [tbData.selectedTbMethod]);
 
   useEffect(() => {
+    componentMounted.current = true;
+    if(!isTb) { 
+      if (selectedSampleType.id !== "" && selectedSampleType.id != null) {
+      getFromOpenElisServer(
+        `/rest/sample-type-tests?sampleType=${selectedSampleType.id}`,
+        fetchSampleTypeTests,
+      );
+    }
+    return () => {
+      componentMounted.current = false;
+    };
+    }
+    
+  }, [selectedSampleType.id]);
+
+  useEffect(() => {
     getFromOpenElisServer(`/rest/UomCreate`, fetchUomCreate);
   }, []);
 
@@ -664,12 +699,27 @@ const SampleType = (props) => {
   }, [isBacterio]);
 
   const repopulateUI = () => {
+    console.log("repopulateUI called", { isTb, sampleTbData: props.sample?.tbData });
     if (props.sample !== null) {
       setSelectedTests(props.sample.tests);
       setSelectedPanels(props.sample.panels);
       setSelectedSampleType({
         id: props.sample.sampleTypeId,
       });
+
+      // Restore tbData if it exists
+      if (props.sample.tbData) {
+        setTbData(props.sample.tbData);
+
+        // Restore selectedTbSampleMethod if selectedTbMethod exists
+        if (props.sample.tbData.selectedTbMethod) {
+          setSelectedTbSampleMethod({
+            id: props.sample.tbData.selectedTbMethod,
+            name: "",
+            element_index: index,
+          });
+        }
+      }
     }
   };
 
@@ -724,6 +774,7 @@ const SampleType = (props) => {
 
         <CustomCheckBox
           id={"reject_" + index}
+          checked={sampleXml.rejected}
           onChange={(value) => handleRejection(value)}
           label={intl.formatMessage({ id: "sample.reject.label" })}
         />
@@ -733,6 +784,7 @@ const SampleType = (props) => {
             options={rejectSampleReasons}
             disabled={rejectionReasonsDisabled}
             defaultSelect={defaultSelect}
+            value={sampleXml.rejectionReason}
             onChange={(e) => handleReasons(e)}
           />
         )}
@@ -823,13 +875,13 @@ const SampleType = (props) => {
                 <Column lg={8} md={4} sm={4}>
                   <TextInput
                     value={tbData.tbSubjectNumber}
-                    onChange={(e) =>
-                      handleChange("tbSubjectNumber", e.target.value)
-                    }
+                    onChange={handleSubjectNumberChange}
                     labelText={intl.formatMessage({
                       id: "sample.tb.followup.code",
                     })}
                     id={"followUpCode_" + index}
+                    placeholder="XX-XXXXX"
+                    maxLength={8}
                   />
                 </Column>
                 <Column lg={8} md={4} sm={4}>

@@ -29,6 +29,7 @@ export let sampleObject = {
   tests: [],
   requestReferralEnabled: false,
   referralItems: [],
+  tbData: null,
 };
 const Index = () => {
   const intl = useIntl();
@@ -497,6 +498,7 @@ const Index = () => {
       name: name,
       panels: [],
       tests: [],
+      tbData: null,
       // setCrossPanels: "false",
       // setCrossTests: "false",
       // crossPanels: [],
