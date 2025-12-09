@@ -1,7 +1,4 @@
-import {
-  InlineLoading,
-  Stack
-} from "@carbon/react";
+import { InlineLoading, Stack } from "@carbon/react";
 import { useEffect, useState } from "react";
 import { FormattedMessage } from "react-intl";
 import "../../App.css";

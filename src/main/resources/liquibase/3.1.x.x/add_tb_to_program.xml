@@ -1,37 +1,37 @@
 <?xml version="1.0" encoding="utf-8"?>
 <databaseChangeLog
-	xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
 
     <property name="now" value="now()" dbms="postgresql" />
-	<changeSet author="azmac" id="1">
-		<comment>Add TB (Tuberculose) to program</comment>
+    <changeSet author="azmac" id="1">
+        <comment>Add TB (Tuberculose) to program</comment>
 
-		<!-- Insertion du programme TB avec un ID fixe -->
-		<insert tableName="program">
-			<column name="id" valueNumeric="9999" />
-			<column name="name" value="Tuberculose" />
-			<column name="code" value="TB" />
-			<column name="lastupdated" valueDate="now()" />
-		</insert>
-	</changeSet>
+        <!-- Insertion du programme TB avec un ID fixe -->
+        <insert tableName="program">
+            <column name="id" valueNumeric="9999" />
+            <column name="name" value="Tuberculose" />
+            <column name="code" value="TB" />
+            <column name="lastupdated" valueDate="now()" />
+        </insert>
+    </changeSet>
 
-	<changeSet author="CIV Developer"
-		id="add-tb-localization-2025-11-28">
-		<preConditions onFail="MARK_RAN">
-			<sqlCheck expectedResult="0">select count(*) from
-				clinlims.localization where french = 'Tuberculose' and description =
-				'Tuberculosis analysis';
-			</sqlCheck>
-		</preConditions>
-		<comment>Add Tuberculosis localization </comment>
-		<insert schemaName="clinlims" tableName="localization">
-			<column name="id" valueSequenceNext="localization_seq" />
-			<column name="lastupdated" valueComputed="${now}" />
-			<column name="description" value="Tuberculosis analysis" />
-			<column name="english" value="Tuberculosis" />
-			<column name="french" value="Tuberculose" />
-		</insert>
-	</changeSet>
+    <changeSet author="CIV Developer"
+        id="add-tb-localization-2025-11-28">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">select count(*) from
+                clinlims.localization where french = 'Tuberculose' and description =
+                'Tuberculosis analysis';
+            </sqlCheck>
+        </preConditions>
+        <comment>Add Tuberculosis localization </comment>
+        <insert schemaName="clinlims" tableName="localization">
+            <column name="id" valueSequenceNext="localization_seq" />
+            <column name="lastupdated" valueComputed="${now}" />
+            <column name="description" value="Tuberculosis analysis" />
+            <column name="english" value="Tuberculosis" />
+            <column name="french" value="Tuberculose" />
+        </insert>
+    </changeSet>
 </databaseChangeLog>

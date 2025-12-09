@@ -171,9 +171,7 @@ function CreatePatientForm(props) {
 
   useEffect(() => {
     getFromOpenElisServer(
-      `/rest/displayList/${encodeURIComponent(
-        CLINICAL_INFO_CATEGORY,
-      )}`,
+      `/rest/displayList/${encodeURIComponent(CLINICAL_INFO_CATEGORY)}`,
       (res) =>
         setClinicalInfoOptions(
           normalizeDictionaryOptions(res, CLINICAL_INFO_FALLBACK),
@@ -186,24 +184,18 @@ function CreatePatientForm(props) {
       return;
     }
     getFromOpenElisServer(
-      `/rest/displayList/${encodeURIComponent(
-        ANTIBIOTHERAPY_CATEGORY,
-      )}`,
+      `/rest/displayList/${encodeURIComponent(ANTIBIOTHERAPY_CATEGORY)}`,
       (res) => setAntibiotherapyOptions(normalizeDictionaryOptions(res, [])),
     );
     getFromOpenElisServer(
-      `/rest/displayList/${encodeURIComponent(
-        INVASIVE_GESTURES_CATEGORY,
-      )}`,
+      `/rest/displayList/${encodeURIComponent(INVASIVE_GESTURES_CATEGORY)}`,
       (res) =>
         setInvasiveGesturesOptions(
           normalizeDictionaryOptions(res, INVASIVE_GESTURES_FALLBACK),
         ),
     );
     getFromOpenElisServer(
-      `/rest/displayList/${encodeURIComponent(
-        INDWELLING_DEVICE_CATEGORY,
-      )}`,
+      `/rest/displayList/${encodeURIComponent(INDWELLING_DEVICE_CATEGORY)}`,
       (res) =>
         setIndwellingDeviceOptions(
           normalizeDictionaryOptions(res, INDWELLING_DEVICE_FALLBACK),
@@ -994,67 +986,68 @@ function CreatePatientForm(props) {
                     {" "}
                     <br></br>
                   </Column>
-              <Column lg={8} md={4} sm={4}>
-                <FilterableMultiSelect
-                  id="clinicalInformation"
-                  titleText={intl.formatMessage({
-                    id: "patient.clinical.info",
-                    defaultMessage: "Renseignements cliniques",
-                  })}
-                  items={clinicalInfoOptions}
-                  itemToString={(item) => (item ? item.value : "")}
-                  selectedItems={buildSelectedItems(
-                    values.clinicalInformation,
-                    clinicalInfoOptions,
-                  )}
-                  onChange={(changes) => {
-                    setFieldValue(
-                      "clinicalInformation",
-                      changes.selectedItems.map(
-                        (item) => item.id || item.value,
+                  <Column lg={8} md={4} sm={4}>
+                    <FilterableMultiSelect
+                      id="clinicalInformation"
+                      titleText={intl.formatMessage({
+                        id: "patient.clinical.info",
+                        defaultMessage: "Renseignements cliniques",
+                      })}
+                      items={clinicalInfoOptions}
+                      itemToString={(item) => (item ? item.value : "")}
+                      selectedItems={buildSelectedItems(
+                        values.clinicalInformation,
+                        clinicalInfoOptions,
+                      )}
+                      onChange={(changes) => {
+                        setFieldValue(
+                          "clinicalInformation",
+                          changes.selectedItems.map(
+                            (item) => item.id || item.value,
+                          ),
+                        );
+                      }}
+                      selectionFeedback="top-after-reopen"
+                    />
+                    {renderSelectedTags(
+                      buildSelectedItems(
+                        values.clinicalInformation,
+                        clinicalInfoOptions,
                       ),
-                    );
-                  }}
-                  selectionFeedback="top-after-reopen"
-                />
-                {renderSelectedTags(
-                  buildSelectedItems(
-                    values.clinicalInformation,
-                    clinicalInfoOptions,
-                  ),
-                  "clinicalInformationTags",
-                )}
-              </Column>
-              <Column lg={8} md={4} sm={4}>
-                {isOtherSelected(
-                  values.clinicalInformation,
-                  clinicalInfoOptions,
-                ) && (
-                  <TextInput
-                    name="clinicalInformationOther"
-                    value={values.clinicalInformationOther || ""}
-                    labelText={intl.formatMessage({
-                      id: "patient.clinical.info.other",
-                      defaultMessage: "Autres renseignements cliniques",
-                    })}
-                    id="clinicalInformationOther"
-                    onChange={handleChange}
-                    placeholder={intl.formatMessage({
-                      id: "patient.clinical.info.other.placeholder",
-                      defaultMessage: "Préciser",
-                    })}
-                  />
-                )}
-              </Column>
-              <Column lg={16} md={8} sm={4}>
-                {" "}
-                <br></br>
-              </Column>
+                      "clinicalInformationTags",
+                    )}
+                  </Column>
+                  <Column lg={8} md={4} sm={4}>
+                    {isOtherSelected(
+                      values.clinicalInformation,
+                      clinicalInfoOptions,
+                    ) && (
+                      <TextInput
+                        name="clinicalInformationOther"
+                        value={values.clinicalInformationOther || ""}
+                        labelText={intl.formatMessage({
+                          id: "patient.clinical.info.other",
+                          defaultMessage: "Autres renseignements cliniques",
+                        })}
+                        id="clinicalInformationOther"
+                        onChange={handleChange}
+                        placeholder={intl.formatMessage({
+                          id: "patient.clinical.info.other.placeholder",
+                          defaultMessage: "Préciser",
+                        })}
+                      />
+                    )}
+                  </Column>
+                  <Column lg={16} md={8} sm={4}>
+                    {" "}
+                    <br></br>
+                  </Column>
                   <Column lg={8} md={4} sm={4}>
                     <RadioButtonGroup
                       legendText={intl.formatMessage({
                         id: "patient.antibiotherapy.recent",
-                        defaultMessage: "Antibiothérapie dans les 3 derniers mois",
+                        defaultMessage:
+                          "Antibiothérapie dans les 3 derniers mois",
                       })}
                       valueSelected={
                         values.recentAntibiotherapy ? "true" : "false"
@@ -1208,7 +1201,8 @@ function CreatePatientForm(props) {
                     <RadioButtonGroup
                       legendText={intl.formatMessage({
                         id: "patient.hospitalization.recent",
-                        defaultMessage: "Antécédent hospitalisation dans les 3 derniers mois",
+                        defaultMessage:
+                          "Antécédent hospitalisation dans les 3 derniers mois",
                       })}
                       valueSelected={
                         values.recentHospitalization ? "true" : "false"
@@ -1263,7 +1257,8 @@ function CreatePatientForm(props) {
                       id="recentInvasiveGestures"
                       titleText={intl.formatMessage({
                         id: "patient.invasive.gestures",
-                        defaultMessage: "Antécédents des gestes invasifs (<30 jours)",
+                        defaultMessage:
+                          "Antécédents des gestes invasifs (<30 jours)",
                       })}
                       items={invasiveGesturesOptions}
                       itemToString={(item) => (item ? item.value : "")}

@@ -1,30 +1,30 @@
 <?xml version="1.0" encoding="utf-8"?>
 <databaseChangeLog
-	xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
 
-	<property name="now" value="now()" dbms="postgresql" />
-	<changeSet author="CIV developer"
-		id="update-menu-item-for-ci-context">
-		<sql>
-			UPDATE clinlims.menu
-			SET is_active = false
-			WHERE element_id IN (
-			'menu_pathology',
-			'menu_immunochem',
-			'menu_notebook',
-			'menu_aliquot',
-			'menu_cytology',
-			'menu_microbiology',
-			'menu_microbiology_tb',
-			'menu_microbiology_classic',
-			'menu_study_sample_eorder',
-			'menu_sample_create',
-			'menu_billing',
-			'menu_patient_create'
-			);
-		</sql>
-	</changeSet>
+    <property name="now" value="now()" dbms="postgresql" />
+    <changeSet author="CIV developer"
+        id="update-menu-item-for-ci-context">
+        <sql>
+            UPDATE clinlims.menu
+            SET is_active = false
+            WHERE element_id IN (
+            'menu_pathology',
+            'menu_immunochem',
+            'menu_notebook',
+            'menu_aliquot',
+            'menu_cytology',
+            'menu_microbiology',
+            'menu_microbiology_tb',
+            'menu_microbiology_classic',
+            'menu_study_sample_eorder',
+            'menu_sample_create',
+            'menu_billing',
+            'menu_patient_create'
+            );
+        </sql>
+    </changeSet>
 </databaseChangeLog>

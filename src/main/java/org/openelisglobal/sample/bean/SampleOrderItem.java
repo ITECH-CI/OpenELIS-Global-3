@@ -214,13 +214,13 @@ public class SampleOrderItem implements Serializable {
     private QuestionnaireResponse additionalQuestions;
 
     private String programId;
-    
-	@SafeHtml(level = SafeHtml.SafeListLevel.NONE)
+
+    @SafeHtml(level = SafeHtml.SafeListLevel.NONE)
     private String clinicalInformations;
 
     // for display
     private List<IdValuePair> priorityList;
-    
+
     @SafeHtml(level = SafeHtml.SafeListLevel.NONE)
     private String epidemiologicalWeek;
 
@@ -233,14 +233,14 @@ public class SampleOrderItem implements Serializable {
     }
 
     public String getClinicalInformations() {
-		return clinicalInformations;
-	}
+        return clinicalInformations;
+    }
 
-	public void setClinicalInformations(String clinicalInformations) {
-		this.clinicalInformations = clinicalInformations;
-	}
+    public void setClinicalInformations(String clinicalInformations) {
+        this.clinicalInformations = clinicalInformations;
+    }
 
-	private OrderPriority priority;
+    private OrderPriority priority;
 
     public OrderPriority getPriority() {
         return priority;
@@ -610,11 +610,11 @@ public class SampleOrderItem implements Serializable {
         this.programId = programId;
     }
 
-	public String getEpidemiologicalWeek() {
-		return epidemiologicalWeek;
-	}
+    public String getEpidemiologicalWeek() {
+        return epidemiologicalWeek;
+    }
 
-	public void setEpidemiologicalWeek(String epidemiologicalWeek) {
-		this.epidemiologicalWeek = epidemiologicalWeek;
-	}
+    public void setEpidemiologicalWeek(String epidemiologicalWeek) {
+        this.epidemiologicalWeek = epidemiologicalWeek;
+    }
 }

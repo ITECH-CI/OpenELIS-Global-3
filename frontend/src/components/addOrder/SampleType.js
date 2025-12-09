@@ -9,7 +9,7 @@ import {
   SelectItem,
   Tag,
   TextInput,
-  Tile
+  Tile,
 } from "@carbon/react";
 import { useContext, useEffect, useRef, useState } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
@@ -120,7 +120,7 @@ const SampleType = (props) => {
           tbSpecimenNature: "",
           tbSubjectNumber: "",
           selectedTbMethod: "",
-        }
+        },
   );
   const [tbReasonDiagnostic, setTbReasonDiagnostic] = useState("");
   const [tbReasonFollowUp, setTbReasonFollowUp] = useState("");
@@ -279,7 +279,6 @@ const SampleType = (props) => {
     handleChange("tbSubjectNumber", value);
   };
 
-  
   const triggerPanelCheckBoxChange = (isChecked, testIds) => {
     if (!testIds) {
       console.warn("testIds is undefined or null");
@@ -607,18 +606,17 @@ const SampleType = (props) => {
 
   useEffect(() => {
     componentMounted.current = true;
-    if(!isTb) { 
+    if (!isTb) {
       if (selectedSampleType.id !== "" && selectedSampleType.id != null) {
-      getFromOpenElisServer(
-        `/rest/sample-type-tests?sampleType=${selectedSampleType.id}`,
-        fetchSampleTypeTests,
-      );
+        getFromOpenElisServer(
+          `/rest/sample-type-tests?sampleType=${selectedSampleType.id}`,
+          fetchSampleTypeTests,
+        );
+      }
+      return () => {
+        componentMounted.current = false;
+      };
     }
-    return () => {
-      componentMounted.current = false;
-    };
-    }
-    
   }, [selectedSampleType.id]);
 
   useEffect(() => {
@@ -651,7 +649,6 @@ const SampleType = (props) => {
       componentMounted.current = false;
     };
   }, [selectedTbSampleMethod.id]);
-
 
   useEffect(() => {
     props.sampleTypeObject({
@@ -699,7 +696,10 @@ const SampleType = (props) => {
   }, [isBacterio]);
 
   const repopulateUI = () => {
-    console.log("repopulateUI called", { isTb, sampleTbData: props.sample?.tbData });
+    console.log("repopulateUI called", {
+      isTb,
+      sampleTbData: props.sample?.tbData,
+    });
     if (props.sample !== null) {
       setSelectedTests(props.sample.tests);
       setSelectedPanels(props.sample.panels);

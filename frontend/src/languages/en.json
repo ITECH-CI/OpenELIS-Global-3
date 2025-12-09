@@ -2089,5 +2089,5 @@
   "patient.invasive.gestures": "Invasive procedures (<30 days)",
   "patient.indwelling.device": "Indwelling device",
   "patient.clinical.info": "Clinical informations",
-  "column.name.priority":"Priority"
+  "column.name.priority": "Priority"
 }

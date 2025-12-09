@@ -1,7 +1,6 @@
 import * as Yup from "yup";
 
 const CreatePatientValidationSchema = Yup.object().shape({
-
   nationalId: Yup.string()
     .min(13)
     .max(13, "Le numero CMU doit contenir 13 chiffres")

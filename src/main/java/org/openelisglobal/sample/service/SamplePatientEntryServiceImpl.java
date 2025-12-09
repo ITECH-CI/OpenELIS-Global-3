@@ -1,12 +1,10 @@
 package org.openelisglobal.sample.service;
 
 import jakarta.servlet.http.HttpServletRequest;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.validator.GenericValidator;
 import org.openelisglobal.address.service.OrganizationAddressService;
@@ -61,7 +59,6 @@ import org.openelisglobal.requester.service.SampleRequesterService;
 import org.openelisglobal.requester.valueholder.SampleRequester;
 import org.openelisglobal.sample.action.util.SamplePatientUpdateData;
 import org.openelisglobal.sample.form.SamplePatientEntryForm;
-import org.openelisglobal.sample.form.SampleTbEntryForm;
 import org.openelisglobal.sample.valueholder.SampleAdditionalField;
 import org.openelisglobal.samplehuman.service.SampleHumanService;
 import org.openelisglobal.sampleitem.service.SampleItemService;
@@ -154,7 +151,7 @@ public class SamplePatientEntryServiceImpl implements SamplePatientEntryService 
 
         // Persist TB data if present
         if (form.getPatientTbInfo() != null) {
-            createPatientIdentity(form.getPatientTbInfo(),updateData.getPatientId() );
+            createPatientIdentity(form.getPatientTbInfo(), updateData.getPatientId());
             persistTbObservations(form.getPatientTbInfo(), updateData.getSample().getId(), updateData.getPatientId(),
                     updateData.getCurrentUserId());
 
@@ -585,7 +582,7 @@ public class SamplePatientEntryServiceImpl implements SamplePatientEntryService 
         return null;
     }
 
-        private String createPatientIdentity(PatientTbInfo tbInfo, String patientId) {
+    private String createPatientIdentity(PatientTbInfo tbInfo, String patientId) {
         String typeID = PatientIdentityTypeMap.getInstance().getIDForType("SUBJECT");
         PatientIdentity patientIdentity = patientIdentityService.getPatitentIdentityForPatientAndType(patientId,
                 typeID);

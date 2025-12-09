@@ -67,7 +67,7 @@ const AddOrder = (props) => {
   const handleChangeUpper = (e) => {
     const upperValue = e.target.value.toUpperCase();
     setValue(upperValue);
-    };
+  };
   const handleDatePickerChange = (datePicker, date) => {
     let obj = null;
     switch (datePicker) {
@@ -832,7 +832,7 @@ const AddOrder = (props) => {
                 })}
               />
             </Column>
-{/*
+            {/*
             <Column lg={8} md={4} sm={4}>
               <TextInput
                 name="providerFax"
@@ -856,7 +856,7 @@ const AddOrder = (props) => {
               {" "}
               &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;{" "}
             </Column>
-            */}   
+            */}
             {isBacterio && (
               <>
                 <Column lg={16} md={8} sm={3}>
@@ -952,17 +952,19 @@ const AddOrder = (props) => {
               />
             </Column>
             {!isBacterio && (
-            <Column lg={8} md={4} sm={4}>
-            <CustomTextInput
-                id={"clinicalInformations"}
-                value={value}
-                style={{ textTransform: "uppercase" }}
-                onChange={handleChangeUpper}
-                labelText={intl.formatMessage({ id: "patient.clinical.info" })}
-                className="uppercase-input"
-              />
-            </Column>
-          )}
+              <Column lg={8} md={4} sm={4}>
+                <CustomTextInput
+                  id={"clinicalInformations"}
+                  value={value}
+                  style={{ textTransform: "uppercase" }}
+                  onChange={handleChangeUpper}
+                  labelText={intl.formatMessage({
+                    id: "patient.clinical.info",
+                  })}
+                  className="uppercase-input"
+                />
+              </Column>
+            )}
             <Column lg={16} md={8} sm={3}>
               {" "}
               &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;{" "}

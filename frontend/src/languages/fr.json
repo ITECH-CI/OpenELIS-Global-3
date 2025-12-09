@@ -1511,5 +1511,5 @@
   "patient.hospitalization.recent.count": "Nombre d'hospitalisations",
   "patient.invasive.gestures": "Antécédants gestes invasifs (<30 jours)",
   "patient.indwelling.device": "Dispositif à demeure",
-  "column.name.priority":"Priorité"
+  "column.name.priority": "Priorité"
 }

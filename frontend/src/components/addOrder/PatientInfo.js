@@ -6,8 +6,13 @@ import SearchPatientForm from "../patient/SearchPatientForm";
 import { getFromOpenElisServer } from "../utils/Utils";
 
 const PatientInfo = (props) => {
-  const { orderFormValues, setOrderFormValues, error, setPhoneValidation, isBacterio } =
-    props;
+  const {
+    orderFormValues,
+    setOrderFormValues,
+    error,
+    setPhoneValidation,
+    isBacterio,
+  } = props;
   const BACTERIOLOGY_PROGRAM_CODE = "RTN_BACTER";
   const bacterioSelected =
     typeof isBacterio === "boolean"
