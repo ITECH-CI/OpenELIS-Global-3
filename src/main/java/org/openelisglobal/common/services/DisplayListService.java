@@ -368,7 +368,9 @@ public class DisplayListService implements LocaleChangeListener {
         List<IdValuePair> list = new ArrayList<>();
         List<Program> programList = programService.getAllOrdered("sortOrder", false);
         for (Program program : programList) {
-            list.add(new IdValuePair(program.getId(), program.getLocalizedName()));
+            if (Boolean.TRUE.equals(program.getActive())) {
+                list.add(new IdValuePair(program.getId(), program.getLocalizedName()));
+            }
         }
         return list;
     }
@@ -745,7 +747,9 @@ public class DisplayListService implements LocaleChangeListener {
         List<Program> programs = programService.getAllOrdered("code", false);
 
         for (Program program : programs) {
-            programCodeList.add(new IdValuePair(program.getId(), program.getCode()));
+            if (Boolean.TRUE.equals(program.getActive())) {
+                programCodeList.add(new IdValuePair(program.getId(), program.getCode()));
+            }
         }
 
         return programCodeList;

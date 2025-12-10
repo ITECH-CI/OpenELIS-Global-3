@@ -525,23 +525,46 @@ const SampleType = (props) => {
         ? followupLine1
         : followupLine2;
     setFollowupReason(value);
-    getFromOpenElisServer(
-      `/rest/Dictionary-by-ByCategory?category=${encodeURIComponent(label)}`,
-      displayTbFollowupLinesOptions,
-    );
+    if (value) {
+      getFromOpenElisServer(
+        `/rest/Dictionary-by-ByCategory?category=${encodeURIComponent(label)}`,
+        displayTbFollowupLinesOptions,
+      );
+    }
   }
 
   useEffect(() => {
-    const category =
-      tbData.tbDiagnosticReason === tbReasonDiagnostic
-        ? "TB Diagnostic Reasons"
-        : "TB Followup Reasons";
+    if (tbData.tbDiagnosticReason) {
+      const category =
+        tbData.tbDiagnosticReason === tbReasonDiagnostic
+          ? "TB Diagnostic Reasons"
+          : "TB Followup Reasons";
 
-    getFromOpenElisServer(
-      `/rest/Dictionary-by-ByCategory?category=${encodeURIComponent(category)}`,
-      fetTbReasons,
-    );
-  }, [tbData.tbDiagnosticReason]);
+      getFromOpenElisServer(
+        `/rest/Dictionary-by-ByCategory?category=${encodeURIComponent(category)}`,
+        fetTbReasons,
+      );
+    }
+  }, [tbData.tbDiagnosticReason, tbReasonDiagnostic]);
+
+  // Load followup lines when tbFollowupReason changes
+  useEffect(() => {
+    if (tbData.tbFollowupReason && reasons.length > 0) {
+      const selectedReason = reasons.find(
+        (item) => item.id === tbData.tbFollowupReason,
+      );
+      if (selectedReason) {
+        const label =
+          selectedReason.value === "Examen de suivi 1ère ligne (TB Sensible)"
+            ? followupLine1
+            : followupLine2;
+        getFromOpenElisServer(
+          `/rest/Dictionary-by-ByCategory?category=${encodeURIComponent(label)}`,
+          displayTbFollowupLinesOptions,
+        );
+      }
+    }
+  }, [tbData.tbFollowupReason, reasons]);
 
   function fetTbReasons(res) {
     if (res) {
@@ -602,7 +625,7 @@ const SampleType = (props) => {
     return () => {
       componentMounted.current = false;
     };
-  }, [tbData.selectedTbMethod]);
+  }, [tbData.selectedTbMethod, isTb]);
 
   useEffect(() => {
     componentMounted.current = true;
@@ -648,7 +671,7 @@ const SampleType = (props) => {
     return () => {
       componentMounted.current = false;
     };
-  }, [selectedTbSampleMethod.id]);
+  }, [selectedTbSampleMethod.id, isTb]);
 
   useEffect(() => {
     props.sampleTypeObject({
@@ -722,6 +745,27 @@ const SampleType = (props) => {
       }
     }
   };
+
+  // Reload dependent lists when TB data is restored on tab change
+  useEffect(() => {
+    if (
+      isTb &&
+      tbData.tbDiagnosticReason &&
+      tbReasonDiagnostic &&
+      tbReasonFollowUp
+    ) {
+      // Reload reasons list based on diagnostic reason
+      const category =
+        tbData.tbDiagnosticReason === tbReasonDiagnostic
+          ? "TB Diagnostic Reasons"
+          : "TB Followup Reasons";
+
+      getFromOpenElisServer(
+        `/rest/Dictionary-by-ByCategory?category=${encodeURIComponent(category)}`,
+        fetTbReasons,
+      );
+    }
+  }, [tbReasonDiagnostic, tbReasonFollowUp, isTb]);
 
   useEffect(() => {
     componentMounted.current = true;

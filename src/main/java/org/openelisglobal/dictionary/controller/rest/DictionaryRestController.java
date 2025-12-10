@@ -312,7 +312,7 @@ public class DictionaryRestController extends BaseController {
         List<Dictionary> dictionaries = dictionaryService.getDictionaryEntrysByCategoryAbbreviation("categoryName",
                 category, false);
         for (Dictionary dictionary : dictionaries) {
-            IdValuePair ivp = new IdValuePair(dictionary.getId(), dictionary.getDictEntry());
+            IdValuePair ivp = new IdValuePair(dictionary.getId(), dictionary.getDisplayValue());
             dictList.add(ivp);
         }
         return dictList;
