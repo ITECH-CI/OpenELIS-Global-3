@@ -157,6 +157,7 @@ function CreatePatientForm(props) {
   };
 
   const isOtherSelected = (selectedValues, options) => {
+    console.log( {selectedValues: selectedValues , options: options})
     return (selectedValues || []).some((val) => {
       const opt = options.find((o) => {
         if (o.id === val || o.value === val) {
@@ -816,7 +817,7 @@ function CreatePatientForm(props) {
                   )}
                 </Field>
               </Column>
-              <Column lg={8} md={4} sm={4}>
+              <Column lg={5} md={5} sm={5}>
                 <Field name="gender">
                   {({ field }) => (
                     <RadioButtonGroup
@@ -848,7 +849,22 @@ function CreatePatientForm(props) {
                 <div className="error">
                   <ErrorMessage name="gender"></ErrorMessage>
                 </div>
+            
               </Column>
+            <Column lg={3} md={3} sm={3}>
+                {values.gender === "F" && (
+                    <Select
+                      className="pregnant"
+                      id={"pregnant"}
+                      name="pregnant"
+                      labelText={intl.formatMessage({ id: "patient.female.pregnant" })}
+                      required
+                    >
+                    <SelectItem text="Non" value="N" />
+                    <SelectItem text="Oui" value="O" />
+                    </Select>
+                )}
+                </Column>
               <Column lg={16} md={8} sm={4}>
                 {" "}
                 <br></br>
@@ -965,7 +981,7 @@ function CreatePatientForm(props) {
                     </RadioButtonGroup>
                   </Column>
                   <Column lg={8} md={4} sm={4}>
-                    {values.currentHospitalization && (
+                    {values.currentHospitalization === "true" && (
                       <TextInput
                         name="roomNumber"
                         value={values.roomNumber || ""}
@@ -1074,7 +1090,7 @@ function CreatePatientForm(props) {
                     </RadioButtonGroup>
                   </Column>
                   <Column lg={8} md={4} sm={4}>
-                    {values.recentAntibiotherapy && (
+                    {values.recentAntibiotherapy === "true" && (
                       <FilterableMultiSelect
                         id="recentAntibiotherapyList"
                         titleText={intl.formatMessage({
@@ -1143,7 +1159,7 @@ function CreatePatientForm(props) {
                     </RadioButtonGroup>
                   </Column>
                   <Column lg={8} md={4} sm={4}>
-                    {values.currentAntibiotherapy && (
+                    {values.currentAntibiotherapy === "true" && (
                       <>
                         <FilterableMultiSelect
                           id="currentAntibiotherapyList"
@@ -1229,7 +1245,7 @@ function CreatePatientForm(props) {
                     </RadioButtonGroup>
                   </Column>
                   <Column lg={8} md={4} sm={4}>
-                    {values.recentHospitalization && (
+                    {values.recentHospitalization === "true" && (
                       <TextInput
                         name="recentHospitalizationCount"
                         value={values.recentHospitalizationCount || ""}
@@ -1466,9 +1482,6 @@ function CreatePatientForm(props) {
                                 id: "patient.address.healthregion",
                               })}
                               onChange={(e) => handleRegionSelection(e, values)}
-                              helperText={intl.formatMessage({
-                                id: "patient.emergency.additional.region",
-                              })}
                             >
                               <SelectItem text="" value="" />
                               {healthRegions?.map((region, index) => (
@@ -1494,9 +1507,6 @@ function CreatePatientForm(props) {
                                 id: "patient.address.healthdistrict",
                               })}
                               onChange={() => {}}
-                              helperText={intl.formatMessage({
-                                id: "patient.emergency.additional.district",
-                              })}
                             >
                               <SelectItem text="" value="" />
                               {healthDistricts.map((district, index) => (
@@ -1565,6 +1575,27 @@ function CreatePatientForm(props) {
                           )}
                         </Field>
                       </Column>
+                      <Column lg={8} md={4} sm={4}>
+                        <Field name="occupation">
+                          {({ field }) => (
+                            <TextInput
+                              value={values.occupation || ""}
+                              name={field.name}
+                              labelText={intl.formatMessage({
+                                id: "patient.occupation.name",
+                              })}
+                              id={field.name}
+                              placeholder={intl.formatMessage({
+                                id: "patient.occupation.additional.name",
+                              })}
+                              onChange={(e) => {
+                                e.target.value = e.target.value.toUpperCase();
+                                handleChange(e);
+                              }}
+                            />
+                          )}
+                        </Field>
+                      </Column>
 
                       <Column lg={16} md={8} sm={4}>
                         {" "}
@@ -1581,9 +1612,6 @@ function CreatePatientForm(props) {
                                 id: "patient.eduction",
                               })}
                               onChange={() => {}}
-                              helperText={intl.formatMessage({
-                                id: "patient.emergency.additional.education",
-                              })}
                             >
                               <SelectItem text="" value="" />
                               {educationList.map((education, index) => (
@@ -1608,9 +1636,6 @@ function CreatePatientForm(props) {
                                 id: "patient.maritalstatus",
                               })}
                               onChange={() => {}}
-                              helperText={intl.formatMessage({
-                                id: "patient.emergency.additional.maritalstatus",
-                              })}
                             >
                               <SelectItem text="" value="" />
                               {maritalStatuses.map((status, index) => (

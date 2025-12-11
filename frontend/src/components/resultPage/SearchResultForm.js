@@ -1679,6 +1679,10 @@ export function SearchResults(props) {
       setPageSize(pageInfo.pageSize);
     }
   };
+  
+  const findPriorityByValue = (searchValue) => {
+    return priorities.find((item) => item.value === searchValue);
+  };
 
   return (
     <>
@@ -1701,6 +1705,12 @@ export function SearchResults(props) {
                 {" "}
                 <FormattedMessage id="validation.label.nonconform" />
               </b>
+               <br/>
+              {findPriorityByValue("ASAP").icon} ={" "}
+              <FormattedMessage id="result.priority.asap" />
+              <br/>
+              {findPriorityByValue("STAT").icon} ={" "}
+              <FormattedMessage id="result.priority.stat" />
             </Column>
           </Grid>
         )}

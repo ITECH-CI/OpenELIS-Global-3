@@ -49,6 +49,7 @@ export const SampleOrderFormValues = {
     nationality: "",
     healthDistrict: "",
     otherNationality: "",
+    pregnant:"",
     patientContact: {
       person: {
         lastName: "",

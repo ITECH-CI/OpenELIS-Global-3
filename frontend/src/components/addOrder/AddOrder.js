@@ -37,7 +37,7 @@ const AddOrder = (props) => {
     isModifyOrder,
     changed,
     setChanged,
-    isBacterio = false,
+    isBacterio,
   } = props;
   const [otherSamplingVisible, setOtherSamplingVisible] = useState(false);
   const [providers, setProviders] = useState([]);
@@ -570,6 +570,24 @@ const AddOrder = (props) => {
                 ))}
               </CustomSelect>
             </Column>
+            <Column lg={16} md={8} sm={3}>
+              {" "}
+              &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;{" "}
+            </Column>
+              {isBacterio && (
+           <Column lg={8} md={4} sm={4}>
+              <Select
+                className="orderType"
+                id={"orderType"}
+                name="orderType"
+                labelText={intl.formatMessage({ id: "sample.order.type" })}
+                required
+              >
+              <SelectItem value="IN" text={intl.formatMessage({ id: "sample.order.type.in" })}/>
+              <SelectItem value="OUT" text={intl.formatMessage({ id: "sample.order.type.out" })} />
+              </Select>
+              </Column>
+            )}
             <Column lg={16} md={8} sm={3}>
               {" "}
               &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;{" "}

@@ -98,6 +98,7 @@ public class SamplePatientEntryRestController extends BaseSampleEntryController 
             "patientProperties.birthDateForDisplay", "patientProperties.age", "patientProperties.gender",
             "patientProperties.patientType", "patientProperties.insuranceNumber", "patientProperties.occupation",
             "patientProperties.education", "patientProperties.maritialStatus", "patientProperties.nationality",
+            "patientProperties.pregnant", "patientProperties.occupation",
             "patientProperties.otherNationality", "patientClinicalProperties.stdOther",
             "patientClinicalProperties.tbDiarrhae", "patientClinicalProperties.stdZona",
             "patientClinicalProperties.tbPrurigol", "patientClinicalProperties.stdKaposi",
@@ -132,6 +133,7 @@ public class SamplePatientEntryRestController extends BaseSampleEntryController 
             "sampleOrderItems.contactTracingIndexName", "sampleOrderItems.contactTracingIndexRecordNumber",
             "sampleOrderItems.priority", "sampleOrderItems.epidemiologicalWeek",
             "sampleOrderItems.clinicalInformations",
+            "sampleOrderItems.orderType",
             //
             "currentDate", "sampleOrderItems.newRequesterName", "sampleOrderItems.externalOrderNumber",
             // referral
@@ -151,8 +153,7 @@ public class SamplePatientEntryRestController extends BaseSampleEntryController 
             "patientRoutineBacteriology.recentAntibiotherapy", "patientRoutineBacteriology.recentAntibiotherapyList",
             "patientRoutineBacteriology.currentAntibiotherapy", "patientRoutineBacteriology.currentAntibiotherapyList",
             "patientRoutineBacteriology.currentAntibiotherapyDuration",
-            "patientRoutineBacteriology.recentHospitalization", "patientRoutineBacteriology.recentHospitalizationCount",
-            "patientRoutineBacteriology.recentInvasiveGestures", "patientRoutineBacteriology.indwellingDevice" };
+            "patientRoutineBacteriology.recentHospitalization", "patientRoutineBacteriology.recentHospitalizationCount", };
 
     @Autowired
     private SamplePatientEntryFormValidator formValidator;
