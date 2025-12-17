@@ -59,6 +59,7 @@ const ModifyOrder = () => {
     "sampleOrderItems.providerLastName": false,
     "sampleOrderItems.labNo": false,
   });
+  const [hasUnsavedLabNo, setHasUnsavedLabNo] = useState(false);
 
   useEffect(() => {
     componentMounted.current = true;
@@ -122,6 +123,8 @@ const ModifyOrder = () => {
         <FormattedMessage id="save.order.success.msg" />,
         NotificationKinds.success,
       );
+      // Réinitialiser l'état après enregistrement réussi
+      setHasUnsavedLabNo(false);
     } else {
       showAlertMessage(
         <FormattedMessage id="server.error.msg" />,
@@ -317,6 +320,9 @@ const ModifyOrder = () => {
                   isModifyOrder={true}
                   changed={changed}
                   setChanged={setChanged}
+                  isBacterio={false}
+                  hasUnsavedLabNo={hasUnsavedLabNo}
+                  setHasUnsavedLabNo={setHasUnsavedLabNo}
                 />
               )}
 

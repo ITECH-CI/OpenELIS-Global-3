@@ -38,6 +38,8 @@ const AddOrder = (props) => {
     changed,
     setChanged,
     isBacterio,
+    hasUnsavedLabNo,
+    setHasUnsavedLabNo,
   } = props;
   const [otherSamplingVisible, setOtherSamplingVisible] = useState(false);
   const [providers, setProviders] = useState([]);
@@ -219,6 +221,20 @@ const AddOrder = (props) => {
     if (e) {
       e.preventDefault();
     }
+
+    if (hasUnsavedLabNo) {
+      setNotificationVisible(true);
+      addNotification({
+        kind: NotificationKinds.warning,
+        title: intl.formatMessage({ id: "notification.title" }),
+        message: intl.formatMessage({
+          id: "notification.unsaved.labnumber",
+          defaultMessage: "Veuillez enregistrer le numéro de laboratoire actuel avant d'en générer un nouveau."
+        }),
+      });
+      return;
+    }
+
     getFromOpenElisServer(
       "/rest/SampleEntryGenerateScanProvider",
       fetchGeneratedAccessionNo,
@@ -448,6 +464,8 @@ const AddOrder = (props) => {
         });
       }
 
+      // Marquer qu'un numéro de labo a été généré mais pas encore enregistré
+      setHasUnsavedLabNo(true);
       setNotificationVisible(false);
     }
   }

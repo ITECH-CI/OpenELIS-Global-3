@@ -157,7 +157,6 @@ function CreatePatientForm(props) {
   };
 
   const isOtherSelected = (selectedValues, options) => {
-    console.log( {selectedValues: selectedValues , options: options})
     return (selectedValues || []).some((val) => {
       const opt = options.find((o) => {
         if (o.id === val || o.value === val) {
