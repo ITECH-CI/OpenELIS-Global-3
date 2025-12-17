@@ -39,9 +39,7 @@ import org.openelisglobal.organization.valueholder.Organization;
 import org.openelisglobal.patient.action.IPatientUpdate;
 import org.openelisglobal.patient.action.IPatientUpdate.PatientUpdateStatus;
 import org.openelisglobal.patient.action.bean.PatientManagementInfo;
-import org.openelisglobal.patient.action.bean.PatientRoutineBacterioInfo;
 import org.openelisglobal.patient.action.bean.PatientSearch;
-import org.openelisglobal.patient.action.bean.PatientTbInfo;
 import org.openelisglobal.provider.service.ProviderService;
 import org.openelisglobal.provider.valueholder.Provider;
 import org.openelisglobal.sample.action.util.SamplePatientUpdateData;
@@ -100,6 +98,7 @@ public class SamplePatientEntryRestController extends BaseSampleEntryController 
             "patientProperties.birthDateForDisplay", "patientProperties.age", "patientProperties.gender",
             "patientProperties.patientType", "patientProperties.insuranceNumber", "patientProperties.occupation",
             "patientProperties.education", "patientProperties.maritialStatus", "patientProperties.nationality",
+            "patientProperties.pregnant", "patientProperties.occupation",
             "patientProperties.otherNationality", "patientClinicalProperties.stdOther",
             "patientClinicalProperties.tbDiarrhae", "patientClinicalProperties.stdZona",
             "patientClinicalProperties.tbPrurigol", "patientClinicalProperties.stdKaposi",
@@ -132,7 +131,9 @@ public class SamplePatientEntryRestController extends BaseSampleEntryController 
             "sampleOrderItems.paymentOptionSelection", "sampleOrderItems.billingReferenceNumber",
             "sampleOrderItems.testLocationCode", "sampleOrderItems.otherLocationCode",
             "sampleOrderItems.contactTracingIndexName", "sampleOrderItems.contactTracingIndexRecordNumber",
-            "sampleOrderItems.priority","sampleOrderItems.epidemiologicalWeek","sampleOrderItems.clinicalInformations",
+            "sampleOrderItems.priority", "sampleOrderItems.epidemiologicalWeek",
+            "sampleOrderItems.clinicalInformations",
+            "sampleOrderItems.orderType",
             //
             "currentDate", "sampleOrderItems.newRequesterName", "sampleOrderItems.externalOrderNumber",
             // referral
@@ -146,15 +147,13 @@ public class SamplePatientEntryRestController extends BaseSampleEntryController 
             "patientTbInfo.tbFollowupPeriodLine1", "patientTbInfo.tbFollowupPeriodLine2", "patientTbInfo.tbAspect",
             "patientTbInfo.tbSpecimenNature", "patientTbInfo.tbSubjectNumber", "patientTbInfo.selectedTbMethod",
             "patientTbInfo.selectedMethodToRemove",
-            //Routine Bacteriology
+            // Routine Bacteriology
             "patientRoutineBacteriology.currentHospitalization", "patientRoutineBacteriology.roomNumber",
             "patientRoutineBacteriology.clinicalInformations", "patientRoutineBacteriology.clinicalInformationOther",
             "patientRoutineBacteriology.recentAntibiotherapy", "patientRoutineBacteriology.recentAntibiotherapyList",
             "patientRoutineBacteriology.currentAntibiotherapy", "patientRoutineBacteriology.currentAntibiotherapyList",
-            "patientRoutineBacteriology.currentAntibiotherapyDuration", "patientRoutineBacteriology.recentHospitalization",
-            "patientRoutineBacteriology.recentHospitalizationCount", "patientRoutineBacteriology.recentInvasiveGestures",
-            "patientRoutineBacteriology.indwellingDevice"
-            };
+            "patientRoutineBacteriology.currentAntibiotherapyDuration",
+            "patientRoutineBacteriology.recentHospitalization", "patientRoutineBacteriology.recentHospitalizationCount", };
 
     @Autowired
     private SamplePatientEntryFormValidator formValidator;
@@ -255,7 +254,7 @@ public class SamplePatientEntryRestController extends BaseSampleEntryController 
         SamplePatientUpdateData updateData = new SamplePatientUpdateData(getSysUserId(request));
 
         PatientManagementInfo patientInfo = form.getPatientProperties();
-        SampleOrderItem sampleOrder = form.getSampleOrderItems();                
+        SampleOrderItem sampleOrder = form.getSampleOrderItems();
 
         boolean trackPayments = ConfigurationProperties.getInstance()
                 .isPropertyValueEqual(Property.TRACK_PATIENT_PAYMENT, "true");

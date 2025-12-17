@@ -29,6 +29,7 @@ export let sampleObject = {
   tests: [],
   requestReferralEnabled: false,
   referralItems: [],
+  tbData: null,
 };
 const Index = () => {
   const intl = useIntl();
@@ -56,6 +57,7 @@ const Index = () => {
     primaryPhone: { body: "", status: true },
     contactPhone: { body: "", status: true },
   });
+  const [hasUnsavedLabNo, setHasUnsavedLabNo] = useState(false);
 
   let SampleTypes = [];
   let sampleTypeMap = {};
@@ -497,6 +499,7 @@ const Index = () => {
       name: name,
       panels: [],
       tests: [],
+      tbData: null,
       // setCrossPanels: "false",
       // setCrossTests: "false",
       // crossPanels: [],
@@ -554,6 +557,8 @@ const Index = () => {
         <FormattedMessage id="save.order.success.msg" />,
         NotificationKinds.success,
       );
+      // Réinitialiser l'état après enregistrement réussi
+      setHasUnsavedLabNo(false);
       setPage(page + 1);
     } else {
       showAlertMessage(
@@ -656,7 +661,6 @@ const Index = () => {
         let tests = null;
         let panels = "";
         samples.map((sampleItem) => {
-
           if (sampleItem.tests.length > 0) {
             tests = Object.keys(sampleItem.tests)
               .map(function (i) {
@@ -787,7 +791,8 @@ const Index = () => {
                 setPhoneValidation={setPhoneValidation}
                 isBacterio={
                   orderFormValues.sampleOrderItems.programCode ===
-                  BACTERIOLOGY_PROGRAM_CODE                }
+                  BACTERIOLOGY_PROGRAM_CODE
+                }
               />
             )}
             {page === programPageNumber && (
@@ -802,7 +807,8 @@ const Index = () => {
                 setSamples={setSamples}
                 samples={samples}
                 isTb={
-                  orderFormValues.sampleOrderItems.programCode === TB_PROGRAM_CODE
+                  orderFormValues.sampleOrderItems.programCode ===
+                  TB_PROGRAM_CODE
                 }
                 isBacterio={
                   orderFormValues.sampleOrderItems.programCode ===
@@ -823,6 +829,8 @@ const Index = () => {
                   orderFormValues.sampleOrderItems.programCode ===
                   BACTERIOLOGY_PROGRAM_CODE
                 }
+                hasUnsavedLabNo={hasUnsavedLabNo}
+                setHasUnsavedLabNo={setHasUnsavedLabNo}
               />
             )}
 

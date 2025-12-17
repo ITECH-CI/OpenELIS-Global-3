@@ -78,7 +78,7 @@ public class SamplePatientEntryForm extends BaseForm {
 
     @Valid
     private PatientTbInfo patientTbInfo;
-    
+
     @Valid
     private PatientRoutineBacterioInfo patientRoutineBacterioInfo;
 
@@ -314,11 +314,11 @@ public class SamplePatientEntryForm extends BaseForm {
         this.rememberSiteAndRequester = rememberSiteAndRequester;
     }
 
-	public PatientRoutineBacterioInfo getPatientRoutineBacterioInfo() {
-		return patientRoutineBacterioInfo;
-	}
+    public PatientRoutineBacterioInfo getPatientRoutineBacterioInfo() {
+        return patientRoutineBacterioInfo;
+    }
 
-	public void setPatientRoutineBacterioInfo(PatientRoutineBacterioInfo patientRoutineBacterioInfo) {
-		this.patientRoutineBacterioInfo = patientRoutineBacterioInfo;
-	}
+    public void setPatientRoutineBacterioInfo(PatientRoutineBacterioInfo patientRoutineBacterioInfo) {
+        this.patientRoutineBacterioInfo = patientRoutineBacterioInfo;
+    }
 }

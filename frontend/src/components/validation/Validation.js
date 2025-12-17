@@ -192,6 +192,10 @@ const Validation = (props) => {
     handleChange(e, rowId);
   };
 
+  const findPriorityByValue = (searchValue) => {
+    return priorities.find((item) => item.value === searchValue);
+  };
+
   const renderCell = (row, index, column, id) => {
     let formatLabNum = configurationProperties.AccessionFormat === "ALPHANUM";
     const fullTestName = row.testName;
@@ -200,9 +204,16 @@ const Validation = (props) => {
     const sampleType = fullTestName.substring(splitIndex);
     switch (column.id) {
       case "priority":
-        const priorityObj = priorities.find(p => p.value === row.priority);
+        const priorityObj = priorities.find((p) => p.value === row.priority);
         return (
-          <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100%" }}>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              height: "100%",
+            }}
+          >
             {priorityObj ? priorityObj.icon : null}
           </div>
         );
@@ -363,6 +374,12 @@ const Validation = (props) => {
               {" "}
               <FormattedMessage id="validation.label.nonconform" />
             </b>
+            <br/>
+            {findPriorityByValue("ASAP").icon} ={" "}
+            <FormattedMessage id="result.priority.asap" />
+            <br/>
+            {findPriorityByValue("STAT").icon} ={" "}
+            <FormattedMessage id="result.priority.stat" />
           </Column>
           <Column lg={3} md={2} sm={4}>
             <Checkbox

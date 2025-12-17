@@ -18,7 +18,6 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
-
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
@@ -86,6 +85,9 @@ public class PatientManagementInfo implements Serializable {
     @SafeHtml(level = SafeHtml.SafeListLevel.NONE, groups = { SamplePatientEntryForm.SamplePatientEntry.class,
             SamplePatientEntryBatch.class })
     private String otherIdentifier;
+
+
+    private List<String> clinicalInformations = new ArrayList<>();
 
     @Pattern(regexp = ValidationHelper.PATIENT_ID_REGEX, groups = { SamplePatientEntryForm.SamplePatientEntry.class,
             SamplePatientEntryBatch.class })
@@ -159,6 +161,10 @@ public class PatientManagementInfo implements Serializable {
             SamplePatientEntryBatch.class })
     private String occupation;
 
+    @SafeHtml(level = SafeHtml.SafeListLevel.NONE, groups = { SamplePatientEntryForm.SamplePatientEntry.class,
+            SamplePatientEntryBatch.class })
+    private String pregnant;
+
     @Pattern(regexp = ValidationHelper.PHONE_REGEX, groups = { SamplePatientEntryForm.SamplePatientEntry.class,
             SamplePatientEntryBatch.class })
     private String primaryPhone;
@@ -172,6 +178,21 @@ public class PatientManagementInfo implements Serializable {
 
     public void setEmail(String email) {
         this.email = email;
+    }
+
+   public String getPregnant() {
+        return pregnant;
+    }
+
+    public void setPregnant(String pregnant) {
+        this.pregnant = pregnant;
+    }
+
+    public List<String> getClinicalInformations() {
+        return clinicalInformations;
+    }
+    public void setClinicalInformations(List<String> clinicalInformations) {
+        this.clinicalInformations = clinicalInformations;
     }
 
     @SafeHtml(level = SafeHtml.SafeListLevel.NONE, groups = { SamplePatientEntryForm.SamplePatientEntry.class,

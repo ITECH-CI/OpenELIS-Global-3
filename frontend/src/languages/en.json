@@ -397,6 +397,7 @@
   "patient.label.contactphone": "Contact Phone:{PHONE_FORMAT}",
   "patient.label.primaryphone": "Primary phone:{PHONE_FORMAT}",
   "patient.gender": "Gender",
+  "patient.female.pregnant":"Pregnant",
   "patient.label.clinicalinformations": "Clincal Informations",
   "label.button.externalsearch": "External Search",
   "label.button.select.status": "Select Status",
@@ -1669,6 +1670,9 @@
   "sample.reject.label": "Reject Sample",
   "sample.remove.action": "Remove Sample",
   "sample.requestDate": "Request Date",
+  "sample.order.type":"Order type",
+  "sample.order.type.in":"Ordonnance Interne",
+  "sample.order.type.out":"Ordonnance Externe",
   "sample.search.nosample": "No sample found for the provided accession number.",
   "sample.search.panel.legend.text": "Search through the available panels",
   "sample.search.scanner.instructions": "Scan or Enter Manually. For a single report, leave the box at the right empty",
@@ -2089,5 +2093,7 @@
   "patient.invasive.gestures": "Invasive procedures (<30 days)",
   "patient.indwelling.device": "Indwelling device",
   "patient.clinical.info": "Clinical informations",
-  "column.name.priority":"Priority"
+  "column.name.priority": "Priority",
+  "notification.unsaved.labnumber":"Please save the current lab number before generating a new one."
+
 }

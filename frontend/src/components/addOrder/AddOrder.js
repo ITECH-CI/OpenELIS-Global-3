@@ -37,7 +37,9 @@ const AddOrder = (props) => {
     isModifyOrder,
     changed,
     setChanged,
-    isBacterio = false,
+    isBacterio,
+    hasUnsavedLabNo,
+    setHasUnsavedLabNo,
   } = props;
   const [otherSamplingVisible, setOtherSamplingVisible] = useState(false);
   const [providers, setProviders] = useState([]);
@@ -67,7 +69,7 @@ const AddOrder = (props) => {
   const handleChangeUpper = (e) => {
     const upperValue = e.target.value.toUpperCase();
     setValue(upperValue);
-    };
+  };
   const handleDatePickerChange = (datePicker, date) => {
     let obj = null;
     switch (datePicker) {
@@ -219,6 +221,20 @@ const AddOrder = (props) => {
     if (e) {
       e.preventDefault();
     }
+
+    if (hasUnsavedLabNo) {
+      setNotificationVisible(true);
+      addNotification({
+        kind: NotificationKinds.warning,
+        title: intl.formatMessage({ id: "notification.title" }),
+        message: intl.formatMessage({
+          id: "notification.unsaved.labnumber",
+          defaultMessage: "Veuillez enregistrer le numéro de laboratoire actuel avant d'en générer un nouveau."
+        }),
+      });
+      return;
+    }
+
     getFromOpenElisServer(
       "/rest/SampleEntryGenerateScanProvider",
       fetchGeneratedAccessionNo,
@@ -448,6 +464,8 @@ const AddOrder = (props) => {
         });
       }
 
+      // Marquer qu'un numéro de labo a été généré mais pas encore enregistré
+      setHasUnsavedLabNo(true);
       setNotificationVisible(false);
     }
   }
@@ -570,6 +588,24 @@ const AddOrder = (props) => {
                 ))}
               </CustomSelect>
             </Column>
+            <Column lg={16} md={8} sm={3}>
+              {" "}
+              &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;{" "}
+            </Column>
+              {isBacterio && (
+           <Column lg={8} md={4} sm={4}>
+              <Select
+                className="orderType"
+                id={"orderType"}
+                name="orderType"
+                labelText={intl.formatMessage({ id: "sample.order.type" })}
+                required
+              >
+              <SelectItem value="IN" text={intl.formatMessage({ id: "sample.order.type.in" })}/>
+              <SelectItem value="OUT" text={intl.formatMessage({ id: "sample.order.type.out" })} />
+              </Select>
+              </Column>
+            )}
             <Column lg={16} md={8} sm={3}>
               {" "}
               &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;{" "}
@@ -832,7 +868,7 @@ const AddOrder = (props) => {
                 })}
               />
             </Column>
-{/*
+            {/*
             <Column lg={8} md={4} sm={4}>
               <TextInput
                 name="providerFax"
@@ -856,7 +892,7 @@ const AddOrder = (props) => {
               {" "}
               &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;{" "}
             </Column>
-            */}   
+            */}
             {isBacterio && (
               <>
                 <Column lg={16} md={8} sm={3}>
@@ -952,17 +988,19 @@ const AddOrder = (props) => {
               />
             </Column>
             {!isBacterio && (
-            <Column lg={8} md={4} sm={4}>
-            <CustomTextInput
-                id={"clinicalInformations"}
-                value={value}
-                style={{ textTransform: "uppercase" }}
-                onChange={handleChangeUpper}
-                labelText={intl.formatMessage({ id: "patient.clinical.info" })}
-                className="uppercase-input"
-              />
-            </Column>
-          )}
+              <Column lg={8} md={4} sm={4}>
+                <CustomTextInput
+                  id={"clinicalInformations"}
+                  value={value}
+                  style={{ textTransform: "uppercase" }}
+                  onChange={handleChangeUpper}
+                  labelText={intl.formatMessage({
+                    id: "patient.clinical.info",
+                  })}
+                  className="uppercase-input"
+                />
+              </Column>
+            )}
             <Column lg={16} md={8} sm={3}>
               {" "}
               &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;{" "}

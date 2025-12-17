@@ -896,7 +896,7 @@ export function SearchResults(props) {
   };
 
   var columns = [
-      {
+    {
       id: "priority",
       name: intl.formatMessage({ id: "column.name.priority" }),
       cell: (row, index, column, id) => {
@@ -1044,9 +1044,16 @@ export function SearchResults(props) {
           </>
         );
       case "priority":
-        const priorityObj = priorities.find(p => p.value === row.priority);
+        const priorityObj = priorities.find((p) => p.value === row.priority);
         return (
-          <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100%" }}>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              height: "100%",
+            }}
+          >
             {priorityObj ? priorityObj.icon : null}
           </div>
         );
@@ -1672,6 +1679,10 @@ export function SearchResults(props) {
       setPageSize(pageInfo.pageSize);
     }
   };
+  
+  const findPriorityByValue = (searchValue) => {
+    return priorities.find((item) => item.value === searchValue);
+  };
 
   return (
     <>
@@ -1694,6 +1705,12 @@ export function SearchResults(props) {
                 {" "}
                 <FormattedMessage id="validation.label.nonconform" />
               </b>
+               <br/>
+              {findPriorityByValue("ASAP").icon} ={" "}
+              <FormattedMessage id="result.priority.asap" />
+              <br/>
+              {findPriorityByValue("STAT").icon} ={" "}
+              <FormattedMessage id="result.priority.stat" />
             </Column>
           </Grid>
         )}

@@ -7,23 +7,14 @@
 
     <property name="now" value="now()" dbms="postgresql" />
     <changeSet author="CIV developer"
-        id="update-menu-item-for-ci-context">
+        id="update-user-program-for-ci-context">
         <sql>
-            UPDATE clinlims.menu
+            UPDATE clinlims.program
             SET is_active = false
-            WHERE element_id IN (
-            'menu_pathology',
-            'menu_immunochem',
-            'menu_notebook',
-            'menu_aliquot',
-            'menu_cytology',
-            'menu_microbiology',
-            'menu_microbiology_tb',
-            'menu_microbiology_classic',
-            'menu_study_sample_eorder',
-            'menu_sample_create',
-            'menu_billing',
-            'menu_patient_create'
+            WHERE code IN (
+            'CYTO',
+            'IHC',
+            'PATH'
             );
         </sql>
     </changeSet>

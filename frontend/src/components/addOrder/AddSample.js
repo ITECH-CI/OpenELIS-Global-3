@@ -23,6 +23,7 @@ const AddSample = (props) => {
       panels: [],
       tests: [],
       nonConformityNature: "",
+      tbData: null,
     });
     console.debug(JSON.stringify(updateSamples));
     setSamples(updateSamples);
@@ -130,16 +131,16 @@ const AddSample = (props) => {
                 <SampleType
                   index={i}
                   rejectSampleReasons={rejectSampleReasons}
-                removeSample={removeSample}
-                sample={sample}
-                isTb={isTb}
-                showTBSection={isTb}
-                isBacterio={isBacterio}
-                setSample={(newSample) => {
-                  let newSamples = [...samples];
-                  newSamples[i] = newSample;
-                  setSamples(newSamples);
-                }}
+                  removeSample={removeSample}
+                  sample={sample}
+                  isTb={isTb}
+                  showTBSection={isTb}
+                  isBacterio={isBacterio}
+                  setSample={(newSample) => {
+                    let newSamples = [...samples];
+                    newSamples[i] = newSample;
+                    setSamples(newSamples);
+                  }}
                   sampleTypeObject={sampleTypeObject}
                   error={error}
                 />
