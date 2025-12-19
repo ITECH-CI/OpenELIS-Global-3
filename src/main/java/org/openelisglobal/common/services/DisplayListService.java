@@ -951,7 +951,7 @@ public class DisplayListService implements LocaleChangeListener {
         return minutes;
     }
 
-    private List<IdValuePair> createSortedQAEvents() {
+    public List<IdValuePair> createSortedQAEvents() {
         List<IdValuePair> qaEvents = new ArrayList<>();
         List<QaEvent> qaEventList = qaEventService.getAllQaEvents();
 

@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+  xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+  <changeSet id="1" author="azizdiakite" context="CI_GENERAL or CSC_GENERAL or MLW_GENERAL or HAITI_GENERAL or HAITI_LNSP or CDI_GENERAL">
+
+        <createSequence sequenceName="non_conformity_seq" startValue="1" incrementBy="1"/>
+
+
+        <createTable tableName="non_conformity" schemaName="clinlims">
+            <column name="id" type="VARCHAR(10)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="nc_number" type="VARCHAR(50)">
+                <constraints unique="true" nullable="false"/>
+            </column>
+            <column name="report_date" type="DATE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="site_provenance" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="sample_type" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="rejection_reason" type="VARCHAR(500)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="comment" type="TEXT"/>
+            <column name="reporter_name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="lab_number" type="VARCHAR(50)"/>
+            <column name="corrective_action" type="TEXT"/>
+            <column name="status" type="VARCHAR(50)" defaultValue="PENDING">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_by" type="VARCHAR(255)"/>
+            <column name="created_date" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP"/>
+            <column name="last_updated_by" type="VARCHAR(255)"/>
+            <column name="last_updated" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP"/>
+        </createTable>
+
+        <!-- Create index on nc_number for faster lookups -->
+        <createIndex indexName="idx_nc_number" tableName="non_conformity" schemaName="clinlims">
+            <column name="nc_number"/>
+        </createIndex>
+
+        <!-- Create index on lab_number for faster lookups -->
+        <createIndex indexName="idx_lab_number" tableName="non_conformity" schemaName="clinlims">
+            <column name="lab_number"/>
+        </createIndex>
+
+        <!-- Create index on report_date for filtering -->
+        <createIndex indexName="idx_report_date" tableName="non_conformity" schemaName="clinlims">
+            <column name="report_date"/>
+        </createIndex>
+
+        <!-- Create index on status for filtering -->
+        <createIndex indexName="idx_status" tableName="non_conformity" schemaName="clinlims">
+            <column name="status"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="6" author="azizdiakite" context="CI_GENERAL or CSC_GENERAL or MLW_GENERAL or HAITI_GENERAL or HAITI_LNSP or CDI_GENERAL">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">
+                SELECT COUNT(*) FROM clinlims.menu WHERE element_id = 'menu_nonconformity_registry'
+            </sqlCheck>
+        </preConditions>
+        <comment>Add Non-Conformity Registry menu as child of Non Conformity menu</comment>
+        <insert tableName="menu" schemaName="clinlims">
+            <column name="id" valueSequenceNext="menu_seq" />
+            <column name="presentation_order" value="3" />
+            <column name="element_id" value="menu_nonconformity_registry" />
+            <column name="parent_id" valueComputed="(SELECT id FROM clinlims.menu WHERE element_id = 'menu_nonconformity')" />
+            <column name="action_url" value="/NonConformityRegistry" />
+            <column name="display_key" value="banner.menu.nonconformity.registry"  />
+            <column name="tool_tip_key" value="tooltip.menu.nonconformity.registry" />
+            <column name="new_window" valueBoolean="false" />
+            <column name="is_active" valueBoolean="true" />
+        </insert>
+    </changeSet>
+
+</databaseChangeLog>
