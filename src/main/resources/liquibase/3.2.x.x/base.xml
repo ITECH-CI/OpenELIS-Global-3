@@ -5,12 +5,14 @@
     xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
 
     <include relativeToChangelogFile="true" file="notebook.xml" />
-
     <include relativeToChangelogFile="true"
         file="routine_bacteriology.xml" />
     <include relativeToChangelogFile="true" file="update_menu.xml" />
     <include relativeToChangelogFile="true" file="update_program.xml" />
     <include relativeToChangelogFile="true" file="update_test_section.xml" />
+    <include relativeToChangelogFile="true" file="add_free_payment_option.xml" />
+    <include relativeToChangelogFile="true" 
+    file="add_non_conformity_table.xml" />
 
 
 </databaseChangeLog>

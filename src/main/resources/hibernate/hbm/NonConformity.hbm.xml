@@ -1,0 +1,34 @@
+<?xml version='1.0' encoding='utf-8'?>
+<!DOCTYPE hibernate-mapping PUBLIC
+    "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+    "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+<hibernate-mapping>
+
+    <class name="org.openelisglobal.nonconformity.valueholder.NonConformity"
+        table="non_conformity" schema="clinlims">
+
+        <id name="id"
+            type="org.openelisglobal.hibernate.resources.usertype.LIMSStringNumberUserType">
+            <column name="id" precision="10" scale="0" />
+            <generator
+                class="org.openelisglobal.hibernate.resources.StringSequenceGenerator">
+                <param name="sequence_name">non_conformity_seq</param>
+            </generator>
+        </id>
+
+        <property name="ncNumber"  column="nc_number" />
+        <property name="reportDate"  column="report_date" />
+        <property name="siteProvenance"  column="site_provenance" />
+        <property name="sampleType"  column="sample_type" />
+        <property name="rejectionReason"  column="rejection_reason" />
+        <property name="comment"  column="comment" />
+        <property name="reporterName"  column="reporter_name" />
+        <property name="labNumber"  column="lab_number" />
+        <property name="correctiveAction"  column="corrective_action" />
+        <property name="status"  column="status" />
+        <property name="createdBy"  column="created_by" />
+        <property name="createdDate"  column="created_date" />
+        <property name="lastUpdatedBy"  column="last_updated_by" />
+        <property name="lastUpdated"  column="last_updated" />
+    </class>
+</hibernate-mapping>

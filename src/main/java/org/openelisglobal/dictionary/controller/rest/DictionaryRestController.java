@@ -318,6 +318,14 @@ public class DictionaryRestController extends BaseController {
         return dictList;
     }
 
+
+    @RequestMapping(value = "/qaevents-dictionnary", method = RequestMethod.GET)
+    public List<IdValuePair> getDictionayByCategory() {
+        List<IdValuePair> dictList = new ArrayList<>();
+        dictList = displayListService.createSortedQAEvents();
+        return dictList != null ? dictList : new ArrayList<>();
+    }
+
     @Override
     protected String findLocalForward(String forward) {
         if (FWD_SUCCESS.equals(forward)) {

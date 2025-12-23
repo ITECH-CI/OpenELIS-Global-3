@@ -257,6 +257,8 @@
   "banner.menu.nonconformity.report": "Signaler un Événement Non Conforme",
   "banner.menu.nonconformity.view": "Voir les Nouveaux Événements Non Conformes",
   "banner.menu.nonconformity.correctiveActions": "Actions Correctives",
+  "banner.menu.nonconformity.registry": "Registre des Non-Conformités",
+  "tooltip.menu.nonconformity.registry": "Gérer le registre des non-conformités",
   "sidenav.label.workplan": "Plan de Travail",
   "sidenav.label.workplan.test": "Par Type de Test",
   "sidenav.label.workplan.panel": "Par Type de Panel",

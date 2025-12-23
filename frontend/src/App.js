@@ -371,6 +371,15 @@ export default function App() {
                 />
 
                 <SecureRoute
+                  path="/NonConformityRegistry"
+                  exact
+                  component={() => (
+                    <NonConformIndex form="NonConformityRegistry" />
+                  )}
+                  role={[Roles.RECEPTION, Roles.VALIDATION]}
+                />
+
+                <SecureRoute
                   path="/SampleBatchEntrySetup"
                   exact
                   component={() => <SampleBatchEntrySetup />}

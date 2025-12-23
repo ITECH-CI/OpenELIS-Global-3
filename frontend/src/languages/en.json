@@ -173,6 +173,8 @@
   "banner.menu.nonconformity.correctiveActions": "Corrective actions",
   "banner.menu.nonconformity.report": "Report Non-Conforming Event",
   "banner.menu.nonconformity.view": "View New Non-Conforming Events",
+  "banner.menu.nonconformity.registry": "Non-Conformity Registry",
+  "tooltip.menu.nonconformity.registry": "Manage non-conformity registry",
   "banner.menu.patient": "Patient",
   "banner.menu.patient.Create": "Study",
   "banner.menu.patient.addOrEdit": "Add/Edit Patient",
