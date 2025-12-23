@@ -1185,7 +1185,7 @@ const SampleType = (props) => {
         </div>
 
         <div className="cds--col">
-          {selectedTests && !selectedTests.length ? "" : <h4>Order Tests</h4>}
+          {selectedTests && !selectedTests.length ? "" : <h4><FormattedMessage id="ordertests.title" /></h4>}
           <div
             className={"searchTestText"}
             style={{ marginBottom: "1.188rem" }}

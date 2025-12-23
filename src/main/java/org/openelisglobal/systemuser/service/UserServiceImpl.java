@@ -281,7 +281,7 @@ public class UserServiceImpl implements UserService {
         if (testSections != null) {
             testSections.forEach(testSection -> testUnitIds.add(Integer.valueOf(testSection.getId())));
         }
-
+        
         List<Test> allTests = testService.getTestsByTestSectionIds(testUnitIds);
         Set<String> sampleIds = new HashSet<>();
         // clear cache to create a fresh Map of testId To TypeOfSample
@@ -295,14 +295,12 @@ public class UserServiceImpl implements UserService {
                 }
             });
         }
-
         sampleIds.forEach(id -> {
             TypeOfSample type = typeOfSampleService.get(id);
             if (type != null) {
                 userSampleTypes.add(new IdValuePair(type.getId(), type.getLocalizedName()));
             }
         });
-
         return userSampleTypes;
     }
 

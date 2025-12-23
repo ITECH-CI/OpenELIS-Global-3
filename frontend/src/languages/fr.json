@@ -819,7 +819,7 @@
   "success.save.msg": "Enregistré avec succès",
   "success.report.status": "Rapport généré avec succès",
   "error.report.status": "Erreur lors de la génération du rapport",
-  "ordertests.title": "Commander des tests",
+  "ordertests.title": "Tests sélectionnés pour l'ordonnance",
   "searchTests.legend": "Recherchez parmi les tests disponibles",
   "searchTests.label": "Rechercher les tests disponibles",
   "noTestsFound.matching": "Aucun test trouvé correspondant",
