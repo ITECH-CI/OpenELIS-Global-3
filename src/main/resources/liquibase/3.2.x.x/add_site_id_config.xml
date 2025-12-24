@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+     http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+    <property name="now" value="now()" dbms="postgresql"/>
+
+    <changeSet author="azizdiakite" id="1">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">SELECT count(*) FROM clinlims.site_information WHERE name = 'siteId'</sqlCheck>
+        </preConditions>
+        <comment>Ajouter une configuration pour l'identifiant du site</comment>
+        <insert schemaName="clinlims" tableName="site_information">
+            <column name="id" valueSequenceNext="site_information_seq" />
+            <column name="name" value="siteId" />
+            <column name="lastupdated" valueComputed="${now}" />
+            <column name="description" value="Identifiant du site" />
+            <column name="value" value="" />
+            <column name="encrypted" value="false" />
+            <column name="domain_id" valueComputed="(SELECT id FROM site_information_domain WHERE name = 'siteIdentity')" />
+            <column name="value_type" value="text" />
+            <column name="instruction_key" value="siteInfo.instruction.siteId" />
+            <column name="group" value="0" />
+            <column name="description_key" value="siteInfo.description.siteId" />
+        </insert>
+    </changeSet>
+</databaseChangeLog>

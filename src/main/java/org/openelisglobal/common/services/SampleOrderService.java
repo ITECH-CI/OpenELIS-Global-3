@@ -44,6 +44,8 @@ import org.openelisglobal.sample.bean.SampleOrderItem;
 import org.openelisglobal.sample.service.SampleService;
 import org.openelisglobal.sample.valueholder.Sample;
 import org.openelisglobal.samplehuman.service.SampleHumanService;
+import org.openelisglobal.siteinformation.service.SiteInformationService;
+import org.openelisglobal.siteinformation.valueholder.SiteInformation;
 import org.openelisglobal.spring.util.SpringContext;
 import org.springframework.context.annotation.DependsOn;
 import org.springframework.context.annotation.Scope;
@@ -61,6 +63,7 @@ public class SampleOrderService {
     private static OrganizationService orgService = SpringContext.getBean(OrganizationService.class);
     private ObservationHistoryService observationHistoryService = SpringContext
             .getBean(ObservationHistoryService.class);
+    private SiteInformationService siteInformationService = SpringContext.getBean(SiteInformationService.class);
 
     boolean needRequesterList = FormFields.getInstance().useField(FormFields.Field.RequesterSiteList);
     private boolean needPaymentOptions = ConfigurationProperties.getInstance()
@@ -108,6 +111,9 @@ public class SampleOrderService {
         if (needRequesterList) {
             orderItems.setReferringSiteList(DisplayListService.getInstance()
                     .getFreshList(DisplayListService.ListType.SAMPLE_PATIENT_REFERRING_CLINIC));
+
+            // Set default site based on siteId from site_information
+            setDefaultReferringSite(orderItems);
         }
 
         if (needPaymentOptions) {
@@ -127,6 +133,22 @@ public class SampleOrderService {
         }
 
         return orderItems;
+    }
+
+
+    private void setDefaultReferringSite(SampleOrderItem orderItems) {
+        try {
+            SiteInformation siteIdConfig = siteInformationService.getSiteInformationByName("siteId");
+            if (siteIdConfig != null && !GenericValidator.isBlankOrNull(siteIdConfig.getValue())) {
+                String siteId = siteIdConfig.getValue();
+                Organization defaultSite = orgService.getOrganizationById(siteId);
+                if (defaultSite != null) {
+                    orderItems.setReferringSiteId(defaultSite.getId());
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     /**

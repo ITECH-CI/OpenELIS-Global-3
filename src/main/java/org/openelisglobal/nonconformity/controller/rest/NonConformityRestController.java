@@ -182,6 +182,7 @@ public class NonConformityRestController extends org.openelisglobal.common.rest.
         try {
             Date sqlStartDate = null;
             Date sqlEndDate = null;
+            Date testDate = null;
 
             if (startDate != null && !startDate.isEmpty()) {
                 sqlStartDate = parseDate(startDate);

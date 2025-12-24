@@ -487,6 +487,18 @@ const AddOrder = (props) => {
       setPaymentOptions(response.sampleOrderItems.paymentOptions);
       setSamplingPerformed(response.sampleOrderItems.testLocationCodeList);
       setProviders(response.sampleOrderItems.providersList);
+
+      // Set default referring site if provided by backend
+      if (response.sampleOrderItems.referringSiteId &&
+          !orderFormValues.sampleOrderItems.referringSiteId) {
+        setOrderFormValues({
+          ...orderFormValues,
+          sampleOrderItems: {
+            ...orderFormValues.sampleOrderItems,
+            referringSiteId: response.sampleOrderItems.referringSiteId,
+          },
+        });
+      }
     }
   };
 
