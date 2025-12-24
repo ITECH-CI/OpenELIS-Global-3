@@ -11,8 +11,9 @@
     <include relativeToChangelogFile="true" file="update_program.xml" />
     <include relativeToChangelogFile="true" file="update_test_section.xml" />
     <include relativeToChangelogFile="true" file="add_free_payment_option.xml" />
-    <include relativeToChangelogFile="true" 
+    <include relativeToChangelogFile="true"
     file="add_non_conformity_table.xml" />
+    <include relativeToChangelogFile="true" file="add_site_id_config.xml" />
 
 
 </databaseChangeLog>
