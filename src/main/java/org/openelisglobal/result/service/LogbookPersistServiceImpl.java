@@ -106,8 +106,6 @@ public class LogbookPersistServiceImpl implements LogbookResultsPersistService {
         }
 
         for (ResultSet resultSet : actionDataSet.getModifiedResults()) {
-            LogEvent.logInfo(this.getClass().getSimpleName(), "persistDataSet", "About to update result ID: "
-                    + resultSet.result.getId() + ", value: " + resultSet.result.getValue());
 
             // Initialize lazy proxies before update to prevent LazyInitializationException
             try {
@@ -155,18 +153,9 @@ public class LogbookPersistServiceImpl implements LogbookResultsPersistService {
 
         setSampleStatus(actionDataSet, sysUserId);
 
-        LogEvent.logInfo(this.getClass().getSimpleName(), "persistDataSet",
-                "About to call transactionalUpdate for " + updaters.size() + " updaters");
-
         for (IResultUpdate updater : updaters) {
-            LogEvent.logInfo(this.getClass().getSimpleName(), "persistDataSet",
-                    "Calling transactionalUpdate on: " + updater.getClass().getSimpleName());
             updater.transactionalUpdate(actionDataSet);
-            LogEvent.logInfo(this.getClass().getSimpleName(), "persistDataSet",
-                    "Completed transactionalUpdate on: " + updater.getClass().getSimpleName());
         }
-
-        LogEvent.logInfo(this.getClass().getSimpleName(), "persistDataSet", "All transactionalUpdate calls completed");
 
         return reflexAnalysises;
     }

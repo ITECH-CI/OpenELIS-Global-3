@@ -46,27 +46,11 @@ public class SiUnitConversionUpdate implements IResultUpdate {
     @Override
     public void transactionalUpdate(IResultSaveService resultService) throws LIMSRuntimeException {
         try {
-            LogEvent.logInfo(this.getClass().getSimpleName(), "transactionalUpdate",
-                    "Starting SI unit conversion - New results: " + resultService.getNewResults().size()
-                            + ", Modified results: " + resultService.getModifiedResults().size());
-
-            LogEvent.logInfo(this.getClass().getSimpleName(), "transactionalUpdate",
-                    "About to call convertSimpleResults");
             convertSimpleResults(resultService);
-            LogEvent.logInfo(this.getClass().getSimpleName(), "transactionalUpdate",
-                    "convertSimpleResults completed successfully");
 
-            LogEvent.logInfo(this.getClass().getSimpleName(), "transactionalUpdate",
-                    "About to calculate derived formulas");
             calculateDerivedFormulas(resultService);
-            LogEvent.logInfo(this.getClass().getSimpleName(), "transactionalUpdate",
-                    "calculateDerivedFormulas completed successfully");
 
-            LogEvent.logInfo(this.getClass().getSimpleName(), "transactionalUpdate",
-                    "transactionalUpdate completed successfully");
         } catch (Exception e) {
-            LogEvent.logError(this.getClass().getSimpleName(), "transactionalUpdate",
-                    "Error during SI unit conversion: " + e.getMessage());
             LogEvent.logError(e);
             throw new LIMSRuntimeException("SI conversion failed", e);
         }
@@ -75,8 +59,6 @@ public class SiUnitConversionUpdate implements IResultUpdate {
     @Override
     public void postTransactionalCommitUpdate(IResultSaveService resultService) {
         // Logging or notifications if needed
-        LogEvent.logInfo(this.getClass().getSimpleName(), "postTransactionalCommitUpdate",
-                "SI unit conversion completed for " + getTotalResultCount(resultService) + " results");
     }
 
     /**
@@ -99,18 +81,13 @@ public class SiUnitConversionUpdate implements IResultUpdate {
      * persist changes.
      */
     private void convertAndSaveResult(Result result, String currentUserId) {
-        LogEvent.logInfo(this.getClass().getSimpleName(), "convertAndSaveResult",
-                "Processing result ID: " + result.getId() + ", value: " + result.getValue());
 
         boolean converted = convertSimpleResult(result);
-        LogEvent.logInfo(this.getClass().getSimpleName(), "convertAndSaveResult", "Conversion result: " + converted);
 
         if (converted) {
             // Reload the result from the current session and update its SI fields
             // This ensures we're modifying the managed entity that Hibernate is tracking
             try {
-                LogEvent.logInfo(this.getClass().getSimpleName(), "convertAndSaveResult",
-                        "Reloading result from session to update SI values");
 
                 // Find the managed instance of this result in the current session
                 Result managedResult = entityManager.find(Result.class, result.getId());
@@ -124,11 +101,6 @@ public class SiUnitConversionUpdate implements IResultUpdate {
                     managedResult.setMaxNormalSi(result.getMaxNormalSi());
                     managedResult.setSiLastupdated(result.getSiLastupdated());
 
-                    LogEvent.logInfo(this.getClass().getSimpleName(), "convertAndSaveResult",
-                            "Updated managed result with SI values: valueSi=" + managedResult.getValueSi()
-                                    + ", uomSi ID="
-                                    + (managedResult.getUomSi() != null ? managedResult.getUomSi().getId() : "null")
-                                    + ". Changes will be persisted by Hibernate dirty checking.");
                 } else {
                     LogEvent.logWarn(this.getClass().getSimpleName(), "convertAndSaveResult",
                             "Could not find managed result with ID: " + result.getId());
@@ -156,15 +128,10 @@ public class SiUnitConversionUpdate implements IResultUpdate {
             return false;
         }
 
-        LogEvent.logInfo(this.getClass().getSimpleName(), "convertSimpleResult",
-                "Attempting to convert result with value: " + result.getValue());
-
         // Perform SI conversion
         boolean converted = siConversionService.convertResultToSi(result);
 
         if (converted) {
-            LogEvent.logInfo(this.getClass().getSimpleName(), "convertSimpleResult",
-                    "Successfully converted to SI: " + result.getValueSi());
 
             // Also convert reference ranges if present
             Analysis analysis = result.getAnalysis();
@@ -191,8 +158,6 @@ public class SiUnitConversionUpdate implements IResultUpdate {
      * Calculate derived formulas for tests that depend on updated results.
      */
     private void calculateDerivedFormulas(IResultSaveService resultService) {
-        LogEvent.logInfo(this.getClass().getSimpleName(), "calculateDerivedFormulas",
-                "Starting derived formula calculation");
 
         // Collect all tests that have been updated
         Set<Test> updatedTests = new HashSet<>();
@@ -209,34 +174,21 @@ public class SiUnitConversionUpdate implements IResultUpdate {
             }
         }
 
-        LogEvent.logInfo(this.getClass().getSimpleName(), "calculateDerivedFormulas",
-                "Found " + updatedTests.size() + " updated tests");
-
         // Find derived formulas that depend on any of the updated tests
         Set<TestDerivedFormula> formulasToCalculate = new HashSet<>();
         for (Test test : updatedTests) {
-            LogEvent.logInfo(this.getClass().getSimpleName(), "calculateDerivedFormulas",
-                    "Looking for formulas that depend on test ID: " + test.getId());
             List<TestDerivedFormula> formulas = testDerivedFormulaDAO.findBySourceTestId(test.getId());
             if (formulas != null && !formulas.isEmpty()) {
-                LogEvent.logInfo(this.getClass().getSimpleName(), "calculateDerivedFormulas",
-                        "Found " + formulas.size() + " derived formulas for test " + test.getId());
+
                 formulasToCalculate.addAll(formulas);
             }
         }
 
-        LogEvent.logInfo(this.getClass().getSimpleName(), "calculateDerivedFormulas",
-                "Total derived formulas to calculate: " + formulasToCalculate.size());
-
         // Calculate each derived formula
         for (TestDerivedFormula formula : formulasToCalculate) {
-            LogEvent.logInfo(this.getClass().getSimpleName(), "calculateDerivedFormulas",
-                    "Calculating derived formula for test: " + formula.getTest().getId());
             calculateDerivedFormula(formula, resultService);
         }
 
-        LogEvent.logInfo(this.getClass().getSimpleName(), "calculateDerivedFormulas",
-                "Completed derived formula calculation");
     }
 
     /**
@@ -281,9 +233,6 @@ public class SiUnitConversionUpdate implements IResultUpdate {
                         managedResult.setUomSi(formula.getToUomSi());
                         managedResult.setSiLastupdated(new Timestamp(System.currentTimeMillis()));
 
-                        LogEvent.logInfo(this.getClass().getSimpleName(), "calculateDerivedFormula",
-                                "Calculated and updated SI value for derived test " + formula.getTest().getId() + ": "
-                                        + siValue + " (will be persisted by Hibernate dirty checking)");
                     } else {
                         LogEvent.logWarn(this.getClass().getSimpleName(), "calculateDerivedFormula",
                                 "Could not find managed result for derived test: " + formula.getTest().getId());

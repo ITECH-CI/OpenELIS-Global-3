@@ -38,22 +38,6 @@ const Validation = (props) => {
 
   useEffect(() => {
     componentMounted.current = true;
-
-    // Log validation data to console for debugging
-    console.log("=== VALIDATION DATA DEBUG ===");
-    console.log("props.results:", props.results);
-    if (props.results?.resultList && props.results.resultList.length > 0) {
-      console.log("First result item:", props.results.resultList[0]);
-      console.log("First result SI fields:", {
-        valueSi: props.results.resultList[0].valueSi,
-        uomSiName: props.results.resultList[0].uomSiName,
-        uom: props.results.resultList[0].uom,
-        result: props.results.resultList[0].result,
-        resultValue: props.results.resultList[0].resultValue,
-      });
-    }
-    console.log("=============================");
-
     return () => {
       componentMounted.current = false;
     };
