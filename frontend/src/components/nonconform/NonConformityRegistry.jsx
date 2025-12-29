@@ -85,22 +85,21 @@ const NonConformityRegistry = () => {
     loadNonConformities();
   }, []);
 
-  
-    const getSiteList = (response) => {
-      if (componentMounted.current) {
-        setSiteNames(response);
-      }
+  const getSiteList = (response) => {
+    if (componentMounted.current) {
+      setSiteNames(response);
+    }
+  };
+
+  useEffect(() => {
+    componentMounted.current = true;
+    getFromOpenElisServer("/rest/site-names", getSiteList);
+    getFromOpenElisServer("/rest/user-sample-types", fetchSamplesTypes);
+    getFromOpenElisServer("/rest/qaevents-dictionnary", fetchQaEvents);
+    return () => {
+      componentMounted.current = false;
     };
-  
-    useEffect(() => {
-      componentMounted.current = true;
-      getFromOpenElisServer("/rest/site-names", getSiteList);
-      getFromOpenElisServer("/rest/user-sample-types", fetchSamplesTypes);
-      getFromOpenElisServer("/rest/qaevents-dictionnary", fetchQaEvents);
-      return () => {
-        componentMounted.current = false;
-      };
-    }, []);
+  }, []);
 
   const fetchSamplesTypes = (res) => {
     if (componentMounted.current) {
@@ -109,7 +108,7 @@ const NonConformityRegistry = () => {
     }
   };
 
-    const fetchQaEvents = (res) => {
+  const fetchQaEvents = (res) => {
     if (componentMounted.current) {
       setQaEvent(res);
       setLoading(false);
@@ -129,9 +128,11 @@ const NonConformityRegistry = () => {
     setLoading(true);
     const params = new URLSearchParams();
 
-    if (filters.siteProvenance) params.append("siteProvenance", filters.siteProvenance);
+    if (filters.siteProvenance)
+      params.append("siteProvenance", filters.siteProvenance);
     if (filters.sampleType) params.append("sampleType", filters.sampleType);
-    if (filters.rejectionReason) params.append("rejectionReason", filters.rejectionReason);
+    if (filters.rejectionReason)
+      params.append("rejectionReason", filters.rejectionReason);
     if (filters.startDate) params.append("startDate", filters.startDate);
     if (filters.endDate) params.append("endDate", filters.endDate);
 
@@ -141,16 +142,18 @@ const NonConformityRegistry = () => {
         const dataArray = Array.isArray(data) ? data : [];
         setFilteredData(dataArray);
         setLoading(false);
-      }
+      },
     );
   };
 
   const handleExportCSV = () => {
     const params = new URLSearchParams();
 
-    if (filters.siteProvenance) params.append("siteProvenance", filters.siteProvenance);
+    if (filters.siteProvenance)
+      params.append("siteProvenance", filters.siteProvenance);
     if (filters.sampleType) params.append("sampleType", filters.sampleType);
-    if (filters.rejectionReason) params.append("rejectionReason", filters.rejectionReason);
+    if (filters.rejectionReason)
+      params.append("rejectionReason", filters.rejectionReason);
     if (filters.startDate) params.append("startDate", filters.startDate);
     if (filters.endDate) params.append("endDate", filters.endDate);
 
@@ -212,7 +215,12 @@ const NonConformityRegistry = () => {
   const handleSubmit = () => {
     console.log("handleSubmit called", formData);
 
-    if (!formData.siteProvenance || !formData.sampleType || !formData.rejectionReason || !formData.reporterName) {
+    if (
+      !formData.siteProvenance ||
+      !formData.sampleType ||
+      !formData.rejectionReason ||
+      !formData.reporterName
+    ) {
       console.log("Validation failed");
       setNotification({
         show: true,
@@ -245,7 +253,9 @@ const NonConformityRegistry = () => {
               show: true,
               kind: NotificationKinds.error,
               title: "Erreur",
-              message: response?.message || "Une erreur est survenue lors de l'enregistrement",
+              message:
+                response?.message ||
+                "Une erreur est survenue lors de l'enregistrement",
             });
           }
         },
@@ -257,7 +267,7 @@ const NonConformityRegistry = () => {
             title: "Erreur",
             message: "Erreur de connexion au serveur",
           });
-        }
+        },
       );
     } catch (error) {
       console.error("Exception in handleSubmit:", error);
@@ -281,14 +291,13 @@ const NonConformityRegistry = () => {
     { key: "actions", header: "Actions" },
   ];
 
-
   const getSiteNameById = (siteId) => {
     if (!siteId) return "-";
     const site = siteNames.find((s) => s.id === siteId);
     return site ? site.value : siteId;
   };
 
-   const getSampleNameById = (sampleId) => {
+  const getSampleNameById = (sampleId) => {
     if (!sampleId) return "-";
     const sample = sampleTypes.find((s) => s.id === sampleId);
     return sample ? sample.value : sampleId;
@@ -300,21 +309,23 @@ const NonConformityRegistry = () => {
     return reason ? reason.value : reasonId;
   };
 
-  const allRows = Array.isArray(filteredData) ? filteredData.map((nc) => ({
-    id: nc.id,
-    ncNumber: nc.ncNumber,
-    reportDate: nc.reportDate,
-    siteProvenance: getSiteNameById(nc.siteProvenance),
-    sampleType: getSampleNameById(nc.sampleType),
-    rejectionReason: getRejectionReasonById(nc.rejectionReason),
-    reporterName: nc.reporterName,
-    labNumber: nc.labNumber || "-",
-    actions: (
-      <Button size="sm" onClick={() => handleOpenModal(nc)}>
-        Modifier
-      </Button>
-    ),
-  })) : [];
+  const allRows = Array.isArray(filteredData)
+    ? filteredData.map((nc) => ({
+        id: nc.id,
+        ncNumber: nc.ncNumber,
+        reportDate: nc.reportDate,
+        siteProvenance: getSiteNameById(nc.siteProvenance),
+        sampleType: getSampleNameById(nc.sampleType),
+        rejectionReason: getRejectionReasonById(nc.rejectionReason),
+        reporterName: nc.reporterName,
+        labNumber: nc.labNumber || "-",
+        actions: (
+          <Button size="sm" onClick={() => handleOpenModal(nc)}>
+            Modifier
+          </Button>
+        ),
+      }))
+    : [];
 
   const startIndex = (currentPage - 1) * pageSize;
   const endIndex = startIndex + pageSize;
@@ -495,7 +506,10 @@ const NonConformityRegistry = () => {
                       <TableHead>
                         <TableRow>
                           {headers.map((header) => (
-                            <TableHeader key={header.key} {...getHeaderProps({ header })}>
+                            <TableHeader
+                              key={header.key}
+                              {...getHeaderProps({ header })}
+                            >
                               {header.header}
                             </TableHeader>
                           ))}
@@ -539,7 +553,9 @@ const NonConformityRegistry = () => {
       <Modal
         open={showModal}
         onRequestClose={handleCloseModal}
-        modalHeading={isEditing ? "Modifier la Non-Conformité" : "Nouvelle Non-Conformité"}
+        modalHeading={
+          isEditing ? "Modifier la Non-Conformité" : "Nouvelle Non-Conformité"
+        }
         primaryButtonText="Enregistrer"
         secondaryButtonText="Annuler"
         onRequestSubmit={handleSubmit}
@@ -575,15 +591,16 @@ const NonConformityRegistry = () => {
             />
           </Column>
           <Column lg={8}>
-
-          <AutoComplete
-            id="site-provenance"
-            labelText="Site de Provenance *"
-            value={formData.siteProvenance}
-            allowFreeText={false}
-            onSelect={handleAutoCompleteSiteName}
-            onChange={(e) => handleInputChange("siteProvenance", e.target.value)}
-            label={
+            <AutoComplete
+              id="site-provenance"
+              labelText="Site de Provenance *"
+              value={formData.siteProvenance}
+              allowFreeText={false}
+              onSelect={handleAutoCompleteSiteName}
+              onChange={(e) =>
+                handleInputChange("siteProvenance", e.target.value)
+              }
+              label={
                 <>
                   <FormattedMessage id="order.search.site.name" />{" "}
                 </>
@@ -593,40 +610,51 @@ const NonConformityRegistry = () => {
             />
           </Column>
           <Column lg={8}>
-        <Select
+            <Select
               id="sample-type"
               labelText="Type d'Échantillon *"
               value={formData.sampleType}
               onChange={(e) => handleInputChange("sampleType", e.target.value)}
               required
-        >
-          <SelectItem text="Select sample type" value="" />
-          {sampleTypes?.map((sampleType, i) => (
-            <SelectItem text={sampleType.value} value={sampleType.id} key={i} />
-          ))}
-        </Select>
-
+            >
+              <SelectItem text="Select sample type" value="" />
+              {sampleTypes?.map((sampleType, i) => (
+                <SelectItem
+                  text={sampleType.value}
+                  value={sampleType.id}
+                  key={i}
+                />
+              ))}
+            </Select>
           </Column>
           <Column lg={16}>
-        <Select
+            <Select
               id="rejection-reason"
               labelText="Raison du Rejet *"
               value={formData.rejectionReason}
-              onChange={(e) => handleInputChange("rejectionReason", e.target.value)}
+              onChange={(e) =>
+                handleInputChange("rejectionReason", e.target.value)
+              }
               required
-        >
-          <SelectItem text="Raison du Rejet" value="" />
-          {qaEvent?.map((rejection, i) => (
-            <SelectItem text={rejection.value} value={rejection.id} key={i} />
-          ))}
-        </Select>
+            >
+              <SelectItem text="Raison du Rejet" value="" />
+              {qaEvent?.map((rejection, i) => (
+                <SelectItem
+                  text={rejection.value}
+                  value={rejection.id}
+                  key={i}
+                />
+              ))}
+            </Select>
           </Column>
           <Column lg={16}>
             <TextInput
               id="reporter-name"
               labelText="Personne ayant constaté la NC (Rapporteur) *"
               value={formData.reporterName}
-              onChange={(e) => handleInputChange("reporterName", e.target.value)}
+              onChange={(e) =>
+                handleInputChange("reporterName", e.target.value)
+              }
               required
             />
           </Column>
@@ -644,7 +672,9 @@ const NonConformityRegistry = () => {
               id="corrective-action"
               labelText="Action Corrective"
               value={formData.correctiveAction}
-              onChange={(e) => handleInputChange("correctiveAction", e.target.value)}
+              onChange={(e) =>
+                handleInputChange("correctiveAction", e.target.value)
+              }
               rows={3}
             />
           </Column>

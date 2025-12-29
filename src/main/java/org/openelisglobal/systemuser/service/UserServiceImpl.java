@@ -281,7 +281,7 @@ public class UserServiceImpl implements UserService {
         if (testSections != null) {
             testSections.forEach(testSection -> testUnitIds.add(Integer.valueOf(testSection.getId())));
         }
-        
+
         List<Test> allTests = testService.getTestsByTestSectionIds(testUnitIds);
         Set<String> sampleIds = new HashSet<>();
         // clear cache to create a fresh Map of testId To TypeOfSample

@@ -588,4 +588,130 @@ public class ResultServiceTest extends BaseWebContextSensitiveTest {
         assertNotNull(updatedResult);
         assertEquals("95.0", updatedResult.getValue());
     }
+
+    // SI Unit Conversion display methods tests
+
+    @Test
+    public void getSiValue_shouldReturnNullWhenNoConversion() {
+        Result result = resultService.get("3");
+        String siValue = resultService.getSiValue(result);
+        // Initially, no SI conversion should exist
+        assertEquals(null, siValue);
+    }
+
+    @Test
+    public void getSiValue_shouldReturnValueWhenConversionExists() {
+        Result result = resultService.get("3");
+        result.setValueSi("850.0");
+        String siValue = resultService.getSiValue(result);
+        assertEquals("850.0", siValue);
+    }
+
+    @Test
+    public void getSiUom_shouldReturnEmptyWhenNoConversion() {
+        Result result = resultService.get("3");
+        String siUom = resultService.getSiUom(result);
+        assertEquals("", siUom);
+    }
+
+    @Test
+    public void getSiUom_shouldReturnUnitNameWhenConversionExists() {
+        Result result = resultService.get("3");
+        org.openelisglobal.unitofmeasure.valueholder.UnitOfMeasure uom = new org.openelisglobal.unitofmeasure.valueholder.UnitOfMeasure();
+        uom.setUnitOfMeasureName("g/L");
+        result.setUomSi(uom);
+        String siUom = resultService.getSiUom(result);
+        assertEquals("g/L", siUom);
+    }
+
+    @Test
+    public void hasSiConversion_shouldReturnFalseWhenNoConversion() {
+        Result result = resultService.get("3");
+        boolean hasSi = resultService.hasSiConversion(result);
+        assertEquals(false, hasSi);
+    }
+
+    @Test
+    public void hasSiConversion_shouldReturnTrueWhenConversionExists() {
+        Result result = resultService.get("3");
+        result.setValueSi("850.0");
+        boolean hasSi = resultService.hasSiConversion(result);
+        assertEquals(true, hasSi);
+    }
+
+    @Test
+    public void getFormattedValueWithSi_shouldReturnOnlyTraditionalWhenNoConversion() {
+        Result result = resultService.get("3");
+        result.setValue("85.0");
+        String formatted = resultService.getFormattedValueWithSi(result, " ", false, true);
+        // Should return just the traditional value without SI in parentheses
+        assertTrue(formatted.contains("85.0"));
+        assertTrue(!formatted.contains("("));
+    }
+
+    @Test
+    public void getFormattedValueWithSi_shouldIncludeSiInParentheses() {
+        Result result = resultService.get("3");
+        result.setValue("85.0");
+        result.setValueSi("850.0");
+
+        org.openelisglobal.unitofmeasure.valueholder.UnitOfMeasure uom = new org.openelisglobal.unitofmeasure.valueholder.UnitOfMeasure();
+        uom.setUnitOfMeasureName("g/L");
+        result.setUomSi(uom);
+
+        String formatted = resultService.getFormattedValueWithSi(result, " ", false, true);
+        // Should return "85.0 unit (850.0 g/L)" format
+        assertTrue(formatted.contains("85.0"));
+        assertTrue(formatted.contains("850.0"));
+        assertTrue(formatted.contains("g/L"));
+        assertTrue(formatted.contains("("));
+        assertTrue(formatted.contains(")"));
+    }
+
+    @Test
+    public void getSiReferenceRange_shouldReturnEmptyWhenNoRange() {
+        Result result = resultService.get("3");
+        String range = resultService.getSiReferenceRange(result);
+        assertEquals("", range);
+    }
+
+    @Test
+    public void getSiReferenceRange_shouldFormatMinMaxRange() {
+        Result result = resultService.get("3");
+        result.setMinNormalSi(120.0);
+        result.setMaxNormalSi(160.0);
+
+        org.openelisglobal.unitofmeasure.valueholder.UnitOfMeasure uom = new org.openelisglobal.unitofmeasure.valueholder.UnitOfMeasure();
+        uom.setUnitOfMeasureName("g/L");
+        result.setUomSi(uom);
+
+        String range = resultService.getSiReferenceRange(result);
+        assertEquals("120.0 - 160.0 g/L", range);
+    }
+
+    @Test
+    public void getSiReferenceRange_shouldFormatMinOnlyRange() {
+        Result result = resultService.get("3");
+        result.setMinNormalSi(120.0);
+
+        org.openelisglobal.unitofmeasure.valueholder.UnitOfMeasure uom = new org.openelisglobal.unitofmeasure.valueholder.UnitOfMeasure();
+        uom.setUnitOfMeasureName("g/L");
+        result.setUomSi(uom);
+
+        String range = resultService.getSiReferenceRange(result);
+        assertEquals("> 120.0 g/L", range);
+    }
+
+    @Test
+    public void getSiReferenceRange_shouldFormatMaxOnlyRange() {
+        Result result = resultService.get("3");
+        result.setMaxNormalSi(160.0);
+
+        org.openelisglobal.unitofmeasure.valueholder.UnitOfMeasure uom = new org.openelisglobal.unitofmeasure.valueholder.UnitOfMeasure();
+        uom.setUnitOfMeasureName("g/L");
+        result.setUomSi(uom);
+
+        String range = resultService.getSiReferenceRange(result);
+        assertEquals("< 160.0 g/L", range);
+    }
 }

@@ -31,6 +31,8 @@ public class AnalysisItem implements Serializable {
 
     private String units;
 
+    private String unitOfMeasureName;
+
     private String testName;
 
     @ValidAccessionNumber(groups = { ResultValidationForm.ResultValidation.class })
@@ -194,6 +196,12 @@ public class AnalysisItem implements Serializable {
     private boolean isNormal;
 
     private String priority;
+
+    // SI unit conversion fields
+    private String valueSi;
+    private String uomSiName;
+    private Double minNormalSi;
+    private Double maxNormalSi;
 
     public String getRejectReasonId() {
         return rejectReasonId;
@@ -828,5 +836,45 @@ public class AnalysisItem implements Serializable {
 
     public void setPriority(String priority) {
         this.priority = priority;
+    }
+
+    public String getValueSi() {
+        return valueSi;
+    }
+
+    public void setValueSi(String valueSi) {
+        this.valueSi = valueSi;
+    }
+
+    public String getUomSiName() {
+        return uomSiName;
+    }
+
+    public String getUnitOfMeasureName() {
+        return unitOfMeasureName;
+    }
+
+    public void setUnitOfMeasureName(String unitOfMeasureName) {
+        this.unitOfMeasureName = unitOfMeasureName;
+    }
+
+    public void setUomSiName(String uomSiName) {
+        this.uomSiName = uomSiName;
+    }
+
+    public Double getMinNormalSi() {
+        return minNormalSi;
+    }
+
+    public void setMinNormalSi(Double minNormalSi) {
+        this.minNormalSi = minNormalSi;
+    }
+
+    public Double getMaxNormalSi() {
+        return maxNormalSi;
+    }
+
+    public void setMaxNormalSi(Double maxNormalSi) {
+        this.maxNormalSi = maxNormalSi;
     }
 }

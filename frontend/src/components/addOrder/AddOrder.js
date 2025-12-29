@@ -229,7 +229,8 @@ const AddOrder = (props) => {
         title: intl.formatMessage({ id: "notification.title" }),
         message: intl.formatMessage({
           id: "notification.unsaved.labnumber",
-          defaultMessage: "Veuillez enregistrer le numéro de laboratoire actuel avant d'en générer un nouveau."
+          defaultMessage:
+            "Veuillez enregistrer le numéro de laboratoire actuel avant d'en générer un nouveau.",
         }),
       });
       return;
@@ -604,18 +605,24 @@ const AddOrder = (props) => {
               {" "}
               &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;{" "}
             </Column>
-              {isBacterio && (
-           <Column lg={8} md={4} sm={4}>
-              <Select
-                className="orderType"
-                id={"orderType"}
-                name="orderType"
-                labelText={intl.formatMessage({ id: "sample.order.type" })}
-                required
-              >
-              <SelectItem value="IN" text={intl.formatMessage({ id: "sample.order.type.in" })}/>
-              <SelectItem value="OUT" text={intl.formatMessage({ id: "sample.order.type.out" })} />
-              </Select>
+            {isBacterio && (
+              <Column lg={8} md={4} sm={4}>
+                <Select
+                  className="orderType"
+                  id={"orderType"}
+                  name="orderType"
+                  labelText={intl.formatMessage({ id: "sample.order.type" })}
+                  required
+                >
+                  <SelectItem
+                    value="IN"
+                    text={intl.formatMessage({ id: "sample.order.type.in" })}
+                  />
+                  <SelectItem
+                    value="OUT"
+                    text={intl.formatMessage({ id: "sample.order.type.out" })}
+                  />
+                </Select>
               </Column>
             )}
             <Column lg={16} md={8} sm={3}>

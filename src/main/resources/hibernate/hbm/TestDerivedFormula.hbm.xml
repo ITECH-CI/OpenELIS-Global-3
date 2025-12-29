@@ -1,0 +1,55 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping>
+    <class
+        name="org.openelisglobal.testunitconversion.valueholder.TestDerivedFormula"
+        table="test_derived_formula" optimistic-lock="version"
+        dynamic-update="true">
+        <id name="id"
+            type="org.openelisglobal.hibernate.resources.usertype.LIMSStringNumberUserType">
+            <column name="id" precision="10" scale="0" />
+            <generator
+                class="org.openelisglobal.hibernate.resources.StringSequenceGenerator">
+                <param name="sequence_name">test_derived_formula_seq</param>
+            </generator>
+        </id>
+        <version name="lastupdated" column="lastupdated"
+            type="timestamp" access="field" />
+
+        <many-to-one name="test"
+            class="org.openelisglobal.test.valueholder.Test" fetch="select">
+            <column name="test_id" precision="10" scale="0"
+                not-null="true" />
+        </many-to-one>
+
+        <property name="expression" type="java.lang.String">
+            <column name="expression" length="255" not-null="true" />
+        </property>
+
+        <many-to-one name="fromUom"
+            class="org.openelisglobal.unitofmeasure.valueholder.UnitOfMeasure"
+            fetch="select">
+            <column name="from_uom_id" precision="10" scale="0" />
+        </many-to-one>
+        <many-to-one name="toUomSi"
+            class="org.openelisglobal.unitofmeasure.valueholder.UnitOfMeasure"
+            fetch="select">
+            <column name="to_uom_si_id" precision="10" scale="0" />
+        </many-to-one>
+
+        <property name="decimals" type="java.lang.Integer">
+            <column name="decimals" />
+        </property>
+        <property name="active" type="java.lang.Boolean">
+            <column name="active" />
+        </property>
+
+        <bag name="dependencies" inverse="true" lazy="true" cascade="all">
+            <key column="derived_formula_id" />
+            <one-to-many
+                class="org.openelisglobal.testunitconversion.valueholder.TestDerivedDependency" />
+        </bag>
+    </class>
+</hibernate-mapping>

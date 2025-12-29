@@ -98,7 +98,7 @@ public class PatientCILNSPClinical_vreduit extends PatientReport implements IRep
         reportParameters.put("footerName", getFooterName());
         Optional<Image> labDirectorSignature = imageService.getImageBySiteInfoName("labDirectorSignature");
         reportParameters.put("useLabDirectorSignature", labDirectorSignature.isPresent());
-        if (labDirectorSignature.isPresent()) {
+        if (labDirectorSignature.isPresent() && labDirectorSignature.get().getImage() != null) {
             reportParameters.put("labDirectorSignature",
                     new ByteArrayInputStream(labDirectorSignature.get().getImage()));
         }

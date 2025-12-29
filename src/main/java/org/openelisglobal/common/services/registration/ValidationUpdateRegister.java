@@ -19,6 +19,8 @@ import org.openelisglobal.common.services.registration.interfaces.IResultUpdate;
 import org.openelisglobal.common.util.ConfigurationProperties;
 import org.openelisglobal.common.util.ConfigurationProperties.Property;
 import org.openelisglobal.dataexchange.resultreporting.ResultReportingUpdate;
+import org.openelisglobal.spring.util.SpringContext;
+import org.openelisglobal.testunitconversion.service.SiUnitConversionUpdate;
 
 public class ValidationUpdateRegister {
     public static List<IResultUpdate> getRegisteredUpdaters() {
@@ -27,6 +29,10 @@ public class ValidationUpdateRegister {
         // kluge at this point, should be discoverable
         if (shouldReport(Property.reportResults)) {
             updaters.add(new ResultReportingUpdate());
+        }
+
+        if (shouldReport(Property.SI_UNIT_CONVERSION)) {
+            updaters.add(SpringContext.getBean(SiUnitConversionUpdate.class));
         }
 
         /*****

@@ -1,0 +1,52 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping>
+    <class
+        name="org.openelisglobal.testunitconversion.valueholder.TestUnitConversion"
+        table="test_unit_conversion" optimistic-lock="version"
+        dynamic-update="true">
+        <id name="id"
+            type="org.openelisglobal.hibernate.resources.usertype.LIMSStringNumberUserType">
+            <column name="id" precision="10" scale="0" />
+            <generator
+                class="org.openelisglobal.hibernate.resources.StringSequenceGenerator">
+                <param name="sequence_name">test_unit_conversion_seq</param>
+            </generator>
+        </id>
+        <version name="lastupdated" column="lastupdated"
+            type="timestamp" access="field" />
+
+        <many-to-one name="test"
+            class="org.openelisglobal.test.valueholder.Test" fetch="select">
+            <column name="test_id" precision="10" scale="0"
+                not-null="true" />
+        </many-to-one>
+        <many-to-one name="fromUom"
+            class="org.openelisglobal.unitofmeasure.valueholder.UnitOfMeasure"
+            fetch="select">
+            <column name="from_uom_id" precision="10" scale="0"
+                not-null="true" />
+        </many-to-one>
+        <many-to-one name="toUom"
+            class="org.openelisglobal.unitofmeasure.valueholder.UnitOfMeasure"
+            fetch="select">
+            <column name="to_uom_id" precision="10" scale="0"
+                not-null="true" />
+        </many-to-one>
+
+        <property name="factor" type="java.math.BigDecimal">
+            <column name="factor" precision="18" scale="8" />
+        </property>
+        <property name="offsetValue" type="java.math.BigDecimal">
+            <column name="offset_value" precision="18" scale="8" />
+        </property>
+        <property name="decimals" type="java.lang.Integer">
+            <column name="decimals" />
+        </property>
+        <property name="active" type="java.lang.Boolean">
+            <column name="active" />
+        </property>
+    </class>
+</hibernate-mapping>

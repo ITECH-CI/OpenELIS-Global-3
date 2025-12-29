@@ -384,6 +384,7 @@ const SampleType = (props) => {
   };
 
   const fetchSampleTypeTests = (res) => {
+    console.log(res);
     if (componentMounted.current) {
       setSampleTypeTests(res);
     }
@@ -1185,7 +1186,13 @@ const SampleType = (props) => {
         </div>
 
         <div className="cds--col">
-          {selectedTests && !selectedTests.length ? "" : <h4><FormattedMessage id="ordertests.title" /></h4>}
+          {selectedTests && !selectedTests.length ? (
+            ""
+          ) : (
+            <h4>
+              <FormattedMessage id="ordertests.title" />
+            </h4>
+          )}
           <div
             className={"searchTestText"}
             style={{ marginBottom: "1.188rem" }}

@@ -593,6 +593,78 @@ public abstract class PatientReport extends Report {
 
         data.setParentResult(currentAnalysis.getParentResult());
         data.setConclusion(currentConclusion);
+
+        // Add SI unit information, analysis method, and analyzer
+        setSiUnitInformation(data, test, resultList);
+    }
+
+    protected void setSiUnitInformation(ClinicalPatientData data, Test test, List<Result> resultList) {
+        if (resultList.isEmpty()) {
+            return;
+        }
+
+        Result result = resultList.get(0);
+
+        // Get SI converted result and unit from Result entity
+        if (result.getValueSi() != null) {
+            try {
+                // Format to 2 decimal places
+                double siValue = Double.parseDouble(result.getValueSi());
+                data.setSiResult(formatTwoDecimals(siValue));
+            } catch (NumberFormatException e) {
+                data.setSiResult(result.getValueSi());
+            }
+        }
+
+        if (result.getMinNormalSi() != null) {
+            data.setSiMinNormal(String.valueOf(result.getMinNormalSi()));
+        }
+
+        if (result.getMaxNormalSi() != null) {
+            data.setSiMaxNormal(String.valueOf(result.getMaxNormalSi()));
+        }
+
+        // Use getUomSiName() to safely handle lazy-loaded proxy
+        String uomSiName = result.getUomSiName();
+        if (uomSiName != null) {
+            data.setSiUom(uomSiName);
+        }
+
+        // Get analysis method from Analysis entity
+        if (currentAnalysis.getMethod() != null) {
+            data.setAnalysisMethod(currentAnalysis.getMethod().getMethodName());
+        }
+
+        // Get analyzer name from analyzer_test_map
+        try {
+            if (test != null) {
+                // Get analyzer for this test from analyzer_test_map table
+                org.openelisglobal.analyzerimport.service.AnalyzerTestMappingService mappingService = SpringContext
+                        .getBean(org.openelisglobal.analyzerimport.service.AnalyzerTestMappingService.class);
+                if (mappingService != null) {
+                    // Get all analyzer mappings and find the one for this test
+                    List<org.openelisglobal.analyzerimport.valueholder.AnalyzerTestMapping> allMappings = mappingService
+                            .getAll();
+                    for (org.openelisglobal.analyzerimport.valueholder.AnalyzerTestMapping mapping : allMappings) {
+                        if (mapping.getTestId() != null && mapping.getTestId().equals(test.getId())) {
+                            // Get the analyzer
+                            org.openelisglobal.analyzer.service.AnalyzerService analyzerService = SpringContext
+                                    .getBean(org.openelisglobal.analyzer.service.AnalyzerService.class);
+                            org.openelisglobal.analyzer.valueholder.Analyzer analyzer = analyzerService
+                                    .get(mapping.getAnalyzerId());
+                            if (analyzer != null) {
+                                data.setAnalyzerName(analyzer.getName());
+                                break; // Use the first matching analyzer
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            // Analyzer information is optional, log but continue
+            LogEvent.logDebug(this.getClass().getSimpleName(), "setSiUnitInformation",
+                    "Could not retrieve analyzer information: " + e.getMessage());
+        }
     }
 
     protected void setReferredOutResult(ClinicalPatientData data) {

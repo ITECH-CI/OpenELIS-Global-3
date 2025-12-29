@@ -83,6 +83,12 @@ public final class ClinicalPatientData {
     private String tbSampleAspect;
     private String tbFollowupPeriodLine1;
     private String tbFollowupPeriodLine2;
+    private String siResult;
+    private String siMinNormal;
+    private String siMaxNormal;
+    private String siUom;
+    private String analysisMethod;
+    private String analyzerName;
 
     public ClinicalPatientData() {
     }
@@ -143,6 +149,12 @@ public final class ClinicalPatientData {
         sampleId = data.getSampleId();
         sampleSortOrder = data.getSampleSortOrder();
         analysisStatus = data.getAnalysisStatus();
+        siResult = data.getSiResult();
+        siMinNormal = data.getSiMinNormal();
+        siMaxNormal = data.getSiMaxNormal();
+        siUom = data.getSiUom();
+        analysisMethod = data.getAnalysisMethod();
+        analyzerName = data.getAnalyzerName();
     }
 
     public String getReferralRefRange() {
@@ -668,5 +680,53 @@ public final class ClinicalPatientData {
 
     public void setPrescriber(String prescriber) {
         this.prescriber = prescriber;
+    }
+
+    public String getSiResult() {
+        return siResult;
+    }
+
+    public void setSiResult(String siResult) {
+        this.siResult = siResult;
+    }
+
+    public String getSiMinNormal() {
+        return siMinNormal;
+    }
+
+    public void setSiMinNormal(String siMinNormal) {
+        this.siMinNormal = siMinNormal;
+    }
+
+    public String getSiMaxNormal() {
+        return siMaxNormal;
+    }
+
+    public void setSiMaxNormal(String siMaxNormal) {
+        this.siMaxNormal = siMaxNormal;
+    }
+
+    public String getSiUom() {
+        return siUom;
+    }
+
+    public void setSiUom(String siUom) {
+        this.siUom = siUom;
+    }
+
+    public String getAnalysisMethod() {
+        return analysisMethod;
+    }
+
+    public void setAnalysisMethod(String analysisMethod) {
+        this.analysisMethod = analysisMethod;
+    }
+
+    public String getAnalyzerName() {
+        return analyzerName;
+    }
+
+    public void setAnalyzerName(String analyzerName) {
+        this.analyzerName = analyzerName;
     }
 }

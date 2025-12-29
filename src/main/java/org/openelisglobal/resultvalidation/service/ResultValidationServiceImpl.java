@@ -95,9 +95,18 @@ public class ResultValidationServiceImpl implements ResultValidationService {
             }
         }
 
+        LogEvent.logInfo(this.getClass().getSimpleName(), "persistdata",
+                "About to call transactionalUpdate for " + updaters.size() + " updaters");
+
         for (IResultUpdate updater : updaters) {
+            LogEvent.logInfo(this.getClass().getSimpleName(), "persistdata",
+                    "Calling transactionalUpdate on: " + updater.getClass().getSimpleName());
             updater.transactionalUpdate(resultSaveService);
+            LogEvent.logInfo(this.getClass().getSimpleName(), "persistdata",
+                    "Completed transactionalUpdate on: " + updater.getClass().getSimpleName());
         }
+
+        LogEvent.logInfo(this.getClass().getSimpleName(), "persistdata", "All transactionalUpdate calls completed");
     }
 
     private boolean isResultAnalysisFinalized(Result result, List<Analysis> analysisUpdateList) {

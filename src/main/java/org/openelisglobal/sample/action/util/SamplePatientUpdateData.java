@@ -353,7 +353,9 @@ public class SamplePatientUpdateData {
             provider = SpringContext.getBean(ProviderService.class).getProviderByPerson(
                     SpringContext.getBean(PersonService.class).get(sampleOrder.getProviderPersonId()));
             providerPerson = provider.getPerson();
-            providerPerson.setSysUserId(currentUserId);
+            // Don't modify sysUserId for existing Person to avoid Hibernate
+            // StaleStateException
+            // providerPerson.setSysUserId(currentUserId);
         } else {
             providerPerson = new Person();
             provider = new Provider();
@@ -368,7 +370,11 @@ public class SamplePatientUpdateData {
             provider.setExternalId(sampleOrder.getRequesterSampleID());
         }
 
-        provider.setSysUserId(currentUserId);
+        // Don't modify sysUserId for existing Provider to avoid Hibernate
+        // StaleStateException
+        if (GenericValidator.isBlankOrNull(provider.getId())) {
+            provider.setSysUserId(currentUserId);
+        }
     }
 
     private boolean noRequesterInformation(SampleOrderItem sampleOrder) {

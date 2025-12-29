@@ -1,5 +1,4 @@
-import React, { useState, useContext, useEffect, useRef } from "react";
-import { Field, Formik } from "formik";
+import { Copy } from "@carbon/icons-react";
 import {
   Button,
   Checkbox,
@@ -7,23 +6,22 @@ import {
   Form,
   Grid,
   Pagination,
-  Select,
-  SelectItem,
   TextArea,
-  TextInput,
 } from "@carbon/react";
-import { Copy } from "@carbon/icons-react";
+import { Field, Formik } from "formik";
+import { useContext, useEffect, useRef, useState } from "react";
 import DataTable from "react-data-table-component";
 import { FormattedMessage, useIntl } from "react-intl";
-import ValidationSearchFormValues from "../formModel/innitialValues/ValidationSearchFormValues";
-import { NotificationKinds } from "../common/CustomNotification";
-import { postToOpenElisServer } from "../utils/Utils";
-import { NotificationContext } from "../layout/Layout";
-import { getFromOpenElisServer } from "../utils/Utils";
-import { ConfigurationContext } from "../layout/Layout";
-import { convertAlphaNumLabNumForDisplay } from "../utils/Utils";
 import config from "../../config.json";
+import { NotificationKinds } from "../common/CustomNotification";
+import SiValueDisplay from "../common/SiValueDisplay";
 import { priorities } from "../data/orderOptions";
+import ValidationSearchFormValues from "../formModel/innitialValues/ValidationSearchFormValues";
+import { ConfigurationContext, NotificationContext } from "../layout/Layout";
+import {
+  convertAlphaNumLabNumForDisplay,
+  postToOpenElisServer,
+} from "../utils/Utils";
 
 const Validation = (props) => {
   const componentMounted = useRef(false);
@@ -40,10 +38,26 @@ const Validation = (props) => {
 
   useEffect(() => {
     componentMounted.current = true;
+
+    // Log validation data to console for debugging
+    console.log("=== VALIDATION DATA DEBUG ===");
+    console.log("props.results:", props.results);
+    if (props.results?.resultList && props.results.resultList.length > 0) {
+      console.log("First result item:", props.results.resultList[0]);
+      console.log("First result SI fields:", {
+        valueSi: props.results.resultList[0].valueSi,
+        uomSiName: props.results.resultList[0].uomSiName,
+        uom: props.results.resultList[0].uom,
+        result: props.results.resultList[0].result,
+        resultValue: props.results.resultList[0].resultValue,
+      });
+    }
+    console.log("=============================");
+
     return () => {
       componentMounted.current = false;
     };
-  }, []);
+  }, [props.results]);
 
   const columns = [
     {
@@ -203,7 +217,7 @@ const Validation = (props) => {
     const testName = fullTestName.substring(0, splitIndex);
     const sampleType = fullTestName.substring(splitIndex);
     switch (column.id) {
-      case "priority":
+      case "priority": {
         const priorityObj = priorities.find((p) => p.value === row.priority);
         return (
           <div
@@ -217,6 +231,7 @@ const Validation = (props) => {
             {priorityObj ? priorityObj.icon : null}
           </div>
         );
+      }
       case "sampleInfo":
         return (
           <>
@@ -349,7 +364,31 @@ const Validation = (props) => {
               </>
             );
           default:
-            return row.result;
+            // Display numeric results with SI conversion if available
+            if (row.valueSi && row.uomSiName) {
+              return (
+                <SiValueDisplay
+                  traditionalValue={row.result}
+                  traditionalUom={row.unitOfMeasureName || ""}
+                  siValue={row.valueSi}
+                  siUom={row.uomSiName}
+                  className="compact"
+                  showTooltip={true}
+                  significantDigits={2}
+                />
+              );
+            }
+            return (
+              <>
+                {row.result}
+                {row.unitOfMeasureName && (
+                  <span className="uom">
+                    {"\u00a0"}
+                    {row.unitOfMeasureName}
+                  </span>
+                )}
+              </>
+            );
         }
 
       default:
@@ -374,10 +413,10 @@ const Validation = (props) => {
               {" "}
               <FormattedMessage id="validation.label.nonconform" />
             </b>
-            <br/>
+            <br />
             {findPriorityByValue("ASAP").icon} ={" "}
             <FormattedMessage id="result.priority.asap" />
-            <br/>
+            <br />
             {findPriorityByValue("STAT").icon} ={" "}
             <FormattedMessage id="result.priority.stat" />
           </Column>

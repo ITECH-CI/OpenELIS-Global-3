@@ -135,7 +135,6 @@ public class SampleOrderService {
         return orderItems;
     }
 
-
     private void setDefaultReferringSite(SampleOrderItem orderItems) {
         try {
             SiteInformation siteIdConfig = siteInformationService.getSiteInformationByName("siteId");

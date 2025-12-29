@@ -89,7 +89,8 @@ public class AccessionValidationRestController extends BaseResultValidationContr
             "resultList*.resultId", "resultList*.hasQualifiedResult", "resultList*.sampleIsAccepted",
             "resultList*.sampleIsRejected", "resultList*.result", "resultList*.qualifiedResultValue",
             "resultList*.multiSelectResultValues", "resultList*.isAccepted", "resultList*.isRejected",
-            "resultList*.note" };
+            "resultList*.note", "resultList*.valueSi", "resultList*.uomSiName", "resultList*.uom",
+            "resultList*.minNormalSi", "resultList*.maxNormalSi" };
 
     // autowiring not needed, using constructor injection
     private AnalysisService analysisService;

@@ -121,6 +121,8 @@ public class SamplePatientEntryServiceImpl implements SamplePatientEntryService 
     private ProgramSampleService programSampleService;
     @Autowired
     private PatientIdentityService patientIdentityService;
+    @Autowired
+    private org.openelisglobal.typeofsample.service.TypeOfSampleService typeOfSampleService;
 
     @Transactional
     @Override
@@ -213,10 +215,16 @@ public class SamplePatientEntryServiceImpl implements SamplePatientEntryService 
     private void persistProviderData(SamplePatientUpdateData updateData) {
         if (updateData.getProviderPerson() != null && updateData.getProvider() != null) {
 
-            personService.save(updateData.getProviderPerson());
+            // Only save Person if it's a new person (no ID yet)
+            if (GenericValidator.isBlankOrNull(updateData.getProviderPerson().getId())) {
+                personService.save(updateData.getProviderPerson());
+            }
             updateData.getProvider().setPerson(updateData.getProviderPerson());
 
-            providerService.save(updateData.getProvider());
+            // Only save Provider if it's a new provider (no ID yet)
+            if (GenericValidator.isBlankOrNull(updateData.getProvider().getId())) {
+                providerService.save(updateData.getProvider());
+            }
         }
     }
 
@@ -250,6 +258,11 @@ public class SamplePatientEntryServiceImpl implements SamplePatientEntryService 
         for (SampleTestCollection sampleTestCollection : updateData.getSampleItemsTests()) {
             if (GenericValidator.isBlankOrNull(sampleTestCollection.item.getFhirUuidAsString())) {
                 sampleTestCollection.item.setFhirUuid(UUID.randomUUID());
+            }
+            // Ensure TypeOfSample is attached to the current persistence context
+            if (sampleTestCollection.item.getTypeOfSample() != null) {
+                String typeOfSampleId = sampleTestCollection.item.getTypeOfSample().getId();
+                sampleTestCollection.item.setTypeOfSample(typeOfSampleService.get(typeOfSampleId));
             }
             String sampleId = sampleItemService.insert(sampleTestCollection.item);
             SampleItem savedItem = sampleItemService.get(sampleId);

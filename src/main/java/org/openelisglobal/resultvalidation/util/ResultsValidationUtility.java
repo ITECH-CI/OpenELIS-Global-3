@@ -447,6 +447,40 @@ public class ResultsValidationUtility {
 
         testItem.setNormalResult(isNormalResult(analysis, result));
 
+        // Populate SI unit conversion fields
+        if (result != null) {
+            testItem.setValueSi(result.getValueSi());
+            testItem.setMinNormalSi(result.getMinNormalSi());
+            testItem.setMaxNormalSi(result.getMaxNormalSi());
+
+            // Get traditional UOM name
+            if (test.getUnitOfMeasure() != null) {
+                testItem.setUom(test.getUnitOfMeasure().getName());
+            }
+
+            // Get SI UOM name - load from database to avoid lazy loading issues
+            try {
+                if (result.getUomSi() != null) {
+                    String uomSiId = result.getUomSi().getId();
+                    if (uomSiId != null) {
+                        org.openelisglobal.unitofmeasure.service.UnitOfMeasureService uomService = org.openelisglobal.spring.util.SpringContext
+                                .getBean(org.openelisglobal.unitofmeasure.service.UnitOfMeasureService.class);
+                        org.openelisglobal.unitofmeasure.valueholder.UnitOfMeasure loadedUomSi = uomService
+                                .get(uomSiId);
+                        if (loadedUomSi != null) {
+                            testItem.setUomSiName(loadedUomSi.getUnitOfMeasureName());
+                        }
+                    }
+                }
+            } catch (org.hibernate.LazyInitializationException e) {
+                org.openelisglobal.common.log.LogEvent.logDebug(this.getClass().getSimpleName(), "createTestResultItem",
+                        "UOM SI proxy not initialized");
+            } catch (Exception e) {
+                org.openelisglobal.common.log.LogEvent.logWarn(this.getClass().getSimpleName(), "createTestResultItem",
+                        "Could not load SI UOM name: " + e.getMessage());
+            }
+        }
+
         return testItem;
     }
 
@@ -641,6 +675,7 @@ public class ResultsValidationUtility {
             testUnits = testResultItem.getUnitsOfMeasure();
             analysisResultItem.setIsHighlighted(!"100.0".equals(testResultItem.getResult().getValue()));
         }
+        analysisResultItem.setUnitOfMeasureName(testUnits);
 
         testUnits = augmentUOMWithRange(testUnits, testResultItem.getResult());
 
@@ -691,6 +726,12 @@ public class ResultsValidationUtility {
         if (sample != null && sample.getPriority() != null) {
             analysisResultItem.setPriority(sample.getPriority().toString());
         }
+
+        // Copy SI unit conversion fields from ResultValidationItem to AnalysisItem
+        analysisResultItem.setValueSi(testResultItem.getValueSi());
+        analysisResultItem.setUomSiName(testResultItem.getUomSiName());
+        analysisResultItem.setMinNormalSi(testResultItem.getMinNormalSi());
+        analysisResultItem.setMaxNormalSi(testResultItem.getMaxNormalSi());
 
         return analysisResultItem;
     }
