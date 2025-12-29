@@ -1520,5 +1520,7 @@
   "patient.invasive.gestures": "Antécédants gestes invasifs (<30 jours)",
   "patient.indwelling.device": "Dispositif à demeure",
   "column.name.priority": "Priorité",
-  "notification.unsaved.labnumber":"Veuillez enregistrer le numéro de laboratoire actuel avant d'en générer un nouveau"
+  "notification.unsaved.labnumber":"Veuillez enregistrer le numéro de laboratoire actuel avant d'en générer un nouveau",
+  "sample.uom.label": "Unité de mesure de l'échantillon",
+  "sample.quantity.label": "Quantité d'échantillon"
 }

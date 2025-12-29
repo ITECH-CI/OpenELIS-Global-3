@@ -2094,8 +2094,8 @@
   "patient.hospitalization.recent.count": "Number of hospitalizations",
   "patient.invasive.gestures": "Invasive procedures (<30 days)",
   "patient.indwelling.device": "Indwelling device",
-  "patient.clinical.info": "Clinical informations",
   "column.name.priority": "Priority",
-  "notification.unsaved.labnumber":"Please save the current lab number before generating a new one."
-
+  "notification.unsaved.labnumber":"Please save the current lab number before generating a new one.",
+  "sample.uom.label": "Sample Unit Of Measure",
+  "sample.quantity.label": "Sample Quantity"
 }
