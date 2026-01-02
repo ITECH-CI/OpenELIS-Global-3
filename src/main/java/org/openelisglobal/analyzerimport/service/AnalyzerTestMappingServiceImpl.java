@@ -30,4 +30,9 @@ public class AnalyzerTestMappingServiceImpl
     public List<AnalyzerTestMapping> getAllForAnalyzer(String analyzerId) {
         return baseObjectDAO.getAllForAnalyzer(analyzerId);
     }
+
+    @Override
+    public List<AnalyzerTestMapping> getAllByTestId(String testId) {
+        return baseObjectDAO.getAllByTestId(testId);
+    }
 }

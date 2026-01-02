@@ -72,10 +72,13 @@ function AnalyzerTestName() {
   const [testName, setTestName] = useState("");
   const [analyzerList, setAnalyzerList] = useState([]);
   const [testList, setTestList] = useState([]);
+  const [methodList, setMethodList] = useState([]);
   const [selectedAnalyzer, setSelectedAnalyzer] = useState(null);
   const [selectedAnalyzerId, setSelectedAnalyzerId] = useState(null);
   const [selectedTest, setSelectedTest] = useState(null);
   const [selectedTestId, setSelectedTestId] = useState(null);
+  const [selectedMethod, setSelectedMethod] = useState(null);
+  const [selectedMethodId, setSelectedMethodId] = useState(null);
   const [filterAnalyzer, setFilterAnalyser] = useState("");
 
   const handleMenuItems = (res) => {
@@ -95,6 +98,7 @@ function AnalyzerTestName() {
     );
     fetchDropdownData();
     fetchDropdownDatatestlist();
+    fetchMethodList();
     return () => {
       componentMounted.current = false;
       setLoading(false);
@@ -108,6 +112,9 @@ function AnalyzerTestName() {
           id: item.uniqueId,
           analyzerName: `${item.analyzerName} - ${item.analyzerTestName}`,
           actualTestName: item.actualTestName,
+          methodName: item.methodName || "",
+          // Store original data for editing
+          originalData: item,
         };
       });
       setFromRecordCount(AnalyzerTestName.fromRecordCount);
@@ -128,8 +135,16 @@ function AnalyzerTestName() {
     getFromOpenElisServer("/rest/test-list", handleDropDownTestList);
   };
 
+  const fetchMethodList = async () => {
+    getFromOpenElisServer("/rest/method-list", handleDropDownMethodList);
+  };
+
   function handleDropDownTestList(response) {
     setTestList(response);
+  }
+
+  function handleDropDownMethodList(response) {
+    setMethodList(response);
   }
 
   function handleDropDown(response) {
@@ -228,6 +243,8 @@ function AnalyzerTestName() {
     setSelectedAnalyzerId(null);
     setSelectedTest(null);
     setSelectedTestId(null);
+    setSelectedMethod(null);
+    setSelectedMethodId(null);
     setIsAddModalOpen(true);
   };
 
@@ -236,15 +253,80 @@ function AnalyzerTestName() {
   };
 
   const openUpdateModal = (AnalyzerId) => {
+    // Find the selected row data
+    const selectedRow = AnalyzerTestNameShow.find(
+      (item) => item.id === selectedRowIds[0],
+    );
+
+    if (selectedRow && selectedRow.originalData) {
+      const data = selectedRow.originalData;
+
+      // Pre-fill analyzer - find by analyzer name
+      const analyzer = analyzerList.find(
+        (a) => a.name === data.analyzerName,
+      );
+      if (analyzer) {
+        setSelectedAnalyzer(analyzer);
+        setSelectedAnalyzerId(analyzer.id);
+      } else {
+        // If not found, reset
+        setSelectedAnalyzer(null);
+        setSelectedAnalyzerId(null);
+      }
+
+      // Pre-fill analyzer test name
+      setTestName(data.analyzerTestName || "");
+
+      // Pre-fill test - actualTestName is the display name, we need to match by value
+      const test = testList.find(
+        (t) => t.value === data.actualTestName || t.id === data.testId,
+      );
+      if (test) {
+        setSelectedTest(test);
+        setSelectedTestId(test.id);
+      } else {
+        // If not found, reset
+        setSelectedTest(null);
+        setSelectedTestId(null);
+      }
+
+      // Pre-fill method - methodName is the display name
+      if (data.methodName) {
+        const method = methodList.find(
+          (m) => m.value === data.methodName || m.id === data.methodId,
+        );
+        if (method) {
+          setSelectedMethod(method);
+          setSelectedMethodId(method.id);
+        } else {
+          setSelectedMethod(null);
+          setSelectedMethodId(null);
+        }
+      } else {
+        setSelectedMethod(null);
+        setSelectedMethodId(null);
+      }
+    }
+
     setIsUpdateModalOpen(true);
   };
 
   const closeUpdateModal = () => {
+    // Reset all fields when closing
+    setTestName("");
+    setSelectedAnalyzer(null);
+    setSelectedAnalyzerId(null);
+    setSelectedTest(null);
+    setSelectedTestId(null);
+    setSelectedMethod(null);
+    setSelectedMethodId(null);
     setIsUpdateModalOpen(false);
   };
-  const checkIfCombinationExists = () => {
+  const checkIfCombinationExists = (excludeId = null) => {
     return AnalyzerTestNameShow.some(
-      (item) => item.analyzerName === `${selectedAnalyzer.name} - ${testName}`,
+      (item) =>
+        item.analyzerName === `${selectedAnalyzer.name} - ${testName}` &&
+        item.id !== excludeId,
     );
   };
 
@@ -265,6 +347,8 @@ function AnalyzerTestName() {
       analyzerId: selectedAnalyzerId,
       analyzerTestName: testName,
       testId: selectedTestId,
+      methodId: selectedMethodId,
+      newMapping: true, // Indique qu'il s'agit d'un nouvel ajout
     };
 
     postToOpenElisServerFullResponse(
@@ -274,11 +358,12 @@ function AnalyzerTestName() {
     );
 
     closeAddModal();
-    window.location.reload();
   };
 
   const handleUpdateAnalyzer = () => {
-    if (checkIfCombinationExists()) {
+    // Exclude the current row being edited from the duplicate check
+    const currentRowId = selectedRowIds[0];
+    if (checkIfCombinationExists(currentRowId)) {
       addNotification({
         kind: NotificationKinds.error,
         title: intl.formatMessage({ id: "notification.title" }),
@@ -293,6 +378,8 @@ function AnalyzerTestName() {
       analyzerId: selectedAnalyzerId,
       analyzerTestName: testName,
       testId: selectedTestId,
+      methodId: selectedMethodId,
+      newMapping: false,
     };
 
     postToOpenElisServerFullResponse(
@@ -302,8 +389,6 @@ function AnalyzerTestName() {
     );
 
     closeUpdateModal();
-
-    window.location.reload();
   };
 
   const renderCell = (cell, row) => {
@@ -406,6 +491,18 @@ function AnalyzerTestName() {
             }}
           />
           <br />
+          <Dropdown
+            id="method-dropdown"
+            titleText={intl.formatMessage({ id: "label.method" })}
+            items={methodList}
+            itemToString={(item) => (item ? item.value : "")}
+            selectedItem={selectedMethod}
+            onChange={({ selectedItem }) => {
+              setSelectedMethod(selectedItem);
+              setSelectedMethodId(selectedItem ? selectedItem.id : null);
+            }}
+          />
+          <br />
           <TextInput
             id="testName"
             labelText={intl.formatMessage({
@@ -440,6 +537,7 @@ function AnalyzerTestName() {
               setSelectedAnalyzerId(selectedItem ? selectedItem.id : null);
             }}
           />
+          <br />
           <Dropdown
             id="test-dropdown"
             titleText={intl.formatMessage({ id: "label.actualTestName" })}
@@ -449,6 +547,18 @@ function AnalyzerTestName() {
             onChange={({ selectedItem }) => {
               setSelectedTest(selectedItem);
               setSelectedTestId(selectedItem ? selectedItem.id : null);
+            }}
+          />
+          <br />
+          <Dropdown
+            id="method-dropdown"
+            titleText={intl.formatMessage({ id: "label.method" })}
+            items={methodList}
+            itemToString={(item) => (item ? item.value : "")}
+            selectedItem={selectedMethod}
+            onChange={({ selectedItem }) => {
+              setSelectedMethod(selectedItem);
+              setSelectedMethodId(selectedItem ? selectedItem.id : null);
             }}
           />
           <br />
@@ -513,6 +623,10 @@ function AnalyzerTestName() {
                     {
                       key: "actualTestName",
                       header: "Actual test Name",
+                    },
+                    {
+                      key: "methodName",
+                      header: intl.formatMessage({ id: "label.method" }),
                     },
                   ]}
                 >

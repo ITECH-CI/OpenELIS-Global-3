@@ -50,6 +50,7 @@ import org.openelisglobal.internationalization.MessageUtil;
 import org.openelisglobal.note.service.NoteService;
 import org.openelisglobal.note.service.NoteServiceImpl.NoteType;
 import org.openelisglobal.observationhistory.service.ObservationHistoryService;
+import org.openelisglobal.observationhistory.service.ObservationHistoryServiceImpl.ObservationType;
 import org.openelisglobal.observationhistory.valueholder.ObservationHistory;
 import org.openelisglobal.observationhistorytype.service.ObservationHistoryTypeService;
 import org.openelisglobal.observationhistorytype.valueholder.ObservationHistoryType;
@@ -723,8 +724,11 @@ public class ResultsValidationUtility {
         analysisResultItem.setHasQualifiedResult(testResultItem.isHasQualifiedResult());
 
         Sample sample = testResultItem.getAnalysis().getSampleItem().getSample();
-        if (sample != null && sample.getPriority() != null) {
-            analysisResultItem.setPriority(sample.getPriority().toString());
+        if (sample != null) {
+            analysisResultItem.setSampleId(sample.getId());
+            if (sample.getPriority() != null) {
+                analysisResultItem.setPriority(sample.getPriority().toString());
+            }
         }
 
         // Copy SI unit conversion fields from ResultValidationItem to AnalysisItem
@@ -732,6 +736,11 @@ public class ResultsValidationUtility {
         analysisResultItem.setUomSiName(testResultItem.getUomSiName());
         analysisResultItem.setMinNormalSi(testResultItem.getMinNormalSi());
         analysisResultItem.setMaxNormalSi(testResultItem.getMaxNormalSi());
+
+        // Retrieve sample interpretation from observation_history (one per sample/labNo)
+        String sampleInterpretation = observationHistoryService.getValueForSample(
+                ObservationType.SAMPLE_INTERPRETATION, sample.getId());
+        analysisResultItem.setSampleInterpretation(sampleInterpretation);
 
         return analysisResultItem;
     }

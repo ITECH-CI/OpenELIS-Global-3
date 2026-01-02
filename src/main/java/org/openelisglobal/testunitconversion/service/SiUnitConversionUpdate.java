@@ -93,13 +93,21 @@ public class SiUnitConversionUpdate implements IResultUpdate {
                 Result managedResult = entityManager.find(Result.class, result.getId());
 
                 if (managedResult != null) {
-                    // Copy the SI values to the managed entity
-                    managedResult.setValueSi(result.getValueSi());
-                    managedResult.setUomSi(result.getUomSi());
-                    managedResult.setSiRule(result.getSiRule());
-                    managedResult.setMinNormalSi(result.getMinNormalSi());
-                    managedResult.setMaxNormalSi(result.getMaxNormalSi());
-                    managedResult.setSiLastupdated(result.getSiLastupdated());
+                    // Check if SI values have actually changed to avoid unnecessary updates
+                    boolean siValuesChanged = hasChangedSiValues(managedResult, result);
+
+                    if (siValuesChanged) {
+                        // Only update if values have actually changed
+                        managedResult.setValueSi(result.getValueSi());
+                        managedResult.setUomSi(result.getUomSi());
+                        managedResult.setSiRule(result.getSiRule());
+                        managedResult.setMinNormalSi(result.getMinNormalSi());
+                        managedResult.setMaxNormalSi(result.getMaxNormalSi());
+                        managedResult.setSiLastupdated(result.getSiLastupdated());
+                    } else {
+                        LogEvent.logDebug(this.getClass().getSimpleName(), "convertAndSaveResult",
+                                "SI values unchanged for result ID: " + result.getId());
+                    }
 
                 } else {
                     LogEvent.logWarn(this.getClass().getSimpleName(), "convertAndSaveResult",
@@ -113,6 +121,43 @@ public class SiUnitConversionUpdate implements IResultUpdate {
         } else {
             LogEvent.logInfo(this.getClass().getSimpleName(), "convertAndSaveResult", "Result was not converted");
         }
+    }
+
+    /**
+     * Check if SI values have actually changed between the managed entity and the converted result.
+     * This prevents unnecessary updates during validation when SI values are already correct.
+     */
+    private boolean hasChangedSiValues(Result managedResult, Result convertedResult) {
+        // Compare valueSi
+        if (!java.util.Objects.equals(managedResult.getValueSi(), convertedResult.getValueSi())) {
+            return true;
+        }
+
+        // Compare uomSi
+        if (!java.util.Objects.equals(
+                managedResult.getUomSi() != null ? managedResult.getUomSi().getId() : null,
+                convertedResult.getUomSi() != null ? convertedResult.getUomSi().getId() : null)) {
+            return true;
+        }
+
+        // Compare siRule
+        if (!java.util.Objects.equals(
+                managedResult.getSiRule() != null ? managedResult.getSiRule().getId() : null,
+                convertedResult.getSiRule() != null ? convertedResult.getSiRule().getId() : null)) {
+            return true;
+        }
+
+        // Compare minNormalSi
+        if (!java.util.Objects.equals(managedResult.getMinNormalSi(), convertedResult.getMinNormalSi())) {
+            return true;
+        }
+
+        // Compare maxNormalSi
+        if (!java.util.Objects.equals(managedResult.getMaxNormalSi(), convertedResult.getMaxNormalSi())) {
+            return true;
+        }
+
+        return false;
     }
 
     /**

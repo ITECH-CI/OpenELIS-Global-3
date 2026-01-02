@@ -89,6 +89,16 @@ public final class ClinicalPatientData {
     private String siUom;
     private String analysisMethod;
     private String analyzerName;
+    private String sectionAnalyzers; // Tous les analyzers de la section, concaténés avec "/"
+    private String sectionMethods; // Toutes les méthodes de la section, concaténées avec "/"
+    private String testCompletedDate; // Date de réalisation du test
+    private String priorResult; // Résultat antécédent (valeur traditionnelle + unité)
+    private String priorResultSi; // Résultat antécédent en unités SI
+    private String priorResultDate; // Date du résultat antécédent
+    private String lastValidationDate; // Dernière date de validation des tests du rapport
+    private String clinicalInformation; // Renseignements cliniques (texte libre + infos structurées TB/VIH)
+    private String otherIdentifier; // Autre identifiant du patient
+    private String interpretation; // Note d'interprétation générale pour la demande d'analyse
 
     public ClinicalPatientData() {
     }
@@ -155,6 +165,16 @@ public final class ClinicalPatientData {
         siUom = data.getSiUom();
         analysisMethod = data.getAnalysisMethod();
         analyzerName = data.getAnalyzerName();
+        sectionAnalyzers = data.getSectionAnalyzers();
+        sectionMethods = data.getSectionMethods();
+        testCompletedDate = data.getTestCompletedDate();
+        priorResult = data.getPriorResult();
+        priorResultSi = data.getPriorResultSi();
+        priorResultDate = data.getPriorResultDate();
+        lastValidationDate = data.getLastValidationDate();
+        clinicalInformation = data.getClinicalInformation();
+        otherIdentifier = data.getOtherIdentifier();
+        interpretation = data.getInterpretation();
     }
 
     public String getReferralRefRange() {
@@ -728,5 +748,85 @@ public final class ClinicalPatientData {
 
     public void setAnalyzerName(String analyzerName) {
         this.analyzerName = analyzerName;
+    }
+
+    public String getTestCompletedDate() {
+        return testCompletedDate;
+    }
+
+    public void setTestCompletedDate(String testCompletedDate) {
+        this.testCompletedDate = testCompletedDate;
+    }
+
+    public String getPriorResult() {
+        return priorResult;
+    }
+
+    public void setPriorResult(String priorResult) {
+        this.priorResult = priorResult;
+    }
+
+    public String getPriorResultSi() {
+        return priorResultSi;
+    }
+
+    public void setPriorResultSi(String priorResultSi) {
+        this.priorResultSi = priorResultSi;
+    }
+
+    public String getPriorResultDate() {
+        return priorResultDate;
+    }
+
+    public void setPriorResultDate(String priorResultDate) {
+        this.priorResultDate = priorResultDate;
+    }
+
+    public String getLastValidationDate() {
+        return lastValidationDate;
+    }
+
+    public void setLastValidationDate(String lastValidationDate) {
+        this.lastValidationDate = lastValidationDate;
+    }
+
+    public String getClinicalInformation() {
+        return clinicalInformation;
+    }
+
+    public void setClinicalInformation(String clinicalInformation) {
+        this.clinicalInformation = clinicalInformation;
+    }
+
+    public String getOtherIdentifier() {
+        return otherIdentifier;
+    }
+
+    public void setOtherIdentifier(String otherIdentifier) {
+        this.otherIdentifier = otherIdentifier;
+    }
+
+    public String getInterpretation() {
+        return interpretation;
+    }
+
+    public void setInterpretation(String interpretation) {
+        this.interpretation = interpretation;
+    }
+
+    public String getSectionAnalyzers() {
+        return sectionAnalyzers;
+    }
+
+    public void setSectionAnalyzers(String sectionAnalyzers) {
+        this.sectionAnalyzers = sectionAnalyzers;
+    }
+
+    public String getSectionMethods() {
+        return sectionMethods;
+    }
+
+    public void setSectionMethods(String sectionMethods) {
+        this.sectionMethods = sectionMethods;
     }
 }

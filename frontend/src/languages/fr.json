@@ -860,6 +860,8 @@
   "label.add.notification": "Ajouter une notification contextuelle à l'utilisateur",
   "label.select.dateRange": "Sélectionnez la plage de dates pour laquelle vous souhaitez le rapport",
   "label.actualTestName": "Nom du test réel",
+  "label.method": "Méthode d'analyse",
+  "select.label.analyzer": "Sélectionner l'analyseur",
   "rulebuilder.label.add.internaltrigger": "Ajouter un message interne \"déclenché par\"",
   "rulebuilder.label.add.externaltrigger": "Ajouter un message externe \"déclenché par\"",
   "error.duplicate.calculationname": "Nom de calcul en double",
@@ -1547,5 +1549,7 @@
   "si.tooltip.aria": "Informations sur la conversion SI",
   "label.button.edit": "Modifier",
   "label.yes": "Oui",
-  "label.no": "Non"
+  "label.no": "Non",
+  "validation.sampleInterpretation.label": "Interprétation générale pour l'échantillon",
+  "validation.sampleInterpretation.placeholder": "Saisir la note d'interprétation générale pour cet échantillon/demande..."
 }

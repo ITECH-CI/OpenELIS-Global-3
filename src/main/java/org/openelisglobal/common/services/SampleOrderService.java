@@ -22,6 +22,7 @@ import java.util.UUID;
 import org.apache.commons.validator.GenericValidator;
 import org.hl7.fhir.r4.model.QuestionnaireResponse;
 import org.openelisglobal.common.formfields.FormFields;
+import org.openelisglobal.common.log.LogEvent;
 import org.openelisglobal.common.util.ConfigurationProperties;
 import org.openelisglobal.common.util.DateUtil;
 import org.openelisglobal.common.util.StringUtil;
@@ -196,6 +197,8 @@ public class SampleOrderService {
                                     .withId(programSample.getQuestionnaireResponseUuid().toString()).execute());
                 }
             }
+            sampleOrder.setClinicalInformations(
+                    observationHistoryService.getValueForSample(ObservationType.CLINICAL_INFOS_OTHER, sample.getId()));
 
             RequesterService requesterService = new RequesterService(sample.getId());
             sampleOrder.setProviderPersonId(requesterService.getRequesterPersonId());
@@ -352,6 +355,8 @@ public class SampleOrderService {
                 sampleOrder.getProgram(), ValueType.DICTIONARY);
         createOrUpdateObservation(currentUserId, observations, patientId, ObservationType.BILLING_REFERENCE_NUMBER,
                 sampleOrder.getBillingReferenceNumber(), ValueType.LITERAL);
+        createOrUpdateObservation(currentUserId, observations, patientId, ObservationType.CLINICAL_INFOS_OTHER,
+                sampleOrder.getClinicalInformations(), ValueType.LITERAL);
 
         artifacts.setObservations(observations);
     }

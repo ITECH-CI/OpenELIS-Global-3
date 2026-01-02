@@ -8,4 +8,6 @@ import org.openelisglobal.common.service.BaseObjectService;
 public interface AnalyzerTestMappingService extends BaseObjectService<AnalyzerTestMapping, AnalyzerTestMappingPK> {
 
     List<AnalyzerTestMapping> getAllForAnalyzer(String analyzerId);
+
+    List<AnalyzerTestMapping> getAllByTestId(String testId);
 }

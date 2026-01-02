@@ -279,6 +279,9 @@ public abstract class PatientReport extends Report {
                 add1LineErrorMessage("report.error.message.noPrintableItems");
             } else {
                 postSampleBuild();
+                aggregateAnalyzersAndMethodsBySection();
+                setLastValidationDateForAllItems();
+                addReportLevelParameters();
             }
         }
 
@@ -533,6 +536,40 @@ public abstract class PatientReport extends Report {
         return identity;
     }
 
+    /**
+     * Récupère et concatène les renseignements cliniques pour un échantillon
+     * Combine les renseignements cliniques texte libre avec les informations structurées TB/VIH
+     */
+    protected String getClinicalInformationForSample(Sample sample, Patient patient) {
+        StringBuilder clinicalInfo = new StringBuilder();
+
+        // Récupérer le service d'observation
+        ObservationHistoryService observationHistoryService = SpringContext.getBean(ObservationHistoryService.class);
+
+        // Récupérer les renseignements cliniques depuis observation_history
+        String clinicalInfos = observationHistoryService.getValueForSample(
+                ObservationType.CLINICAL_INFOS,
+                sampleService.getId(sample));
+
+        String clinicalInfosOther = observationHistoryService.getValueForSample(
+                ObservationType.CLINICAL_INFOS_OTHER,
+                sampleService.getId(sample));
+
+        // Concaténer les informations cliniques
+        if (clinicalInfos != null && !clinicalInfos.trim().isEmpty()) {
+            clinicalInfo.append(clinicalInfos.trim());
+        }
+
+        if (clinicalInfosOther != null && !clinicalInfosOther.trim().isEmpty()) {
+            if (clinicalInfo.length() > 0) {
+                clinicalInfo.append(" / ");
+            }
+            clinicalInfo.append(clinicalInfosOther.trim());
+        }
+
+        return clinicalInfo.toString();
+    }
+
     protected void setPatientName(ClinicalPatientData data) {
         data.setPatientName(patientService.getLastFirstName(currentPatient));
         data.setFirstName(patientService.getFirstName(currentPatient));
@@ -588,14 +625,13 @@ public abstract class PatientReport extends Report {
                 data.setResult(getAugmentedResult(data, result));
                 data.setFinishDate(analysisService.getCompletedDateForDisplay(currentAnalysis));
                 data.setAlerts(getResultFlag(result, null, data));
+                // Add SI unit information only when result is validated
+                setSiUnitInformation(data, test, resultList);
             }
         }
 
         data.setParentResult(currentAnalysis.getParentResult());
         data.setConclusion(currentConclusion);
-
-        // Add SI unit information, analysis method, and analyzer
-        setSiUnitInformation(data, test, resultList);
     }
 
     protected void setSiUnitInformation(ClinicalPatientData data, Test test, List<Result> resultList) {
@@ -604,6 +640,9 @@ public abstract class PatientReport extends Report {
         }
 
         Result result = resultList.get(0);
+
+        // Use ResultService which has @Transactional methods
+        ResultService resultService = SpringContext.getBean(ResultService.class);
 
         // Get SI converted result and unit from Result entity
         if (result.getValueSi() != null) {
@@ -624,9 +663,9 @@ public abstract class PatientReport extends Report {
             data.setSiMaxNormal(String.valueOf(result.getMaxNormalSi()));
         }
 
-        // Use getUomSiName() to safely handle lazy-loaded proxy
-        String uomSiName = result.getUomSiName();
-        if (uomSiName != null) {
+        // Get SI UOM using ResultService which handles transactions properly
+        String uomSiName = resultService.getSiUom(result);
+        if (uomSiName != null && !uomSiName.isEmpty()) {
             data.setSiUom(uomSiName);
         }
 
@@ -665,6 +704,136 @@ public abstract class PatientReport extends Report {
             LogEvent.logDebug(this.getClass().getSimpleName(), "setSiUnitInformation",
                     "Could not retrieve analyzer information: " + e.getMessage());
         }
+
+        // Set test completion date (not validation date, which goes in signature)
+        if (currentAnalysis != null) {
+            data.setTestCompletedDate(analysisService.getCompletedDateForDisplay(currentAnalysis));
+        }
+
+        // Get prior result for this test and patient
+        setPriorResultInformation(data, test);
+    }
+
+    protected void setPriorResultInformation(ClinicalPatientData data, Test test) {
+        if (test == null || currentPatient == null || currentAnalysis == null) {
+            return;
+        }
+
+        try {
+            // Get all samples for this patient
+            List<Sample> patientSamples = sampleHumanService.getSamplesForPatient(currentPatient.getId());
+
+            if (patientSamples == null || patientSamples.isEmpty()) {
+                return;
+            }
+
+            // Collect all analyses for these samples with the same test
+            List<Analysis> candidateAnalyses = new ArrayList<>();
+            String currentAnalysisId = currentAnalysis.getId();
+            String testId = test.getId();
+
+            for (Sample sample : patientSamples) {
+                List<Analysis> sampleAnalyses = analysisService.getAnalysesBySampleId(sample.getId());
+                if (sampleAnalyses != null) {
+                    for (Analysis analysis : sampleAnalyses) {
+                        // Filter: same test, not current analysis, finalized status
+                        Test analysisTest = analysisService.getTest(analysis);
+                        if (analysisTest != null && analysisTest.getId().equals(testId)
+                                && !analysis.getId().equals(currentAnalysisId)
+                                && SpringContext.getBean(IStatusService.class).matches(
+                                        analysisService.getStatusId(analysis), AnalysisStatus.Finalized)) {
+                            candidateAnalyses.add(analysis);
+                        }
+                    }
+                }
+            }
+
+            if (candidateAnalyses.isEmpty()) {
+                return;
+            }
+
+            // Sort by completed date descending to get most recent first
+            candidateAnalyses.sort((a1, a2) -> {
+                Date d1 = a1.getCompletedDate();
+                Date d2 = a2.getCompletedDate();
+                if (d1 == null && d2 == null) return 0;
+                if (d1 == null) return 1;
+                if (d2 == null) return -1;
+                return d2.compareTo(d1); // Descending order
+            });
+
+            // Get the most recent prior result (first in sorted list)
+            Analysis priorAnalysis = candidateAnalyses.get(0);
+            List<Result> priorResults = analysisService.getResults(priorAnalysis);
+
+            if (priorResults != null && !priorResults.isEmpty()) {
+                Result priorResult = priorResults.get(0);
+
+                // Format prior result with traditional value and unit
+                String priorResultValue = getFormattedPriorResult(priorResult, test);
+                data.setPriorResult(priorResultValue);
+
+                // Format prior result SI value
+                if (priorResult.getValueSi() != null) {
+                    String priorSiValue = priorResult.getValueSi();
+                    String priorSiUom = priorResult.getUomSiName();
+
+                    try {
+                        double siValue = Double.parseDouble(priorSiValue);
+                        priorSiValue = formatTwoDecimals(siValue);
+                    } catch (NumberFormatException e) {
+                        // Use as-is if not numeric
+                    }
+
+                    if (priorSiUom != null && !priorSiUom.isEmpty()) {
+                        data.setPriorResultSi(priorSiValue + " " + priorSiUom);
+                    } else {
+                        data.setPriorResultSi(priorSiValue);
+                    }
+                }
+
+                // Set prior result date
+                Date priorCompletedDate = priorAnalysis.getCompletedDate();
+                if (priorCompletedDate != null) {
+                    data.setPriorResultDate(analysisService.getCompletedDateForDisplay(priorAnalysis));
+                }
+            }
+        } catch (Exception e) {
+            // Prior result information is optional, log but continue
+            LogEvent.logDebug(this.getClass().getSimpleName(), "setPriorResultInformation",
+                    "Could not retrieve prior result information: " + e.getMessage());
+        }
+    }
+
+    private String getFormattedPriorResult(Result result, Test test) {
+        if (result == null) {
+            return "";
+        }
+
+        ResultService resultService = SpringContext.getBean(ResultService.class);
+        String value = "";
+
+        // Handle dictionary results
+        if (TypeOfTestResultServiceImpl.ResultType.isDictionaryVariant(result.getResultType())) {
+            Dictionary dictionary = new Dictionary();
+            dictionary.setId(result.getValue());
+            dictionaryService.getData(dictionary);
+            value = dictionary.getId() != null ? dictionary.getLocalizedName() : "";
+        } else {
+            // Get numeric or text value
+            value = resultService.getResultValue(result, true);
+        }
+
+        // Append unit of measure if available
+        String uom = test != null && test.getUnitOfMeasure() != null
+                ? test.getUnitOfMeasure().getName()
+                : "";
+
+        if (!GenericValidator.isBlankOrNull(value) && !GenericValidator.isBlankOrNull(uom)) {
+            return value + " " + uom;
+        }
+
+        return value;
     }
 
     protected void setReferredOutResult(ClinicalPatientData data) {
@@ -977,6 +1146,10 @@ public abstract class PatientReport extends Report {
         data.setAge(createReadableAge(data.getDob()));
         data.setGender(patientService.getGender(currentPatient));
         data.setNationalId(patientService.getNationalId(currentPatient));
+        String otherIdentifier = currentPatient.getOtherIdentifier();
+        data.setOtherIdentifier(otherIdentifier);
+        LogEvent.logDebug(this.getClass().getSimpleName(), "buildClinicalPatientData",
+            "Other Identifier for patient " + currentPatient.getId() + ": " + otherIdentifier);
         setPatientName(data);
         data.setDept(patientDept);
         data.setCommune(patientCommune);
@@ -996,12 +1169,33 @@ public abstract class PatientReport extends Report {
         data.setBillingNumber(observationHistoryService.getValueForSample(ObservationType.BILLING_REFERENCE_NUMBER,
                 sampleService.getId(currentSample)));
 
+        String clinicalInfo = getClinicalInformationForSample(currentSample, currentPatient);
+        data.setClinicalInformation(clinicalInfo);
+        LogEvent.logInfo(this.getClass().getSimpleName(), "buildClinicalPatientData",
+            "Clinical Info for sample " + sampleService.getId(currentSample) + " (accession: " +
+            currentSample.getAccessionNumber() + "): '" + clinicalInfo + "'");
+
+        String interpretation = observationHistoryService.getValueForSample(ObservationType.SAMPLE_INTERPRETATION,
+                sampleService.getId(currentSample));
+        data.setInterpretation(interpretation);
+        LogEvent.logInfo(this.getClass().getSimpleName(), "buildClinicalPatientData",
+            "Interpretation for sample " + sampleService.getId(currentSample) + " (accession: " +
+            currentSample.getAccessionNumber() + "): '" + interpretation + "'");
+
         if (doAnalysis) {
             data.setPanel(analysisService.getPanel(currentAnalysis));
             if (analysisService.getPanel(currentAnalysis) != null) {
                 data.setPanelName(analysisService.getPanel(currentAnalysis).getLocalizedName());
             }
-            data.setTestDate(analysisService.getCompletedDateForDisplay(currentAnalysis));
+            // Only set testDate for biologically validated results (Finalized or TechnicalRejected)
+            if (SpringContext.getBean(IStatusService.class).matches(analysisService.getStatusId(currentAnalysis),
+                    AnalysisStatus.Finalized)
+                    || (SpringContext.getBean(IStatusService.class).matches(analysisService.getStatusId(currentAnalysis),
+                            AnalysisStatus.TechnicalRejected)
+                            && ConfigurationProperties.getInstance().isPropertyValueEqual(
+                                    ConfigurationProperties.Property.VALIDATE_REJECTED_TESTS, "false"))) {
+                data.setTestDate(analysisService.getCompletedDateForDisplay(currentAnalysis));
+            }
             data.setSampleSortOrder(currentAnalysis.getSampleItem().getSortOrder());
             data.setOrderFinishDate(completionDate);
             data.setOrderDate(DateUtil
@@ -1154,5 +1348,160 @@ public abstract class PatientReport extends Report {
     @Override
     public List<String> getReportedOrders() {
         return handledOrders;
+    }
+
+    /**
+     * Add report-level parameters that can be used in the JasperReports template
+     * These parameters are extracted from the report items after they are generated
+     */
+    protected void addReportLevelParameters() {
+        if (reportItems == null || reportItems.isEmpty()) {
+            return;
+        }
+
+        // Log first item's interpretation to verify data
+        if (!reportItems.isEmpty()) {
+            ClinicalPatientData firstItem = reportItems.get(0);
+            LogEvent.logInfo(this.getClass().getSimpleName(), "addReportLevelParameters",
+                "First reportItem - interpretation: '" + firstItem.getInterpretation() +
+                "', clinicalInfo: '" + firstItem.getClinicalInformation() +
+                "', accessionNumber: '" + firstItem.getAccessionNumber() + "'");
+        }
+
+        // Get the last validation date from the first item (all items have the same value)
+        String lastValidationDate = reportItems.get(0).getLastValidationDate();
+        if (lastValidationDate != null) {
+            reportParameters.put("lastValidationDate", lastValidationDate);
+        } else {
+            reportParameters.put("lastValidationDate", "");
+        }
+
+        // Collect all unique section analyzers and methods across all sections
+        Set<String> allAnalyzers = new java.util.LinkedHashSet<>();
+        Set<String> allMethods = new java.util.LinkedHashSet<>();
+
+        // Track sections we've already processed to avoid duplicates
+        Set<String> processedSections = new java.util.HashSet<>();
+
+        for (ClinicalPatientData item : reportItems) {
+            String section = item.getTestSection();
+            if (section != null && !processedSections.contains(section)) {
+                processedSections.add(section);
+
+                // Add this section's aggregated analyzers and methods
+                if (item.getSectionAnalyzers() != null && !item.getSectionAnalyzers().isEmpty()) {
+                    // Split by " / " and add each analyzer
+                    String[] analyzers = item.getSectionAnalyzers().split(" / ");
+                    for (String analyzer : analyzers) {
+                        if (!analyzer.trim().isEmpty()) {
+                            allAnalyzers.add(analyzer.trim());
+                        }
+                    }
+                }
+
+                if (item.getSectionMethods() != null && !item.getSectionMethods().isEmpty()) {
+                    // Split by " / " and add each method
+                    String[] methods = item.getSectionMethods().split(" / ");
+                    for (String method : methods) {
+                        if (!method.trim().isEmpty()) {
+                            allMethods.add(method.trim());
+                        }
+                    }
+                }
+            }
+        }
+
+        // Concatenate all unique analyzers and methods for the entire report
+        String reportAnalyzers = String.join(" / ", allAnalyzers);
+        String reportMethods = String.join(" / ", allMethods);
+
+        reportParameters.put("reportAnalyzers", reportAnalyzers);
+        reportParameters.put("reportMethods", reportMethods);
+    }
+
+    /**
+     * Aggregate analyzers and methods by test section and set them for all items
+     * in each section. Multiple analyzers/methods are concatenated with "/"
+     */
+    protected void aggregateAnalyzersAndMethodsBySection() {
+        if (reportItems == null || reportItems.isEmpty()) {
+            return;
+        }
+
+        // Group items by test section
+        Map<String, List<ClinicalPatientData>> itemsBySection = new HashMap<>();
+        for (ClinicalPatientData item : reportItems) {
+            String section = item.getTestSection();
+            if (section != null && !section.isEmpty()) {
+                itemsBySection.computeIfAbsent(section, k -> new ArrayList<>()).add(item);
+            }
+        }
+
+        // For each section, collect unique analyzers and methods
+        for (Map.Entry<String, List<ClinicalPatientData>> entry : itemsBySection.entrySet()) {
+            List<ClinicalPatientData> sectionItems = entry.getValue();
+
+            // Use LinkedHashSet to maintain insertion order and uniqueness
+            Set<String> analyzers = new java.util.LinkedHashSet<>();
+            Set<String> methods = new java.util.LinkedHashSet<>();
+
+            for (ClinicalPatientData item : sectionItems) {
+                if (item.getAnalyzerName() != null && !item.getAnalyzerName().isEmpty()) {
+                    analyzers.add(item.getAnalyzerName());
+                }
+                if (item.getAnalysisMethod() != null && !item.getAnalysisMethod().isEmpty()) {
+                    methods.add(item.getAnalysisMethod());
+                }
+            }
+
+            // Concatenate with "/"
+            String aggregatedAnalyzers = String.join(" / ", analyzers);
+            String aggregatedMethods = String.join(" / ", methods);
+
+            // Set the aggregated values for all items in this section
+            for (ClinicalPatientData item : sectionItems) {
+                item.setSectionAnalyzers(aggregatedAnalyzers);
+                item.setSectionMethods(aggregatedMethods);
+            }
+        }
+    }
+
+    /**
+     * Calculate the most recent validation date among all tests in the report
+     * and set it for all report items
+     */
+    protected void setLastValidationDateForAllItems() {
+        if (reportItems == null || reportItems.isEmpty()) {
+            return;
+        }
+
+        // Find the most recent validation (released) date among all analyses in the report
+        Date latestValidationDate = null;
+
+        for (Sample sample : sampleService.getSamplesByAccessionRange(lowerNumber, upperNumber)) {
+            List<Analysis> analyses = analysisService.getAnalysesBySampleId(sample.getId());
+            if (analyses != null) {
+                for (Analysis analysis : analyses) {
+                    // Only consider finalized analyses
+                    if (SpringContext.getBean(IStatusService.class).matches(
+                            analysisService.getStatusId(analysis), AnalysisStatus.Finalized)) {
+                        Date releasedDate = analysis.getReleasedDate();
+                        if (releasedDate != null) {
+                            if (latestValidationDate == null || releasedDate.after(latestValidationDate)) {
+                                latestValidationDate = releasedDate;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // Set the validation date for all report items
+        if (latestValidationDate != null) {
+            String validationDateForDisplay = DateUtil.convertSqlDateToStringDate(latestValidationDate);
+            for (ClinicalPatientData item : reportItems) {
+                item.setLastValidationDate(validationDateForDisplay);
+            }
+        }
     }
 }

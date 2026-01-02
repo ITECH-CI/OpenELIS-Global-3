@@ -28,6 +28,8 @@ import org.openelisglobal.spring.util.SpringContext;
 import org.openelisglobal.test.service.TestService;
 import org.openelisglobal.test.service.TestServiceImpl;
 import org.openelisglobal.test.valueholder.Test;
+import org.openelisglobal.method.service.MethodService;
+import org.openelisglobal.method.valueholder.Method;
 
 public class AnalyzerTestNameCache {
 
@@ -35,6 +37,7 @@ public class AnalyzerTestNameCache {
     protected AnalyzerTestMappingService analyzerTestMappingService = SpringContext
             .getBean(AnalyzerTestMappingService.class);
     protected TestService testService = SpringContext.getBean(TestService.class);
+    protected MethodService methodService = SpringContext.getBean(MethodService.class);
 
     private static class SingletonHelper {
         private static final AnalyzerTestNameCache INSTANCE = new AnalyzerTestNameCache();
@@ -147,6 +150,8 @@ public class AnalyzerTestNameCache {
         mappedTest.setAnalyzerTestName(mapping.getAnalyzerTestName());
         mappedTest.setTestId(mapping.getTestId());
         mappedTest.setAnalyzerId(mapping.getAnalyzerId());
+        mappedTest.setMethodId(mapping.getMethodId());
+
         if (mapping.getTestId() != null) {
             Test test = new Test();
             test.setId(mapping.getTestId());
@@ -155,6 +160,13 @@ public class AnalyzerTestNameCache {
         } else {
             mappedTest.setTestId("-1");
             mappedTest.setOpenElisTestName(MessageUtil.getMessage("warning.configuration.needed"));
+        }
+
+        if (mapping.getMethodId() != null) {
+            Method method = methodService.get(mapping.getMethodId());
+            if (method != null) {
+                mappedTest.setMethodName(method.getMethodName());
+            }
         }
 
         return mappedTest;

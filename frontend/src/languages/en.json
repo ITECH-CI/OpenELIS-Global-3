@@ -956,6 +956,8 @@
   "labNumber.type": "Lab Number Type",
   "labNumber.usePrefix": "Use Prefix",
   "label.actualTestName": "Actual Test Name",
+  "label.method": "Analysis Method",
+  "select.label.analyzer": "Select Analyzer",
   "label.add.notification": "Add pop up notification to user",
   "label.analysisNotStarted": "Analysis not started",
   "label.any": "Any",
@@ -2122,5 +2124,7 @@
   "si.tooltip.aria": "Information about SI conversion",
   "label.button.edit": "Edit",
   "label.yes": "Yes",
-  "label.no": "No"
+  "label.no": "No",
+  "validation.sampleInterpretation.label": "General interpretation for sample",
+  "validation.sampleInterpretation.placeholder": "Enter general interpretation note for this sample/request..."
 }

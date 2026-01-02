@@ -13,6 +13,7 @@ import org.openelisglobal.analysis.service.AnalysisService;
 import org.openelisglobal.analysis.valueholder.Analysis;
 import org.openelisglobal.common.formfields.FormFields;
 import org.openelisglobal.common.formfields.FormFields.Field;
+import org.openelisglobal.common.log.LogEvent;
 import org.openelisglobal.common.services.DisplayListService;
 import org.openelisglobal.common.services.DisplayListService.ListType;
 import org.openelisglobal.common.services.IStatusService;
@@ -164,10 +165,16 @@ public class SamplePatientEntryServiceImpl implements SamplePatientEntryService 
     }
 
     private void persistObservations(SamplePatientUpdateData updateData) {
+        LogEvent.logInfo(this.getClass().getSimpleName(), "persistObservations",
+            "Persisting " + updateData.getObservations().size() + " observations for sample " +
+            updateData.getSample().getId());
 
         for (ObservationHistory observation : updateData.getObservations()) {
             observation.setSampleId(updateData.getSample().getId());
             observation.setPatientId(updateData.getPatientId());
+            LogEvent.logInfo(this.getClass().getSimpleName(), "persistObservations",
+                "Inserting observation - typeId: " + observation.getObservationHistoryTypeId() +
+                ", value: '" + observation.getValue() + "', valueType: " + observation.getValueType());
             observationHistoryService.insert(observation);
         }
     }

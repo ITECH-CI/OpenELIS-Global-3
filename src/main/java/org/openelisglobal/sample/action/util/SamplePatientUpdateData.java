@@ -24,6 +24,7 @@ import org.hl7.fhir.r4.model.QuestionnaireResponse;
 import org.openelisglobal.address.valueholder.OrganizationAddress;
 import org.openelisglobal.common.formfields.FormFields;
 import org.openelisglobal.common.formfields.FormFields.Field;
+import org.openelisglobal.common.log.LogEvent;
 import org.openelisglobal.common.provider.validation.IAccessionNumberValidator;
 import org.openelisglobal.common.services.IStatusService;
 import org.openelisglobal.common.services.SampleAddService;
@@ -264,6 +265,11 @@ public class SamplePatientUpdateData {
             observation.setValue(observationData);
             observation.setValueType(valueType);
             observations.add(observation);
+            LogEvent.logInfo(this.getClass().getSimpleName(), "createObservation",
+                "Created observation - typeId: " + observationType + ", value: '" + observationData + "', valueType: " + valueType);
+        } else {
+            LogEvent.logDebug(this.getClass().getSimpleName(), "createObservation",
+                "Skipped blank observation - typeId: " + observationType + ", value: '" + observationData + "'");
         }
     }
 
@@ -583,6 +589,11 @@ public class SamplePatientUpdateData {
                         ValueType.LITERAL);
             }
         }
+
+        // Save clinical information
+        createObservation(sampleOrder.getClinicalInformations(),
+                observationHistoryService.getObservationTypeIdForType(ObservationType.CLINICAL_INFOS_OTHER),
+                ValueType.LITERAL);
     }
 
     public boolean getCustomNotificationLogic() {

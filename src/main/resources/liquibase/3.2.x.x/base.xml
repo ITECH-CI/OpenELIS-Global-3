@@ -32,5 +32,9 @@
         file="add_bacterio_sampletype_panel.xml" />
     <include relativeToChangelogFile="true"
         file="test_unit_conversion_to_si.xml" />
+    <include relativeToChangelogFile="true"
+        file="add_sample_interpretation_config.xml" />
+    <include relativeToChangelogFile="true"
+        file="add_method_to_analyzer_test_map.xml" />
 
 </databaseChangeLog>

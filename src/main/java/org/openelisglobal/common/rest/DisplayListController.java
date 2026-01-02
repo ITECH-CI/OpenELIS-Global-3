@@ -58,6 +58,8 @@ import org.openelisglobal.test.valueholder.TestSection;
 import org.openelisglobal.testresult.service.TestResultService;
 import org.openelisglobal.testresult.valueholder.TestResult;
 import org.openelisglobal.typeofsample.service.TypeOfSampleService;
+import org.openelisglobal.method.service.MethodService;
+import org.openelisglobal.method.valueholder.Method;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ResolvableType;
@@ -118,6 +120,9 @@ public class DisplayListController extends BaseRestController {
 
     @Autowired
     DictionaryService dictionaryService;
+
+    @Autowired
+    MethodService methodService;
 
     @Autowired(required = false)
     private ClientRegistrationRepository clientRegistrationRepository;
@@ -464,6 +469,19 @@ public class DisplayListController extends BaseRestController {
         }
         Collections.sort(testList, new ValueComparator());
         return testList;
+    }
+
+    @GetMapping(value = "method-list", produces = MediaType.APPLICATION_JSON_VALUE)
+    @ResponseBody
+    private List<IdValuePair> getActiveMethodsList() {
+        List<Method> methods = methodService.getAllActiveMethods();
+        List<IdValuePair> methodList = new ArrayList<>();
+
+        for (Method method : methods) {
+            methodList.add(new IdValuePair(method.getId(), method.getMethodName()));
+        }
+
+        return methodList;
     }
 
     @GetMapping(value = "priorities", produces = MediaType.APPLICATION_JSON_VALUE)

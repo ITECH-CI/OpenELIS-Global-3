@@ -35,6 +35,7 @@ const Validation = (props) => {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(100);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [, forceUpdate] = useState({});
 
   useEffect(() => {
     componentMounted.current = true;
@@ -186,6 +187,47 @@ const Validation = (props) => {
     var jp = require("jsonpath");
     jp.value(form, name, checked);
   };
+
+  const handleInterpretationChange = (e, sampleId) => {
+    const { value } = e.target;
+    const limitedValue = value.slice(0, 199);
+    let form = props.results;
+    var jp = require("jsonpath");
+
+    // Update interpretation for all results with the same sampleId
+    if (form.resultList) {
+      form.resultList.forEach((result, index) => {
+        if (result.sampleId === sampleId) {
+          jp.value(
+            form,
+            `resultList[${index}].sampleInterpretation`,
+            limitedValue,
+          );
+        }
+      });
+      // Force re-render to update the UI
+      forceUpdate({});
+    }
+  };
+
+  const getUniqueSamples = () => {
+    if (!props.results?.resultList) {
+      return [];
+    }
+
+    const samplesMap = new Map();
+    props.results.resultList.forEach((result) => {
+      if (result.sampleId && !samplesMap.has(result.sampleId)) {
+        samplesMap.set(result.sampleId, {
+          sampleId: result.sampleId,
+          accessionNumber: result.accessionNumber,
+          sampleInterpretation: result.sampleInterpretation || "",
+        });
+      }
+    });
+    return Array.from(samplesMap.values());
+  };
+
   const validateResults = (e, rowId) => {
     handleChange(e, rowId);
   };
@@ -467,6 +509,38 @@ const Validation = (props) => {
       >
         {({ values, errors, touched, handleChange }) => (
           <Form onChange={handleChange}>
+            {/* Sample Interpretation Section - One per unique sample */}
+            {props.results?.resultList?.length > 0 && getUniqueSamples().length > 0 && (
+              <Grid className="gridBoundary" style={{ marginTop: "20px", marginBottom: "20px" }}>
+                <Column lg={16} md={8} sm={4}>
+                  <h6 style={{ marginBottom: "10px", fontWeight: "bold" }}>
+                    <FormattedMessage id="validation.sampleInterpretation.label" />
+                  </h6>
+                  {getUniqueSamples().map((sample) => (
+                    <div key={sample.sampleId} style={{ marginBottom: "15px" }}>
+                      <label style={{ display: "block", marginBottom: "5px", fontWeight: "500" }}>
+                        {intl.formatMessage({ id: "column.name.sampleInfo" })}:{" "}
+                        {configurationProperties.AccessionFormat === "ALPHANUM"
+                          ? convertAlphaNumLabNumForDisplay(sample.accessionNumber)
+                          : sample.accessionNumber}
+                      </label>
+                      <TextArea
+                        id={`interpretation-${sample.sampleId}`}
+                        labelText=""
+                        maxCount={200}
+                        placeholder={intl.formatMessage({
+                          id: "validation.sampleInterpretation.placeholder",
+                        })}
+                        value={sample.sampleInterpretation || ""}
+                        onChange={(e) => handleInterpretationChange(e, sample.sampleId)}
+                        rows={3}
+                        style={{ width: "100%" }}
+                      />
+                    </div>
+                  ))}
+                </Column>
+              </Grid>
+            )}
             <DataTable
               data={
                 props.results

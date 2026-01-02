@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+	xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+     http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+	<property name="now" value="now()" dbms="postgresql" />
+
+	<changeSet author="pkomena"
+		id="add-sample-interpretation-observation-type-1">
+		<preConditions onFail="MARK_RAN">
+			<sqlCheck expectedResult="0">SELECT count(*) FROM
+				clinlims.observation_history_type WHERE type_name =
+				'sampleInterpretation'</sqlCheck>
+		</preConditions>
+		<comment>Ajouter le type d'observation pour l'interprétation générale des demandes d'analyse</comment>
+		<insert schemaName="clinlims"
+			tableName="observation_history_type">
+			<column name="id"
+				valueSequenceNext="observation_history_type_seq" />
+			<column name="type_name" value="sampleInterpretation" />
+			<column name="description"
+				value="sample result Interpretation" />
+			<column name="lastupdated" valueComputed="${now}" />
+		</insert>
+	</changeSet>
+
+	<changeSet author="pkomena"
+		id="add-sample-interpretation-site-info-1">
+		<preConditions onFail="MARK_RAN">
+			<sqlCheck expectedResult="0">SELECT count(*) FROM
+				clinlims.site_information WHERE name =
+				'ENABLE_SAMPLE_INTERPRETATION'</sqlCheck>
+		</preConditions>
+		<comment>Ajouter le paramètre pour activer/désactiver la note d'interprétation générale par demande</comment>
+		<insert schemaName="clinlims" tableName="site_information">
+			<column name="id" valueSequenceNext="site_information_seq" />
+			<column name="name" value="ENABLE_SAMPLE_INTERPRETATION" />
+			<column name="lastupdated" valueComputed="${now}" />
+			<column name="description"
+				value="Activer la saisie d'une note d'interprétation générale pour chaque demande d'analyse" />
+			<column name="value" value="true" />
+			<column name="encrypted" value="false" />
+			<column name="domain_id"
+				valueComputed="(SELECT id FROM site_information_domain WHERE name = 'resultConfiguration')" />
+			<column name="value_type" value="boolean" />
+			<column name="instruction_key"
+				value="siteInfo.instruction.sampleInterp" />
+			<column name="group" value="0" />
+			<column name="description_key"
+				value="siteInfo.description.sampleInterp" />
+		</insert>
+	</changeSet>
+
+	<changeSet author="pkomena"
+		id="extend-obervation-history-value-size-1">
+		<modifyDataType tableName="observation_history"
+			columnName="value" newDataType="varchar(200)" />
+	</changeSet>
+
+</databaseChangeLog>

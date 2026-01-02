@@ -124,6 +124,7 @@ public class AnalyzerTestNameRestController extends BaseController {
         String analyzerId = form.getAnalyzerId();
         String analyzerTestName = form.getAnalyzerTestName();
         String testId = form.getTestId();
+        String methodId = form.getMethodId();
         boolean newMapping = form.isNewMapping();
 
         AnalyzerTestMapping analyzerTestNameMapping;
@@ -132,9 +133,16 @@ public class AnalyzerTestNameRestController extends BaseController {
             analyzerTestNameMapping.setAnalyzerId(analyzerId);
             analyzerTestNameMapping.setAnalyzerTestName(analyzerTestName);
             analyzerTestNameMapping.setTestId(testId);
+            analyzerTestNameMapping.setMethodId(methodId);
             analyzerTestNameMapping.setSysUserId(getSysUserId(request));
         } else {
             analyzerTestNameMapping = getAnalyzerAndTestName(analyzerId, analyzerTestName, testId);
+            if (analyzerTestNameMapping == null) {
+                errors.reject("error.notFound", "Analyzer test mapping not found");
+                saveErrors(errors);
+                return FWD_FAIL_INSERT;
+            }
+            analyzerTestNameMapping.setMethodId(methodId);
         }
 
         try {
@@ -182,7 +190,7 @@ public class AnalyzerTestNameRestController extends BaseController {
             if (analyzerId.equals(testMapping.getAnalyzerId())
                     && analyzerTestName.equals(testMapping.getAnalyzerTestName())) {
                 existingMapping = testMapping;
-                testMapping.setTestId(testId);
+                existingMapping.setTestId(testId);
                 break;
             }
         }

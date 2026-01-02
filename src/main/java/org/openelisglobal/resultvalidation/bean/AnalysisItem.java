@@ -203,6 +203,10 @@ public class AnalysisItem implements Serializable {
     private Double minNormalSi;
     private Double maxNormalSi;
 
+    // Sample interpretation - one note per sample (labNo), not per result
+    @SafeHtml(level = SafeHtml.SafeListLevel.NONE, groups = { ResultValidationForm.ResultValidation.class })
+    private String sampleInterpretation;
+
     public String getRejectReasonId() {
         return rejectReasonId;
     }
@@ -876,5 +880,13 @@ public class AnalysisItem implements Serializable {
 
     public void setMaxNormalSi(Double maxNormalSi) {
         this.maxNormalSi = maxNormalSi;
+    }
+
+    public String getSampleInterpretation() {
+        return sampleInterpretation;
+    }
+
+    public void setSampleInterpretation(String sampleInterpretation) {
+        this.sampleInterpretation = sampleInterpretation;
     }
 }
