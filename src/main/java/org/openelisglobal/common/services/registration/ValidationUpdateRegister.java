@@ -19,8 +19,6 @@ import org.openelisglobal.common.services.registration.interfaces.IResultUpdate;
 import org.openelisglobal.common.util.ConfigurationProperties;
 import org.openelisglobal.common.util.ConfigurationProperties.Property;
 import org.openelisglobal.dataexchange.resultreporting.ResultReportingUpdate;
-import org.openelisglobal.spring.util.SpringContext;
-import org.openelisglobal.testunitconversion.service.SiUnitConversionUpdate;
 
 public class ValidationUpdateRegister {
     public static List<IResultUpdate> getRegisteredUpdaters() {
@@ -34,7 +32,8 @@ public class ValidationUpdateRegister {
         // SI Unit Conversion is NOT included in validation updaters because:
         // 1. SI values are already calculated during result entry
         // 2. Results cannot be modified in the validation interface
-        // 3. Re-calculating SI values during validation triggers false "modified result" detections
+        // 3. Re-calculating SI values during validation triggers false "modified
+        // result" detections
         // SI conversion only happens in ResultUpdateRegister (during result entry)
 
         /*****

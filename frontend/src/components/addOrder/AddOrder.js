@@ -68,7 +68,7 @@ const AddOrder = (props) => {
   const handleChangeUpper = (e) => {
     // CustomTextInput peut passer directement une valeur (string) ou un événement
     let upperValue;
-    if (typeof e === 'string') {
+    if (typeof e === "string") {
       // Si c'est déjà une string (venant de CustomTextInput), on l'utilise directement
       upperValue = e;
     } else if (e && e.target) {
@@ -507,8 +507,10 @@ const AddOrder = (props) => {
       setProviders(response.sampleOrderItems.providersList);
 
       // Set default referring site if provided by backend
-      if (response.sampleOrderItems.referringSiteId &&
-          !orderFormValues.sampleOrderItems.referringSiteId) {
+      if (
+        response.sampleOrderItems.referringSiteId &&
+        !orderFormValues.sampleOrderItems.referringSiteId
+      ) {
         setOrderFormValues({
           ...orderFormValues,
           sampleOrderItems: {
@@ -1027,7 +1029,9 @@ const AddOrder = (props) => {
               <Column lg={8} md={4} sm={4}>
                 <CustomTextInput
                   id={"clinicalInformations"}
-                  value={orderFormValues.sampleOrderItems.clinicalInformations || ""}
+                  value={
+                    orderFormValues.sampleOrderItems.clinicalInformations || ""
+                  }
                   style={{ textTransform: "uppercase" }}
                   onChange={handleChangeUpper}
                   labelText={intl.formatMessage({

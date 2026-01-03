@@ -538,7 +538,8 @@ public abstract class PatientReport extends Report {
 
     /**
      * Récupère et concatène les renseignements cliniques pour un échantillon
-     * Combine les renseignements cliniques texte libre avec les informations structurées TB/VIH
+     * Combine les renseignements cliniques texte libre avec les informations
+     * structurées TB/VIH
      */
     protected String getClinicalInformationForSample(Sample sample, Patient patient) {
         StringBuilder clinicalInfo = new StringBuilder();
@@ -547,12 +548,10 @@ public abstract class PatientReport extends Report {
         ObservationHistoryService observationHistoryService = SpringContext.getBean(ObservationHistoryService.class);
 
         // Récupérer les renseignements cliniques depuis observation_history
-        String clinicalInfos = observationHistoryService.getValueForSample(
-                ObservationType.CLINICAL_INFOS,
+        String clinicalInfos = observationHistoryService.getValueForSample(ObservationType.CLINICAL_INFOS,
                 sampleService.getId(sample));
 
-        String clinicalInfosOther = observationHistoryService.getValueForSample(
-                ObservationType.CLINICAL_INFOS_OTHER,
+        String clinicalInfosOther = observationHistoryService.getValueForSample(ObservationType.CLINICAL_INFOS_OTHER,
                 sampleService.getId(sample));
 
         // Concaténer les informations cliniques
@@ -740,8 +739,8 @@ public abstract class PatientReport extends Report {
                         Test analysisTest = analysisService.getTest(analysis);
                         if (analysisTest != null && analysisTest.getId().equals(testId)
                                 && !analysis.getId().equals(currentAnalysisId)
-                                && SpringContext.getBean(IStatusService.class).matches(
-                                        analysisService.getStatusId(analysis), AnalysisStatus.Finalized)) {
+                                && SpringContext.getBean(IStatusService.class)
+                                        .matches(analysisService.getStatusId(analysis), AnalysisStatus.Finalized)) {
                             candidateAnalyses.add(analysis);
                         }
                     }
@@ -756,9 +755,12 @@ public abstract class PatientReport extends Report {
             candidateAnalyses.sort((a1, a2) -> {
                 Date d1 = a1.getCompletedDate();
                 Date d2 = a2.getCompletedDate();
-                if (d1 == null && d2 == null) return 0;
-                if (d1 == null) return 1;
-                if (d2 == null) return -1;
+                if (d1 == null && d2 == null)
+                    return 0;
+                if (d1 == null)
+                    return 1;
+                if (d2 == null)
+                    return -1;
                 return d2.compareTo(d1); // Descending order
             });
 
@@ -825,9 +827,7 @@ public abstract class PatientReport extends Report {
         }
 
         // Append unit of measure if available
-        String uom = test != null && test.getUnitOfMeasure() != null
-                ? test.getUnitOfMeasure().getName()
-                : "";
+        String uom = test != null && test.getUnitOfMeasure() != null ? test.getUnitOfMeasure().getName() : "";
 
         if (!GenericValidator.isBlankOrNull(value) && !GenericValidator.isBlankOrNull(uom)) {
             return value + " " + uom;
@@ -1149,7 +1149,7 @@ public abstract class PatientReport extends Report {
         String otherIdentifier = currentPatient.getOtherIdentifier();
         data.setOtherIdentifier(otherIdentifier);
         LogEvent.logDebug(this.getClass().getSimpleName(), "buildClinicalPatientData",
-            "Other Identifier for patient " + currentPatient.getId() + ": " + otherIdentifier);
+                "Other Identifier for patient " + currentPatient.getId() + ": " + otherIdentifier);
         setPatientName(data);
         data.setDept(patientDept);
         data.setCommune(patientCommune);
@@ -1172,26 +1172,27 @@ public abstract class PatientReport extends Report {
         String clinicalInfo = getClinicalInformationForSample(currentSample, currentPatient);
         data.setClinicalInformation(clinicalInfo);
         LogEvent.logInfo(this.getClass().getSimpleName(), "buildClinicalPatientData",
-            "Clinical Info for sample " + sampleService.getId(currentSample) + " (accession: " +
-            currentSample.getAccessionNumber() + "): '" + clinicalInfo + "'");
+                "Clinical Info for sample " + sampleService.getId(currentSample) + " (accession: "
+                        + currentSample.getAccessionNumber() + "): '" + clinicalInfo + "'");
 
         String interpretation = observationHistoryService.getValueForSample(ObservationType.SAMPLE_INTERPRETATION,
                 sampleService.getId(currentSample));
         data.setInterpretation(interpretation);
         LogEvent.logInfo(this.getClass().getSimpleName(), "buildClinicalPatientData",
-            "Interpretation for sample " + sampleService.getId(currentSample) + " (accession: " +
-            currentSample.getAccessionNumber() + "): '" + interpretation + "'");
+                "Interpretation for sample " + sampleService.getId(currentSample) + " (accession: "
+                        + currentSample.getAccessionNumber() + "): '" + interpretation + "'");
 
         if (doAnalysis) {
             data.setPanel(analysisService.getPanel(currentAnalysis));
             if (analysisService.getPanel(currentAnalysis) != null) {
                 data.setPanelName(analysisService.getPanel(currentAnalysis).getLocalizedName());
             }
-            // Only set testDate for biologically validated results (Finalized or TechnicalRejected)
+            // Only set testDate for biologically validated results (Finalized or
+            // TechnicalRejected)
             if (SpringContext.getBean(IStatusService.class).matches(analysisService.getStatusId(currentAnalysis),
                     AnalysisStatus.Finalized)
-                    || (SpringContext.getBean(IStatusService.class).matches(analysisService.getStatusId(currentAnalysis),
-                            AnalysisStatus.TechnicalRejected)
+                    || (SpringContext.getBean(IStatusService.class)
+                            .matches(analysisService.getStatusId(currentAnalysis), AnalysisStatus.TechnicalRejected)
                             && ConfigurationProperties.getInstance().isPropertyValueEqual(
                                     ConfigurationProperties.Property.VALIDATE_REJECTED_TESTS, "false"))) {
                 data.setTestDate(analysisService.getCompletedDateForDisplay(currentAnalysis));
@@ -1363,12 +1364,13 @@ public abstract class PatientReport extends Report {
         if (!reportItems.isEmpty()) {
             ClinicalPatientData firstItem = reportItems.get(0);
             LogEvent.logInfo(this.getClass().getSimpleName(), "addReportLevelParameters",
-                "First reportItem - interpretation: '" + firstItem.getInterpretation() +
-                "', clinicalInfo: '" + firstItem.getClinicalInformation() +
-                "', accessionNumber: '" + firstItem.getAccessionNumber() + "'");
+                    "First reportItem - interpretation: '" + firstItem.getInterpretation() + "', clinicalInfo: '"
+                            + firstItem.getClinicalInformation() + "', accessionNumber: '"
+                            + firstItem.getAccessionNumber() + "'");
         }
 
-        // Get the last validation date from the first item (all items have the same value)
+        // Get the last validation date from the first item (all items have the same
+        // value)
         String lastValidationDate = reportItems.get(0).getLastValidationDate();
         if (lastValidationDate != null) {
             reportParameters.put("lastValidationDate", lastValidationDate);
@@ -1420,8 +1422,8 @@ public abstract class PatientReport extends Report {
     }
 
     /**
-     * Aggregate analyzers and methods by test section and set them for all items
-     * in each section. Multiple analyzers/methods are concatenated with "/"
+     * Aggregate analyzers and methods by test section and set them for all items in
+     * each section. Multiple analyzers/methods are concatenated with "/"
      */
     protected void aggregateAnalyzersAndMethodsBySection() {
         if (reportItems == null || reportItems.isEmpty()) {
@@ -1467,15 +1469,16 @@ public abstract class PatientReport extends Report {
     }
 
     /**
-     * Calculate the most recent validation date among all tests in the report
-     * and set it for all report items
+     * Calculate the most recent validation date among all tests in the report and
+     * set it for all report items
      */
     protected void setLastValidationDateForAllItems() {
         if (reportItems == null || reportItems.isEmpty()) {
             return;
         }
 
-        // Find the most recent validation (released) date among all analyses in the report
+        // Find the most recent validation (released) date among all analyses in the
+        // report
         Date latestValidationDate = null;
 
         for (Sample sample : sampleService.getSamplesByAccessionRange(lowerNumber, upperNumber)) {
@@ -1483,8 +1486,8 @@ public abstract class PatientReport extends Report {
             if (analyses != null) {
                 for (Analysis analysis : analyses) {
                     // Only consider finalized analyses
-                    if (SpringContext.getBean(IStatusService.class).matches(
-                            analysisService.getStatusId(analysis), AnalysisStatus.Finalized)) {
+                    if (SpringContext.getBean(IStatusService.class).matches(analysisService.getStatusId(analysis),
+                            AnalysisStatus.Finalized)) {
                         Date releasedDate = analysis.getReleasedDate();
                         if (releasedDate != null) {
                             if (latestValidationDate == null || releasedDate.after(latestValidationDate)) {

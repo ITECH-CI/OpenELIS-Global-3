@@ -262,9 +262,7 @@ function AnalyzerTestName() {
       const data = selectedRow.originalData;
 
       // Pre-fill analyzer - find by analyzer name
-      const analyzer = analyzerList.find(
-        (a) => a.name === data.analyzerName,
-      );
+      const analyzer = analyzerList.find((a) => a.name === data.analyzerName);
       if (analyzer) {
         setSelectedAnalyzer(analyzer);
         setSelectedAnalyzerId(analyzer.id);

@@ -137,9 +137,9 @@ export const getResultStyle = (validation) => {
         ? "red"
         : "",
     background: validation.outsideValid
-      ? "#ffa0a0"          // Light red for out of valid range
+      ? "#ffa0a0" // Light red for out of valid range
       : validation.outsideNormal
-        ? "#ffffa0"         // Light yellow for out of normal range
+        ? "#ffffa0" // Light yellow for out of normal range
         : "var(--cds-field)",
   };
 };

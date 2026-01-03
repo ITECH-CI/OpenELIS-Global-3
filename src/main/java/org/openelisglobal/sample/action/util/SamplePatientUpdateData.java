@@ -265,11 +265,11 @@ public class SamplePatientUpdateData {
             observation.setValue(observationData);
             observation.setValueType(valueType);
             observations.add(observation);
-            LogEvent.logInfo(this.getClass().getSimpleName(), "createObservation",
-                "Created observation - typeId: " + observationType + ", value: '" + observationData + "', valueType: " + valueType);
+            LogEvent.logInfo(this.getClass().getSimpleName(), "createObservation", "Created observation - typeId: "
+                    + observationType + ", value: '" + observationData + "', valueType: " + valueType);
         } else {
             LogEvent.logDebug(this.getClass().getSimpleName(), "createObservation",
-                "Skipped blank observation - typeId: " + observationType + ", value: '" + observationData + "'");
+                    "Skipped blank observation - typeId: " + observationType + ", value: '" + observationData + "'");
         }
     }
 

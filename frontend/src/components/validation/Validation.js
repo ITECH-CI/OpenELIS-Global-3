@@ -18,11 +18,11 @@ import SiValueDisplay from "../common/SiValueDisplay";
 import { priorities } from "../data/orderOptions";
 import ValidationSearchFormValues from "../formModel/innitialValues/ValidationSearchFormValues";
 import { ConfigurationContext, NotificationContext } from "../layout/Layout";
+import { validateNumericResults } from "../utils/ResultValidationUtils";
 import {
   convertAlphaNumLabNumForDisplay,
   postToOpenElisServer,
 } from "../utils/Utils";
-import { validateNumericResults } from "../utils/ResultValidationUtils";
 
 const Validation = (props) => {
   const componentMounted = useRef(false);
@@ -421,7 +421,7 @@ const Validation = (props) => {
                 }
               </>
             );
-          default:
+          default: {
             // Get validation classes for numeric results
             const validation = validationState[row.id];
             const className = validation?.className || "";
@@ -453,6 +453,7 @@ const Validation = (props) => {
                 )}
               </span>
             );
+          }
         }
 
       default:
@@ -548,37 +549,56 @@ const Validation = (props) => {
         {({ values, errors, touched, handleChange }) => (
           <Form onChange={handleChange}>
             {/* Sample Interpretation Section - One per unique sample */}
-            {props.results?.resultList?.length > 0 && getUniqueSamples().length > 0 && (
-              <Grid className="gridBoundary" style={{ marginTop: "20px", marginBottom: "20px" }}>
-                <Column lg={16} md={8} sm={4}>
-                  <h6 style={{ marginBottom: "10px", fontWeight: "bold" }}>
-                    <FormattedMessage id="validation.sampleInterpretation.label" />
-                  </h6>
-                  {getUniqueSamples().map((sample) => (
-                    <div key={sample.sampleId} style={{ marginBottom: "15px" }}>
-                      <label style={{ display: "block", marginBottom: "5px", fontWeight: "500" }}>
-                        {intl.formatMessage({ id: "column.name.sampleInfo" })}:{" "}
-                        {configurationProperties.AccessionFormat === "ALPHANUM"
-                          ? convertAlphaNumLabNumForDisplay(sample.accessionNumber)
-                          : sample.accessionNumber}
-                      </label>
-                      <TextArea
-                        id={`interpretation-${sample.sampleId}`}
-                        labelText=""
-                        maxCount={200}
-                        placeholder={intl.formatMessage({
-                          id: "validation.sampleInterpretation.placeholder",
-                        })}
-                        value={sample.sampleInterpretation || ""}
-                        onChange={(e) => handleInterpretationChange(e, sample.sampleId)}
-                        rows={3}
-                        style={{ width: "100%" }}
-                      />
-                    </div>
-                  ))}
-                </Column>
-              </Grid>
-            )}
+            {props.results?.resultList?.length > 0 &&
+              getUniqueSamples().length > 0 && (
+                <Grid
+                  className="gridBoundary"
+                  style={{ marginTop: "20px", marginBottom: "20px" }}
+                >
+                  <Column lg={16} md={8} sm={4}>
+                    <h6 style={{ marginBottom: "10px", fontWeight: "bold" }}>
+                      <FormattedMessage id="validation.sampleInterpretation.label" />
+                    </h6>
+                    {getUniqueSamples().map((sample) => (
+                      <div
+                        key={sample.sampleId}
+                        style={{ marginBottom: "15px" }}
+                      >
+                        <label
+                          style={{
+                            display: "block",
+                            marginBottom: "5px",
+                            fontWeight: "500",
+                          }}
+                        >
+                          {intl.formatMessage({ id: "column.name.sampleInfo" })}
+                          :{" "}
+                          {configurationProperties.AccessionFormat ===
+                          "ALPHANUM"
+                            ? convertAlphaNumLabNumForDisplay(
+                                sample.accessionNumber,
+                              )
+                            : sample.accessionNumber}
+                        </label>
+                        <TextArea
+                          id={`interpretation-${sample.sampleId}`}
+                          labelText=""
+                          maxCount={200}
+                          placeholder={intl.formatMessage({
+                            id: "validation.sampleInterpretation.placeholder",
+                          })}
+                          value={sample.sampleInterpretation || ""}
+                          onChange={(e) =>
+                            handleInterpretationChange(e, sample.sampleId)
+                          }
+                          rows={3}
+                          style={{ width: "100%" }}
+                        />
+                      </div>
+                    ))}
+                  </Column>
+                </Grid>
+              )}
             <DataTable
               data={
                 props.results
@@ -593,10 +613,10 @@ const Validation = (props) => {
               customStyles={{
                 cells: {
                   style: {
-                    '&:nth-child(5)': {
+                    "&:nth-child(5)": {
                       // Target the result column (5th column)
-                      paddingLeft: '0px',
-                      paddingRight: '0px',
+                      paddingLeft: "0px",
+                      paddingRight: "0px",
                     },
                   },
                 },

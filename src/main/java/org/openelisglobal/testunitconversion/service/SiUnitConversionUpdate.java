@@ -124,8 +124,9 @@ public class SiUnitConversionUpdate implements IResultUpdate {
     }
 
     /**
-     * Check if SI values have actually changed between the managed entity and the converted result.
-     * This prevents unnecessary updates during validation when SI values are already correct.
+     * Check if SI values have actually changed between the managed entity and the
+     * converted result. This prevents unnecessary updates during validation when SI
+     * values are already correct.
      */
     private boolean hasChangedSiValues(Result managedResult, Result convertedResult) {
         // Compare valueSi
@@ -134,15 +135,13 @@ public class SiUnitConversionUpdate implements IResultUpdate {
         }
 
         // Compare uomSi
-        if (!java.util.Objects.equals(
-                managedResult.getUomSi() != null ? managedResult.getUomSi().getId() : null,
+        if (!java.util.Objects.equals(managedResult.getUomSi() != null ? managedResult.getUomSi().getId() : null,
                 convertedResult.getUomSi() != null ? convertedResult.getUomSi().getId() : null)) {
             return true;
         }
 
         // Compare siRule
-        if (!java.util.Objects.equals(
-                managedResult.getSiRule() != null ? managedResult.getSiRule().getId() : null,
+        if (!java.util.Objects.equals(managedResult.getSiRule() != null ? managedResult.getSiRule().getId() : null,
                 convertedResult.getSiRule() != null ? convertedResult.getSiRule().getId() : null)) {
             return true;
         }

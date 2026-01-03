@@ -269,9 +269,8 @@ public class ResultSaveService {
     private void setStandardResultValues(String value, Result result) {
         if (!(GenericValidator.isBlankOrNull(value) || GenericValidator.isBlankOrNull(result.getValue()))
                 && !areValuesEquivalent(value, result.getValue())) {
-            LogEvent.logInfo(this.getClass().getSimpleName(), "setStandardResultValues",
-                    "Result value changed - Old: [" + result.getValue() + "] New: [" + value + "] ResultId: "
-                            + result.getId());
+            LogEvent.logInfo(this.getClass().getSimpleName(), "setStandardResultValues", "Result value changed - Old: ["
+                    + result.getValue() + "] New: [" + value + "] ResultId: " + result.getId());
             updatedResult = true;
         }
         result.setValue(value);
@@ -280,9 +279,9 @@ public class ResultSaveService {
     }
 
     /**
-     * Compare two result values, treating numeric values that are mathematically equal
-     * as equivalent (e.g., "25" and "25.0" are considered equal).
-     * This prevents false "result modified" detections during validation.
+     * Compare two result values, treating numeric values that are mathematically
+     * equal as equivalent (e.g., "25" and "25.0" are considered equal). This
+     * prevents false "result modified" detections during validation.
      */
     private boolean areValuesEquivalent(String value1, String value2) {
         // First try exact string match

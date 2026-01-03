@@ -749,9 +749,10 @@ public class ResultsValidationUtility {
         analysisResultItem.setMinNormalSi(testResultItem.getMinNormalSi());
         analysisResultItem.setMaxNormalSi(testResultItem.getMaxNormalSi());
 
-        // Retrieve sample interpretation from observation_history (one per sample/labNo)
-        String sampleInterpretation = observationHistoryService.getValueForSample(
-                ObservationType.SAMPLE_INTERPRETATION, sample.getId());
+        // Retrieve sample interpretation from observation_history (one per
+        // sample/labNo)
+        String sampleInterpretation = observationHistoryService.getValueForSample(ObservationType.SAMPLE_INTERPRETATION,
+                sample.getId());
         analysisResultItem.setSampleInterpretation(sampleInterpretation);
 
         return analysisResultItem;

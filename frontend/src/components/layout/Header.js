@@ -254,7 +254,14 @@ function OEHeader(props) {
               style={{ width: "100%" }}
               rel="noreferrer"
             >
-              <span style={{ display: "flex", width: "100%", alignItems: "flex-start", minHeight: "2rem" }}>
+              <span
+                style={{
+                  display: "flex",
+                  width: "100%",
+                  alignItems: "flex-start",
+                  minHeight: "2rem",
+                }}
+              >
                 {!menuItem.menu.actionURL &&
                   !hasActiveChildMenu(menuItem) &&
                   console.warn("menu entry has no action url and no child")}

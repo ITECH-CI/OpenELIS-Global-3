@@ -573,11 +573,13 @@ public class AccessionValidationRestController extends BaseResultValidationContr
         if (analysisService.patientReportHasBeenDone(analysis) && resultSaveService.isUpdatedResult()) {
             // Ne plus enregistrer la note "Résultat corrigé"
             // Note note = noteService.createSavableNote(analysis, NoteType.EXTERNAL,
-            //         MessageUtil.getMessage("note.corrected.result"), RESULT_SUBJECT, getSysUserId(request));
+            // MessageUtil.getMessage("note.corrected.result"), RESULT_SUBJECT,
+            // getSysUserId(request));
             // if (!noteService.duplicateNoteExists(note)) {
-                analysis.setCorrectedSincePatientReport(true);
-            //     noteUpdateList.add(noteService.createSavableNote(analysis, NoteType.EXTERNAL,
-            //             MessageUtil.getMessage("note.corrected.result"), RESULT_SUBJECT, getSysUserId(request)));
+            analysis.setCorrectedSincePatientReport(true);
+            // noteUpdateList.add(noteService.createSavableNote(analysis, NoteType.EXTERNAL,
+            // MessageUtil.getMessage("note.corrected.result"), RESULT_SUBJECT,
+            // getSysUserId(request)));
             // }
         }
         return results;
@@ -642,17 +644,16 @@ public class AccessionValidationRestController extends BaseResultValidationContr
     }
 
     /**
-     * Save sample interpretation to observation_history.
-     * Since interpretation is per sample (labNo), not per result, we need to:
-     * 1. Group items by sampleId
-     * 2. Save only one interpretation per sample
+     * Save sample interpretation to observation_history. Since interpretation is
+     * per sample (labNo), not per result, we need to: 1. Group items by sampleId 2.
+     * Save only one interpretation per sample
      *
      * @param resultItemList List of all analysis items from the form
-     * @param sysUserId System user ID for audit trail
+     * @param sysUserId      System user ID for audit trail
      */
     private void saveSampleInterpretations(List<AnalysisItem> resultItemList, String sysUserId) {
         LogEvent.logInfo(this.getClass().getSimpleName(), "saveSampleInterpretations",
-            "Starting to save sample interpretations. Total result items: " + resultItemList.size());
+                "Starting to save sample interpretations. Total result items: " + resultItemList.size());
 
         // Use a map to track which samples we've already processed
         Map<String, String> sampleInterpretations = new HashMap<>();
@@ -663,7 +664,7 @@ public class AccessionValidationRestController extends BaseResultValidationContr
             String interpretation = item.getSampleInterpretation();
 
             LogEvent.logDebug(this.getClass().getSimpleName(), "saveSampleInterpretations",
-                "Processing item - sampleId: " + sampleId + ", interpretation: " + interpretation);
+                    "Processing item - sampleId: " + sampleId + ", interpretation: " + interpretation);
 
             if (sampleId != null && !sampleInterpretations.containsKey(sampleId)) {
                 sampleInterpretations.put(sampleId, interpretation);
@@ -671,7 +672,7 @@ public class AccessionValidationRestController extends BaseResultValidationContr
         }
 
         LogEvent.logInfo(this.getClass().getSimpleName(), "saveSampleInterpretations",
-            "Unique samples to save: " + sampleInterpretations.size());
+                "Unique samples to save: " + sampleInterpretations.size());
 
         // Save each sample's interpretation
         for (Map.Entry<String, String> entry : sampleInterpretations.entrySet()) {
@@ -679,34 +680,34 @@ public class AccessionValidationRestController extends BaseResultValidationContr
             String interpretation = entry.getValue();
 
             LogEvent.logInfo(this.getClass().getSimpleName(), "saveSampleInterpretations",
-                "Saving interpretation for sampleId: " + sampleId + ", value: " + interpretation);
+                    "Saving interpretation for sampleId: " + sampleId + ", value: " + interpretation);
 
             // Get the full sample object to retrieve patient ID
             Sample sample = sampleService.get(sampleId);
             if (sample == null) {
                 LogEvent.logError(this.getClass().getSimpleName(), "saveSampleInterpretations",
-                    "Sample not found for sampleId: " + sampleId);
+                        "Sample not found for sampleId: " + sampleId);
                 continue;
             }
 
             // Get patient ID from sample
             String patientId = sampleService.getPatient(sample).getId();
             LogEvent.logDebug(this.getClass().getSimpleName(), "saveSampleInterpretations",
-                "PatientId for sampleId " + sampleId + ": " + patientId);
+                    "PatientId for sampleId " + sampleId + ": " + patientId);
 
             // Get the observation type ID
-            String typeId = observationHistoryService.getObservationTypeIdForType(ObservationType.SAMPLE_INTERPRETATION);
+            String typeId = observationHistoryService
+                    .getObservationTypeIdForType(ObservationType.SAMPLE_INTERPRETATION);
             LogEvent.logDebug(this.getClass().getSimpleName(), "saveSampleInterpretations",
-                "ObservationHistoryTypeId for SAMPLE_INTERPRETATION: " + typeId);
+                    "ObservationHistoryTypeId for SAMPLE_INTERPRETATION: " + typeId);
 
             // Check if observation already exists
-            List<ObservationHistory> existingObservations = observationHistoryService.getAll(
-                null, sample, typeId);
+            List<ObservationHistory> existingObservations = observationHistoryService.getAll(null, sample, typeId);
 
             if (existingObservations != null && !existingObservations.isEmpty()) {
                 // Update existing observation
                 LogEvent.logInfo(this.getClass().getSimpleName(), "saveSampleInterpretations",
-                    "Updating existing interpretation for sampleId: " + sampleId);
+                        "Updating existing interpretation for sampleId: " + sampleId);
                 ObservationHistory existing = existingObservations.get(0);
                 existing.setValue(interpretation != null ? interpretation : "");
                 existing.setValueType(ObservationHistory.ValueType.LITERAL.getCode());
@@ -715,7 +716,7 @@ public class AccessionValidationRestController extends BaseResultValidationContr
             } else {
                 // Create new observation
                 LogEvent.logInfo(this.getClass().getSimpleName(), "saveSampleInterpretations",
-                    "Creating new interpretation for sampleId: " + sampleId);
+                        "Creating new interpretation for sampleId: " + sampleId);
                 ObservationHistory newObservation = new ObservationHistory();
                 newObservation.setSampleId(sampleId);
                 newObservation.setPatientId(patientId);
@@ -725,10 +726,10 @@ public class AccessionValidationRestController extends BaseResultValidationContr
                 newObservation.setSysUserId(sysUserId);
                 observationHistoryService.insert(newObservation);
                 LogEvent.logInfo(this.getClass().getSimpleName(), "saveSampleInterpretations",
-                    "Successfully created interpretation for sampleId: " + sampleId);
+                        "Successfully created interpretation for sampleId: " + sampleId);
             }
         }
         LogEvent.logInfo(this.getClass().getSimpleName(), "saveSampleInterpretations",
-            "Finished saving all sample interpretations");
+                "Finished saving all sample interpretations");
     }
 }

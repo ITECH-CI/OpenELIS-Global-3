@@ -562,7 +562,8 @@ public class ResultValidationController extends BaseResultValidationController {
             // Ne plus enregistrer la note "Résultat corrigé"
             analysis.setCorrectedSincePatientReport(true);
             // noteUpdateList.add(noteService.createSavableNote(analysis, NoteType.EXTERNAL,
-            //         MessageUtil.getMessage("note.corrected.result"), RESULT_SUBJECT, getSysUserId(request)));
+            // MessageUtil.getMessage("note.corrected.result"), RESULT_SUBJECT,
+            // getSysUserId(request)));
         }
         return results;
     }
