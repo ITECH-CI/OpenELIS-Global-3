@@ -298,6 +298,11 @@ public class SamplePatientEntryRestController extends BaseSampleEntryController 
 
         try {
             samplePatientService.persistData(updateData, patientUpdate, patientInfo, form, request);
+
+            // Vider le cache après une sauvegarde réussie
+            // Cela permet de générer un nouveau numéro pour le prochain échantillon
+            org.openelisglobal.common.rest.provider.CommonValidationsRestController.clearAllAccessionNumberCache();
+
             try {
                 SamplePatientUpdateDataCreatedEvent event = new SamplePatientUpdateDataCreatedEvent(this, updateData,
                         patientInfo, form);
