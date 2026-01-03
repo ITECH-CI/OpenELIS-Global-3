@@ -580,3 +580,28 @@ button {
     width: 14rem;
   }
 }
+
+/* Validation result conditional formatting */
+.result-outside-valid {
+  background-color: #ffa0a0 !important;
+  padding: 6px 10px !important;
+  border-radius: 4px !important;
+  display: inline-block !important;
+  min-width: 60px !important;
+}
+
+.result-outside-normal {
+  background-color: #ffffa0 !important;
+  padding: 6px 10px !important;
+  border-radius: 4px !important;
+  display: inline-block !important;
+  min-width: 60px !important;
+}
+
+.result-critical {
+  border: 2px solid orange !important;
+}
+
+.result-invalid {
+  border: 2px solid red !important;
+}

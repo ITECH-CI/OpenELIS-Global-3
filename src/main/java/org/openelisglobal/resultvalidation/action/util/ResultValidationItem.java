@@ -85,6 +85,10 @@ public class ResultValidationItem implements ResultItem, Serializable {
     private String patientName;
     private double lowerCritical;
     private double higherCritical;
+    private double upperNormalRange = 0;
+    private double lowerNormalRange = 0;
+    private double upperAbnormalRange = 0;
+    private double lowerAbnormalRange = 0;
 
     // SI unit conversion fields
     private String valueSi;
@@ -488,6 +492,38 @@ public class ResultValidationItem implements ResultItem, Serializable {
 
     public void setHigherCritical(double higherCritical) {
         this.higherCritical = higherCritical;
+    }
+
+    public double getUpperNormalRange() {
+        return upperNormalRange;
+    }
+
+    public void setUpperNormalRange(double upperNormalRange) {
+        this.upperNormalRange = upperNormalRange;
+    }
+
+    public double getLowerNormalRange() {
+        return lowerNormalRange;
+    }
+
+    public void setLowerNormalRange(double lowerNormalRange) {
+        this.lowerNormalRange = lowerNormalRange;
+    }
+
+    public double getUpperAbnormalRange() {
+        return upperAbnormalRange;
+    }
+
+    public void setUpperAbnormalRange(double upperAbnormalRange) {
+        this.upperAbnormalRange = upperAbnormalRange;
+    }
+
+    public double getLowerAbnormalRange() {
+        return lowerAbnormalRange;
+    }
+
+    public void setLowerAbnormalRange(double lowerAbnormalRange) {
+        this.lowerAbnormalRange = lowerAbnormalRange;
     }
 
     public String getValueSi() {

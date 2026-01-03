@@ -22,6 +22,7 @@ import {
   convertAlphaNumLabNumForDisplay,
   postToOpenElisServer,
 } from "../utils/Utils";
+import { validateNumericResults } from "../utils/ResultValidationUtils";
 
 const Validation = (props) => {
   const componentMounted = useRef(false);
@@ -36,12 +37,43 @@ const Validation = (props) => {
   const [pageSize, setPageSize] = useState(100);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [, forceUpdate] = useState({});
+  const [validationState, setValidationState] = useState({});
 
   useEffect(() => {
     componentMounted.current = true;
     return () => {
       componentMounted.current = false;
     };
+  }, [props.results]);
+
+  // Validate numeric results for conditional formatting
+  useEffect(() => {
+    if (props.results?.resultList) {
+      let newValidationState = {};
+      props.results.resultList.forEach((row) => {
+        if (row.resultType === "N" && row.result) {
+          const validation = validateNumericResults(row.result, row);
+
+          // Add CSS classes based on validation
+          const classes = [];
+          if (validation.outsideValid) {
+            classes.push("result-outside-valid");
+          } else if (validation.outsideNormal) {
+            classes.push("result-outside-normal");
+          }
+
+          if (validation.isCritical) {
+            classes.push("result-critical");
+          } else if (validation.isInvalid) {
+            classes.push("result-invalid");
+          }
+
+          validation.className = classes.join(" ");
+          newValidationState[row.id] = validation;
+        }
+      });
+      setValidationState(newValidationState);
+    }
   }, [props.results]);
 
   const columns = [
@@ -390,22 +422,28 @@ const Validation = (props) => {
               </>
             );
           default:
+            // Get validation classes for numeric results
+            const validation = validationState[row.id];
+            const className = validation?.className || "";
+
             // Display numeric results with SI conversion if available
             if (row.valueSi && row.uomSiName) {
               return (
-                <SiValueDisplay
-                  traditionalValue={row.result}
-                  traditionalUom={row.unitOfMeasureName || ""}
-                  siValue={row.valueSi}
-                  siUom={row.uomSiName}
-                  className="compact"
-                  showTooltip={true}
-                  significantDigits={2}
-                />
+                <div className={className}>
+                  <SiValueDisplay
+                    traditionalValue={row.result}
+                    traditionalUom={row.unitOfMeasureName || ""}
+                    siValue={row.valueSi}
+                    siUom={row.uomSiName}
+                    className="compact"
+                    showTooltip={true}
+                    significantDigits={2}
+                  />
+                </div>
               );
             }
             return (
-              <>
+              <span className={className}>
                 {row.result}
                 {row.unitOfMeasureName && (
                   <span className="uom">
@@ -413,7 +451,7 @@ const Validation = (props) => {
                     {row.unitOfMeasureName}
                   </span>
                 )}
-              </>
+              </span>
             );
         }
 
@@ -552,6 +590,17 @@ const Validation = (props) => {
               }
               columns={columns}
               isSortable
+              customStyles={{
+                cells: {
+                  style: {
+                    '&:nth-child(5)': {
+                      // Target the result column (5th column)
+                      paddingLeft: '0px',
+                      paddingRight: '0px',
+                    },
+                  },
+                },
+              }}
             ></DataTable>
             <Pagination
               onChange={handlePageChange}

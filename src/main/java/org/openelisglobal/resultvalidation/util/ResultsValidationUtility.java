@@ -493,6 +493,14 @@ public class ResultsValidationUtility {
                     resultLimit.getLowCritical() == Double.NEGATIVE_INFINITY ? 0 : resultLimit.getLowCritical());
             testItem.setHigherCritical(
                     resultLimit.getHighCritical() == Double.POSITIVE_INFINITY ? 0 : resultLimit.getHighCritical());
+            testItem.setLowerNormalRange(
+                    resultLimit.getLowNormal() == Double.NEGATIVE_INFINITY ? 0 : resultLimit.getLowNormal());
+            testItem.setUpperNormalRange(
+                    resultLimit.getHighNormal() == Double.POSITIVE_INFINITY ? 0 : resultLimit.getHighNormal());
+            testItem.setLowerAbnormalRange(
+                    resultLimit.getLowValid() == Double.NEGATIVE_INFINITY ? 0 : resultLimit.getLowValid());
+            testItem.setUpperAbnormalRange(
+                    resultLimit.getHighValid() == Double.POSITIVE_INFINITY ? 0 : resultLimit.getHighValid());
 
             testItem.setNormalRange(SpringContext.getBean(ResultLimitService.class).getDisplayReferenceRange(
                     resultLimit, testResults.isEmpty() ? "0" : testResults.get(0).getSignificantDigits(), " - "));
@@ -686,6 +694,10 @@ public class ResultsValidationUtility {
         analysisResultItem.setHigherCritical(testResultItem.getHigherCritical() == Double.POSITIVE_INFINITY ? 0
                 : testResultItem.getHigherCritical());
         analysisResultItem.setNormalRange(testResultItem.getNormalRange());
+        analysisResultItem.setLowerNormalRange(testResultItem.getLowerNormalRange());
+        analysisResultItem.setUpperNormalRange(testResultItem.getUpperNormalRange());
+        analysisResultItem.setLowerAbnormalRange(testResultItem.getLowerAbnormalRange());
+        analysisResultItem.setUpperAbnormalRange(testResultItem.getUpperAbnormalRange());
         analysisResultItem.setPatientName(testResultItem.getPatientName());
         analysisResultItem.setTestName(testName);
         analysisResultItem.setUnits(testUnits);

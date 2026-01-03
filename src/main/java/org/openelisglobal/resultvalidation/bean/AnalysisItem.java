@@ -82,6 +82,10 @@ public class AnalysisItem implements Serializable {
     private double lowerCritical;
     private double higherCritical;
     private String normalRange;
+    private double upperNormalRange = 0;
+    private double lowerNormalRange = 0;
+    private double upperAbnormalRange = 0;
+    private double lowerAbnormalRange = 0;
 
     @SafeHtml(level = SafeHtml.SafeListLevel.NONE, groups = { ResultValidationForm.ResultValidation.class })
     private String resultType;
@@ -800,6 +804,38 @@ public class AnalysisItem implements Serializable {
 
     public void setHigherCritical(double higherCritical) {
         this.higherCritical = higherCritical;
+    }
+
+    public double getUpperNormalRange() {
+        return upperNormalRange;
+    }
+
+    public void setUpperNormalRange(double upperNormalRange) {
+        this.upperNormalRange = upperNormalRange;
+    }
+
+    public double getLowerNormalRange() {
+        return lowerNormalRange;
+    }
+
+    public void setLowerNormalRange(double lowerNormalRange) {
+        this.lowerNormalRange = lowerNormalRange;
+    }
+
+    public double getUpperAbnormalRange() {
+        return upperAbnormalRange;
+    }
+
+    public void setUpperAbnormalRange(double upperAbnormalRange) {
+        this.upperAbnormalRange = upperAbnormalRange;
+    }
+
+    public double getLowerAbnormalRange() {
+        return lowerAbnormalRange;
+    }
+
+    public void setLowerAbnormalRange(double lowerAbnormalRange) {
+        this.lowerAbnormalRange = lowerAbnormalRange;
     }
 
     public String getGenscreenResult() {
