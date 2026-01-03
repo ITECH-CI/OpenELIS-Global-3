@@ -546,12 +546,15 @@
                 </exclusion>
             </exclusions>
         </dependency>
-        <!-- Old iText dependency for BarcodeLabelMaker compatibility -->
+        <!-- Old iText dependency for BarcodeLabelMaker compatibility
+        Commented out to use OpenPDF (included with JasperReports 6.21.3) instead
+        This resolves NoSuchMethodError when using JasperReports compiled with OpenPDF
         <dependency>
             <groupId>com.lowagie</groupId>
             <artifactId>itext</artifactId>
             <version>2.1.7</version>
         </dependency>
+        -->
         <!-- JasperReports PDF extension for JR 7.x
         <dependency>
             <groupId>net.sf.jasperreports</groupId>
