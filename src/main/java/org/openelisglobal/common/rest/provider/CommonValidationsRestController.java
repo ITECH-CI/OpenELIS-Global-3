@@ -5,6 +5,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 import org.apache.commons.validator.GenericValidator;
 import org.openelisglobal.common.log.LogEvent;
 import org.openelisglobal.common.provider.query.PatientSearchResults;
@@ -32,6 +33,10 @@ import org.springframework.web.bind.annotation.ResponseBody;
 @RequestMapping(value = "/rest/")
 public class CommonValidationsRestController {
 
+    // Cache global pour stocker les numéros de laboratoire générés mais non persistés
+    // La clé est construite à partir des paramètres (programCode, format)
+    private static final ConcurrentHashMap<String, String> accessionNumberCache = new ConcurrentHashMap<>();
+
     private ResponseObject responseObject;
 
     @Autowired
@@ -41,6 +46,21 @@ public class CommonValidationsRestController {
 
     public CommonValidationsRestController() {
         this.responseObject = new ResponseObject();
+    }
+
+    /**
+     * Méthode publique statique pour invalider le cache d'un numéro de laboratoire spécifique.
+     */
+    public static void clearAccessionNumberFromCache(String accessionNumber) {
+        accessionNumberCache.values().remove(accessionNumber);
+    }
+
+    /**
+     * Méthode publique statique pour vider complètement le cache.
+     * Appelée après une sauvegarde réussie.
+     */
+    public static void clearAllAccessionNumberCache() {
+        accessionNumberCache.clear();
     }
 
     @GetMapping(value = "SampleEntryAccessionNumberValidation", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -118,20 +138,37 @@ public class CommonValidationsRestController {
 
     @GetMapping(value = "SampleEntryGenerateScanProvider", produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
-    public ResponseObject accessionNumberGenerator(@RequestParam(required = false) String programCode,
+    public ResponseObject accessionNumberGenerator(HttpServletRequest request,
+            @RequestParam(required = false) String programCode,
             @RequestParam(defaultValue = "false") Boolean noIncrement,
             @RequestParam(required = false) AccessionFormat format) {
 
         String nextNumber = null;
         String error = null;
+
+        // Créer une clé unique basée sur les paramètres
+        String cacheKey = "accessionNumber_" + (programCode != null ? programCode : "default") + "_"
+                + (format != null ? format.name() : "none");
+
+        // Vérifier si un numéro est déjà en cache pour ces paramètres
+        String cachedNumber = accessionNumberCache.get(cacheKey);
+
+        if (cachedNumber != null) {
+            // Retourner le numéro en cache sans générer un nouveau
+            responseObject.setStatus(true);
+            responseObject.setBody(cachedNumber);
+            return responseObject;
+        }
+
+        // Générer un nouveau numéro seulement si aucun n'est en cache
         try {
             if (GenericValidator.isBlankOrNull(programCode)) {
                 if (format == null) {
                     nextNumber = AccessionNumberUtil.getMainAccessionNumberGenerator()
-                            .getNextAvailableAccessionNumber("", !noIncrement);
+                            .getNextAvailableAccessionNumber("", true);
                 } else {
                     nextNumber = AccessionNumberUtil.getAccessionNumberGenerator(format)
-                            .getNextAvailableAccessionNumber("", !noIncrement);
+                            .getNextAvailableAccessionNumber("", true);
                 }
             } else {
                 // check program code validity
@@ -145,7 +182,7 @@ public class CommonValidationsRestController {
                 }
                 if (found) {
                     nextNumber = AccessionNumberUtil.getProgramAccessionNumberGenerator()
-                            .getNextAvailableAccessionNumber(programCode, !noIncrement);
+                            .getNextAvailableAccessionNumber(programCode, true);
                     if (GenericValidator.isBlankOrNull(nextNumber)) {
                         error = MessageUtil.getMessage("error.accession.no.next");
                     }
@@ -160,6 +197,8 @@ public class CommonValidationsRestController {
 
         boolean success = !GenericValidator.isBlankOrNull(nextNumber);
         if (success) {
+            // Mettre le numéro en cache pour qu'il soit réutilisé jusqu'à la sauvegarde
+            accessionNumberCache.put(cacheKey, nextNumber);
             responseObject.setStatus(true);
         }
         String result = GenericValidator.isBlankOrNull(error) ? nextNumber : error;
