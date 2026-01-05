@@ -99,20 +99,10 @@ public class SiConversionServiceImpl implements SiConversionService {
             if (siValue != null) {
                 // Update result with SI values
                 result.setValueSi(siValue.toPlainString());
-
-                LogEvent.logInfo(this.getClass().getSimpleName(), "convertResultToSi",
-                        "Setting UomSi - conversion.getToUom() ID: "
-                                + (conversion.getToUom() != null ? conversion.getToUom().getId() : "null"));
                 result.setUomSi(conversion.getToUom());
-
-                LogEvent.logInfo(this.getClass().getSimpleName(), "convertResultToSi",
-                        "Setting SiRule - conversion ID: " + conversion.getId());
                 result.setSiRule(conversion);
 
                 result.setSiLastupdated(new Timestamp(System.currentTimeMillis()));
-
-                LogEvent.logInfo(this.getClass().getSimpleName(), "convertResultToSi",
-                        "All SI fields set successfully");
                 return true;
             }
 

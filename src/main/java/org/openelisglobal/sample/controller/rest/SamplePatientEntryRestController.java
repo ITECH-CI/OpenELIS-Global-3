@@ -351,8 +351,6 @@ public class SamplePatientEntryRestController extends BaseSampleEntryController 
                 // error = new ActionError("errors.UpdateException", null, null);
                 result.reject("errors.UpdateException", "errors.UpdateException");
             }
-            LogEvent.logInfo(this.getClass().getSimpleName(), "samplePatientEntrySave", result.toString());
-
             // errors.add(ActionMessages.GLOBAL_MESSAGE, error);
             saveErrors(result);// TODO theses errors are not communicated to the frontend return an error code
                                // if svae is not successful

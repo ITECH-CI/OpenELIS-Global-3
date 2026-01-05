@@ -39,8 +39,6 @@ public class TestProductMapping {
         int mappingsLoaded;
         if (loaded) {
             mappingsLoaded = testToProductInfo.size();
-            LogEvent.logInfo(getClass().getSimpleName(), "init",
-                    "Loaded CSV mapping. Total mappings loaded: " + mappingsLoaded);
         } else {
             LogEvent.logError(getClass().getSimpleName(), "init",
                     "No CSV mapping file could be loaded from fixed path: " + FIXED_CSV_PATH);
@@ -97,8 +95,6 @@ public class TestProductMapping {
 
     public boolean hasValidMapping(String testCode) {
         boolean hasMapping = testToProductInfo.containsKey(testCode);
-        LogEvent.logInfo(getClass().getSimpleName(), "hasValidMapping",
-                "Checking testCode='" + testCode + "' -> hasMapping=" + hasMapping);
         return hasMapping;
     }
 

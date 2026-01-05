@@ -652,8 +652,6 @@ public class AccessionValidationRestController extends BaseResultValidationContr
      * @param sysUserId      System user ID for audit trail
      */
     private void saveSampleInterpretations(List<AnalysisItem> resultItemList, String sysUserId) {
-        LogEvent.logInfo(this.getClass().getSimpleName(), "saveSampleInterpretations",
-                "Starting to save sample interpretations. Total result items: " + resultItemList.size());
 
         // Use a map to track which samples we've already processed
         Map<String, String> sampleInterpretations = new HashMap<>();
@@ -671,16 +669,10 @@ public class AccessionValidationRestController extends BaseResultValidationContr
             }
         }
 
-        LogEvent.logInfo(this.getClass().getSimpleName(), "saveSampleInterpretations",
-                "Unique samples to save: " + sampleInterpretations.size());
-
         // Save each sample's interpretation
         for (Map.Entry<String, String> entry : sampleInterpretations.entrySet()) {
             String sampleId = entry.getKey();
             String interpretation = entry.getValue();
-
-            LogEvent.logInfo(this.getClass().getSimpleName(), "saveSampleInterpretations",
-                    "Saving interpretation for sampleId: " + sampleId + ", value: " + interpretation);
 
             // Get the full sample object to retrieve patient ID
             Sample sample = sampleService.get(sampleId);
@@ -706,8 +698,6 @@ public class AccessionValidationRestController extends BaseResultValidationContr
 
             if (existingObservations != null && !existingObservations.isEmpty()) {
                 // Update existing observation
-                LogEvent.logInfo(this.getClass().getSimpleName(), "saveSampleInterpretations",
-                        "Updating existing interpretation for sampleId: " + sampleId);
                 ObservationHistory existing = existingObservations.get(0);
                 existing.setValue(interpretation != null ? interpretation : "");
                 existing.setValueType(ObservationHistory.ValueType.LITERAL.getCode());
@@ -715,8 +705,6 @@ public class AccessionValidationRestController extends BaseResultValidationContr
                 observationHistoryService.update(existing);
             } else {
                 // Create new observation
-                LogEvent.logInfo(this.getClass().getSimpleName(), "saveSampleInterpretations",
-                        "Creating new interpretation for sampleId: " + sampleId);
                 ObservationHistory newObservation = new ObservationHistory();
                 newObservation.setSampleId(sampleId);
                 newObservation.setPatientId(patientId);
@@ -725,11 +713,7 @@ public class AccessionValidationRestController extends BaseResultValidationContr
                 newObservation.setValueType(ObservationHistory.ValueType.LITERAL.getCode());
                 newObservation.setSysUserId(sysUserId);
                 observationHistoryService.insert(newObservation);
-                LogEvent.logInfo(this.getClass().getSimpleName(), "saveSampleInterpretations",
-                        "Successfully created interpretation for sampleId: " + sampleId);
             }
         }
-        LogEvent.logInfo(this.getClass().getSimpleName(), "saveSampleInterpretations",
-                "Finished saving all sample interpretations");
     }
 }

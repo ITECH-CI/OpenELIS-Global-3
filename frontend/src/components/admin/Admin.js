@@ -32,6 +32,7 @@ import {
   ResultNew,
   Popup,
   Search,
+  TrashCan,
 } from "@carbon/icons-react";
 import PathRoute from "../utils/PathRoute";
 import CalculatedValue from "./calculatedValue/CalculatedValueForm";
@@ -48,6 +49,7 @@ import ProviderMenu from "./ProviderMenu/ProviderMenu";
 import BarcodeConfiguration from "./barcodeConfiguration/BarcodeConfiguration";
 import AnalyzerTestName from "./analyzerTestName/AnalyzerTestName.js";
 import PluginList from "./pluginFile/PluginFile.js";
+import { getFromOpenElisServer } from "../utils/Utils.js";
 import ResultReportingConfiguration from "./ResultReportingConfiguration/ResultReportingConfiguration.js";
 import TestCatalog from "./testManagement/ViewTestCatalog.js";
 import PushNotificationPage from "../notifications/PushNotificationPage.jsx";
@@ -90,10 +92,12 @@ import UomRenameEntry from "./testManagementConfigMenu/UomRenameEntry.js";
 import SelectListRenameEntry from "./testManagementConfigMenu/SelectListRenameEntry.js";
 import MethodRenameEntry from "./testManagementConfigMenu/MethodRenameEntry.js";
 import SiConversionManagement from "./testManagementConfigMenu/SiConversionManagement.js";
+import DatabaseCleaning from "./databaseCleaning/DatabaseCleaning.js";
 
 function Admin() {
   const intl = useIntl();
   const [isSmallScreen, setIsSmallScreen] = useState(false);
+  const [isTrainingInstallation, setIsTrainingInstallation] = useState(false);
 
   useEffect(() => {
     const mediaQuery = window.matchMedia("(max-width: 1024px)"); //applicable for medium screen and below  for only small screen set max-width: 768px
@@ -104,6 +108,12 @@ function Admin() {
 
     return () =>
       mediaQuery.removeEventListener("change", handleMediaQueryChange);
+  }, []);
+
+  useEffect(() => {
+    getFromOpenElisServer("/rest/database-cleaning/status", (response) => {
+      setIsTrainingInstallation(response.trainingInstallation);
+    });
   }, []);
 
   return (
@@ -318,6 +328,11 @@ function Admin() {
           <SideNavLink href="#SearchIndexManagement" renderIcon={Search}>
             <FormattedMessage id="searchindexmanagement.label" />
           </SideNavLink>
+          {isTrainingInstallation && (
+            <SideNavLink href="#DatabaseCleaning" renderIcon={TrashCan}>
+              <FormattedMessage id="database.clean" />
+            </SideNavLink>
+          )}
           <SideNavLink
             renderIcon={Catalog}
             target="_blank"
@@ -559,6 +574,9 @@ function Admin() {
       </PathRoute>
       <PathRoute path="#SearchIndexManagement">
         <SearchIndexManagement />
+      </PathRoute>
+      <PathRoute path="#DatabaseCleaning">
+        <DatabaseCleaning />
       </PathRoute>
     </>
   );

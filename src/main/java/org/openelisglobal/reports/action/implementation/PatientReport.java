@@ -1148,8 +1148,7 @@ public abstract class PatientReport extends Report {
         data.setNationalId(patientService.getNationalId(currentPatient));
         String otherIdentifier = currentPatient.getOtherIdentifier();
         data.setOtherIdentifier(otherIdentifier);
-        LogEvent.logDebug(this.getClass().getSimpleName(), "buildClinicalPatientData",
-                "Other Identifier for patient " + currentPatient.getId() + ": " + otherIdentifier);
+        
         setPatientName(data);
         data.setDept(patientDept);
         data.setCommune(patientCommune);
@@ -1171,16 +1170,10 @@ public abstract class PatientReport extends Report {
 
         String clinicalInfo = getClinicalInformationForSample(currentSample, currentPatient);
         data.setClinicalInformation(clinicalInfo);
-        LogEvent.logInfo(this.getClass().getSimpleName(), "buildClinicalPatientData",
-                "Clinical Info for sample " + sampleService.getId(currentSample) + " (accession: "
-                        + currentSample.getAccessionNumber() + "): '" + clinicalInfo + "'");
 
         String interpretation = observationHistoryService.getValueForSample(ObservationType.SAMPLE_INTERPRETATION,
                 sampleService.getId(currentSample));
         data.setInterpretation(interpretation);
-        LogEvent.logInfo(this.getClass().getSimpleName(), "buildClinicalPatientData",
-                "Interpretation for sample " + sampleService.getId(currentSample) + " (accession: "
-                        + currentSample.getAccessionNumber() + "): '" + interpretation + "'");
 
         if (doAnalysis) {
             data.setPanel(analysisService.getPanel(currentAnalysis));
@@ -1358,15 +1351,6 @@ public abstract class PatientReport extends Report {
     protected void addReportLevelParameters() {
         if (reportItems == null || reportItems.isEmpty()) {
             return;
-        }
-
-        // Log first item's interpretation to verify data
-        if (!reportItems.isEmpty()) {
-            ClinicalPatientData firstItem = reportItems.get(0);
-            LogEvent.logInfo(this.getClass().getSimpleName(), "addReportLevelParameters",
-                    "First reportItem - interpretation: '" + firstItem.getInterpretation() + "', clinicalInfo: '"
-                            + firstItem.getClinicalInformation() + "', accessionNumber: '"
-                            + firstItem.getAccessionNumber() + "'");
         }
 
         // Get the last validation date from the first item (all items have the same

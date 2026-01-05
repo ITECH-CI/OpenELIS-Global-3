@@ -9,10 +9,30 @@
 
 #mainHeader {
   z-index: 8001;
+  min-height: 48px;
+  height: auto !important;
+}
+
+#mainHeader .cds--header__name {
+  height: auto !important;
+  min-height: 48px;
+  align-items: center;
 }
 
 .headerPanel {
   height: max-content;
+}
+
+.banner {
+  display: flex;
+  flex-direction: column;
+  min-height: fit-content;
+  padding: 4px 0;
+}
+
+.banner h5 {
+  margin: 0;
+  padding: 0;
 }
 
 .banner p {

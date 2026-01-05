@@ -149,11 +149,9 @@ public class SiteInformationMenuRestController extends BaseMenuController<SiteIn
             request.setAttribute(TITLE_KEY, "validationConfig.browse.title");
         }
 
-        int startingRecNo = Integer.parseInt((String) request.getAttribute("startingRecNo"));
-
         request.setAttribute("menuDefinition", "SiteInformationMenuDefinition");
 
-        configurationList = siteInformationService.getPageOfSiteInformationByDomainName(startingRecNo, dbDomainName);
+        configurationList = siteInformationService.getSiteInformationByDomainName(dbDomainName);
         for (SiteInformation siteInformation : configurationList) {
             if ("localization".equals(siteInformation.getTag())) {
                 siteInformation.setLocalization(localizationService.get(siteInformation.getValue()));
@@ -161,9 +159,6 @@ public class SiteInformationMenuRestController extends BaseMenuController<SiteIn
         }
 
         hideEncryptedFields(configurationList);
-
-        setDisplayPageBounds(request, configurationList == null ? 0 : configurationList.size(), startingRecNo,
-                siteInformationService.getCountForDomainName(dbDomainName));
 
         return configurationList;
     }
@@ -236,6 +231,13 @@ public class SiteInformationMenuRestController extends BaseMenuController<SiteIn
         } else {
             return "PageNotFound";
         }
+    }
+
+    @Override
+    protected int getPageSize() {
+        // Return a very large number to effectively disable pagination for REST API
+        // The frontend will handle pagination
+        return Integer.MAX_VALUE;
     }
 
     @Override

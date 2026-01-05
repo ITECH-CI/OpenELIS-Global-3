@@ -122,7 +122,7 @@
 			<band height="84">
 				<property name="com.jaspersoft.studio.unit.height" value="px"/>
 				<rectangle>
-					<reportElement x="1" y="17" width="301" height="63" isPrintWhenDetailOverflows="true" uuid="6543fca6-7be0-4b6d-8d45-8e782354c1f7"/>
+					<reportElement x="1" y="17" width="301" height="62" isPrintWhenDetailOverflows="true" uuid="6543fca6-7be0-4b6d-8d45-8e782354c1f7"/>
 					<graphicElement>
 						<pen lineWidth="0.5"/>
 					</graphicElement>
@@ -218,7 +218,7 @@
 					<textFieldExpression><![CDATA[$F{lastValidationDate}]]></textFieldExpression>
 				</textField>
 				<textField evaluationTime="Group" evaluationGroup="person" isBlankWhenNull="true">
-					<reportElement x="2" y="16" width="299" height="62" isPrintWhenDetailOverflows="true" uuid="8498060e-c3a5-4ae7-8bad-e25d53e9da1c"/>
+					<reportElement x="2" y="16" width="299" height="61" isPrintWhenDetailOverflows="true" uuid="8498060e-c3a5-4ae7-8bad-e25d53e9da1c"/>
 					<box topPadding="2" leftPadding="4" bottomPadding="1" rightPadding="2"/>
 					<textElement markup="none"/>
 					<textFieldExpression><![CDATA[$F{interpretation}]]></textFieldExpression>
