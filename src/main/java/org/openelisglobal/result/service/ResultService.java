@@ -73,4 +73,50 @@ public interface ResultService extends BaseObjectService<Result, String> {
     String getResultValueForDisplay(Result result, String string, boolean b, boolean c);
 
     String getUOM(Result result);
+
+    // SI Unit Conversion methods
+
+    /**
+     * Get the SI converted value for a result.
+     * 
+     * @param result The result
+     * @return The SI value as a string, or null if not available
+     */
+    String getSiValue(Result result);
+
+    /**
+     * Get the SI unit of measure for a result.
+     * 
+     * @param result The result
+     * @return The SI unit name, or empty string if not available
+     */
+    String getSiUom(Result result);
+
+    /**
+     * Get the formatted result value with SI value in parentheses if available.
+     * Format: "12.5 g/dL (125.0 g/L)" or just "12.5 g/dL" if no SI conversion
+     * 
+     * @param result     The result
+     * @param separator  Separator between value and unit
+     * @param printable  Whether to format for printing
+     * @param includeUOM Whether to include the unit of measure
+     * @return Formatted result value with optional SI value
+     */
+    String getFormattedValueWithSi(Result result, String separator, boolean printable, boolean includeUOM);
+
+    /**
+     * Check if a result has an SI conversion available.
+     * 
+     * @param result The result
+     * @return true if SI value exists, false otherwise
+     */
+    boolean hasSiConversion(Result result);
+
+    /**
+     * Get the formatted SI reference range.
+     * 
+     * @param result The result with SI reference range values
+     * @return Formatted SI reference range, or empty string if not available
+     */
+    String getSiReferenceRange(Result result);
 }

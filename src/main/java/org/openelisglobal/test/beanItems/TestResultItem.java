@@ -121,6 +121,13 @@ public class TestResultItem implements ResultItem, Serializable {
     @SafeHtml(level = SafeHtml.SafeListLevel.NONE, groups = { LogbookResultsForm.LogbookResults.class })
     private String shadowResultValue;
 
+    // SI unit conversion fields
+    private String shadowValueSi;
+    private String shadowUomSiName;
+    private String shadowUom;
+    private Double minNormalSi;
+    private Double maxNormalSi;
+
     @SafeHtml(level = SafeHtml.SafeListLevel.NONE, groups = { LogbookResultsForm.LogbookResults.class })
     private String resultValue;
 
@@ -577,6 +584,46 @@ public class TestResultItem implements ResultItem, Serializable {
 
     public void setShadowResultValue(String shadowResultValue) {
         this.shadowResultValue = shadowResultValue;
+    }
+
+    public String getShadowValueSi() {
+        return shadowValueSi;
+    }
+
+    public void setShadowValueSi(String shadowValueSi) {
+        this.shadowValueSi = shadowValueSi;
+    }
+
+    public String getShadowUomSiName() {
+        return shadowUomSiName;
+    }
+
+    public void setShadowUomSiName(String shadowUomSiName) {
+        this.shadowUomSiName = shadowUomSiName;
+    }
+
+    public String getShadowUom() {
+        return shadowUom;
+    }
+
+    public void setShadowUom(String shadowUom) {
+        this.shadowUom = shadowUom;
+    }
+
+    public Double getMinNormalSi() {
+        return minNormalSi;
+    }
+
+    public void setMinNormalSi(Double minNormalSi) {
+        this.minNormalSi = minNormalSi;
+    }
+
+    public Double getMaxNormalSi() {
+        return maxNormalSi;
+    }
+
+    public void setMaxNormalSi(Double maxNormalSi) {
+        this.maxNormalSi = maxNormalSi;
     }
 
     public String getResultType() {

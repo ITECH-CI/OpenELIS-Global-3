@@ -48,7 +48,6 @@ const AddOrder = (props) => {
   const [siteNames, setSiteNames] = useState([]);
   const [innitialized, setInnitialized] = useState(false);
   const [departments, setDepartments] = useState([]);
-  const [value, setValue] = useState("");
   const epiWeekOptions = Array.from({ length: 52 }, (_, index) => {
     const weekNumber = index + 1;
     return {
@@ -67,8 +66,26 @@ const AddOrder = (props) => {
   }, []);
 
   const handleChangeUpper = (e) => {
-    const upperValue = e.target.value.toUpperCase();
-    setValue(upperValue);
+    // CustomTextInput peut passer directement une valeur (string) ou un événement
+    let upperValue;
+    if (typeof e === 'string') {
+      // Si c'est déjà une string (venant de CustomTextInput), on l'utilise directement
+      upperValue = e;
+    } else if (e && e.target) {
+      // Si c'est un événement, on extrait la valeur
+      upperValue = e.target.value.toUpperCase();
+    } else {
+      return;
+    }
+
+    const updatedOrderFormValues = {
+      ...orderFormValues,
+      sampleOrderItems: {
+        ...orderFormValues.sampleOrderItems,
+        clinicalInformations: upperValue,
+      },
+    };
+    setOrderFormValues(updatedOrderFormValues);
   };
   const handleDatePickerChange = (datePicker, date) => {
     let obj = null;
@@ -229,7 +246,8 @@ const AddOrder = (props) => {
         title: intl.formatMessage({ id: "notification.title" }),
         message: intl.formatMessage({
           id: "notification.unsaved.labnumber",
-          defaultMessage: "Veuillez enregistrer le numéro de laboratoire actuel avant d'en générer un nouveau."
+          defaultMessage:
+            "Veuillez enregistrer le numéro de laboratoire actuel avant d'en générer un nouveau.",
         }),
       });
       return;
@@ -604,18 +622,24 @@ const AddOrder = (props) => {
               {" "}
               &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;{" "}
             </Column>
-              {isBacterio && (
-           <Column lg={8} md={4} sm={4}>
-              <Select
-                className="orderType"
-                id={"orderType"}
-                name="orderType"
-                labelText={intl.formatMessage({ id: "sample.order.type" })}
-                required
-              >
-              <SelectItem value="IN" text={intl.formatMessage({ id: "sample.order.type.in" })}/>
-              <SelectItem value="OUT" text={intl.formatMessage({ id: "sample.order.type.out" })} />
-              </Select>
+            {isBacterio && (
+              <Column lg={8} md={4} sm={4}>
+                <Select
+                  className="orderType"
+                  id={"orderType"}
+                  name="orderType"
+                  labelText={intl.formatMessage({ id: "sample.order.type" })}
+                  required
+                >
+                  <SelectItem
+                    value="IN"
+                    text={intl.formatMessage({ id: "sample.order.type.in" })}
+                  />
+                  <SelectItem
+                    value="OUT"
+                    text={intl.formatMessage({ id: "sample.order.type.out" })}
+                  />
+                </Select>
               </Column>
             )}
             <Column lg={16} md={8} sm={3}>
@@ -1003,7 +1027,7 @@ const AddOrder = (props) => {
               <Column lg={8} md={4} sm={4}>
                 <CustomTextInput
                   id={"clinicalInformations"}
-                  value={value}
+                  value={orderFormValues.sampleOrderItems.clinicalInformations || ""}
                   style={{ textTransform: "uppercase" }}
                   onChange={handleChangeUpper}
                   labelText={intl.formatMessage({

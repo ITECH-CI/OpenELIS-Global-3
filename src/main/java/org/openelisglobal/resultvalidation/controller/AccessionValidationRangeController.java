@@ -554,9 +554,10 @@ public class AccessionValidationRangeController extends BaseResultValidationCont
         ResultSaveService resultSaveService = new ResultSaveService(analysis, getSysUserId(request));
         List<Result> results = resultSaveService.createResultsFromTestResultItem(bean, deletableList);
         if (analysisService.patientReportHasBeenDone(analysis) && resultSaveService.isUpdatedResult()) {
+            // Ne plus enregistrer la note "Résultat corrigé"
             analysis.setCorrectedSincePatientReport(true);
-            noteUpdateList.add(noteService.createSavableNote(analysis, NoteType.EXTERNAL,
-                    MessageUtil.getMessage("note.corrected.result"), RESULT_SUBJECT, getSysUserId(request)));
+            // noteUpdateList.add(noteService.createSavableNote(analysis, NoteType.EXTERNAL,
+            //         MessageUtil.getMessage("note.corrected.result"), RESULT_SUBJECT, getSysUserId(request)));
         }
         return results;
     }

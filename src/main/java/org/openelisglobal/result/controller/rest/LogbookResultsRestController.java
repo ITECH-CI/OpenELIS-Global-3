@@ -134,7 +134,8 @@ public class LogbookResultsRestController extends LogbookResultsBaseController {
             "testResult*.qualifiedResultValue", "testResult*.qualifiedResultValue", "testResult*.shadowReferredOut",
             "testResult*.referredOut", "testResult*.referralReasonId", "testResult*.technician",
             "testResult*.shadowRejected", "testResult*.rejected", "testResult*.rejectReasonId", "testResult*.note",
-            "paging.currentPage", //
+            "testResult*.shadowValueSi", "testResult*.shadowUomSiName", "testResult*.shadowUom",
+            "testResult*.minNormalSi", "testResult*.maxNormalSi", "paging.currentPage", //
             "testResult*.refer", "testResult*.referralItem.referralReasonId",
             "testResult*.referralItem.referredInstituteId", "testResult*.referralItem.referredTestId",
             "testResult*.referralItem.referredSendDate" };
@@ -416,6 +417,9 @@ public class LogbookResultsRestController extends LogbookResultsBaseController {
             @Validated(LogbookResultsForm.LogbookResults.class) @RequestBody LogbookResultsForm form,
             BindingResult result) throws IllegalAccessException, InvocationTargetException, NoSuchMethodException {
 
+        LogEvent.logInfo(this.getClass().getSimpleName(), "showReactLogbookResultsUpdate",
+                "=== Starting LogbookResults POST endpoint ===");
+
         boolean useTechnicianName = ConfigurationProperties.getInstance()
                 .isPropertyValueEqual(Property.resultTechnicianName, "true");
         boolean alwaysValidate = ConfigurationProperties.getInstance()
@@ -457,6 +461,13 @@ public class LogbookResultsRestController extends LogbookResultsBaseController {
 
         List<IResultUpdate> updaters = ResultUpdateRegister.getRegisteredUpdaters();
 
+        LogEvent.logInfo(this.getClass().getSimpleName(), "showReactLogbookResultsUpdate",
+                "Retrieved " + updaters.size() + " updaters from ResultUpdateRegister");
+        for (IResultUpdate updater : updaters) {
+            LogEvent.logInfo(this.getClass().getSimpleName(), "showReactLogbookResultsUpdate",
+                    "Updater registered: " + updater.getClass().getSimpleName());
+        }
+
         ResultsPaging paging = new ResultsPaging();
         paging.updatePagedResults(request, form);
         List<TestResultItem> tests = paging.getResults(request);
@@ -473,9 +484,15 @@ public class LogbookResultsRestController extends LogbookResultsBaseController {
         createResultsFromItems(actionDataSet, supportReferrals, alwaysValidate, useTechnicianName, statusRuleSet);
         createAnalysisOnlyUpdates(actionDataSet);
 
+        LogEvent.logInfo(this.getClass().getSimpleName(), "showReactLogbookResultsUpdate",
+                "About to call logbookPersistService.persistDataSet with " + updaters.size() + " updaters");
+
         try {
             List<Analysis> reflexAnalysises = logbookPersistService.persistDataSet(actionDataSet, updaters,
                     getSysUserId(request));
+
+            LogEvent.logInfo(this.getClass().getSimpleName(), "showReactLogbookResultsUpdate",
+                    "Returned from logbookPersistService.persistDataSet");
             reflexMap.put("reflex", reflexAnalysises.stream().filter(e -> !e.getResultCalculated())
                     .map(e -> analysisService.getOrderAccessionNumber(e)).collect(Collectors.toList()));
             reflexMap.put("calculated", reflexAnalysises.stream().filter(e -> e.getResultCalculated())

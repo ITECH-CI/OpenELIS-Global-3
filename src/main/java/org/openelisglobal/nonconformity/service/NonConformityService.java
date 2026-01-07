@@ -2,10 +2,8 @@ package org.openelisglobal.nonconformity.service;
 
 import java.sql.Date;
 import java.util.List;
-
 import org.openelisglobal.common.service.BaseObjectService;
 import org.openelisglobal.nonconformity.valueholder.NonConformity;
-
 
 public interface NonConformityService extends BaseObjectService<NonConformity, String> {
 
@@ -19,9 +17,8 @@ public interface NonConformityService extends BaseObjectService<NonConformity, S
 
     List<NonConformity> getNonConformitiesByStatus(String status);
 
-    List<NonConformity> searchNonConformities(String siteProvenance, String sampleType,
-                                              String rejectionReason, Date startDate,
-                                              Date endDate, String status);
+    List<NonConformity> searchNonConformities(String siteProvenance, String sampleType, String rejectionReason,
+            Date startDate, Date endDate, String status);
 
     String generateNextNcNumber();
 

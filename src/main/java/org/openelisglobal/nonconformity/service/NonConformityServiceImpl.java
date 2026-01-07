@@ -3,7 +3,6 @@ package org.openelisglobal.nonconformity.service;
 import java.sql.Date;
 import java.text.SimpleDateFormat;
 import java.util.List;
-
 import org.openelisglobal.common.service.AuditableBaseObjectServiceImpl;
 import org.openelisglobal.nonconformity.dao.NonConformityDAO;
 import org.openelisglobal.nonconformity.valueholder.NonConformity;
@@ -14,7 +13,6 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class NonConformityServiceImpl extends AuditableBaseObjectServiceImpl<NonConformity, String>
         implements NonConformityService {
-
 
     @Autowired
     protected NonConformityDAO baseObjectDAO;
@@ -61,11 +59,10 @@ public class NonConformityServiceImpl extends AuditableBaseObjectServiceImpl<Non
 
     @Override
     @Transactional(readOnly = true)
-    public List<NonConformity> searchNonConformities(String siteProvenance, String sampleType,
-                                                     String rejectionReason, Date startDate,
-                                                     Date endDate, String status) {
-        return baseObjectDAO.searchNonConformities(siteProvenance, sampleType, rejectionReason,
-                startDate, endDate, status);
+    public List<NonConformity> searchNonConformities(String siteProvenance, String sampleType, String rejectionReason,
+            Date startDate, Date endDate, String status) {
+        return baseObjectDAO.searchNonConformities(siteProvenance, sampleType, rejectionReason, startDate, endDate,
+                status);
     }
 
     @Override
@@ -96,5 +93,5 @@ public class NonConformityServiceImpl extends AuditableBaseObjectServiceImpl<Non
         int nextNumber = maxNumber + 1;
         return prefix + String.format("%04d", nextNumber);
     }
-    
+
 }

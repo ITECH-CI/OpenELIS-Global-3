@@ -297,6 +297,18 @@ function TestManagementConfigMenu() {
                 </ClickableTile>
                 <br />
                 <ClickableTile
+                  href="/admin#SiConversionManagement"
+                  id="SiConversionManagement"
+                >
+                  <FormattedMessage id="configuration.siconversion.manage" />
+                  <UnorderedList nested>
+                    <ListItem>
+                      <FormattedMessage id="configuration.siconversion.manage.explain" />
+                    </ListItem>
+                  </UnorderedList>
+                </ClickableTile>
+                <br />
+                <ClickableTile
                   href="/admin#PanelManagement"
                   id="PanelManagement"
                 >

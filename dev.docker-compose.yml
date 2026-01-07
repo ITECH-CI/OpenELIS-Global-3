@@ -37,11 +37,11 @@ services:
             retries: 10 
             
     oe.openelis.org:
-        container_name: openelisglobal-webapp 
-        # build:
-        #     context: .
-        #     dockerfile: Dockerfile.dev
-        image: itechuw/openelis-global-2-dev:develop 
+        container_name: openelisglobal-webapp
+        build:
+            context: .
+            dockerfile: Dockerfile.dev
+        # image: itechuw/openelis-global-2-dev:develop
         platform: linux/amd64
         depends_on:
             - database
@@ -55,7 +55,7 @@ services:
               ipv4_address: 172.20.1.121
         environment:
             - DEFAULT_PW=adminADMIN! 
-            - TZ=Africa/Nairobi
+            - TZ=Africa/Abidjan
               # context.xml doesn't seem to be able to pick up environment variables directly, so we are passing them in as CATALINA_OPTS
             - CATALINA_OPTS= -Ddatasource.url=jdbc:postgresql://database:5432/clinlims -Ddatasource.username=clinlims
         volumes:
@@ -64,7 +64,7 @@ services:
             - ./volume/logs/oeLogs:/var/lib/openelis-global/logs
             - ./volume/logs/tomcatLogs/:/usr/local/tomcat/logs
             - ./volume/tomcat/oe_server.xml:/usr/local/tomcat/conf/server.xml
-            - ./target/OpenELIS-Global.war:/usr/local/tomcat/webapps/OpenELIS-Global.war
+            # - ./target/OpenELIS-Global.war:/usr/local/tomcat/webapps/OpenELIS-Global.war
             - ./volume/properties/SystemConfiguration.properties:/var/lib/openelis-global/properties/SystemConfiguration.properties
             - ./volume/odoo/odoo-test-product-mapping.csv:/var/lib/openelis-global/odoo/odoo-test-product-mapping.csv
             -  lucene_index-vol:/var/lib/lucene_index
@@ -89,7 +89,7 @@ services:
         restart: always
         environment:
           SPRING_CONFIG_LOCATION: file:///run/secrets/hapi_application.yaml
-          TZ: Africa/Nairobi
+          TZ: Africa/Abidjan
 
           JAVA_OPTS: "-Djavax.net.ssl.trustStore=/etc/openelis-global/truststore 
                       -Djavax.net.ssl.trustStorePassword=tspass

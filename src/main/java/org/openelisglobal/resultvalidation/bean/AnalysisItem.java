@@ -31,6 +31,8 @@ public class AnalysisItem implements Serializable {
 
     private String units;
 
+    private String unitOfMeasureName;
+
     private String testName;
 
     @ValidAccessionNumber(groups = { ResultValidationForm.ResultValidation.class })
@@ -80,6 +82,10 @@ public class AnalysisItem implements Serializable {
     private double lowerCritical;
     private double higherCritical;
     private String normalRange;
+    private double upperNormalRange = 0;
+    private double lowerNormalRange = 0;
+    private double upperAbnormalRange = 0;
+    private double lowerAbnormalRange = 0;
 
     @SafeHtml(level = SafeHtml.SafeListLevel.NONE, groups = { ResultValidationForm.ResultValidation.class })
     private String resultType;
@@ -194,6 +200,16 @@ public class AnalysisItem implements Serializable {
     private boolean isNormal;
 
     private String priority;
+
+    // SI unit conversion fields
+    private String valueSi;
+    private String uomSiName;
+    private Double minNormalSi;
+    private Double maxNormalSi;
+
+    // Sample interpretation - one note per sample (labNo), not per result
+    @SafeHtml(level = SafeHtml.SafeListLevel.NONE, groups = { ResultValidationForm.ResultValidation.class })
+    private String sampleInterpretation;
 
     public String getRejectReasonId() {
         return rejectReasonId;
@@ -790,6 +806,38 @@ public class AnalysisItem implements Serializable {
         this.higherCritical = higherCritical;
     }
 
+    public double getUpperNormalRange() {
+        return upperNormalRange;
+    }
+
+    public void setUpperNormalRange(double upperNormalRange) {
+        this.upperNormalRange = upperNormalRange;
+    }
+
+    public double getLowerNormalRange() {
+        return lowerNormalRange;
+    }
+
+    public void setLowerNormalRange(double lowerNormalRange) {
+        this.lowerNormalRange = lowerNormalRange;
+    }
+
+    public double getUpperAbnormalRange() {
+        return upperAbnormalRange;
+    }
+
+    public void setUpperAbnormalRange(double upperAbnormalRange) {
+        this.upperAbnormalRange = upperAbnormalRange;
+    }
+
+    public double getLowerAbnormalRange() {
+        return lowerAbnormalRange;
+    }
+
+    public void setLowerAbnormalRange(double lowerAbnormalRange) {
+        this.lowerAbnormalRange = lowerAbnormalRange;
+    }
+
     public String getGenscreenResult() {
         return genscreenResult;
     }
@@ -828,5 +876,53 @@ public class AnalysisItem implements Serializable {
 
     public void setPriority(String priority) {
         this.priority = priority;
+    }
+
+    public String getValueSi() {
+        return valueSi;
+    }
+
+    public void setValueSi(String valueSi) {
+        this.valueSi = valueSi;
+    }
+
+    public String getUomSiName() {
+        return uomSiName;
+    }
+
+    public String getUnitOfMeasureName() {
+        return unitOfMeasureName;
+    }
+
+    public void setUnitOfMeasureName(String unitOfMeasureName) {
+        this.unitOfMeasureName = unitOfMeasureName;
+    }
+
+    public void setUomSiName(String uomSiName) {
+        this.uomSiName = uomSiName;
+    }
+
+    public Double getMinNormalSi() {
+        return minNormalSi;
+    }
+
+    public void setMinNormalSi(Double minNormalSi) {
+        this.minNormalSi = minNormalSi;
+    }
+
+    public Double getMaxNormalSi() {
+        return maxNormalSi;
+    }
+
+    public void setMaxNormalSi(Double maxNormalSi) {
+        this.maxNormalSi = maxNormalSi;
+    }
+
+    public String getSampleInterpretation() {
+        return sampleInterpretation;
+    }
+
+    public void setSampleInterpretation(String sampleInterpretation) {
+        this.sampleInterpretation = sampleInterpretation;
     }
 }

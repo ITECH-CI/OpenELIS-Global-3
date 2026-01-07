@@ -20,6 +20,9 @@ public class NamedAnalyzerTestMapping {
     private String analyzerName;
     private String analyzerTestName;
     private String actualTestName;
+    private String methodName;
+    private String testId;
+    private String methodId;
     private String uniqueId;
     private static final String uniqueIdSeperator = "#";
 
@@ -45,6 +48,30 @@ public class NamedAnalyzerTestMapping {
 
     public void setActualTestName(String actualTestName) {
         this.actualTestName = actualTestName;
+    }
+
+    public String getMethodName() {
+        return methodName;
+    }
+
+    public void setMethodName(String methodName) {
+        this.methodName = methodName;
+    }
+
+    public String getTestId() {
+        return testId;
+    }
+
+    public void setTestId(String testId) {
+        this.testId = testId;
+    }
+
+    public String getMethodId() {
+        return methodId;
+    }
+
+    public void setMethodId(String methodId) {
+        this.methodId = methodId;
     }
 
     public void setUniqueId(String uniqueId) {

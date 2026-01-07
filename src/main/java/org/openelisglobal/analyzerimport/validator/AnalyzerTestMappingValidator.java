@@ -45,10 +45,10 @@ public class AnalyzerTestMappingValidator implements Validator {
     }
 
     public void preUpdateValidate(AnalyzerTestMapping analyzerTestMapping, Errors errors) {
-        validate(analyzerTestMapping, errors);
-
-        // ValidationHelper.validateIdField(analyzerTestMapping.getId(), "id", errors,
-        // true);
+        // For UPDATE, we only validate fields that can be changed (testId, methodId)
+        // We don't validate analyzerTestName because it's part of the composite key and cannot be changed
+        ValidationHelper.validateIdField(analyzerTestMapping.getAnalyzerId(), "analyzerId", errors, true);
+        ValidationHelper.validateIdField(analyzerTestMapping.getTestId(), "testId", errors, true);
         ValidationHelper.validateIdField(analyzerTestMapping.getStringId(), "id", errors, true);
     }
 }

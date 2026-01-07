@@ -51,8 +51,6 @@ public class NonConformingEventsCorrectionActionRestController extends BaseRestC
 
         searchResults = ncEventService.getAllMatching(searchParameters);
 
-        System.out.println("search Results Size" + searchResults.size());
-
         nceForm.setnceEventsSearchResults(searchResults);
         nceForm.setReportingUnits(
                 DisplayListService.getInstance().getList(DisplayListService.ListType.TEST_SECTION_ACTIVE));

@@ -1,0 +1,12 @@
+derived_test_name,from_uom,to_uom_si,expression,decimals
+CCMH,10^6/µl,g/dL,Hb x 100 / HCT,
+Concentration Corpusculaire Moyenne en Hémoglobine,g/dL,g/dL,Hb x 100 / HCT,
+Lymphocytes (Abs),/mm3,/mm3,GB x Lymph %,
+Monocytes (Abs),/mm3,/mm3,GB x Mono %,
+Polynucléaires basophiles (Abs),/mm3,/mm3,GB x Baso %,
+Polynucléaires Eosinophiles (Abs),/mm3,/mm3,GB x Eo %,
+Polynucléaires Neutrophiles (Abs),/mm3,/mm3,GB x Ne %,
+TCMH,g/dL,pg,Hb x 10 / GR,
+Teneur Corpusculaire Moyenne en Hémoglobine,pg,pg,Hb x 10 / GR,
+VGM,pg,fl,HCT x 10 / GR,
+Volume Globulaire Moyen,fl,fl,HCT x 10 / GR,

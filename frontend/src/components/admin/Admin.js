@@ -89,6 +89,7 @@ import TestSectionRenameEntry from "./testManagementConfigMenu/TestSectionRename
 import UomRenameEntry from "./testManagementConfigMenu/UomRenameEntry.js";
 import SelectListRenameEntry from "./testManagementConfigMenu/SelectListRenameEntry.js";
 import MethodRenameEntry from "./testManagementConfigMenu/MethodRenameEntry.js";
+import SiConversionManagement from "./testManagementConfigMenu/SiConversionManagement.js";
 
 function Admin() {
   const intl = useIntl();
@@ -476,6 +477,9 @@ function Admin() {
       </PathRoute>
       <PathRoute path="#MethodRenameEntry">
         <MethodRenameEntry />
+      </PathRoute>
+      <PathRoute path="#SiConversionManagement">
+        <SiConversionManagement />
       </PathRoute>
 
       <PathRoute path="#NonConformityConfigurationMenu">

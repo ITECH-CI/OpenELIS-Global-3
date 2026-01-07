@@ -318,7 +318,6 @@ public class DictionaryRestController extends BaseController {
         return dictList;
     }
 
-
     @RequestMapping(value = "/qaevents-dictionnary", method = RequestMethod.GET)
     public List<IdValuePair> getDictionayByCategory() {
         List<IdValuePair> dictList = new ArrayList<>();

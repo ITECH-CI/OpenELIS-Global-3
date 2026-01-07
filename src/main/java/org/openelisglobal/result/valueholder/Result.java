@@ -14,8 +14,10 @@
 package org.openelisglobal.result.valueholder;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import java.sql.Timestamp;
 import java.util.Objects;
 import java.util.UUID;
+import org.hibernate.Hibernate;
 import org.openelisglobal.analysis.valueholder.Analysis;
 import org.openelisglobal.analyte.valueholder.Analyte;
 import org.openelisglobal.common.util.StringUtil;
@@ -24,6 +26,8 @@ import org.openelisglobal.common.valueholder.ValueHolder;
 import org.openelisglobal.common.valueholder.ValueHolderInterface;
 import org.openelisglobal.dataexchange.orderresult.OrderResponseWorker.Event;
 import org.openelisglobal.testresult.valueholder.TestResult;
+import org.openelisglobal.testunitconversion.valueholder.TestUnitConversion;
+import org.openelisglobal.unitofmeasure.valueholder.UnitOfMeasure;
 import org.springframework.beans.factory.annotation.Value;
 
 public class Result extends EnumValueItemImpl {
@@ -49,6 +53,14 @@ public class Result extends EnumValueItemImpl {
     private Integer virralloadLowLimit;
 
     private Event resultEvent;
+
+    // SI unit conversion fields
+    private String valueSi;
+    private UnitOfMeasure uomSi;
+    private TestUnitConversion siRule;
+    private Timestamp siLastupdated;
+    private Double minNormalSi;
+    private Double maxNormalSi;
 
     public Result() {
         super();
@@ -128,7 +140,7 @@ public class Result extends EnumValueItemImpl {
         if (workingResult.toLowerCase().contains("log7") || workingResult.contains(">")) {
             finalResult = 10000000;
         } else if (workingResult.toUpperCase().contains("LL") || workingResult.contains("<")) {
-            finalResult = virralloadLowLimit;
+            finalResult = virralloadLowLimit != null ? virralloadLowLimit : 0;
         } else {
             try {
                 finalResult = Long.parseLong(workingResult.replaceAll("[^0-9]", ""));
@@ -220,6 +232,79 @@ public class Result extends EnumValueItemImpl {
 
     public void setVirralloadLowLimit(Integer virralloadLowLimit) {
         this.virralloadLowLimit = virralloadLowLimit;
+    }
+
+    public String getValueSi() {
+        return valueSi;
+    }
+
+    public void setValueSi(String valueSi) {
+        this.valueSi = valueSi;
+    }
+
+    @JsonIgnore
+    public UnitOfMeasure getUomSi() {
+        return uomSi;
+    }
+
+    public void setUomSi(UnitOfMeasure uomSi) {
+        this.uomSi = uomSi;
+    }
+
+    @JsonIgnore
+    public TestUnitConversion getSiRule() {
+        return siRule;
+    }
+
+    public void setSiRule(TestUnitConversion siRule) {
+        this.siRule = siRule;
+    }
+
+    public Timestamp getSiLastupdated() {
+        return siLastupdated;
+    }
+
+    public void setSiLastupdated(Timestamp siLastupdated) {
+        this.siLastupdated = siLastupdated;
+    }
+
+    public Double getMinNormalSi() {
+        return minNormalSi;
+    }
+
+    public void setMinNormalSi(Double minNormalSi) {
+        this.minNormalSi = minNormalSi;
+    }
+
+    public Double getMaxNormalSi() {
+        return maxNormalSi;
+    }
+
+    public void setMaxNormalSi(Double maxNormalSi) {
+        this.maxNormalSi = maxNormalSi;
+    }
+
+    /**
+     * Get the SI unit of measure name for JSON serialization. Handles lazy-loaded
+     * proxy safely.
+     * 
+     * @return The unit name or null if no SI UOM is set
+     */
+    public String getUomSiName() {
+        if (uomSi == null) {
+            return null;
+        }
+        // Check if the proxy is initialized to avoid LazyInitializationException
+        if (!Hibernate.isInitialized(uomSi)) {
+            try {
+                Hibernate.initialize(uomSi);
+            } catch (Exception e) {
+                // Session might be closed, cannot load - return null
+                // This can happen when accessing results outside an active transaction
+                return null;
+            }
+        }
+        return uomSi.getUnitOfMeasureName();
     }
 
     @Override

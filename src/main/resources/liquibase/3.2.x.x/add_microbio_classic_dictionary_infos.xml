@@ -1,0 +1,305 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+    <!-- dictionary category -->
+    <changeSet author="CIV developer Group" id="2024112216"
+        >
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0"><![CDATA[
+SELECT count(*) FROM
+                clinlims.dictionary_category WHERE description = 'Prescription Type'
+]]></sqlCheck>
+        </preConditions>
+        <insert tableName="dictionary_category" schemaName="clinlims">
+            <column name="id" valueSequenceNext="dictionary_category_seq" />
+            <column name="description" value="Prescription Type" />
+            <column name="lastupdated" valueDate="now()" />
+            <column name="local_abbrev" value="PrescType" />
+            <column name="name" value="Prescription Type" />
+        </insert>
+    </changeSet>
+    <changeSet author="CIV developer Group" id="2025012001"
+        >
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0"><![CDATA[
+                SELECT count(*) FROM
+                clinlims.dictionary_category WHERE description = 'Germ Identification']]></sqlCheck>
+        </preConditions>
+        <insert tableName="dictionary_category" schemaName="clinlims">
+            <column name="id" valueSequenceNext="dictionary_category_seq" />
+            <column name="description" value="Germ Identification" />
+            <column name="lastupdated" valueDate="now()" />
+            <column name="local_abbrev" value="GermIdent" />
+            <column name="name" value="Germ Identification" />
+        </insert>
+    </changeSet>
+    <changeSet author="CIV developer Group" id="2025012002"
+        >
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0"><![CDATA[
+                SELECT count(*) FROM
+                clinlims.dictionary_category WHERE description = 'Bacteria']]></sqlCheck>
+        </preConditions>
+        <insert tableName="dictionary_category" schemaName="clinlims">
+            <column name="id" valueSequenceNext="dictionary_category_seq" />
+            <column name="description" value="Bacteria" />
+            <column name="lastupdated" valueDate="now()" />
+            <column name="local_abbrev" value="Bacteria" />
+            <column name="name" value="Bacteria" />
+        </insert>
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="2025013000"
+        >
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0"><![CDATA[
+            SELECT count(*) FROM
+                clinlims.dictionary_category WHERE description = 'Statut']]>
+            </sqlCheck>
+        </preConditions>
+        <insert tableName="dictionary_category" schemaName="clinlims">
+            <column name="id" valueSequenceNext="dictionary_category_seq" />
+            <column name="description" value="Statut" />
+            <column name="lastupdated" valueDate="now()" />
+            <column name="local_abbrev" value="Stat" />
+            <column name="name" value="Statut" />
+        </insert>
+    </changeSet>
+
+
+    <changeSet author="CIV developer Group" id="2025010910"
+        >
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0"><![CDATA[
+            SELECT count(*) FROM
+                clinlims.dictionary_category WHERE description = 'Bacteriology Culture Result']]></sqlCheck>
+        </preConditions>
+        <insert tableName="dictionary_category" schemaName="clinlims">
+            <column name="id" valueSequenceNext="dictionary_category_seq" />
+            <column name="description" value="Bacteriology Culture Result" />
+            <column name="lastupdated" valueDate="now()" />
+            <column name="local_abbrev" value="CultRes" />
+            <column name="name" value="Bacteriology Culture Result" />
+        </insert>
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="2025011405"
+        >
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0"><![CDATA[SELECT count(*) FROM
+                clinlims.dictionary_category WHERE description = 'CultureCol']]>
+            </sqlCheck>
+        </preConditions>
+        <insert tableName="dictionary_category" schemaName="clinlims">
+            <column name="id" valueSequenceNext="dictionary_category_seq" />
+            <column name="description" value="CultureCol" />
+            <column name="lastupdated" valueDate="now()" />
+            <column name="local_abbrev" value="cultcol" />
+            <column name="name" value="CultureCol" />
+        </insert>
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="2025040001"
+        >
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0"><![CDATA[
+SELECT count(*) FROM
+                clinlims.dictionary_category WHERE description = 'Bacterial Count'
+]]></sqlCheck>
+        </preConditions>
+        <insert tableName="dictionary_category" schemaName="clinlims">
+            <column name="id" valueSequenceNext="dictionary_category_seq" />
+            <column name="description" value="Bacterial Count" />
+            <column name="lastupdated" valueDate="now()" />
+            <column name="local_abbrev" value="BactCnt" />
+            <column name="name" value="Bacterial Count" />
+        </insert>
+    </changeSet>
+
+
+    <changeSet author="CIV developer Group" id="2025060128"
+        >
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0"><![CDATA[SELECT count(*) FROM
+                clinlims.dictionary_category WHERE description = 'colLeucore']]>
+            </sqlCheck>
+        </preConditions>
+        <insert tableName="dictionary_category" schemaName="clinlims">
+            <column name="id" valueSequenceNext="dictionary_category_seq" />
+            <column name="description" value="colLeucore" />
+            <column name="lastupdated" valueDate="now()" />
+            <column name="local_abbrev" value="leuc" />
+            <column name="name" value="colLeucore" />
+        </insert>
+    </changeSet>
+
+
+    <changeSet author="CIV developer Group" id="2025060131"
+        >
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0"><![CDATA[SELECT count(*) FROM
+                clinlims.dictionary_category WHERE description = 'vaginalAbondance']]>
+            </sqlCheck>
+        </preConditions>
+        <insert tableName="dictionary_category" schemaName="clinlims">
+            <column name="id" valueSequenceNext="dictionary_category_seq" />
+            <column name="description" value="vaginalAbondance" />
+            <column name="lastupdated" valueDate="now()" />
+            <column name="local_abbrev" value="vagAbon" />
+            <column name="name" value="vaginalAbondance" />
+        </insert>
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="2025060134"
+        >
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0"><![CDATA[SELECT count(*) FROM
+                clinlims.dictionary_category WHERE description = 'vaginalAspect']]>
+            </sqlCheck>
+        </preConditions>
+        <insert tableName="dictionary_category" schemaName="clinlims">
+            <column name="id" valueSequenceNext="dictionary_category_seq" />
+            <column name="description" value="vaginalAspect" />
+            <column name="lastupdated" valueDate="now()" />
+            <column name="local_abbrev" value="vagAspe" />
+            <column name="name" value="vaginalAspect" />
+        </insert>
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="2025060137"
+        >
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0"><![CDATA[SELECT count(*) FROM
+                clinlims.dictionary_category WHERE description = 'vaginalCouleur']]>
+            </sqlCheck>
+        </preConditions>
+        <insert tableName="dictionary_category" schemaName="clinlims">
+            <column name="id" valueSequenceNext="dictionary_category_seq" />
+            <column name="description" value="vaginalCouleur" />
+            <column name="lastupdated" valueDate="now()" />
+            <column name="local_abbrev" value="vagCoul" />
+            <column name="name" value="vaginalCouleur" />
+        </insert>
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="2025060138"
+        >
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0"><![CDATA[SELECT count(*) FROM
+                clinlims.dictionary_category WHERE description = 'vaginalAutre']]>
+            </sqlCheck>
+        </preConditions>
+        <insert tableName="dictionary_category" schemaName="clinlims">
+            <column name="id" valueSequenceNext="dictionary_category_seq" />
+            <column name="description" value="vaginalAutre" />
+            <column name="lastupdated" valueDate="now()" />
+            <column name="local_abbrev" value="vagAutre" />
+            <column name="name" value="vaginalAutre" />
+        </insert>
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="2025060200"
+        >
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0"><![CDATA[SELECT count(*) FROM
+                clinlims.dictionary_category WHERE description = 'uretreAspect']]>
+            </sqlCheck>
+        </preConditions>
+        <insert tableName="dictionary_category" schemaName="clinlims">
+            <column name="id" valueSequenceNext="dictionary_category_seq" />
+            <column name="description" value="uretreAspect" />
+            <column name="lastupdated" valueDate="now()" />
+            <column name="local_abbrev" value="urAspec" />
+            <column name="name" value="uretreAspect" />
+        </insert>
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="2024112247">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="1"><![CDATA[
+SELECT count(*) FROM
+                clinlims.dictionary_category WHERE description = 'Prescription Type'
+                limit 1]]></sqlCheck>
+        </preConditions>
+        <sql><![CDATA[
+            INSERT INTO clinlims.dictionary (
+            id,
+            is_active,
+            dict_entry,
+            lastupdated,
+            local_abbrev,
+            dictionary_category_id,
+            display_key,
+            sort_order,
+            name_localization_id
+            ) VALUES
+            (nextval('dictionary_seq'),'Y','Internal Prescription',now(),'orderint',(SELECT id FROM
+            clinlims.dictionary_category WHERE description = 'Prescription Type'
+            LIMIT 1),'label.internal_prescription',70000,NULL),
+            (nextval('dictionary_seq'),'Y','External Prescription',now(),'orderext',(SELECT id FROM
+            clinlims.dictionary_category WHERE description = 'Prescription Type'
+            LIMIT 1),'label.external_prescription',70001,NULL);
+]]></sql>
+    </changeSet>
+    <changeSet author="CIV developer Group" id="20250121010">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="1"><![CDATA[
+                SELECT count(*) FROM
+                clinlims.dictionary_category WHERE description = 'Bacteriology Culture Result' limit 1
+]]></sqlCheck>
+        </preConditions>
+        <sql><![CDATA[
+            INSERT INTO clinlims.dictionary (
+            id,
+            is_active,
+            dict_entry,
+            lastupdated,
+            local_abbrev,
+            dictionary_category_id,
+            display_key,
+            sort_order,
+            name_localization_id
+            ) VALUES
+            (nextval('dictionary_seq'),'Y','Contaminée',now(),'contaminee',(SELECT
+            id FROM clinlims.dictionary_category WHERE description =
+            'Bacteriology Culture Result' LIMIT 1),'dictionary.bacterio.contamine',70010,NULL),
+            (nextval('dictionary_seq'),'Y','Negative',now(),'negative',(SELECT id
+            FROM clinlims.dictionary_category WHERE description = 'Bacteriology Culture Result' LIMIT 1),
+            'dictionary.bacterio.negative',70011,NULL),
+            (nextval('dictionary_seq'),'Y','Positive Nombre de germes isolés 1',now(),'Positivegerm1',(SELECT id FROM clinlims.dictionary_category
+            WHERE description = 'Bacteriology Culture Result' LIMIT 1),'dictionary.bacterio.Positivegerm1',70012,NULL),
+            (nextval('dictionary_seq'),'Y','Positive Nombre de germes isolés 2',now(),'Positivegerm2',(SELECT id FROM clinlims.dictionary_category
+            WHERE description = 'Bacteriology Culture Result' LIMIT 1),'dictionary.bacterio.Positivegerm2',70013,NULL),
+            (nextval('dictionary_seq'),'Y','Positive Nombre de germes isolés 3',now(),'Positivegerm3',(SELECT id FROM clinlims.dictionary_category
+            WHERE description ='Bacteriology Culture Result' LIMIT 1),'dictionary.bacterio.Positivegerm3',70014,NULL);]]></sql>
+    </changeSet>
+    <changeSet author="CIV developer Group" id="2025031400">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="1">SELECT count(*) FROM
+                clinlims.dictionary_category WHERE description = 'CultureCol' limit
+                1
+            </sqlCheck>
+        </preConditions>
+        <sql>
+        <![CDATA[ INSERT INTO clinlims.dictionary (
+            id,
+            is_active,
+            dict_entry,
+            lastupdated,
+            local_abbrev,
+            dictionary_category_id,
+            display_key,
+            sort_order,
+            name_localization_id
+        ) VALUES
+            (nextval('dictionary_seq'),'Y','Negative',now(),'Negative',(SELECT id FROM clinlims.dictionary_category WHERE description = 'CultureCol' LIMIT 1),'dictionary.bacterio.contamine',70010,NULL),
+            (nextval('dictionary_seq'),'Y','Positive',now(),'Positive',(SELECT id FROM clinlims.dictionary_category WHERE description = 'CultureCol' LIMIT 1),'dictionary.bacterio.negative',70011,NULL),
+            (nextval('dictionary_seq'),'Y','Neisseria gonorrhoeae positive',now(),'gonoposi',(SELECT id FROM clinlims.dictionary_category WHERE description = 'CultureCol'  LIMIT 1),'dictionary.bacterio.Positivegerm1',70012,NULL),
+            (nextval('dictionary_seq'),'Y','Neisseria gonorrhoeae Negative',now(),'gononega',(SELECT id FROM clinlims.dictionary_category WHERE description = 'CultureCol'  LIMIT 1),'dictionary.bacterio.Positivegerm2',70013,NULL);
+        ]]>
+        </sql>
+    </changeSet>
+</databaseChangeLog>

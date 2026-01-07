@@ -1,0 +1,20 @@
+test_name,alias
+CCMH,Concentration Corpusculaire Moyenne en Hémoglobine
+Concentration Corpusculaire Moyenne en Hémoglobine,CCMH
+Hb,Hémoglobine
+HCT,Hématocrite
+Hématocrite,HCT
+Hémoglobine,Hb
+Lymph %,Lymphocytes (%)
+Lymphocytes (%),Lymph %
+Mono %,Monocytes (%)
+Monocytes (%),Mono %
+Numération des globules blancs,GB
+Numération des globules rouges,GR
+Plaquette,PLQ
+TCMH,Teneur Corpusculaire Moyenne en Hémoglobine
+Teneur Corpusculaire Moyenne en Hémoglobine,TCMH
+CD4 absolute count,Dénombrement des lymphocytes CD4 (mm3)
+CD4 percentage count,Dénombrement des lymphocytes  CD4 (%)
+Dénombrement des lymphocytes  CD4 (%),CD4 percentage count
+Dénombrement des lymphocytes CD4 (mm3),CD4 absolute count

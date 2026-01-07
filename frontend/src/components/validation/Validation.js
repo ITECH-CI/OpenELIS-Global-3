@@ -1,5 +1,4 @@
-import React, { useState, useContext, useEffect, useRef } from "react";
-import { Field, Formik } from "formik";
+import { Copy } from "@carbon/icons-react";
 import {
   Button,
   Checkbox,
@@ -7,23 +6,23 @@ import {
   Form,
   Grid,
   Pagination,
-  Select,
-  SelectItem,
   TextArea,
-  TextInput,
 } from "@carbon/react";
-import { Copy } from "@carbon/icons-react";
+import { Field, Formik } from "formik";
+import { useContext, useEffect, useRef, useState } from "react";
 import DataTable from "react-data-table-component";
 import { FormattedMessage, useIntl } from "react-intl";
-import ValidationSearchFormValues from "../formModel/innitialValues/ValidationSearchFormValues";
-import { NotificationKinds } from "../common/CustomNotification";
-import { postToOpenElisServer } from "../utils/Utils";
-import { NotificationContext } from "../layout/Layout";
-import { getFromOpenElisServer } from "../utils/Utils";
-import { ConfigurationContext } from "../layout/Layout";
-import { convertAlphaNumLabNumForDisplay } from "../utils/Utils";
 import config from "../../config.json";
+import { NotificationKinds } from "../common/CustomNotification";
+import SiValueDisplay from "../common/SiValueDisplay";
 import { priorities } from "../data/orderOptions";
+import ValidationSearchFormValues from "../formModel/innitialValues/ValidationSearchFormValues";
+import { ConfigurationContext, NotificationContext } from "../layout/Layout";
+import {
+  convertAlphaNumLabNumForDisplay,
+  postToOpenElisServer,
+} from "../utils/Utils";
+import { validateNumericResults } from "../utils/ResultValidationUtils";
 
 const Validation = (props) => {
   const componentMounted = useRef(false);
@@ -37,13 +36,45 @@ const Validation = (props) => {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(100);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [, forceUpdate] = useState({});
+  const [validationState, setValidationState] = useState({});
 
   useEffect(() => {
     componentMounted.current = true;
     return () => {
       componentMounted.current = false;
     };
-  }, []);
+  }, [props.results]);
+
+  // Validate numeric results for conditional formatting
+  useEffect(() => {
+    if (props.results?.resultList) {
+      let newValidationState = {};
+      props.results.resultList.forEach((row) => {
+        if (row.resultType === "N" && row.result) {
+          const validation = validateNumericResults(row.result, row);
+
+          // Add CSS classes based on validation
+          const classes = [];
+          if (validation.outsideValid) {
+            classes.push("result-outside-valid");
+          } else if (validation.outsideNormal) {
+            classes.push("result-outside-normal");
+          }
+
+          if (validation.isCritical) {
+            classes.push("result-critical");
+          } else if (validation.isInvalid) {
+            classes.push("result-invalid");
+          }
+
+          validation.className = classes.join(" ");
+          newValidationState[row.id] = validation;
+        }
+      });
+      setValidationState(newValidationState);
+    }
+  }, [props.results]);
 
   const columns = [
     {
@@ -188,6 +219,47 @@ const Validation = (props) => {
     var jp = require("jsonpath");
     jp.value(form, name, checked);
   };
+
+  const handleInterpretationChange = (e, sampleId) => {
+    const { value } = e.target;
+    const limitedValue = value.slice(0, 199);
+    let form = props.results;
+    var jp = require("jsonpath");
+
+    // Update interpretation for all results with the same sampleId
+    if (form.resultList) {
+      form.resultList.forEach((result, index) => {
+        if (result.sampleId === sampleId) {
+          jp.value(
+            form,
+            `resultList[${index}].sampleInterpretation`,
+            limitedValue,
+          );
+        }
+      });
+      // Force re-render to update the UI
+      forceUpdate({});
+    }
+  };
+
+  const getUniqueSamples = () => {
+    if (!props.results?.resultList) {
+      return [];
+    }
+
+    const samplesMap = new Map();
+    props.results.resultList.forEach((result) => {
+      if (result.sampleId && !samplesMap.has(result.sampleId)) {
+        samplesMap.set(result.sampleId, {
+          sampleId: result.sampleId,
+          accessionNumber: result.accessionNumber,
+          sampleInterpretation: result.sampleInterpretation || "",
+        });
+      }
+    });
+    return Array.from(samplesMap.values());
+  };
+
   const validateResults = (e, rowId) => {
     handleChange(e, rowId);
   };
@@ -203,7 +275,7 @@ const Validation = (props) => {
     const testName = fullTestName.substring(0, splitIndex);
     const sampleType = fullTestName.substring(splitIndex);
     switch (column.id) {
-      case "priority":
+      case "priority": {
         const priorityObj = priorities.find((p) => p.value === row.priority);
         return (
           <div
@@ -217,6 +289,7 @@ const Validation = (props) => {
             {priorityObj ? priorityObj.icon : null}
           </div>
         );
+      }
       case "sampleInfo":
         return (
           <>
@@ -349,7 +422,37 @@ const Validation = (props) => {
               </>
             );
           default:
-            return row.result;
+            // Get validation classes for numeric results
+            const validation = validationState[row.id];
+            const className = validation?.className || "";
+
+            // Display numeric results with SI conversion if available
+            if (row.valueSi && row.uomSiName) {
+              return (
+                <div className={className}>
+                  <SiValueDisplay
+                    traditionalValue={row.result}
+                    traditionalUom={row.unitOfMeasureName || ""}
+                    siValue={row.valueSi}
+                    siUom={row.uomSiName}
+                    className="compact"
+                    showTooltip={true}
+                    significantDigits={2}
+                  />
+                </div>
+              );
+            }
+            return (
+              <span className={className}>
+                {row.result}
+                {row.unitOfMeasureName && (
+                  <span className="uom">
+                    {"\u00a0"}
+                    {row.unitOfMeasureName}
+                  </span>
+                )}
+              </span>
+            );
         }
 
       default:
@@ -374,10 +477,10 @@ const Validation = (props) => {
               {" "}
               <FormattedMessage id="validation.label.nonconform" />
             </b>
-            <br/>
+            <br />
             {findPriorityByValue("ASAP").icon} ={" "}
             <FormattedMessage id="result.priority.asap" />
-            <br/>
+            <br />
             {findPriorityByValue("STAT").icon} ={" "}
             <FormattedMessage id="result.priority.stat" />
           </Column>
@@ -444,6 +547,38 @@ const Validation = (props) => {
       >
         {({ values, errors, touched, handleChange }) => (
           <Form onChange={handleChange}>
+            {/* Sample Interpretation Section - One per unique sample */}
+            {props.results?.resultList?.length > 0 && getUniqueSamples().length > 0 && (
+              <Grid className="gridBoundary" style={{ marginTop: "20px", marginBottom: "20px" }}>
+                <Column lg={16} md={8} sm={4}>
+                  <h6 style={{ marginBottom: "10px", fontWeight: "bold" }}>
+                    <FormattedMessage id="validation.sampleInterpretation.label" />
+                  </h6>
+                  {getUniqueSamples().map((sample) => (
+                    <div key={sample.sampleId} style={{ marginBottom: "15px" }}>
+                      <label style={{ display: "block", marginBottom: "5px", fontWeight: "500" }}>
+                        {intl.formatMessage({ id: "column.name.sampleInfo" })}:{" "}
+                        {configurationProperties.AccessionFormat === "ALPHANUM"
+                          ? convertAlphaNumLabNumForDisplay(sample.accessionNumber)
+                          : sample.accessionNumber}
+                      </label>
+                      <TextArea
+                        id={`interpretation-${sample.sampleId}`}
+                        labelText=""
+                        maxCount={200}
+                        placeholder={intl.formatMessage({
+                          id: "validation.sampleInterpretation.placeholder",
+                        })}
+                        value={sample.sampleInterpretation || ""}
+                        onChange={(e) => handleInterpretationChange(e, sample.sampleId)}
+                        rows={3}
+                        style={{ width: "100%" }}
+                      />
+                    </div>
+                  ))}
+                </Column>
+              </Grid>
+            )}
             <DataTable
               data={
                 props.results
@@ -455,6 +590,17 @@ const Validation = (props) => {
               }
               columns={columns}
               isSortable
+              customStyles={{
+                cells: {
+                  style: {
+                    '&:nth-child(5)': {
+                      // Target the result column (5th column)
+                      paddingLeft: '0px',
+                      paddingRight: '0px',
+                    },
+                  },
+                },
+              }}
             ></DataTable>
             <Pagination
               onChange={handlePageChange}

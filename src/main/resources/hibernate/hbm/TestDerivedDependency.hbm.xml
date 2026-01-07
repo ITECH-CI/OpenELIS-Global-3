@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping>
+    <class
+        name="org.openelisglobal.testunitconversion.valueholder.TestDerivedDependency"
+        table="test_derived_dependency" dynamic-update="true">
+        <id name="id"
+            type="org.openelisglobal.hibernate.resources.usertype.LIMSStringNumberUserType">
+            <column name="id" precision="10" scale="0" />
+            <generator
+                class="org.openelisglobal.hibernate.resources.StringSequenceGenerator">
+                <param name="sequence_name">test_derived_dependency_seq</param>
+            </generator>
+        </id>
+
+        <many-to-one name="derivedFormula"
+            class="org.openelisglobal.testunitconversion.valueholder.TestDerivedFormula"
+            fetch="select">
+            <column name="derived_formula_id" precision="10" scale="0"
+                not-null="true" />
+        </many-to-one>
+        <many-to-one name="sourceTest"
+            class="org.openelisglobal.test.valueholder.Test" fetch="select">
+            <column name="source_test_id" precision="10" scale="0"
+                not-null="true" />
+        </many-to-one>
+    </class>
+</hibernate-mapping>

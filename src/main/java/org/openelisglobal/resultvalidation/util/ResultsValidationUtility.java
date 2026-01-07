@@ -50,6 +50,7 @@ import org.openelisglobal.internationalization.MessageUtil;
 import org.openelisglobal.note.service.NoteService;
 import org.openelisglobal.note.service.NoteServiceImpl.NoteType;
 import org.openelisglobal.observationhistory.service.ObservationHistoryService;
+import org.openelisglobal.observationhistory.service.ObservationHistoryServiceImpl.ObservationType;
 import org.openelisglobal.observationhistory.valueholder.ObservationHistory;
 import org.openelisglobal.observationhistorytype.service.ObservationHistoryTypeService;
 import org.openelisglobal.observationhistorytype.valueholder.ObservationHistoryType;
@@ -447,6 +448,40 @@ public class ResultsValidationUtility {
 
         testItem.setNormalResult(isNormalResult(analysis, result));
 
+        // Populate SI unit conversion fields
+        if (result != null) {
+            testItem.setValueSi(result.getValueSi());
+            testItem.setMinNormalSi(result.getMinNormalSi());
+            testItem.setMaxNormalSi(result.getMaxNormalSi());
+
+            // Get traditional UOM name
+            if (test.getUnitOfMeasure() != null) {
+                testItem.setUom(test.getUnitOfMeasure().getName());
+            }
+
+            // Get SI UOM name - load from database to avoid lazy loading issues
+            try {
+                if (result.getUomSi() != null) {
+                    String uomSiId = result.getUomSi().getId();
+                    if (uomSiId != null) {
+                        org.openelisglobal.unitofmeasure.service.UnitOfMeasureService uomService = org.openelisglobal.spring.util.SpringContext
+                                .getBean(org.openelisglobal.unitofmeasure.service.UnitOfMeasureService.class);
+                        org.openelisglobal.unitofmeasure.valueholder.UnitOfMeasure loadedUomSi = uomService
+                                .get(uomSiId);
+                        if (loadedUomSi != null) {
+                            testItem.setUomSiName(loadedUomSi.getUnitOfMeasureName());
+                        }
+                    }
+                }
+            } catch (org.hibernate.LazyInitializationException e) {
+                org.openelisglobal.common.log.LogEvent.logDebug(this.getClass().getSimpleName(), "createTestResultItem",
+                        "UOM SI proxy not initialized");
+            } catch (Exception e) {
+                org.openelisglobal.common.log.LogEvent.logWarn(this.getClass().getSimpleName(), "createTestResultItem",
+                        "Could not load SI UOM name: " + e.getMessage());
+            }
+        }
+
         return testItem;
     }
 
@@ -458,6 +493,14 @@ public class ResultsValidationUtility {
                     resultLimit.getLowCritical() == Double.NEGATIVE_INFINITY ? 0 : resultLimit.getLowCritical());
             testItem.setHigherCritical(
                     resultLimit.getHighCritical() == Double.POSITIVE_INFINITY ? 0 : resultLimit.getHighCritical());
+            testItem.setLowerNormalRange(
+                    resultLimit.getLowNormal() == Double.NEGATIVE_INFINITY ? 0 : resultLimit.getLowNormal());
+            testItem.setUpperNormalRange(
+                    resultLimit.getHighNormal() == Double.POSITIVE_INFINITY ? 0 : resultLimit.getHighNormal());
+            testItem.setLowerAbnormalRange(
+                    resultLimit.getLowValid() == Double.NEGATIVE_INFINITY ? 0 : resultLimit.getLowValid());
+            testItem.setUpperAbnormalRange(
+                    resultLimit.getHighValid() == Double.POSITIVE_INFINITY ? 0 : resultLimit.getHighValid());
 
             testItem.setNormalRange(SpringContext.getBean(ResultLimitService.class).getDisplayReferenceRange(
                     resultLimit, testResults.isEmpty() ? "0" : testResults.get(0).getSignificantDigits(), " - "));
@@ -641,6 +684,7 @@ public class ResultsValidationUtility {
             testUnits = testResultItem.getUnitsOfMeasure();
             analysisResultItem.setIsHighlighted(!"100.0".equals(testResultItem.getResult().getValue()));
         }
+        analysisResultItem.setUnitOfMeasureName(testUnits);
 
         testUnits = augmentUOMWithRange(testUnits, testResultItem.getResult());
 
@@ -650,6 +694,10 @@ public class ResultsValidationUtility {
         analysisResultItem.setHigherCritical(testResultItem.getHigherCritical() == Double.POSITIVE_INFINITY ? 0
                 : testResultItem.getHigherCritical());
         analysisResultItem.setNormalRange(testResultItem.getNormalRange());
+        analysisResultItem.setLowerNormalRange(testResultItem.getLowerNormalRange());
+        analysisResultItem.setUpperNormalRange(testResultItem.getUpperNormalRange());
+        analysisResultItem.setLowerAbnormalRange(testResultItem.getLowerAbnormalRange());
+        analysisResultItem.setUpperAbnormalRange(testResultItem.getUpperAbnormalRange());
         analysisResultItem.setPatientName(testResultItem.getPatientName());
         analysisResultItem.setTestName(testName);
         analysisResultItem.setUnits(testUnits);
@@ -688,9 +736,23 @@ public class ResultsValidationUtility {
         analysisResultItem.setHasQualifiedResult(testResultItem.isHasQualifiedResult());
 
         Sample sample = testResultItem.getAnalysis().getSampleItem().getSample();
-        if (sample != null && sample.getPriority() != null) {
-            analysisResultItem.setPriority(sample.getPriority().toString());
+        if (sample != null) {
+            analysisResultItem.setSampleId(sample.getId());
+            if (sample.getPriority() != null) {
+                analysisResultItem.setPriority(sample.getPriority().toString());
+            }
         }
+
+        // Copy SI unit conversion fields from ResultValidationItem to AnalysisItem
+        analysisResultItem.setValueSi(testResultItem.getValueSi());
+        analysisResultItem.setUomSiName(testResultItem.getUomSiName());
+        analysisResultItem.setMinNormalSi(testResultItem.getMinNormalSi());
+        analysisResultItem.setMaxNormalSi(testResultItem.getMaxNormalSi());
+
+        // Retrieve sample interpretation from observation_history (one per sample/labNo)
+        String sampleInterpretation = observationHistoryService.getValueForSample(
+                ObservationType.SAMPLE_INTERPRETATION, sample.getId());
+        analysisResultItem.setSampleInterpretation(sampleInterpretation);
 
         return analysisResultItem;
     }
