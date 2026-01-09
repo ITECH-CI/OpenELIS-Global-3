@@ -730,17 +730,22 @@ public abstract class PatientReport extends Report {
             List<Analysis> candidateAnalyses = new ArrayList<>();
             String currentAnalysisId = currentAnalysis.getId();
             String testId = test.getId();
+            Date currentCompletedDate = currentAnalysis.getCompletedDate();
 
             for (Sample sample : patientSamples) {
                 List<Analysis> sampleAnalyses = analysisService.getAnalysesBySampleId(sample.getId());
                 if (sampleAnalyses != null) {
                     for (Analysis analysis : sampleAnalyses) {
-                        // Filter: same test, not current analysis, finalized status
+                        // Filter: same test, not current analysis, finalized status, and completed before current
                         Test analysisTest = analysisService.getTest(analysis);
+                        Date analysisCompletedDate = analysis.getCompletedDate();
+
                         if (analysisTest != null && analysisTest.getId().equals(testId)
                                 && !analysis.getId().equals(currentAnalysisId)
                                 && SpringContext.getBean(IStatusService.class)
-                                        .matches(analysisService.getStatusId(analysis), AnalysisStatus.Finalized)) {
+                                        .matches(analysisService.getStatusId(analysis), AnalysisStatus.Finalized)
+                                && analysisCompletedDate != null
+                                && (currentCompletedDate == null || analysisCompletedDate.before(currentCompletedDate))) {
                             candidateAnalyses.add(analysis);
                         }
                     }
@@ -1148,7 +1153,7 @@ public abstract class PatientReport extends Report {
         data.setNationalId(patientService.getNationalId(currentPatient));
         String otherIdentifier = currentPatient.getOtherIdentifier();
         data.setOtherIdentifier(otherIdentifier);
-        
+
         setPatientName(data);
         data.setDept(patientDept);
         data.setCommune(patientCommune);

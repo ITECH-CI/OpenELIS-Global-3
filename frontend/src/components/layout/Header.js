@@ -468,15 +468,17 @@ function OEHeader(props) {
                         {configurationProperties?.releaseNumber}
                       </p>
                       {isTrainingInstallation && (
-                        <p style={{
-                          backgroundColor: "#ff8800",
-                          color: "white",
-                          padding: "4px 8px",
-                          marginTop: "4px",
-                          borderRadius: "4px",
-                          fontWeight: "bold",
-                          fontSize: "0.9em"
-                        }}>
+                        <p
+                          style={{
+                            backgroundColor: "#ff8800",
+                            color: "white",
+                            padding: "4px 8px",
+                            marginTop: "4px",
+                            borderRadius: "4px",
+                            fontWeight: "bold",
+                            fontSize: "0.9em",
+                          }}
+                        >
                           <FormattedMessage id="training.installation.message" />
                         </p>
                       )}

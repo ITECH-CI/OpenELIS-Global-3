@@ -1,12 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
+import { Button, Loading, InlineNotification, Modal } from "@carbon/react";
 import {
-  Button,
-  Loading,
-  InlineNotification,
-  Modal,
-} from "@carbon/react";
-import { getFromOpenElisServer, postToOpenElisServerFullResponse } from "../../utils/Utils.js";
+  getFromOpenElisServer,
+  postToOpenElisServerFullResponse,
+} from "../../utils/Utils.js";
 import "../../Style.css";
 
 function DatabaseCleaning() {
@@ -46,10 +44,12 @@ function DatabaseCleaning() {
           setNotification({
             kind: "error",
             title: intl.formatMessage({ id: "alert.error" }),
-            message: errorData.error || intl.formatMessage({ id: "database.clean.error" }),
+            message:
+              errorData.error ||
+              intl.formatMessage({ id: "database.clean.error" }),
           });
         }
-      }
+      },
     );
   };
 
@@ -106,7 +106,9 @@ function DatabaseCleaning() {
       <Modal
         open={showConfirmModal}
         danger
-        modalHeading={intl.formatMessage({ id: "database.clean.confirm.title" })}
+        modalHeading={intl.formatMessage({
+          id: "database.clean.confirm.title",
+        })}
         primaryButtonText={intl.formatMessage({ id: "label.button.confirm" })}
         secondaryButtonText={intl.formatMessage({ id: "label.button.cancel" })}
         onRequestClose={() => setShowConfirmModal(false)}

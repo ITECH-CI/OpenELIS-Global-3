@@ -165,15 +165,10 @@ public class SamplePatientEntryServiceImpl implements SamplePatientEntryService 
     }
 
     private void persistObservations(SamplePatientUpdateData updateData) {
-        LogEvent.logInfo(this.getClass().getSimpleName(), "persistObservations", "Persisting "
-                + updateData.getObservations().size() + " observations for sample " + updateData.getSample().getId());
 
         for (ObservationHistory observation : updateData.getObservations()) {
             observation.setSampleId(updateData.getSample().getId());
             observation.setPatientId(updateData.getPatientId());
-            LogEvent.logInfo(this.getClass().getSimpleName(), "persistObservations",
-                    "Inserting observation - typeId: " + observation.getObservationHistoryTypeId() + ", value: '"
-                            + observation.getValue() + "', valueType: " + observation.getValueType());
             observationHistoryService.insert(observation);
         }
     }
