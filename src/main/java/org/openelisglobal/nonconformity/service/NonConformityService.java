@@ -22,4 +22,6 @@ public interface NonConformityService extends BaseObjectService<NonConformity, S
 
     String generateNextNcNumber();
 
+    NonConformity getAndPrepareForUpdate(String ncNumber, String id);
+
 }

@@ -35,8 +35,6 @@ public class NonConformity extends BaseObject<String> {
 
     private String lastUpdatedBy;
 
-    private Date lastUpdated;
-
     public NonConformity() {
         super();
     }
@@ -155,11 +153,13 @@ public class NonConformity extends BaseObject<String> {
         this.lastUpdatedBy = lastUpdatedBy;
     }
 
-    public Date getLastUpdated() {
-        return lastUpdated;
-    }
 
-    public void setLastUpdated(Date lastUpdated) {
-        this.lastUpdated = lastUpdated;
+    @Override
+    public String toString() {
+        return "NonConformity [id=" + id + ", ncNumber=" + ncNumber + ", reportDate=" + reportDate
+                + ", siteProvenance=" + siteProvenance + ", sampleType=" + sampleType + ", rejectionReason="
+                + rejectionReason + ", comment=" + comment + ", reporterName=" + reporterName + ", labNumber="
+                + labNumber + ", correctiveAction=" + correctiveAction + ", status=" + status + ", createdBy="
+                + createdBy + ", createdDate=" + createdDate + ", lastUpdatedBy=" + lastUpdatedBy + "]";
     }
 }
