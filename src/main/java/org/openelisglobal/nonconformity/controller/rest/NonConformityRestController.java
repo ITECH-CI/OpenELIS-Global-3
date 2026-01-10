@@ -1,7 +1,5 @@
 package org.openelisglobal.nonconformity.controller.rest;
 
-import java.io.IOException;
-import java.io.PrintWriter;
 import java.sql.Date;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -25,7 +23,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 
 @RestController
 public class NonConformityRestController extends org.openelisglobal.common.rest.BaseRestController {
@@ -118,13 +115,25 @@ public class NonConformityRestController extends org.openelisglobal.common.rest.
                 nc.setStatus("NEW");
             } else {
                 System.out.println("UPDATE ELSE: ");
-                nc = nonConformityService.get(form.getId());
-                //nc = nonConformityService.getNonConformityByNumber(form.getNcNumber());
-                System.out.println("Updating Non-Conformity with ID: " + form.getId());
-                if (nc == null) {
-                    return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                            .body("Non-conformity not found with id: " + form.getId());
+
+                if (form.getNcNumber() == null && form.getId() == null) {
+                    System.out.println("No identifier provided for update");
+                    return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                            .body("Either ncNumber or id must be provided for update");
                 }
+
+                // Use service method to get entity in a writable transaction
+                System.out.println("Finding Non-Conformity with ncNumber: " + form.getNcNumber() + ", ID: " + form.getId());
+                nc = nonConformityService.getAndPrepareForUpdate(form.getNcNumber(), form.getId());
+
+                if (nc == null) {
+                    System.err.println("Non-Conformity not found for update");
+                    return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                            .body("Non-conformity not found with " +
+                                  (form.getNcNumber() != null ? "ncNumber: " + form.getNcNumber() : "id: " + form.getId()));
+                }
+
+                System.out.println("Updating Non-Conformity: " + nc.getNcNumber() + " (ID: " + nc.getId() + ")");
             }
 
             // Update fields
@@ -142,15 +151,18 @@ public class NonConformityRestController extends org.openelisglobal.common.rest.
             if (form.getStatus() != null && !form.getStatus().isEmpty()) {
                 nc.setStatus(form.getStatus());
             }
-
+            System.out.println("Non-Conformity data set for: " + nc.getNcNumber());
             String currentUserId = getSysUserId(request);
             if (isNew) {
+                System.out.println("Inserting New Non-Conformity in DB: " + nc.getNcNumber());
                 nc.setCreatedBy(currentUserId);
                 nc.setCreatedDate(new Date(System.currentTimeMillis()));
                 nonConformityService.insert(nc);
             } else {
+              //  nc.setLastUpdated(new Date(System.currentTimeMillis()));
                 nc.setLastUpdatedBy(currentUserId);
-                nc.setLastUpdated(new Date(System.currentTimeMillis()));
+                System.out.println("Updating Non-Conformity in DB: " + nc.getNcNumber() + " (ID: " + nc.getId() + ")");
+                System.out.println("Non-Conformity to update: " + nc.toString());
                 nonConformityService.update(nc);
             }
 
@@ -171,8 +183,8 @@ public class NonConformityRestController extends org.openelisglobal.common.rest.
         }
     }
 
-    @GetMapping(value = "/rest/nonconformities/export", produces = "text/csv")
-    public ResponseEntity<?> exportNonConformities(
+    @GetMapping(value = "/rest/nonconformities/export", produces = "text/csv;charset=UTF-8")
+    public ResponseEntity<String> exportNonConformities(
             @RequestParam(required = false) String siteProvenance,
             @RequestParam(required = false) String sampleType,
             @RequestParam(required = false) String rejectionReason,
@@ -182,7 +194,6 @@ public class NonConformityRestController extends org.openelisglobal.common.rest.
         try {
             Date sqlStartDate = null;
             Date sqlEndDate = null;
-            Date testDate = null;
 
             if (startDate != null && !startDate.isEmpty()) {
                 sqlStartDate = parseDate(startDate);
@@ -191,9 +202,19 @@ public class NonConformityRestController extends org.openelisglobal.common.rest.
                 sqlEndDate = parseDate(endDate);
             }
 
-            List<NonConformity> nonConformities = nonConformityService.getAllNonConformities();
+            // Utiliser les filtres pour la recherche si fournis
+            List<NonConformity> nonConformities;
+            if (siteProvenance != null || sampleType != null || rejectionReason != null ||
+                sqlStartDate != null || sqlEndDate != null || status != null) {
+                nonConformities = nonConformityService.searchNonConformities(
+                    siteProvenance, sampleType, rejectionReason, sqlStartDate, sqlEndDate, status);
+            } else {
+                nonConformities = nonConformityService.getAllNonConformities();
+            }
 
             StringBuilder csv = new StringBuilder();
+            // UTF-8 BOM pour Excel
+            csv.append('\ufeff');
             // CSV Header
             csv.append("Numéro NC,Date de Signalement,Site de Provenance,Type d'Échantillon,")
                .append("Raison du Rejet,Commentaire,Rapporteur,Numéro Laboratoire,")
@@ -213,8 +234,14 @@ public class NonConformityRestController extends org.openelisglobal.common.rest.
                 csv.append(escapeCsv(nc.getStatus())).append("\n");
             }
 
+            String filename = "non_conformities_" + new SimpleDateFormat("yyyy-MM-dd").format(new java.util.Date()) + ".csv";
+
             return ResponseEntity.ok()
-                    .header("Content-Disposition", "attachment; filename=non_conformities.csv")
+                    .header("Content-Type", "text/csv;charset=UTF-8")
+                    .header("Content-Disposition", "attachment; filename=\"" + filename + "\"")
+                    .header("Cache-Control", "no-cache, no-store, must-revalidate")
+                    .header("Pragma", "no-cache")
+                    .header("Expires", "0")
                     .body(csv.toString());
         } catch (Exception e) {
             LogEvent.logError(e);
@@ -237,7 +264,7 @@ public class NonConformityRestController extends org.openelisglobal.common.rest.
         map.put("correctiveAction", nc.getCorrectiveAction());
         map.put("status", nc.getStatus());
         map.put("createdDate", nc.getCreatedDate() != null ? nc.getCreatedDate().toString() : null);
-        map.put("lastUpdated", nc.getLastUpdated() != null ? nc.getLastUpdated().toString() : null);
+      //  map.put("lastUpdated", nc.getLastUpdated() != null ? nc.getLastUpdated().toString() : null);
         return map;
     }
 

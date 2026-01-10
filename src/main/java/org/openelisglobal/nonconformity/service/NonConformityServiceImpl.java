@@ -96,5 +96,19 @@ public class NonConformityServiceImpl extends AuditableBaseObjectServiceImpl<Non
         int nextNumber = maxNumber + 1;
         return prefix + String.format("%04d", nextNumber);
     }
-    
+
+    @Override
+    @Transactional
+    public NonConformity getAndPrepareForUpdate(String ncNumber, String id) {
+        NonConformity nc = null;
+
+        if (ncNumber != null && !ncNumber.isEmpty()) {
+            nc = baseObjectDAO.getNonConformityByNumber(ncNumber);
+        } else if (id != null && !id.isEmpty()) {
+            nc = baseObjectDAO.get(id).orElse(null);
+        }
+
+        return nc;
+    }
+
 }
