@@ -24,6 +24,8 @@ public interface AnalyzerTestMappingDAO extends BaseDAO<AnalyzerTestMapping, Ana
 
     List<AnalyzerTestMapping> getAllForAnalyzer(String analyzerId);
 
+    List<AnalyzerTestMapping> getAllByTestId(String testId);
+
     // List<AnalyzerTestMapping> getAllAnalyzerTestMappings() throws
     // LIMSRuntimeException;
 

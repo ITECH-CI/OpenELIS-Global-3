@@ -33,7 +33,8 @@ import org.springframework.web.bind.annotation.ResponseBody;
 @RequestMapping(value = "/rest/")
 public class CommonValidationsRestController {
 
-    // Cache global pour stocker les numéros de laboratoire générés mais non persistés
+    // Cache global pour stocker les numéros de laboratoire générés mais non
+    // persistés
     // La clé est construite à partir des paramètres (programCode, format)
     private static final ConcurrentHashMap<String, String> accessionNumberCache = new ConcurrentHashMap<>();
 
@@ -49,15 +50,16 @@ public class CommonValidationsRestController {
     }
 
     /**
-     * Méthode publique statique pour invalider le cache d'un numéro de laboratoire spécifique.
+     * Méthode publique statique pour invalider le cache d'un numéro de laboratoire
+     * spécifique.
      */
     public static void clearAccessionNumberFromCache(String accessionNumber) {
         accessionNumberCache.values().remove(accessionNumber);
     }
 
     /**
-     * Méthode publique statique pour vider complètement le cache.
-     * Appelée après une sauvegarde réussie.
+     * Méthode publique statique pour vider complètement le cache. Appelée après une
+     * sauvegarde réussie.
      */
     public static void clearAllAccessionNumberCache() {
         accessionNumberCache.clear();

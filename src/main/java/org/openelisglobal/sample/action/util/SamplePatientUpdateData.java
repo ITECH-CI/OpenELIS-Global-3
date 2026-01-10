@@ -24,6 +24,7 @@ import org.hl7.fhir.r4.model.QuestionnaireResponse;
 import org.openelisglobal.address.valueholder.OrganizationAddress;
 import org.openelisglobal.common.formfields.FormFields;
 import org.openelisglobal.common.formfields.FormFields.Field;
+import org.openelisglobal.common.log.LogEvent;
 import org.openelisglobal.common.provider.validation.IAccessionNumberValidator;
 import org.openelisglobal.common.services.IStatusService;
 import org.openelisglobal.common.services.SampleAddService;
@@ -264,6 +265,9 @@ public class SamplePatientUpdateData {
             observation.setValue(observationData);
             observation.setValueType(valueType);
             observations.add(observation);
+        } else {
+            LogEvent.logDebug(this.getClass().getSimpleName(), "createObservation",
+                    "Skipped blank observation - typeId: " + observationType + ", value: '" + observationData + "'");
         }
     }
 
@@ -353,7 +357,9 @@ public class SamplePatientUpdateData {
             provider = SpringContext.getBean(ProviderService.class).getProviderByPerson(
                     SpringContext.getBean(PersonService.class).get(sampleOrder.getProviderPersonId()));
             providerPerson = provider.getPerson();
-            providerPerson.setSysUserId(currentUserId);
+            // Don't modify sysUserId for existing Person to avoid Hibernate
+            // StaleStateException
+            // providerPerson.setSysUserId(currentUserId);
         } else {
             providerPerson = new Person();
             provider = new Provider();
@@ -368,7 +374,11 @@ public class SamplePatientUpdateData {
             provider.setExternalId(sampleOrder.getRequesterSampleID());
         }
 
-        provider.setSysUserId(currentUserId);
+        // Don't modify sysUserId for existing Provider to avoid Hibernate
+        // StaleStateException
+        if (GenericValidator.isBlankOrNull(provider.getId())) {
+            provider.setSysUserId(currentUserId);
+        }
     }
 
     private boolean noRequesterInformation(SampleOrderItem sampleOrder) {
@@ -577,6 +587,11 @@ public class SamplePatientUpdateData {
                         ValueType.LITERAL);
             }
         }
+
+        // Save clinical information
+        createObservation(sampleOrder.getClinicalInformations(),
+                observationHistoryService.getObservationTypeIdForType(ObservationType.CLINICAL_INFOS_OTHER),
+                ValueType.LITERAL);
     }
 
     public boolean getCustomNotificationLogic() {

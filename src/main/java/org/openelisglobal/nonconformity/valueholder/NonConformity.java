@@ -1,7 +1,6 @@
 package org.openelisglobal.nonconformity.valueholder;
 
 import java.sql.Date;
-
 import org.openelisglobal.common.valueholder.BaseObject;
 
 public class NonConformity extends BaseObject<String> {

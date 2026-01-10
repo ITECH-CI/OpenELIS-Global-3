@@ -9,6 +9,7 @@ import java.util.Set;
 import java.util.UUID;
 import org.openelisglobal.analysis.service.AnalysisService;
 import org.openelisglobal.analysis.valueholder.Analysis;
+import org.openelisglobal.common.log.LogEvent;
 import org.openelisglobal.common.services.IStatusService;
 import org.openelisglobal.common.services.ResultSaveService;
 import org.openelisglobal.common.services.StatusService.OrderStatus;
@@ -105,6 +106,21 @@ public class LogbookPersistServiceImpl implements LogbookResultsPersistService {
         }
 
         for (ResultSet resultSet : actionDataSet.getModifiedResults()) {
+
+            // Initialize lazy proxies before update to prevent LazyInitializationException
+            try {
+                if (resultSet.result.getUomSi() != null) {
+                    org.hibernate.Hibernate.initialize(resultSet.result.getUomSi());
+                }
+                if (resultSet.result.getSiRule() != null) {
+                    org.hibernate.Hibernate.initialize(resultSet.result.getSiRule());
+                }
+            } catch (Exception e) {
+                LogEvent.logWarn(this.getClass().getSimpleName(), "persistDataSet",
+                        "Could not initialize lazy proxies for result " + resultSet.result.getId() + ": "
+                                + e.getMessage());
+            }
+
             resultSet.result.setResultEvent(Event.RESULT);
             resultService.update(resultSet.result);
 
@@ -140,6 +156,7 @@ public class LogbookPersistServiceImpl implements LogbookResultsPersistService {
         for (IResultUpdate updater : updaters) {
             updater.transactionalUpdate(actionDataSet);
         }
+
         return reflexAnalysises;
     }
 

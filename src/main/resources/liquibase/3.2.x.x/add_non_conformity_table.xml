@@ -5,7 +5,7 @@
   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
 
-  <changeSet id="1" author="azizdiakite" context="CI_GENERAL or CSC_GENERAL or MLW_GENERAL or HAITI_GENERAL or HAITI_LNSP or CDI_GENERAL">
+  <changeSet id="1" author="azizdiakite">
 
         <createSequence sequenceName="non_conformity_seq" startValue="1" incrementBy="1"/>
 
@@ -65,7 +65,7 @@
         </createIndex>
     </changeSet>
 
-    <changeSet id="6" author="azizdiakite" context="CI_GENERAL or CSC_GENERAL or MLW_GENERAL or HAITI_GENERAL or HAITI_LNSP or CDI_GENERAL">
+    <changeSet id="6" author="azizdiakite">
         <preConditions onFail="MARK_RAN">
             <sqlCheck expectedResult="0">
                 SELECT COUNT(*) FROM clinlims.menu WHERE element_id = 'menu_nonconformity_registry'

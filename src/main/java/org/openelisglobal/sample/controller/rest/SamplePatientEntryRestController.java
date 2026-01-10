@@ -98,23 +98,23 @@ public class SamplePatientEntryRestController extends BaseSampleEntryController 
             "patientProperties.birthDateForDisplay", "patientProperties.age", "patientProperties.gender",
             "patientProperties.patientType", "patientProperties.insuranceNumber", "patientProperties.occupation",
             "patientProperties.education", "patientProperties.maritialStatus", "patientProperties.nationality",
-            "patientProperties.pregnant", "patientProperties.occupation",
-            "patientProperties.otherNationality", "patientClinicalProperties.stdOther",
-            "patientClinicalProperties.tbDiarrhae", "patientClinicalProperties.stdZona",
-            "patientClinicalProperties.tbPrurigol", "patientClinicalProperties.stdKaposi",
-            "patientClinicalProperties.tbMenigitis", "patientClinicalProperties.stdCandidiasis",
-            "patientClinicalProperties.tbCerebral", "patientClinicalProperties.stdColonCancer",
-            "patientClinicalProperties.tbExtraPulmanary", "patientClinicalProperties.arvProphyaxixType",
-            "patientClinicalProperties.arvTreatmentReceiving", "patientClinicalProperties.arvTreatmentRemembered",
-            "patientClinicalProperties.arvTreatment1", "patientClinicalProperties.arvTreatment2",
-            "patientClinicalProperties.arvTreatment3", "patientClinicalProperties.arvTreatment4",
-            "patientClinicalProperties.cotrimoxazoleReceiving", "patientClinicalProperties.cotrimoxazoleType",
-            "patientClinicalProperties.infectionExtraPulmanary", "patientClinicalProperties.stdInfectionColon",
-            "patientClinicalProperties.infectionCerebral", "patientClinicalProperties.stdInfectionCandidiasis",
-            "patientClinicalProperties.infectionMeningitis", "patientClinicalProperties.stdInfectionKaposi",
-            "patientClinicalProperties.infectionPrurigol", "patientClinicalProperties.stdInfectionZona",
-            "patientClinicalProperties.infectionOther", "patientClinicalProperties.infectionUnderTreatment",
-            "patientClinicalProperties.weight", "patientClinicalProperties.karnofskyScore",
+            "patientProperties.pregnant", "patientProperties.occupation", "patientProperties.otherNationality",
+            "patientClinicalProperties.stdOther", "patientClinicalProperties.tbDiarrhae",
+            "patientClinicalProperties.stdZona", "patientClinicalProperties.tbPrurigol",
+            "patientClinicalProperties.stdKaposi", "patientClinicalProperties.tbMenigitis",
+            "patientClinicalProperties.stdCandidiasis", "patientClinicalProperties.tbCerebral",
+            "patientClinicalProperties.stdColonCancer", "patientClinicalProperties.tbExtraPulmanary",
+            "patientClinicalProperties.arvProphyaxixType", "patientClinicalProperties.arvTreatmentReceiving",
+            "patientClinicalProperties.arvTreatmentRemembered", "patientClinicalProperties.arvTreatment1",
+            "patientClinicalProperties.arvTreatment2", "patientClinicalProperties.arvTreatment3",
+            "patientClinicalProperties.arvTreatment4", "patientClinicalProperties.cotrimoxazoleReceiving",
+            "patientClinicalProperties.cotrimoxazoleType", "patientClinicalProperties.infectionExtraPulmanary",
+            "patientClinicalProperties.stdInfectionColon", "patientClinicalProperties.infectionCerebral",
+            "patientClinicalProperties.stdInfectionCandidiasis", "patientClinicalProperties.infectionMeningitis",
+            "patientClinicalProperties.stdInfectionKaposi", "patientClinicalProperties.infectionPrurigol",
+            "patientClinicalProperties.stdInfectionZona", "patientClinicalProperties.infectionOther",
+            "patientClinicalProperties.infectionUnderTreatment", "patientClinicalProperties.weight",
+            "patientClinicalProperties.karnofskyScore",
             //
             "initialSampleConditionList", "sampleXML",
             //
@@ -132,8 +132,7 @@ public class SamplePatientEntryRestController extends BaseSampleEntryController 
             "sampleOrderItems.testLocationCode", "sampleOrderItems.otherLocationCode",
             "sampleOrderItems.contactTracingIndexName", "sampleOrderItems.contactTracingIndexRecordNumber",
             "sampleOrderItems.priority", "sampleOrderItems.epidemiologicalWeek",
-            "sampleOrderItems.clinicalInformations",
-            "sampleOrderItems.orderType",
+            "sampleOrderItems.clinicalInformations", "sampleOrderItems.orderType",
             //
             "currentDate", "sampleOrderItems.newRequesterName", "sampleOrderItems.externalOrderNumber",
             // referral
@@ -153,7 +152,8 @@ public class SamplePatientEntryRestController extends BaseSampleEntryController 
             "patientRoutineBacteriology.recentAntibiotherapy", "patientRoutineBacteriology.recentAntibiotherapyList",
             "patientRoutineBacteriology.currentAntibiotherapy", "patientRoutineBacteriology.currentAntibiotherapyList",
             "patientRoutineBacteriology.currentAntibiotherapyDuration",
-            "patientRoutineBacteriology.recentHospitalization", "patientRoutineBacteriology.recentHospitalizationCount", };
+            "patientRoutineBacteriology.recentHospitalization",
+            "patientRoutineBacteriology.recentHospitalizationCount", };
 
     @Autowired
     private SamplePatientEntryFormValidator formValidator;
@@ -351,8 +351,6 @@ public class SamplePatientEntryRestController extends BaseSampleEntryController 
                 // error = new ActionError("errors.UpdateException", null, null);
                 result.reject("errors.UpdateException", "errors.UpdateException");
             }
-            LogEvent.logInfo(this.getClass().getSimpleName(), "samplePatientEntrySave", result.toString());
-
             // errors.add(ActionMessages.GLOBAL_MESSAGE, error);
             saveErrors(result);// TODO theses errors are not communicated to the frontend return an error code
                                // if svae is not successful

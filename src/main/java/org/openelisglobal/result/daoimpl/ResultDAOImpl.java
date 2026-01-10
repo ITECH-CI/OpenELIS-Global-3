@@ -51,7 +51,13 @@ public class ResultDAOImpl extends BaseDAOImpl<Result, String> implements Result
     @Transactional(readOnly = true)
     public void getData(Result result) throws LIMSRuntimeException {
         try {
-            Result re = entityManager.unwrap(Session.class).get(Result.class, result.getId());
+            // Use HQL with left join fetch to eagerly load uomSi and siRule to avoid
+            // LazyInitializationException
+            String hql = "select distinct r from Result r left join fetch r.uomSi left join fetch r.siRule where r.id = :id";
+            Query<Result> query = entityManager.unwrap(Session.class).createQuery(hql, Result.class);
+            query.setParameter("id", Integer.valueOf(result.getId()));
+            Result re = query.uniqueResult();
+
             if (re != null) {
                 PropertyUtils.copyProperties(result, re);
             } else {
@@ -102,7 +108,7 @@ public class ResultDAOImpl extends BaseDAOImpl<Result, String> implements Result
     public List<Result> getResultsByAnalysis(Analysis analysis) throws LIMSRuntimeException {
         try {
 
-            String sql = "from Result r where r.analysis = :analysisId order by r.id";
+            String sql = "select distinct r from Result r left join fetch r.uomSi where r.analysis = :analysisId order by r.id";
             Query<Result> query = entityManager.unwrap(Session.class).createQuery(sql, Result.class);
             query.setParameter("analysisId", Integer.parseInt(analysis.getId()));
 
@@ -294,7 +300,7 @@ public class ResultDAOImpl extends BaseDAOImpl<Result, String> implements Result
         if (analysisIdList.isEmpty()) {
             return null;
         }
-        String sql = "from Result r where r.analysis IN (:analysisList)";
+        String sql = "select distinct r from Result r left join fetch r.uomSi where r.analysis IN (:analysisList)";
 
         try {
             Query<Result> query = entityManager.unwrap(Session.class).createQuery(sql, Result.class);
@@ -312,7 +318,7 @@ public class ResultDAOImpl extends BaseDAOImpl<Result, String> implements Result
     @Override
     @Transactional(readOnly = true)
     public List<Result> getResultsForTestAndSample(String sampleId, String testId) {
-        String sql = "FROM Result r WHERE r.analysis.sampleItem.sample.id = :sampleId AND r.testResult.test.id ="
+        String sql = "SELECT distinct r FROM Result r left join fetch r.uomSi WHERE r.analysis.sampleItem.sample.id = :sampleId AND r.testResult.test.id ="
                 + " :testId";
 
         try {
@@ -332,7 +338,7 @@ public class ResultDAOImpl extends BaseDAOImpl<Result, String> implements Result
     @Override
     @Transactional(readOnly = true)
     public List<Result> getResultsForSample(Sample sample) throws LIMSRuntimeException {
-        String sql = "From Result r where r.analysis.sampleItem.sample.id = :sampleId";
+        String sql = "select distinct r From Result r left join fetch r.uomSi where r.analysis.sampleItem.sample.id = :sampleId";
 
         try {
             Query<Result> query = entityManager.unwrap(Session.class).createQuery(sql, Result.class);

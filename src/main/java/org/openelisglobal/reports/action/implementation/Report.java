@@ -109,10 +109,10 @@ public abstract class Report implements IReportCreator {
         // reportParameters.put("localization", createLocalizationMap());
         Optional<Image> leftLogo = imageService.getImageBySiteInfoName("headerLeftImage");
         Optional<Image> rightLogo = imageService.getImageBySiteInfoName("headerRightImage");
-        if (leftLogo.isPresent()) {
+        if (leftLogo.isPresent() && leftLogo.get().getImage() != null) {
             reportParameters.put("leftHeaderImage", new ByteArrayInputStream(leftLogo.get().getImage()));
         }
-        if (rightLogo.isPresent()) {
+        if (rightLogo.isPresent() && rightLogo.get().getImage() != null) {
             reportParameters.put("rightHeaderImage", new ByteArrayInputStream(rightLogo.get().getImage()));
         }
         reportParameters.put(JRParameter.REPORT_LOCALE, LocaleContextHolder.getLocale());

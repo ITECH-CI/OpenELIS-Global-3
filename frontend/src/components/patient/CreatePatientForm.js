@@ -414,7 +414,7 @@ function CreatePatientForm(props) {
   }
 
   function fetchHealthDistrictsCallback(res) {
-    setHealthDistricts(res);
+    setHealthDistricts(res || []);
   }
 
   useEffect(() => {
@@ -541,7 +541,7 @@ function CreatePatientForm(props) {
   };
 
   const fetchHeathDistricts = (districts) => {
-    setHealthDistricts(districts);
+    setHealthDistricts(districts || []);
   };
 
   const handleSubmit = async (values, { resetForm }) => {
@@ -848,22 +848,23 @@ function CreatePatientForm(props) {
                 <div className="error">
                   <ErrorMessage name="gender"></ErrorMessage>
                 </div>
-            
               </Column>
-            <Column lg={3} md={3} sm={3}>
+              <Column lg={3} md={3} sm={3}>
                 {values.gender === "F" && (
-                    <Select
-                      className="pregnant"
-                      id={"pregnant"}
-                      name="pregnant"
-                      labelText={intl.formatMessage({ id: "patient.female.pregnant" })}
-                      required
-                    >
+                  <Select
+                    className="pregnant"
+                    id={"pregnant"}
+                    name="pregnant"
+                    labelText={intl.formatMessage({
+                      id: "patient.female.pregnant",
+                    })}
+                    required
+                  >
                     <SelectItem text="Non" value="N" />
                     <SelectItem text="Oui" value="O" />
-                    </Select>
+                  </Select>
                 )}
-                </Column>
+              </Column>
               <Column lg={16} md={8} sm={4}>
                 {" "}
                 <br></br>
@@ -1011,12 +1012,12 @@ function CreatePatientForm(props) {
                       items={clinicalInfoOptions}
                       itemToString={(item) => (item ? item.value : "")}
                       selectedItems={buildSelectedItems(
-                        values.clinicalInformation,
+                        values.clinicalInformations,
                         clinicalInfoOptions,
                       )}
                       onChange={(changes) => {
                         setFieldValue(
-                          "clinicalInformation",
+                          "clinicalInformations",
                           changes.selectedItems.map(
                             (item) => item.id || item.value,
                           ),
@@ -1026,7 +1027,7 @@ function CreatePatientForm(props) {
                     />
                     {renderSelectedTags(
                       buildSelectedItems(
-                        values.clinicalInformation,
+                        values.clinicalInformations,
                         clinicalInfoOptions,
                       ),
                       "clinicalInformationTags",
@@ -1034,7 +1035,7 @@ function CreatePatientForm(props) {
                   </Column>
                   <Column lg={8} md={4} sm={4}>
                     {isOtherSelected(
-                      values.clinicalInformation,
+                      values.clinicalInformations,
                       clinicalInfoOptions,
                     ) && (
                       <TextInput
@@ -1508,10 +1509,10 @@ function CreatePatientForm(props) {
                               onChange={() => {}}
                             >
                               <SelectItem text="" value="" />
-                              {healthDistricts.map((district, index) => (
+                              {healthDistricts?.map((district, index) => (
                                 <SelectItem
                                   text={district.value}
-                                  value={district.value}
+                                  value={district.id}
                                   key={index}
                                 />
                               ))}

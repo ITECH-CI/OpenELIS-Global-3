@@ -763,6 +763,41 @@ public class ResultsLoadUtility {
             testItem.setPriority(currSample.getPriority().name());
         }
 
+        // Populate SI unit conversion fields
+        if (result != null) {
+            String valueSi = result.getValueSi();
+
+            // Get SI UOM name - load it from database if needed since lazy loading fails
+            String uomSiName = null;
+            try {
+                if (result.getUomSi() != null) {
+                    String uomSiId = result.getUomSi().getId();
+                    if (uomSiId != null) {
+                        // Load the UOM from database using Spring Context
+                        org.openelisglobal.unitofmeasure.service.UnitOfMeasureService uomService = SpringContext
+                                .getBean(org.openelisglobal.unitofmeasure.service.UnitOfMeasureService.class);
+                        org.openelisglobal.unitofmeasure.valueholder.UnitOfMeasure loadedUomSi = uomService
+                                .get(uomSiId);
+                        if (loadedUomSi != null) {
+                            uomSiName = loadedUomSi.getUnitOfMeasureName();
+                        }
+                    }
+                }
+            } catch (org.hibernate.LazyInitializationException e) {
+                LogEvent.logDebug(this.getClass().getSimpleName(), "createTestResultItem",
+                        "UOM SI proxy not initialized");
+            } catch (Exception e) {
+                LogEvent.logWarn(this.getClass().getSimpleName(), "createTestResultItem",
+                        "Could not load SI UOM name from database: " + e.getMessage());
+            }
+
+            testItem.setShadowValueSi(valueSi);
+            testItem.setShadowUomSiName(uomSiName);
+            testItem.setShadowUom(uom); // Traditional UOM already retrieved above
+            testItem.setMinNormalSi(result.getMinNormalSi());
+            testItem.setMaxNormalSi(result.getMaxNormalSi());
+        }
+
         return testItem;
     }
 

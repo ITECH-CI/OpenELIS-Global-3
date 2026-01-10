@@ -128,30 +128,6 @@ public class TestAnalyteDAOImpl extends BaseDAOImpl<TestAnalyte, String> impleme
     public List<TestAnalyte> getTestAnalytes(String filter) throws LIMSRuntimeException {
 
         return null;
-        /*
-         * try { DatabaseSession aSession = getSession(); ReadAllQuery query = new
-         * ReadAllQuery(TestAnalyte.class); ExpressionBuilder builder = new
-         * ExpressionBuilder(); Expression exp = null; if (filter != null) { exp =
-         * builder.get("testAnalyteName").toUpperCase().like( filter.toUpperCase() +
-         * "%"); } else { exp = builder.get("testAnalyteName").like(filter + "%"); }
-         *
-         * // Expression exp1 = builder.get("isActive").equal(true); // exp =
-         * exp.and(exp1);
-         *
-         * query.setSelectionCriteria(exp);
-         * query.addAscendingOrdering("testAnalyteName");
-         *
-         * LogEvent.logInfo(this.getClass().getSimpleName(), "method unkown",
-         * "This is query " + query.getSQLString()); List testAnalytes = (Vector)
-         * aSession.executeQuery(query);
-         *
-         * LogEvent.logInfo(this.getClass().getSimpleName(), "method unkown",
-         * "This is size of list retrieved " + testAnalytes.size() + " " +
-         * testAnalytes.get(0)); return testAnalytes;
-         *
-         * } catch (RuntimeException e) { throw new LIMSRuntimeException(
-         * "Error in TestAnalyte getTestAnalytes(String filter)", e); }
-         */
     }
 
     @Override
