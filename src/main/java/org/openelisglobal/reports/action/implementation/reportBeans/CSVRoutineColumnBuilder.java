@@ -311,7 +311,8 @@ public abstract class CSVRoutineColumnBuilder {
 
     protected String prepareColumnName(String columnName) {
         // trim and escape the column name so it is more safe from sql injection
-        // Allow common special characters: apostrophe, degree symbol, various dashes, etc.
+        // Allow common special characters: apostrophe, degree symbol, various dashes,
+        // etc.
         if (!columnName.matches("(?i)[a-zàâçéèêëîïôûùüÿñæœ0-9_ ()%/\\[\\]+\\-–°'′]+")) {
             LogEvent.logWarn(this.getClass().getSimpleName(), "prepareColumnName",
                     "potentially dangerous character detected in '" + columnName + "'");
@@ -547,7 +548,8 @@ public abstract class CSVRoutineColumnBuilder {
             labUnitFilter = " AND ts.id = " + selectedLabUnit;
         }
 
-        // Build the list of test names as VALUES for crosstab - must match column definitions exactly
+        // Build the list of test names as VALUES for crosstab - must match column
+        // definitions exactly
         StringBuilder testNamesQuery = new StringBuilder();
         testNamesQuery.append("SELECT test_name FROM (VALUES ");
         boolean first = true;
@@ -580,8 +582,7 @@ public abstract class CSVRoutineColumnBuilder {
                 // + (( excludeAnalytes == null)?"":
                 // " AND r.analyte_id NOT IN ( " + excludeAnalytes) + ")"
                 // + " AND a.test_id = t.id "
-                + labUnitFilter + "\n ORDER BY 1, 2 "
-                + "\n ', '" + testNamesQuery.toString() + ";' ) ");
+                + labUnitFilter + "\n ORDER BY 1, 2 " + "\n ', '" + testNamesQuery.toString() + ";' ) ");
         // end of cross tab
 
         // Name the test pivot table columns . We'll name them all after the
@@ -640,9 +641,7 @@ public abstract class CSVRoutineColumnBuilder {
                         + "\n WHERE s.entered_date >= date(''" + formatDateForDatabaseSql(lowDate) + "'') "
                         + "\n AND s.entered_date <= date(''" + formatDateForDatabaseSql(highDate) + "'')"
                         + "\n AND s.id = oh.sample_id AND oh.observation_history_type_id = oht.id order by 1;' "
-                        + "\n , "
-                        + "\n '" + categoryQuery.toString() + ";' "
-                        + "\n ) \n ");
+                        + "\n , " + "\n '" + categoryQuery.toString() + ";' " + "\n ) \n ");
 
         // in the following list of observation history items, all valid values
         // are listed in alphabetical order (since that is how crosstab lists

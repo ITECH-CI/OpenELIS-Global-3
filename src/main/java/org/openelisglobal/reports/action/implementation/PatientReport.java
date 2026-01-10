@@ -736,7 +736,8 @@ public abstract class PatientReport extends Report {
                 List<Analysis> sampleAnalyses = analysisService.getAnalysesBySampleId(sample.getId());
                 if (sampleAnalyses != null) {
                     for (Analysis analysis : sampleAnalyses) {
-                        // Filter: same test, not current analysis, finalized status, and completed before current
+                        // Filter: same test, not current analysis, finalized status, and completed
+                        // before current
                         Test analysisTest = analysisService.getTest(analysis);
                         Date analysisCompletedDate = analysis.getCompletedDate();
 
@@ -744,8 +745,8 @@ public abstract class PatientReport extends Report {
                                 && !analysis.getId().equals(currentAnalysisId)
                                 && SpringContext.getBean(IStatusService.class)
                                         .matches(analysisService.getStatusId(analysis), AnalysisStatus.Finalized)
-                                && analysisCompletedDate != null
-                                && (currentCompletedDate == null || analysisCompletedDate.before(currentCompletedDate))) {
+                                && analysisCompletedDate != null && (currentCompletedDate == null
+                                        || analysisCompletedDate.before(currentCompletedDate))) {
                             candidateAnalyses.add(analysis);
                         }
                     }

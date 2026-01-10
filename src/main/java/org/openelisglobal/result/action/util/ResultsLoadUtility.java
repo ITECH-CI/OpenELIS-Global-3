@@ -260,8 +260,15 @@ public class ResultsLoadUtility {
 
     public List<TestResultItem> getUnfinishedTestResultItemsInTestSection(String testSectionId) {
 
+        LogEvent.logInfo(this.getClass().getSimpleName(), "getUnfinishedTestResultItemsInTestSection",
+                "TestSection: " + testSectionId + ", AnalysisStatusList: " + analysisStatusList + ", SampleStatusList: "
+                        + sampleStatusList);
+
         List<Analysis> fullAnalysisList = analysisService.getAllAnalysisByTestSectionAndStatus(testSectionId,
                 analysisStatusList, sampleStatusList);
+
+        LogEvent.logInfo(this.getClass().getSimpleName(), "getUnfinishedTestResultItemsInTestSection",
+                "Found " + fullAnalysisList.size() + " analyses");
         // request.setAttribute("analysisesSize", fullAnalysisList.size());
         // List<Analysis> analysisList =
         // analysisService.getPageAnalysisByTestSectionAndStatus(testSectionId,

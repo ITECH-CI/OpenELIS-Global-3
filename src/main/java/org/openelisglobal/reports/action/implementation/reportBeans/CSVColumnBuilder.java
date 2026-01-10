@@ -323,7 +323,8 @@ public abstract class CSVColumnBuilder {
 
     protected String prepareColumnName(String columnName) {
         // trim and escape the column name so it is more safe from sql injection
-        // Allow common special characters: apostrophe, degree symbol, various dashes, etc.
+        // Allow common special characters: apostrophe, degree symbol, various dashes,
+        // etc.
         if (!columnName.matches("(?i)[a-zàâçéèêëîïôûùüÿñæœ0-9_ ()%/\\[\\]+\\-–°'′]+")) {
             LogEvent.logWarn(this.getClass().getSimpleName(), "prepareColumnName",
                     "potentially dangerous character detected in '" + columnName + "'");
@@ -647,9 +648,7 @@ public abstract class CSVColumnBuilder {
                         + "\n WHERE s.collection_date >= date(''" + formatDateForDatabaseSql(lowDate) + "'') "
                         + "\n AND s.collection_date <= date(''" + formatDateForDatabaseSql(highDate) + "'')"
                         + "\n AND s.id = oh.sample_id AND oh.observation_history_type_id = oht.id order by 1;' "
-                        + "\n , "
-                        + "\n '" + categoryQuery.toString() + ";' "
-                        + "\n ) \n ");
+                        + "\n , " + "\n '" + categoryQuery.toString() + ";' " + "\n ) \n ");
 
         // in the following list of observation history items, all valid values
         // are listed in alphabetical order (since that is how crosstab lists

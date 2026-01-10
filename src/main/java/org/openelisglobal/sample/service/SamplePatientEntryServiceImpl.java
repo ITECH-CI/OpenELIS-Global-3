@@ -45,6 +45,7 @@ import org.openelisglobal.organization.valueholder.Organization;
 import org.openelisglobal.organization.valueholder.OrganizationType;
 import org.openelisglobal.panel.valueholder.Panel;
 import org.openelisglobal.patient.action.bean.PatientManagementInfo;
+import org.openelisglobal.patient.action.bean.PatientRoutineBacterioInfo;
 import org.openelisglobal.patient.action.bean.PatientTbInfo;
 import org.openelisglobal.patientidentity.service.PatientIdentityService;
 import org.openelisglobal.patientidentity.valueholder.PatientIdentity;
@@ -59,6 +60,7 @@ import org.openelisglobal.provider.service.ProviderService;
 import org.openelisglobal.requester.service.SampleRequesterService;
 import org.openelisglobal.requester.valueholder.SampleRequester;
 import org.openelisglobal.sample.action.util.SamplePatientUpdateData;
+import org.openelisglobal.sample.bean.SampleOrderItem;
 import org.openelisglobal.sample.form.SamplePatientEntryForm;
 import org.openelisglobal.sample.valueholder.SampleAdditionalField;
 import org.openelisglobal.samplehuman.service.SampleHumanService;
@@ -158,6 +160,13 @@ public class SamplePatientEntryServiceImpl implements SamplePatientEntryService 
             persistTbObservations(form.getPatientTbInfo(), updateData.getSample().getId(), updateData.getPatientId(),
                     updateData.getCurrentUserId());
 
+        }
+
+        // Persist Bacteriologie Classique data if present
+        if (form.getPatientRoutineBacterioInfo() != null) {
+            persistBacterioObservations(form.getPatientRoutineBacterioInfo(), form.getPatientProperties(),
+                    form.getSampleOrderItems(), updateData.getSample().getId(), updateData.getPatientId(),
+                    updateData.getCurrentUserId());
         }
 
         request.getSession().setAttribute("lastAccessionNumber", updateData.getAccessionNumber());
@@ -588,12 +597,152 @@ public class SamplePatientEntryServiceImpl implements SamplePatientEntryService 
         }
     }
 
+    private void persistBacterioObservations(PatientRoutineBacterioInfo bacterioInfo, PatientManagementInfo patientInfo,
+            SampleOrderItem sampleOrderItems, String sampleId, String patientId, String sysUserId) {
+        if (bacterioInfo == null) {
+            return;
+        }
+
+        List<ObservationHistory> observations = new ArrayList<>();
+
+        // Pregnant status from patient properties (Boolean: true/false)
+        if (patientInfo != null && !GenericValidator.isBlankOrNull(patientInfo.getPregnant())) {
+            addObservationIfTypeExists(observations, "Pregnancy", sampleId, patientId, sysUserId, ValueType.LITERAL,
+                    patientInfo.getPregnant());
+        }
+
+        // Order Type from sample order items
+        if (sampleOrderItems != null && !GenericValidator.isBlankOrNull(sampleOrderItems.getOrderType())) {
+            addObservationIfTypeExists(observations, "BacterioTypeExamens", sampleId, patientId, sysUserId,
+                    ValueType.LITERAL, sampleOrderItems.getOrderType());
+        }
+
+        // Epidemiological Week from sample order items
+        if (sampleOrderItems != null && !GenericValidator.isBlankOrNull(sampleOrderItems.getEpidemiologicalWeek())) {
+            addObservationIfTypeExists(observations, "EPIDEMIO_WEEK", sampleId, patientId, sysUserId, ValueType.LITERAL,
+                    sampleOrderItems.getEpidemiologicalWeek());
+        }
+
+        // Current Hospitalization (Boolean: true/false)
+        if (bacterioInfo.getCurrentHospitalization() != null) {
+            addObservationIfTypeExists(observations, "currentHospitalization", sampleId, patientId, sysUserId,
+                    ValueType.LITERAL, bacterioInfo.getCurrentHospitalization().toString());
+        }
+
+        // Room Number
+        if (!GenericValidator.isBlankOrNull(bacterioInfo.getRoomNumber())) {
+            addObservationIfTypeExists(observations, "roomNumber", sampleId, patientId, sysUserId, ValueType.LITERAL,
+                    bacterioInfo.getRoomNumber());
+        }
+
+        // Clinical Informations (list of dictionary IDs)
+        if (bacterioInfo.getClinicalInformations() != null && !bacterioInfo.getClinicalInformations().isEmpty()) {
+            for (Integer clinicalInfoId : bacterioInfo.getClinicalInformations()) {
+                addObservationIfTypeExists(observations, "CLINICAL_INFOS", sampleId, patientId, sysUserId,
+                        ValueType.DICTIONARY, clinicalInfoId.toString());
+            }
+        }
+
+        // Clinical Information Other (free text)
+        if (!GenericValidator.isBlankOrNull(bacterioInfo.getClinicalInformationOther())) {
+            addObservationIfTypeExists(observations, "CLINICAL_INFOS_OTHER", sampleId, patientId, sysUserId,
+                    ValueType.LITERAL, bacterioInfo.getClinicalInformationOther());
+        }
+
+        // Recent Antibiotherapy (Boolean: true/false)
+        if (bacterioInfo.getRecentAntibiotherapy() != null) {
+            addObservationIfTypeExists(observations, "PREV3M_ATB", sampleId, patientId, sysUserId, ValueType.LITERAL,
+                    bacterioInfo.getRecentAntibiotherapy().toString());
+        }
+
+        // Recent Antibiotherapy List
+        if (bacterioInfo.getRecentAntibiotherapyList() != null
+                && !bacterioInfo.getRecentAntibiotherapyList().isEmpty()) {
+            for (Integer atbId : bacterioInfo.getRecentAntibiotherapyList()) {
+                addObservationIfTypeExists(observations, "PREV3M_ATB_LIST", sampleId, patientId, sysUserId,
+                        ValueType.DICTIONARY, atbId.toString());
+            }
+        }
+
+        // Current Antibiotherapy (Boolean: true/false)
+        if (bacterioInfo.getCurrentAntibiotherapy() != null) {
+            addObservationIfTypeExists(observations, "CURR_ATB", sampleId, patientId, sysUserId, ValueType.LITERAL,
+                    bacterioInfo.getCurrentAntibiotherapy().toString());
+        }
+
+        // Current Antibiotherapy List
+        if (bacterioInfo.getCurrentAntibiotherapyList() != null
+                && !bacterioInfo.getCurrentAntibiotherapyList().isEmpty()) {
+            for (Integer atbId : bacterioInfo.getCurrentAntibiotherapyList()) {
+                addObservationIfTypeExists(observations, "CURR_ATB_LIST", sampleId, patientId, sysUserId,
+                        ValueType.DICTIONARY, atbId.toString());
+            }
+        }
+
+        // Current Antibiotherapy Duration
+        if (bacterioInfo.getCurrentAntibiotherapyDuration() != null) {
+            addObservationIfTypeExists(observations, "CURR_ATB_DUR", sampleId, patientId, sysUserId, ValueType.LITERAL,
+                    bacterioInfo.getCurrentAntibiotherapyDuration().toString());
+        }
+
+        // Recent Hospitalization (Boolean: true/false)
+        if (bacterioInfo.getRecentHospitalization() != null) {
+            addObservationIfTypeExists(observations, "HOSP_3M", sampleId, patientId, sysUserId, ValueType.LITERAL,
+                    bacterioInfo.getRecentHospitalization().toString());
+        }
+
+        // Recent Hospitalization Count
+        if (bacterioInfo.getRecentHospitalizationCount() != null) {
+            addObservationIfTypeExists(observations, "HOSP_3M_COUNT", sampleId, patientId, sysUserId, ValueType.LITERAL,
+                    bacterioInfo.getRecentHospitalizationCount().toString());
+        }
+
+        // Recent Invasive Gestures
+        if (bacterioInfo.getRecentInvasiveGestures() != null && !bacterioInfo.getRecentInvasiveGestures().isEmpty()) {
+            for (Integer gestureId : bacterioInfo.getRecentInvasiveGestures()) {
+                addObservationIfTypeExists(observations, "INVASIVE_GESTURE", sampleId, patientId, sysUserId,
+                        ValueType.DICTIONARY, gestureId.toString());
+            }
+        }
+
+        // Indwelling Device
+        if (bacterioInfo.getIndwellingDevice() != null && !bacterioInfo.getIndwellingDevice().isEmpty()) {
+            for (Integer deviceId : bacterioInfo.getIndwellingDevice()) {
+                addObservationIfTypeExists(observations, "INDWELLING_DEVICES", sampleId, patientId, sysUserId,
+                        ValueType.DICTIONARY, deviceId.toString());
+            }
+        }
+
+        // Persist all observations
+        for (ObservationHistory observation : observations) {
+            observationHistoryService.insert(observation);
+        }
+    }
+
     private String getObservationHistoryTypeId(String name) {
         ObservationHistoryType oht = observationHistoryTypeService.getByName(name);
         if (oht != null) {
             return oht.getId();
         }
+        LogEvent.logWarn(this.getClass().getSimpleName(), "getObservationHistoryTypeId",
+                "ObservationHistoryType not found for name: " + name);
         return null;
+    }
+
+    private void addObservationIfTypeExists(List<ObservationHistory> observations, String typeName, String sampleId,
+            String patientId, String sysUserId, ValueType valueType, String value) {
+        String typeId = getObservationHistoryTypeId(typeName);
+        if (typeId != null) {
+            ObservationHistory observation = new ObservationHistory();
+            observation.setSampleId(sampleId);
+            observation.setPatientId(patientId);
+            observation.setLastupdated(DateUtil.getNowAsTimestamp());
+            observation.setSysUserId(sysUserId);
+            observation.setValueType(valueType);
+            observation.setValue(value);
+            observation.setObservationHistoryTypeId(typeId);
+            observations.add(observation);
+        }
     }
 
     private String createPatientIdentity(PatientTbInfo tbInfo, String patientId) {

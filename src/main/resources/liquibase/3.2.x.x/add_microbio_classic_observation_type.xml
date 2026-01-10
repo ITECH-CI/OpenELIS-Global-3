@@ -183,4 +183,40 @@ INSERT INTO clinlims.observation_history_type(id, type_name, description,lastupd
         </sql>
     </changeSet>
 
+    <changeSet author="CIV developer Group" id="2026011001">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0"><![CDATA[
+            SELECT count(*) FROM clinlims.observation_history_type WHERE type_name = 'Pregnancy']]>
+            </sqlCheck>
+        </preConditions>
+        <sql><![CDATA[
+            INSERT INTO clinlims.observation_history_type(id, type_name, description, lastupdated) VALUES
+            (nextval('observation_history_type_seq'), 'Pregnancy', 'Patient Pregnancy Status (Boolean)', now());]]>
+        </sql>
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="2026011002">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0"><![CDATA[
+            SELECT count(*) FROM clinlims.observation_history_type WHERE type_name = 'currentHospitalization']]>
+            </sqlCheck>
+        </preConditions>
+        <sql><![CDATA[
+            INSERT INTO clinlims.observation_history_type(id, type_name, description, lastupdated) VALUES
+            (nextval('observation_history_type_seq'), 'currentHospitalization', 'Current Hospitalization Status (Boolean)', now());]]>
+        </sql>
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="2026011003">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0"><![CDATA[
+            SELECT count(*) FROM clinlims.observation_history_type WHERE type_name = 'roomNumber']]>
+            </sqlCheck>
+        </preConditions>
+        <sql><![CDATA[
+            INSERT INTO clinlims.observation_history_type(id, type_name, description, lastupdated) VALUES
+            (nextval('observation_history_type_seq'), 'roomNumber', 'Patient Room Number', now());]]>
+        </sql>
+    </changeSet>
+
 </databaseChangeLog>

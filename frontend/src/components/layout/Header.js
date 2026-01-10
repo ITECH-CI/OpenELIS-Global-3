@@ -466,22 +466,22 @@ function OEHeader(props) {
                       <p>
                         <FormattedMessage id="header.label.version" /> &nbsp;{" "}
                         {configurationProperties?.releaseNumber}
+                        {isTrainingInstallation && (
+                          <span
+                            style={{
+                              backgroundColor: "#ff8800",
+                              color: "white",
+                              padding: "2px 6px",
+                              marginLeft: "8px",
+                              borderRadius: "3px",
+                              fontWeight: "bold",
+                              fontSize: "0.85em",
+                            }}
+                          >
+                            <FormattedMessage id="training.installation.message" />
+                          </span>
+                        )}
                       </p>
-                      {isTrainingInstallation && (
-                        <p
-                          style={{
-                            backgroundColor: "#ff8800",
-                            color: "white",
-                            padding: "4px 8px",
-                            marginTop: "4px",
-                            borderRadius: "4px",
-                            fontWeight: "bold",
-                            fontSize: "0.9em",
-                          }}
-                        >
-                          <FormattedMessage id="training.installation.message" />
-                        </p>
-                      )}
                     </div>
                   </HeaderName>
                   <HeaderGlobalBar>

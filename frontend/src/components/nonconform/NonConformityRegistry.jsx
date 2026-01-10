@@ -81,22 +81,21 @@ const NonConformityRegistry = () => {
     loadNonConformities();
   }, []);
 
-  
-    const getSiteList = (response) => {
-      if (componentMounted.current) {
-        setSiteNames(response);
-      }
+  const getSiteList = (response) => {
+    if (componentMounted.current) {
+      setSiteNames(response);
+    }
+  };
+
+  useEffect(() => {
+    componentMounted.current = true;
+    getFromOpenElisServer("/rest/site-names", getSiteList);
+    getFromOpenElisServer("/rest/user-sample-types", fetchSamplesTypes);
+    getFromOpenElisServer("/rest/qaevents-dictionnary", fetchQaEvents);
+    return () => {
+      componentMounted.current = false;
     };
-  
-    useEffect(() => {
-      componentMounted.current = true;
-      getFromOpenElisServer("/rest/site-names", getSiteList);
-      getFromOpenElisServer("/rest/user-sample-types", fetchSamplesTypes);
-      getFromOpenElisServer("/rest/qaevents-dictionnary", fetchQaEvents);
-      return () => {
-        componentMounted.current = false;
-      };
-    }, []);
+  }, []);
 
   const fetchSamplesTypes = (res) => {
     if (componentMounted.current) {
@@ -105,7 +104,7 @@ const NonConformityRegistry = () => {
     }
   };
 
-    const fetchQaEvents = (res) => {
+  const fetchQaEvents = (res) => {
     if (componentMounted.current) {
       setQaEvent(res);
       setLoading(false);
@@ -125,9 +124,11 @@ const NonConformityRegistry = () => {
     setLoading(true);
     const params = new URLSearchParams();
 
-    if (filters.siteProvenance) params.append("siteProvenance", filters.siteProvenance);
+    if (filters.siteProvenance)
+      params.append("siteProvenance", filters.siteProvenance);
     if (filters.sampleType) params.append("sampleType", filters.sampleType);
-    if (filters.rejectionReason) params.append("rejectionReason", filters.rejectionReason);
+    if (filters.rejectionReason)
+      params.append("rejectionReason", filters.rejectionReason);
     if (filters.startDate) params.append("startDate", filters.startDate);
     if (filters.endDate) params.append("endDate", filters.endDate);
 
@@ -137,7 +138,7 @@ const NonConformityRegistry = () => {
         const dataArray = Array.isArray(data) ? data : [];
         setFilteredData(dataArray);
         setLoading(false);
-      }
+      },
     );
   };
 
@@ -148,16 +149,22 @@ const NonConformityRegistry = () => {
           return "";
         }
         const stringValue = String(value);
-        if (stringValue.includes(",") || stringValue.includes('"') || stringValue.includes("\n")) {
+        if (
+          stringValue.includes(",") ||
+          stringValue.includes('"') ||
+          stringValue.includes("\n")
+        ) {
           return `"${stringValue.replace(/"/g, '""')}"`;
         }
         return stringValue;
       };
 
-      let csvContent = "\ufeff"; 
+      let csvContent = "\ufeff";
 
-      csvContent += "Numéro NC,Date de Signalement,Site de Provenance,Type d'Échantillon,";
-      csvContent += "Raison du Rejet,Commentaire,Rapporteur,Numéro Laboratoire,";
+      csvContent +=
+        "Numéro NC,Date de Signalement,Site de Provenance,Type d'Échantillon,";
+      csvContent +=
+        "Raison du Rejet,Commentaire,Rapporteur,Numéro Laboratoire,";
       csvContent += "Action Corrective\n";
 
       filteredData.forEach((nc) => {
@@ -165,25 +172,26 @@ const NonConformityRegistry = () => {
         csvContent += escapeCsv(nc.reportDate) + ",";
         csvContent += escapeCsv(getSiteNameById(nc.siteProvenance)) + ",";
         csvContent += escapeCsv(getSampleNameById(nc.sampleType)) + ",";
-        csvContent += escapeCsv(getRejectionReasonById(nc.rejectionReason)) + ",";
+        csvContent +=
+          escapeCsv(getRejectionReasonById(nc.rejectionReason)) + ",";
         csvContent += escapeCsv(nc.comment) + ",";
         csvContent += escapeCsv(nc.reporterName) + ",";
         csvContent += escapeCsv(nc.labNumber) + ",";
         csvContent += escapeCsv(nc.correctiveAction) + "\n";
       });
 
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
       const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
+      const link = document.createElement("a");
       link.href = url;
-      link.download = `nonconformites_${new Date().toISOString().split('T')[0]}.csv`;
+      link.download = `nonconformites_${new Date().toISOString().split("T")[0]}.csv`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
     } catch (error) {
-      console.error('Erreur lors de l\'exportation CSV:', error);
-      alert('Erreur lors de l\'exportation du fichier CSV: ' + error.message);
+      console.error("Erreur lors de l'exportation CSV:", error);
+      alert("Erreur lors de l'exportation du fichier CSV: " + error.message);
     }
   };
 
@@ -305,7 +313,7 @@ const NonConformityRegistry = () => {
         },
         (error) => {
           console.error("Error calling server:", error);
-        }
+        },
       );
     } catch (error) {
       console.error("Exception in handleSubmit:", error);
@@ -323,14 +331,13 @@ const NonConformityRegistry = () => {
     { key: "actions", header: "Actions" },
   ];
 
-
   const getSiteNameById = (siteId) => {
     if (!siteId) return "-";
     const site = siteNames.find((s) => s.id === siteId);
     return site ? site.value : siteId;
   };
 
-   const getSampleNameById = (sampleId) => {
+  const getSampleNameById = (sampleId) => {
     if (!sampleId) return "-";
     const sample = sampleTypes.find((s) => s.id === sampleId);
     return sample ? sample.value : sampleId;
@@ -342,21 +349,23 @@ const NonConformityRegistry = () => {
     return reason ? reason.value : reasonId;
   };
 
-  const allRows = Array.isArray(filteredData) ? filteredData.map((nc) => ({
-    id: nc.id,
-    ncNumber: nc.ncNumber,
-    reportDate: nc.reportDate,
-    siteProvenance: getSiteNameById(nc.siteProvenance),
-    sampleType: getSampleNameById(nc.sampleType),
-    rejectionReason: getRejectionReasonById(nc.rejectionReason),
-    reporterName: nc.reporterName,
-    labNumber: nc.labNumber || "-",
-    actions: (
-      <Button size="sm" onClick={() => handleOpenModal(nc)}>
-        Modifier
-      </Button>
-    ),
-  })) : [];
+  const allRows = Array.isArray(filteredData)
+    ? filteredData.map((nc) => ({
+        id: nc.id,
+        ncNumber: nc.ncNumber,
+        reportDate: nc.reportDate,
+        siteProvenance: getSiteNameById(nc.siteProvenance),
+        sampleType: getSampleNameById(nc.sampleType),
+        rejectionReason: getRejectionReasonById(nc.rejectionReason),
+        reporterName: nc.reporterName,
+        labNumber: nc.labNumber || "-",
+        actions: (
+          <Button size="sm" onClick={() => handleOpenModal(nc)}>
+            Modifier
+          </Button>
+        ),
+      }))
+    : [];
 
   const startIndex = (currentPage - 1) * pageSize;
   const endIndex = startIndex + pageSize;
@@ -528,7 +537,10 @@ const NonConformityRegistry = () => {
                       <TableHead>
                         <TableRow>
                           {headers.map((header) => (
-                            <TableHeader key={header.key} {...getHeaderProps({ header })}>
+                            <TableHeader
+                              key={header.key}
+                              {...getHeaderProps({ header })}
+                            >
                               {header.header}
                             </TableHeader>
                           ))}
@@ -572,7 +584,9 @@ const NonConformityRegistry = () => {
       <Modal
         open={showModal}
         onRequestClose={handleCloseModal}
-        modalHeading={isEditing ? "Modifier la Non-Conformité" : "Nouvelle Non-Conformité"}
+        modalHeading={
+          isEditing ? "Modifier la Non-Conformité" : "Nouvelle Non-Conformité"
+        }
         primaryButtonText="Enregistrer"
         secondaryButtonText="Annuler"
         onRequestSubmit={handleSubmit}
@@ -617,17 +631,25 @@ const NonConformityRegistry = () => {
                 value={formData.siteProvenance}
                 allowFreeText={false}
                 onSelect={handleAutoCompleteSiteName}
-                onChange={(e) => handleInputChange("siteProvenance", e.target.value)}
+                onChange={(e) =>
+                  handleInputChange("siteProvenance", e.target.value)
+                }
                 label={
-                    <>
-                      <FormattedMessage id="order.search.site.name" />{" "}
-                    </>
-                  }
-                  style={{ width: "!important 100%" }}
-                  suggestions={siteNames.length > 0 ? siteNames : []}
+                  <>
+                    <FormattedMessage id="order.search.site.name" />{" "}
+                  </>
+                }
+                style={{ width: "!important 100%" }}
+                suggestions={siteNames.length > 0 ? siteNames : []}
               />
               {fieldErrors.siteProvenance && (
-                <div style={{ color: "red", fontSize: "0.75rem", marginTop: "0.25rem" }}>
+                <div
+                  style={{
+                    color: "red",
+                    fontSize: "0.75rem",
+                    marginTop: "0.25rem",
+                  }}
+                >
                   {fieldErrors.siteProvenance}
                 </div>
               )}
@@ -645,7 +667,11 @@ const NonConformityRegistry = () => {
             >
               <SelectItem text="Select sample type" value="" />
               {sampleTypes?.map((sampleType, i) => (
-                <SelectItem text={sampleType.value} value={sampleType.id} key={i} />
+                <SelectItem
+                  text={sampleType.value}
+                  value={sampleType.id}
+                  key={i}
+                />
               ))}
             </Select>
           </Column>
@@ -654,14 +680,20 @@ const NonConformityRegistry = () => {
               id="rejection-reason"
               labelText="Raison du Rejet *"
               value={formData.rejectionReason}
-              onChange={(e) => handleInputChange("rejectionReason", e.target.value)}
+              onChange={(e) =>
+                handleInputChange("rejectionReason", e.target.value)
+              }
               invalid={!!fieldErrors.rejectionReason}
               invalidText={fieldErrors.rejectionReason}
               required
             >
               <SelectItem text="Raison du Rejet" value="" />
               {qaEvent?.map((rejection, i) => (
-                <SelectItem text={rejection.value} value={rejection.id} key={i} />
+                <SelectItem
+                  text={rejection.value}
+                  value={rejection.id}
+                  key={i}
+                />
               ))}
             </Select>
           </Column>
@@ -670,7 +702,9 @@ const NonConformityRegistry = () => {
               id="reporter-name"
               labelText="Personne ayant constaté la NC (Rapporteur) *"
               value={formData.reporterName}
-              onChange={(e) => handleInputChange("reporterName", e.target.value.toUpperCase())}
+              onChange={(e) =>
+                handleInputChange("reporterName", e.target.value.toUpperCase())
+              }
               invalid={!!fieldErrors.reporterName}
               invalidText={fieldErrors.reporterName}
               required
@@ -681,7 +715,9 @@ const NonConformityRegistry = () => {
               id="comment"
               labelText="Commentaire"
               value={formData.comment}
-              onChange={(e) => handleInputChange("comment", e.target.value.toUpperCase())}
+              onChange={(e) =>
+                handleInputChange("comment", e.target.value.toUpperCase())
+              }
               rows={3}
             />
           </Column>
@@ -690,7 +726,12 @@ const NonConformityRegistry = () => {
               id="corrective-action"
               labelText="Action Corrective"
               value={formData.correctiveAction}
-              onChange={(e) => handleInputChange("correctiveAction", e.target.value.toUpperCase())}
+              onChange={(e) =>
+                handleInputChange(
+                  "correctiveAction",
+                  e.target.value.toUpperCase(),
+                )
+              }
               rows={3}
             />
           </Column>
@@ -701,4 +742,3 @@ const NonConformityRegistry = () => {
 };
 
 export default NonConformityRegistry;
-
