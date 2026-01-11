@@ -207,6 +207,9 @@ public class SampleOrderItem implements Serializable {
     // for display
     private Collection programList;
 
+    // for display
+    private String programCode;
+
     private String contactTracingIndexName;
 
     private String contactTracingIndexRecordNumber;
@@ -610,6 +613,14 @@ public class SampleOrderItem implements Serializable {
         this.programId = programId;
     }
 
+     public String getProgramCode() {
+        return programCode;
+    }
+
+    public void setProgramCode(String programCode) {
+        this.programCode = programCode;
+    }
+    
     public String getEpidemiologicalWeek() {
         return epidemiologicalWeek;
     }
