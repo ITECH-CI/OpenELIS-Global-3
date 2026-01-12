@@ -21,6 +21,8 @@ import org.openelisglobal.common.util.ConfigurationProperties.Property;
 import org.openelisglobal.dataexchange.aggregatereporting.TestUsageUpdate;
 import org.openelisglobal.dataexchange.malariareporting.MalariaReportingUpdate;
 import org.openelisglobal.dataexchange.resultreporting.ResultReportingUpdate;
+import org.openelisglobal.spring.util.SpringContext;
+import org.openelisglobal.testunitconversion.service.SiUnitConversionUpdate;
 
 public class ResultUpdateRegister {
     public static List<IResultUpdate> getRegisteredUpdaters() {
@@ -38,6 +40,11 @@ public class ResultUpdateRegister {
         if (shouldReport(Property.testUsageReporting)) {
             updaters.add(new TestUsageUpdate());
         }
+
+        if (shouldReport(Property.SI_UNIT_CONVERSION)) {
+            updaters.add(SpringContext.getBean(SiUnitConversionUpdate.class));
+        }
+
         return updaters;
     }
 

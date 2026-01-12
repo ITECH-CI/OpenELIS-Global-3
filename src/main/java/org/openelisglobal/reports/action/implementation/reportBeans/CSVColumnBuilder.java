@@ -323,11 +323,14 @@ public abstract class CSVColumnBuilder {
 
     protected String prepareColumnName(String columnName) {
         // trim and escape the column name so it is more safe from sql injection
-        if (!columnName.matches("(?i)[a-zàâçéèêëîïôûùüÿñæœ0-9_ ()%/\\[\\]+\\-]+")) {
+        // Allow common special characters: apostrophe, degree symbol, various dashes, etc.
+        if (!columnName.matches("(?i)[a-zàâçéèêëîïôûùüÿñæœ0-9_ ()%/\\[\\]+\\-–°'′]+")) {
             LogEvent.logWarn(this.getClass().getSimpleName(), "prepareColumnName",
                     "potentially dangerous character detected in '" + columnName + "'");
         }
-        return "\"" + trimToPostgresMaxColumnName(columnName = columnName.replace("\"", "\\\"")) + "\"";
+        // Escape double quotes and wrap column name in double quotes for PostgreSQL
+        String escapedName = columnName.replace("\"", "\"\"");
+        return "\"" + trimToPostgresMaxColumnName(escapedName) + "\"";
     }
 
     private String trimToPostgresMaxColumnName(String name) {
@@ -622,6 +625,22 @@ public abstract class CSVColumnBuilder {
     protected void appendObservationHistoryCrosstab(Date lowDate, Date highDate, String byDate) {
         SQLConstant listName = SQLConstant.DEMO;
         appendCrosstabPreamble(listName);
+
+        // Build the list of observation history type names as UNION SELECT for crosstab
+        StringBuilder categoryQuery = new StringBuilder();
+        categoryQuery.append("SELECT type_name FROM (VALUES ");
+        boolean first = true;
+        for (ObservationHistoryType oht : allObHistoryTypes) {
+            if (!first) {
+                categoryQuery.append(", ");
+            }
+            // Escape single quotes in the type name for SQL string literal
+            String escapedTypeName = oht.getTypeName().replace("'", "''''");
+            categoryQuery.append("(''").append(escapedTypeName).append("'')");
+            first = false;
+        }
+        categoryQuery.append(") AS t(type_name) ORDER BY 1");
+
         query.append( // any Observation History items
                 "\n crosstab( " + "\n 'SELECT DISTINCT oh.sample_id as samp_id, oht.type_name, value "
                         + "\n FROM observation_history AS oh, sample AS s, observation_history_type AS oht "
@@ -629,21 +648,8 @@ public abstract class CSVColumnBuilder {
                         + "\n AND s.collection_date <= date(''" + formatDateForDatabaseSql(highDate) + "'')"
                         + "\n AND s.id = oh.sample_id AND oh.observation_history_type_id = oht.id order by 1;' "
                         + "\n , "
-                        + "\n 'SELECT DISTINCT oht.type_name FROM observation_history_type AS oht ORDER BY 1;' " + // must
-                                                                                                                   // be
-                                                                                                                   // the
-                                                                                                                   // same
-                                                                                                                   // list
-                                                                                                                   // as
-                                                                                                                   // the
-                                                                                                                   // column
-                                                                                                                   // definition
-                                                                                                                   // for
-                                                                                                                   // the
-                                                                                                                   // demo
-                                                                                                                   // table
-                                                                                                                   // below.
-                        "\n ) \n ");
+                        + "\n '" + categoryQuery.toString() + ";' "
+                        + "\n ) \n ");
 
         // in the following list of observation history items, all valid values
         // are listed in alphabetical order (since that is how crosstab lists
@@ -659,9 +665,8 @@ public abstract class CSVColumnBuilder {
         // ... )
         query.append(" as demo ( " + " \"s_id\"                           numeric(10) ");
         for (ObservationHistoryType oht : allObHistoryTypes) {
-            // this is sql injection safe as users currently have no way of modifying fields
-            // in ObservationHistoryTypes
-            query.append("\n," + oht.getTypeName() + " varchar(100) ");
+            // Use prepareColumnName to properly escape special characters
+            query.append("\n," + prepareColumnName(oht.getTypeName()) + " varchar(100) ");
         }
         query.append(" ) \n");
         appendCrosstabPostfix(lowDate, highDate, listName);

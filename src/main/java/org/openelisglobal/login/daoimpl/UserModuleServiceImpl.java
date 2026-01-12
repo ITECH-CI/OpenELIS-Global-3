@@ -110,32 +110,6 @@ public class UserModuleServiceImpl implements UserModuleService, IActionConstant
                         isFound = true;
                         setupUserButtons(request, systemUserModule, actionName);
                         // bugzilla 2154
-                        LogEvent.logInfo("UserModuleServiceImpl", "isVerifyUserModule()",
-                                "======> ALLOWED ACCESS TO THIS MODULE");
-                        LogEvent.logDebug("UserModuleServiceImpl", "isVerifyUserModule()",
-                                "======> MODULE ID   : " + systemUserModule.getSystemModule().getId());
-                        LogEvent.logDebug("UserModuleServiceImpl", "isVerifyUserModule()",
-                                "======> MODULE NAME : " + systemUserModule.getSystemModule().getSystemModuleName());
-
-                        LogEvent.logDebug("UserModuleServiceImpl", "isVerifyUserModule()",
-                                "======> ALLOW_VIEW  : " + systemUserModule.getHasSelect());
-                        LogEvent.logDebug("UserModuleServiceImpl", "isVerifyUserModule()",
-                                "======> ALLOW_ADD   : " + systemUserModule.getHasAdd());
-                        LogEvent.logDebug("UserModuleServiceImpl", "isVerifyUserModule()",
-                                "======> ALLOW_UPDATE: " + systemUserModule.getHasUpdate());
-                        LogEvent.logDebug("UserModuleServiceImpl", "isVerifyUserModule()",
-                                "======> ALLOW_DELETE: " + systemUserModule.getHasDelete());
-                        LogEvent.logDebug("UserModuleServiceImpl", "isVerifyUserModule()",
-                                "======> SYSTEM MODULE DEFAULT VALUE");
-                        LogEvent.logDebug("UserModuleServiceImpl", "isVerifyUserModule()",
-                                "======> HAS_VIEW  : " + systemUserModule.getSystemModule().getHasSelectFlag());
-                        LogEvent.logDebug("UserModuleServiceImpl", "isVerifyUserModule()",
-                                "======> HAS_ADD   : " + systemUserModule.getSystemModule().getHasAddFlag());
-                        LogEvent.logDebug("UserModuleServiceImpl", "isVerifyUserModule()",
-                                "======> HAS_UPDATE: " + systemUserModule.getSystemModule().getHasUpdateFlag());
-                        LogEvent.logDebug("UserModuleServiceImpl", "isVerifyUserModule()",
-                                "======> HAS_DELETE: " + systemUserModule.getSystemModule().getHasDeleteFlag());
-
                         break;
                     }
                 }

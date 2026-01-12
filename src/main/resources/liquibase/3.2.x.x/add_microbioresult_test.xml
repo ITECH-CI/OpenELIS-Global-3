@@ -1,0 +1,3104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+
+    <changeSet author="CIV developer Group"
+        id="20251219-01-addMicrobioDictionaryEntries">
+        <sqlFile path="sql/addMicrobioDictionaryEntries.sql"
+            relativeToChangelogFile="true" splitStatements="true"
+            endDelimiter=";" />
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="2024090812">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0"><![CDATA[
+SELECT count(*) FROM
+                clinlims.test_result WHERE test_id =(select id from clinlims.test where description = 'Macroscopie – Aspect')
+]]></sqlCheck>
+        </preConditions>
+        <sql><![CDATA[
+INSERT INTO
+            clinlims.test_result(id,test_id,result_group,flags,tst_rslt_type,value,significant_digits,quant_limit,cont_level,lastupdated,scriptlet_id,sort_order,
+            is_quantifiable,is_active,is_normal) VALUES
+            (nextval('test_result_seq'), (select id from test where description = 'Macroscopie – Aspect'),	null,null,'D',
+            (select id from dictionary where dict_entry = 'Louche' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (nextval('test_result_seq'), (select id from test where description = 'Macroscopie – Aspect'),	null,null,'D',
+            (select id from dictionary where dict_entry = 'Clair' limit 1),	null,null,null,now(),null,1,'f','t','f'),
+            (nextval('test_result_seq'), (select id from test where description = 'Macroscopie – Aspect'),	null,null,'D',
+            (select id from dictionary where dict_entry = 'Trouble' limit 1),	null,null,null,now(),null,1,'f','t','f'),
+            (nextval('test_result_seq'), (select id from test where description = 'Macroscopie – Aspect'),	null,null,'D',
+            (select id from dictionary where dict_entry = 'Purulent' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (nextval('test_result_seq'), (select id from test where description = 'Macroscopie – Aspect'),	null,null,'D',
+            (select id from dictionary where dict_entry = 'Hematique' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (nextval('test_result_seq'), (select id from test where description = 'Macroscopie – Aspect'),	null,null,'D',
+            (select id from dictionary where dict_entry = 'Xanthochromique' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (nextval('test_result_seq'), (select id from test where description = 'Macroscopie – Aspect'),	null,null,'D',
+            (select id from dictionary where dict_entry = 'Glaireux' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (nextval('test_result_seq'), (select id from test where description = 'Macroscopie – Aspect'),	null,null,'D',
+            (select id from dictionary where dict_entry = 'Glaireux Sanglant' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (nextval('test_result_seq'), (select id from test where description = 'Macroscopie – Aspect'),	null,null,'D',
+            (select id from dictionary where dict_entry = 'Limpide' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (nextval('test_result_seq'), (select id from test where description = 'Macroscopie – Aspect'),	null,null,'D',
+            (select id from dictionary where dict_entry = 'Clair' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (nextval('test_result_seq'), (select id from test where description = 'Macroscopie – Aspect'),	null,null,'D',
+            (select id from dictionary where dict_entry = 'Clair Eau De Roche' limit 1),null,null,null,now(),null,1,'f','t','f');
+]]></sql>
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="2025070254">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0"><![CDATA[
+SELECT count(*) FROM
+                clinlims.test_result WHERE test_id =(select id from clinlims.test where description = 'Macroscopie-Turbidité')
+]]></sqlCheck>
+        </preConditions>
+        <sql><![CDATA[
+INSERT INTO
+            clinlims.test_result(id,test_id,result_group,flags,tst_rslt_type,value,significant_digits,quant_limit,cont_level,lastupdated,scriptlet_id,sort_order,
+            is_quantifiable,is_active,is_normal) VALUES
+            (nextval('test_result_seq'), (select id from test where description = 'Macroscopie-Turbidité'),	null,null,'D',
+            (select id from dictionary where dict_entry = 'Louche' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (nextval('test_result_seq'), (select id from test where description = 'Macroscopie-Turbidité'),	null,null,'D',
+            (select id from dictionary where dict_entry = 'Clair' limit 1),	null,null,null,now(),null,1,'f','t','f'),
+            (nextval('test_result_seq'), (select id from test where description = 'Macroscopie-Turbidité'),	null,null,'D',
+            (select id from dictionary where dict_entry = 'Trouble' limit 1),	null,null,null,now(),null,1,'f','t','f'),
+            (nextval('test_result_seq'), (select id from test where description = 'Macroscopie-Turbidité'),	null,null,'D',
+            (select id from dictionary where dict_entry = 'Purulent' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (nextval('test_result_seq'), (select id from test where description = 'Macroscopie-Turbidité'),	null,null,'D',
+            (select id from dictionary where dict_entry = 'Hematique' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (nextval('test_result_seq'), (select id from test where description = 'Macroscopie-Turbidité'),	null,null,'D',
+            (select id from dictionary where dict_entry = 'Xanthochromique' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (nextval('test_result_seq'), (select id from test where description = 'Macroscopie-Turbidité'),	null,null,'D',
+            (select id from dictionary where dict_entry = 'Glaireux' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (nextval('test_result_seq'), (select id from test where description = 'Macroscopie-Turbidité'),	null,null,'D',
+            (select id from dictionary where dict_entry = 'Glaireux Sanglant' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (nextval('test_result_seq'), (select id from test where description = 'Macroscopie-Turbidité'),	null,null,'D',
+            (select id from dictionary where dict_entry = 'Limpide' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (nextval('test_result_seq'), (select id from test where description = 'Macroscopie-Turbidité'),	null,null,'D',
+            (select id from dictionary where dict_entry = 'Clair' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (nextval('test_result_seq'), (select id from test where description = 'Macroscopie-Turbidité'),	null,null,'D',
+            (select id from dictionary where dict_entry = 'Clair Eau De Roche' limit 1),null,null,null,now(),null,1,'f','t','f');
+]]></sql>
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="2024090813">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0"><![CDATA[
+SELECT count(*) FROM clinlims.result_limits WHERE test_id =
+                (select id from clinlims.test where description = 'Macroscopie – Aspect')
+]]></sqlCheck>
+        </preConditions>
+        <sql><![CDATA[
+INSERT INTO clinlims.result_limits(id, test_id,	test_result_type_id,min_age, max_age, gender, low_normal,
+            high_normal, low_valid,	high_valid, lastupdated, normal_dictionary_id,	always_validate)
+            VALUES
+                (nextval('result_limits_seq'),(select id from test where description = 'Macroscopie-Turbidité'),
+            2,0,'Infinity',null,'-Infinity','Infinity','-Infinity','Infinity',now(),null,'f'),
+            (nextval('result_limits_seq'),(select id from test where description = 'Macroscopie – Aspect'),
+            2,0,'Infinity',null,'-Infinity','Infinity','-Infinity','Infinity',now(),null,'f');
+]]></sql>
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="2024090814">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0"><![CDATA[
+SELECT count(*) FROM clinlims.result_limits WHERE test_id =
+                (select id from clinlims.test where description = 'Macroscopie – Autres')
+]]></sqlCheck>
+        </preConditions>
+        <sql><![CDATA[
+INSERT INTO clinlims.result_limits(id, test_id,	test_result_type_id,min_age, max_age, gender, low_normal,
+            high_normal, low_valid,	high_valid, lastupdated, normal_dictionary_id,	always_validate)
+            VALUES
+            (nextval('result_limits_seq'),(select id from test where description = 'Macroscopie – Autres'),
+            2,0,'Infinity',null,'-Infinity','Infinity','-Infinity','Infinity',now(),null,'f'),
+            (nextval('result_limits_seq'),(select id from test where description = 'Macroscopie – Consistance'),
+            2,0,'Infinity',null,'-Infinity','Infinity','-Infinity','Infinity',now(),null,'f'),
+            (nextval('result_limits_seq'),(select id from test where description = 'Microscopie – Etat frais-Qualitatif Hématies'),
+            2,0,'Infinity',null,'-Infinity','Infinity','-Infinity','Infinity',now(),null,'f'),
+            (nextval('result_limits_seq'),(select id from test where description = 'Microscopie – Etat frais-Qualitatif Leucocytes'),
+            2,0,'Infinity',null,'-Infinity','Infinity','-Infinity','Infinity',now(),null,'f'),
+            (nextval('result_limits_seq'),(select id from test where description = 'Microscopie – Etat frais-Qualitatif Parasites'),
+            2,0,'Infinity',null,'-Infinity','Infinity','-Infinity','Infinity',now(),null,'f'),
+            (nextval('result_limits_seq'),(select id from test where description = 'Microscopie – Etat frais-Qualitatif Levures'),
+            2,0,'Infinity',null,'-Infinity','Infinity','-Infinity','Infinity',now(),null,'f'),
+            (nextval('result_limits_seq'),(select id from test where description = 'Microscopie – Etat frais-Qualitatif Bactéries'),
+            2,0,'Infinity',null,'-Infinity','Infinity','-Infinity','Infinity',now(),null,'f'),
+            (nextval('result_limits_seq'),(select id from test where description = 'Microscopie – Etat frais-Qualitatif Spermatozoides'),
+            2,0,'Infinity',null,'-Infinity','Infinity','-Infinity','Infinity',now(),null,'f'),
+            (nextval('result_limits_seq'),(select id from test where description = 'Diagnostic rapide du Rotavirus'),
+            2,0,'Infinity',null,'-Infinity','Infinity','-Infinity','Infinity',now(),null,'f'),
+            (nextval('result_limits_seq'),(select id from test where description = 'Diagnostic rapide du Adenovirus'),
+            2,0,'Infinity',null,'-Infinity','Infinity','-Infinity','Infinity',now(),null,'f'),
+            (nextval('result_limits_seq'),(select id from test where description = 'Microscopie – Etat frais-Qualitatif Cylindre'),
+            2,0,'Infinity',null,'-Infinity','Infinity','-Infinity','Infinity',now(),null,'f'),
+            (nextval('result_limits_seq'),(select id from test where description = 'Microscopie – Etat frais-Qualitatif Cellules épithéaliales'),
+            2,0,'Infinity',null,'-Infinity','Infinity','-Infinity','Infinity',now(),null,'f'),
+            (nextval('result_limits_seq'),(select id from test where description = 'Microscopie – Etat frais-Qualitatif Cellules'),
+            2,0,'Infinity',null,'-Infinity','Infinity','-Infinity','Infinity',now(),null,'f'),
+            (nextval('result_limits_seq'),(select id from test where description = 'Microscopie – Etat frais-Qualitatif Kystes'),
+            2,0,'Infinity',null,'-Infinity','Infinity','-Infinity','Infinity',now(),null,'f'),
+            (nextval('result_limits_seq'),(select id from test where description = 'Microscopie – Etat frais-Qualitatif Oeufs'),
+            2,0,'Infinity',null,'-Infinity','Infinity','-Infinity','Infinity',now(),null,'f'),
+            (nextval('result_limits_seq'),(select id from test where description = 'Microscopie – Etat frais-Qualitatif Cristaux'),
+            2,0,'Infinity',null,'-Infinity','Infinity','-Infinity','Infinity',now(),null,'f'),
+            (nextval('result_limits_seq'),(select id from test where description = 'Microscopie – Etat frais-Quantitatif Volume'),
+            4,0,'Infinity',null,'-Infinity','Infinity','-Infinity','Infinity',now(),null,'f'),
+            (nextval('result_limits_seq'),(select id from test where description = 'Microscopie – Etat frais-Qualitatif Flagellés'),
+            2,0,'Infinity',null,'-Infinity','Infinity','-Infinity','Infinity',now(),null,'f'),
+            (nextval('result_limits_seq'),(select id from test where description = 'Microscopie – Etat frais-Qualitatif Larves'),
+            2,0,'Infinity',null,'-Infinity','Infinity','-Infinity','Infinity',now(),null,'f'),
+            (nextval('result_limits_seq'),(select id from test where description = 'Microscopie – Etat frais-Qualitatif Spores'),
+            2,0,'Infinity',null,'-Infinity','Infinity','-Infinity','Infinity',now(),null,'f'),
+            (nextval('result_limits_seq'),(select id from test where description = 'Microscopie – Etat frais-Qualitatif Encre de chine Cryptocoque'),
+            2,0,'Infinity',null,'-Infinity','Infinity','-Infinity','Infinity',now(),null,'f'),
+            (nextval('result_limits_seq'),(select id from test where description = 'Microscopie-Qualitatif Recherche Antigènes solubles Escherichia coli k1'),
+            2,0,'Infinity',null,'-Infinity','Infinity','-Infinity','Infinity',now(),null,'f'),
+            (nextval('result_limits_seq'),(select id from test where description = 'Microscopie-Qualitatif Recherche Antigènes solubles Streptococcus pneumoniae'),
+            2,0,'Infinity',null,'-Infinity','Infinity','-Infinity','Infinity',now(),null,'f'),
+            (nextval('result_limits_seq'),(select id from test where description = 'Microscopie Qualitatif Recherche Antigènes solubles Streptoccus B'),
+            2,0,'Infinity',null,'-Infinity','Infinity','-Infinity','Infinity',now(),null,'f'),
+            (nextval('result_limits_seq'),(select id from test where description = 'Microscopie qualitatif Recherche Antigènes solubles Hemophilus Influenzae B'),
+            2,0,'Infinity',null,'-Infinity','Infinity','-Infinity','Infinity',now(),null,'f'),
+            (nextval('result_limits_seq'),(select id from test where description = 'Microscopie-Qualitatif Recherche Antigènes solubles Neisseria meningitidis A'),
+            2,0,'Infinity',null,'-Infinity','Infinity','-Infinity','Infinity',now(),null,'f'),
+            (nextval('result_limits_seq'),(select id from test where description = 'Microscopie Qualitatif Recherche Antigènes solubles Neisseria meningitidis B'),
+            2,0,'Infinity',null,'-Infinity','Infinity','-Infinity','Infinity',now(),null,'f'),
+            (nextval('result_limits_seq'),(select id from test where description = 'microscopie-Qualitatif Recherche Antigènes solubles Neisseria meningitidis C'),
+            2,0,'Infinity',null,'-Infinity','Infinity','-Infinity','Infinity',now(),null,'f'),
+            (nextval('result_limits_seq'),(select id from test where description = 'Microscopie qualitatif Recherche Antigènes solubles Neisseria meningitidis Y/W135'),
+            2,0,'Infinity',null,'-Infinity','Infinity','-Infinity','Infinity',now(),null,'f'),
+            (nextval('result_limits_seq'),(select id from test where description = 'Microscopie – Frottis-Coloration Gram-Polynucléaires'),
+            4,0,'Infinity',null,'-Infinity','Infinity','-Infinity','Infinity',now(),null,'f'),
+            (nextval('result_limits_seq'),(select id from test where description = 'Microscopie – Frottis-Coloration Gram-Bacteries'),
+            2,0,'Infinity',null,'-Infinity','Infinity','-Infinity','Infinity',now(),null,'f'),
+  (nextval('result_limits_seq'),(select id from test where description = 'Microscopie – Frottis-Coloration Gram-Bactérie Flore Bactérienne'),
+            2,0,'Infinity',null,'-Infinity','Infinity','-Infinity','Infinity',now(),null,'f'),
+            (nextval('result_limits_seq'),(select id from test where description = 'Macroscopie – Vulve Leucorrhées'),
+            2,0,'Infinity',null,'-Infinity','Infinity','-Infinity','Infinity',now(),null,'f'),
+            (nextval('result_limits_seq'),(select id from test where description = 'Macroscopie – Vulve Ulcération'),
+            2,0,'Infinity',null,'-Infinity','Infinity','-Infinity','Infinity',now(),null,'f'),
+            (nextval('result_limits_seq'),(select id from test where description = 'Macroscopie – Vulve Condylomes'),
+            2,0,'Infinity',null,'-Infinity','Infinity','-Infinity','Infinity',now(),null,'f'),
+            (nextval('result_limits_seq'),(select id from test where description = 'Macroscopie – Vulve Inflammation'),
+            2,0,'Infinity',null,'-Infinity','Infinity','-Infinity','Infinity',now(),null,'f'),
+            (nextval('result_limits_seq'),(select id from test where description = 'Macroscopie – Vulve Normale'),
+            2,0,'Infinity',null,'-Infinity','Infinity','-Infinity','Infinity',now(),null,'f'),
+            (nextval('result_limits_seq'),(select id from test where description = 'Macroscopie – Muqueuse Vaginale Leucorrhées'),
+            2,0,'Infinity',null,'-Infinity','Infinity','-Infinity','Infinity',now(),null,'f'),
+            (nextval('result_limits_seq'),(select id from test where description = 'Macroscopie – Muqueuse Vaginale Ulcération'),
+            2,0,'Infinity',null,'-Infinity','Infinity','-Infinity','Infinity',now(),null,'f'),
+            (nextval('result_limits_seq'),(select id from test where description = 'Macroscopie – Muqueuse Vaginale Condylomes'),
+            2,0,'Infinity',null,'-Infinity','Infinity','-Infinity','Infinity',now(),null,'f'),
+            (nextval('result_limits_seq'),(select id from test where description = 'Macroscopie – Muqueuse Vaginale Inflammation'),
+            2,0,'Infinity',null,'-Infinity','Infinity','-Infinity','Infinity',now(),null,'f'),
+            (nextval('result_limits_seq'),(select id from test where description = 'Macroscopie – Muqueuse Vaginale Normale'),
+            2,0,'Infinity',null,'-Infinity','Infinity','-Infinity','Infinity',now(),null,'f'),
+            (nextval('result_limits_seq'),(select id from test where description = 'Macroscopie – Col Leucorrhées'),
+            2,0,'Infinity',null,'-Infinity','Infinity','-Infinity','Infinity',now(),null,'f'),
+            (nextval('result_limits_seq'),(select id from test where description = 'Macroscopie – Col Ulcération'),
+            2,0,'Infinity',null,'-Infinity','Infinity','-Infinity','Infinity',now(),null,'f'),
+                (nextval('result_limits_seq'),(select id from test where description = 'Macroscopie – Col Condylomes'),
+            2,0,'Infinity',null,'-Infinity','Infinity','-Infinity','Infinity',now(),null,'f'),
+                (nextval('result_limits_seq'),(select id from test where description = 'Macroscopie – Col Inflammation'),
+            2,0,'Infinity',null,'-Infinity','Infinity','-Infinity','Infinity',now(),null,'f'),
+                (nextval('result_limits_seq'),(select id from test where description = 'Macroscopie – Col Normale'),
+            2,0,'Infinity',null,'-Infinity','Infinity','-Infinity','Infinity',now(),null,'f'),
+            (nextval('result_limits_seq'),(select id from test where description = 'Macroscopie – Col Normale'),
+            2,0,'Infinity',null,'-Infinity','Infinity','-Infinity','Infinity',now(),null,'f'),
+            (nextval('result_limits_seq'),(select id from test where description = 'Macroscopie – Vulve-Aspect'),
+            2,0,'Infinity',null,'-Infinity','Infinity','-Infinity','Infinity',now(),null,'f'),
+                (nextval('result_limits_seq'),(select id from test where description = 'Macroscopie – Vulve-Autre'),
+            2,0,'Infinity',null,'-Infinity','Infinity','-Infinity','Infinity',now(),null,'f'),
+            (nextval('result_limits_seq'),(select id from test where description = 'Macroscopie – Vulve-Couleur'),
+            2,0,'Infinity',null,'-Infinity','Infinity','-Infinity','Infinity',now(),null,'f'),
+            (nextval('result_limits_seq'),(select id from test where description = 'Macroscopie – Muqueuse vaginale-Abondance'),
+            2,0,'Infinity',null,'-Infinity','Infinity','-Infinity','Infinity',now(),null,'f'),
+            (nextval('result_limits_seq'),(select id from test where description = 'Macroscopie – Muqueuse vaginale-Aspect'),
+            2,0,'Infinity',null,'-Infinity','Infinity','-Infinity','Infinity',now(),null,'f'),
+            (nextval('result_limits_seq'),(select id from test where description = 'Macroscopie – Muqueuse vaginale-Autre'),
+            2,0,'Infinity',null,'-Infinity','Infinity','-Infinity','Infinity',now(),null,'f'),
+            (nextval('result_limits_seq'),(select id from test where description = 'Macroscopie – Muqueuse vaginale-Couleur'),
+            2,0,'Infinity',null,'-Infinity','Infinity','-Infinity','Infinity',now(),null,'f'),
+            (nextval('result_limits_seq'),(select id from test where description = 'Macroscopie – Col-Abondance'),
+            2,0,'Infinity',null,'-Infinity','Infinity','-Infinity','Infinity',now(),null,'f'),
+            (nextval('result_limits_seq'),(select id from test where description = 'Macroscopie – Col-Aspect'),
+            2,0,'Infinity',null,'-Infinity','Infinity','-Infinity','Infinity',now(),null,'f'),
+            (nextval('result_limits_seq'),(select id from test where description = 'Macroscopie – Col-Autre'),
+            2,0,'Infinity',null,'-Infinity','Infinity','-Infinity','Infinity',now(),null,'f'),
+            (nextval('result_limits_seq'),(select id from test where description = 'Macroscopie – Col-Couleur'),
+            2,0,'Infinity',null,'-Infinity','Infinity','-Infinity','Infinity',now(),null,'f');
+]]></sql>
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="2024102207">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0"><![CDATA[
+SELECT count(*) FROM clinlims.result_limits WHERE test_id =
+                (select id from clinlims.test where description = 'Macroscopie-gland Ulceration')
+]]></sqlCheck>
+        </preConditions>
+        <sql><![CDATA[
+INSERT INTO clinlims.result_limits(id, test_id,	test_result_type_id,min_age, max_age, gender, low_normal,
+            high_normal, low_valid,	high_valid, lastupdated, normal_dictionary_id,	always_validate)
+            VALUES
+            (nextval('result_limits_seq'),(select id from test where description = 'Macroscopie-gland Ulceration'),
+            2,0,'Infinity',null,'-Infinity','Infinity','-Infinity','Infinity',now(),null,'f'),
+            (nextval('result_limits_seq'),(select id from test where description = 'Macroscopie-gland Condylomes'),
+            2,0,'Infinity',null,'-Infinity','Infinity','-Infinity','Infinity',now(),null,'f'),
+            (nextval('result_limits_seq'),(select id from test where description = 'Macroscopie-gland Inflammation'),
+            2,0,'Infinity',null,'-Infinity','Infinity','-Infinity','Infinity',now(),null,'f'),
+            (nextval('result_limits_seq'),(select id from test where description = 'Macroscopie-gland Normale'),
+            2,0,'Infinity',null,'-Infinity','Infinity','-Infinity','Infinity',now(),null,'f');
+]]></sql>
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="2024090816">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0"><![CDATA[
+SELECT count(*) FROM
+                clinlims.test_result WHERE test_id =(select id from clinlims.test where description = 'Macroscopie – Autres')
+]]></sqlCheck>
+        </preConditions>
+        <sql><![CDATA[
+INSERT INTO
+            clinlims.test_result(id,test_id,result_group,flags,tst_rslt_type,value,significant_digits,quant_limit,cont_level,lastupdated,scriptlet_id,sort_order,
+            is_quantifiable,is_active,is_normal) VALUES
+            (nextval('test_result_seq'), (select id from test where description = 'Macroscopie – Autres'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Inodore' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (nextval('test_result_seq'), (select id from test where description = 'Macroscopie – Autres'),	null,null,'D',
+            (select id from dictionary where dict_entry = 'Fetide' limit 1),null,null,null,now(),null,1,'f','t','f');
+]]></sql>
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="2024090817">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0"><![CDATA[
+SELECT count(*) FROM
+                clinlims.test_result WHERE test_id =(select id from clinlims.test where description = 'Macroscopie – Consistance')
+]]></sqlCheck>
+        </preConditions>
+        <sql><![CDATA[
+INSERT INTO
+            clinlims.test_result(id,test_id,result_group,flags,tst_rslt_type,value,significant_digits,quant_limit,cont_level,lastupdated,scriptlet_id,sort_order,
+            is_quantifiable,is_active,is_normal) VALUES
+            (nextval('test_result_seq'), (select id from test where description = 'Macroscopie – Consistance'),	null,null,'D',
+            (select id from dictionary where dict_entry = 'Liquide' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (nextval('test_result_seq'), (select id from test where description = 'Macroscopie – Consistance'),	null,null,'D',
+            (select id from dictionary where dict_entry = 'Cremeux' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (nextval('test_result_seq'), (select id from test where description = 'Macroscopie – Consistance'),	null,null,'D',
+            (select id from dictionary where dict_entry = 'Fluide' limit 1),	null,null,null,now(),null,1,'f','t','f'),
+            (nextval('test_result_seq'), (select id from test where description = 'Macroscopie – Consistance'),	null,null,'D',
+            (select id from dictionary where dict_entry = 'Pateux' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (nextval('test_result_seq'), (select id from test where description = 'Macroscopie – Consistance'),	null,null,'D',
+            (select id from dictionary where dict_entry = 'Granuleux' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (nextval('test_result_seq'), (select id from test where description = 'Macroscopie – Consistance'),	null,null,'D',
+            (select id from dictionary where dict_entry = 'Viscosite Normale' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (nextval('test_result_seq'), (select id from test where description = 'Macroscopie – Consistance'),	null,null,'D',
+            (select id from dictionary where dict_entry = 'Hyper Visqueux' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (nextval('test_result_seq'), (select id from test where description = 'Macroscopie – Consistance'),	null,null,'D',
+            (select id from dictionary where dict_entry = 'Molles' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (nextval('test_result_seq'), (select id from test where description = 'Macroscopie – Consistance'),	null,null,'D',
+            (select id from dictionary where dict_entry = 'Dur' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (nextval('test_result_seq'), (select id from test where description = 'Macroscopie – Consistance'),	null,null,'D',
+            (select id from dictionary where dict_entry = 'Moulee' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (nextval('test_result_seq'), (select id from test where description = 'Macroscopie – Consistance'),	null,null,'D',
+            (select id from dictionary where dict_entry = 'Muqueux' limit 1),null,null,null,now(),null,1,'f','t','f');
+]]></sql>
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="2024090850">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0"><![CDATA[
+SELECT count(*) FROM
+                clinlims.test_result WHERE test_id =(select id from clinlims.test where description = 'Macroscopie – Couleur')
+]]></sqlCheck>
+        </preConditions>
+        <sql><![CDATA[
+INSERT INTO
+            clinlims.test_result(id,test_id,result_group,flags,tst_rslt_type,value,significant_digits,quant_limit,cont_level,lastupdated,scriptlet_id,sort_order,
+            is_quantifiable,is_active,is_normal) VALUES
+            (nextval('test_result_seq'), (select id from test where description = 'Macroscopie – Couleur'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Citrin' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (nextval('test_result_seq'), (select id from test where description = 'Macroscopie – Couleur'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Blanchatre' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (nextval('test_result_seq'), (select id from test where description = 'Macroscopie – Couleur'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Verdatre' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (nextval('test_result_seq'), (select id from test where description = 'Macroscopie – Couleur'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Jaunatre' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (nextval('test_result_seq'), (select id from test where description = 'Macroscopie – Couleur'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Grisatre' limit 1),null,null,null,now(),null,1,'f','t','f');
+]]></sql>
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="2024090819">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0"><![CDATA[
+SELECT count(*) FROM
+                clinlims.test_result WHERE test_id =(select id from clinlims.test where description = 'Microscopie – Etat frais-Qualitatif Leucocytes')
+]]></sqlCheck>
+        </preConditions>
+        <sql><![CDATA[
+INSERT INTO
+            clinlims.test_result(id,test_id,result_group,flags,tst_rslt_type,value,significant_digits,quant_limit,cont_level,lastupdated,scriptlet_id,sort_order,
+            is_quantifiable,is_active,is_normal) VALUES
+            (nextval('test_result_seq'), (select id from test where description = 'Microscopie – Etat frais-Qualitatif Leucocytes'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Presence' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (nextval('test_result_seq'), (select id from test where description = 'Microscopie – Etat frais-Qualitatif Leucocytes'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Absence' limit 1),null,null,null,now(),null,1,'f','t','f');
+]]></sql>
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="2024090818">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0"><![CDATA[
+SELECT count(*) FROM
+                clinlims.test_result WHERE test_id =(select id from clinlims.test where description = 'Microscopie – Etat frais-Qualitatif Hématies')
+]]></sqlCheck>
+        </preConditions>
+        <sql><![CDATA[
+INSERT INTO
+            clinlims.test_result(id,test_id,result_group,flags,tst_rslt_type,value,significant_digits,quant_limit,cont_level,lastupdated,scriptlet_id,sort_order,
+            is_quantifiable,is_active,is_normal) VALUES
+            (nextval('test_result_seq'), (select id from test where description = 'Microscopie – Etat frais-Qualitatif Hématies'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Presence' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (nextval('test_result_seq'), (select id from test where description = 'Microscopie – Etat frais-Qualitatif Hématies'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Absence' limit 1),null,null,null,now(),null,1,'f','t','f');
+]]></sql>
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="2024090820">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0"><![CDATA[
+SELECT count(*) FROM
+                clinlims.test_result WHERE test_id =(select id from clinlims.test where description = 'Microscopie – Etat frais-Qualitatif Parasites')
+]]></sqlCheck>
+        </preConditions>
+        <sql><![CDATA[
+INSERT INTO
+            clinlims.test_result(id,test_id,result_group,flags,tst_rslt_type,value,significant_digits,quant_limit,cont_level,lastupdated,scriptlet_id,sort_order,
+            is_quantifiable,is_active,is_normal) VALUES
+            (nextval('test_result_seq'), (select id from test where description = 'Microscopie – Etat frais-Qualitatif Parasites'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Presence' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (nextval('test_result_seq'), (select id from test where description = 'Microscopie – Etat frais-Qualitatif Parasites'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Absence' limit 1),null,null,null,now(),null,1,'f','t','f');
+]]></sql>
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="2025060119">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0"><![CDATA[
+SELECT count(*) FROM
+                clinlims.test_result WHERE test_id =(select id from clinlims.test where description = 'Diagnostic rapide du Rotavirus')
+]]></sqlCheck>
+        </preConditions>
+        <sql><![CDATA[
+INSERT INTO
+            clinlims.test_result(id,test_id,result_group,flags,tst_rslt_type,value,significant_digits,quant_limit,cont_level,lastupdated,scriptlet_id,sort_order,
+            is_quantifiable,is_active,is_normal) VALUES
+            (nextval('test_result_seq'), (select id from test where description = 'Diagnostic rapide du Rotavirus'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Presence' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (nextval('test_result_seq'), (select id from test where description = 'Diagnostic rapide du Rotavirus'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Absence' limit 1),null,null,null,now(),null,1,'f','t','f');
+]]></sql>
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="2025060120">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0"><![CDATA[
+SELECT count(*) FROM
+                clinlims.test_result WHERE test_id =(select id from clinlims.test where description = 'Diagnostic rapide du Adenovirus')
+]]></sqlCheck>
+        </preConditions>
+        <sql><![CDATA[
+INSERT INTO
+            clinlims.test_result(id,test_id,result_group,flags,tst_rslt_type,value,significant_digits,quant_limit,cont_level,lastupdated,scriptlet_id,sort_order,
+            is_quantifiable,is_active,is_normal) VALUES
+            (nextval('test_result_seq'), (select id from test where description = 'Diagnostic rapide du Adenovirus'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Presence' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (nextval('test_result_seq'), (select id from test where description = 'Diagnostic rapide du Adenovirus'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Absence' limit 1),null,null,null,now(),null,1,'f','t','f');
+]]></sql>
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="2024090821">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0"><![CDATA[
+SELECT count(*) FROM
+                clinlims.test_result WHERE test_id =(select id from clinlims.test where description = 'Microscopie – Etat frais-Qualitatif Levures')
+]]></sqlCheck>
+        </preConditions>
+        <sql><![CDATA[
+INSERT INTO
+            clinlims.test_result(id,test_id,result_group,flags,tst_rslt_type,value,significant_digits,quant_limit,cont_level,lastupdated,scriptlet_id,sort_order,
+            is_quantifiable,is_active,is_normal) VALUES
+            (nextval('test_result_seq'), (select id from test where description = 'Microscopie – Etat frais-Qualitatif Levures'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Presence' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (nextval('test_result_seq'), (select id from test where description = 'Microscopie – Etat frais-Qualitatif Levures'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Absence' limit 1),null,null,null,now(),null,1,'f','t','f');
+]]></sql>
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="2024090827">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0"><![CDATA[
+SELECT count(*) FROM
+                clinlims.test_result WHERE test_id =(select id from clinlims.test where description = 'Microscopie – Etat frais-Qualitatif Cristaux')
+]]></sqlCheck>
+        </preConditions>
+        <sql><![CDATA[
+INSERT INTO
+            clinlims.test_result(id,test_id,result_group,flags,tst_rslt_type,value,significant_digits,quant_limit,cont_level,lastupdated,scriptlet_id,sort_order,
+            is_quantifiable,is_active,is_normal) VALUES
+            (nextval('test_result_seq'), (select id from test where description = 'Microscopie – Etat frais-Qualitatif Cristaux'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Presence' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (nextval('test_result_seq'), (select id from test where description = 'Microscopie – Etat frais-Qualitatif Cristaux'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Absence' limit 1),null,null,null,now(),null,1,'f','t','f');
+]]></sql>
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="2024090822">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0"><![CDATA[
+SELECT count(*) FROM
+                clinlims.test_result WHERE test_id =(select id from clinlims.test where description = 'Microscopie – Etat frais-Qualitatif Bactéries')
+]]></sqlCheck>
+        </preConditions>
+        <sql><![CDATA[
+INSERT INTO
+            clinlims.test_result(id,test_id,result_group,flags,tst_rslt_type,value,significant_digits,quant_limit,cont_level,lastupdated,scriptlet_id,sort_order,
+            is_quantifiable,is_active,is_normal) VALUES
+            (nextval('test_result_seq'), (select id from test where description = 'Microscopie – Etat frais-Qualitatif Bactéries'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Presence' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (nextval('test_result_seq'), (select id from test where description = 'Microscopie – Etat frais-Qualitatif Bactéries'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Absence' limit 1),null,null,null,now(),null,1,'f','t','f');
+]]></sql>
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="2024090823">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0"><![CDATA[
+SELECT count(*) FROM
+                clinlims.test_result WHERE test_id =(select id from clinlims.test where description = 'Microscopie – Etat frais-Qualitatif Spermatozoides')
+]]></sqlCheck>
+        </preConditions>
+        <sql><![CDATA[
+INSERT INTO
+            clinlims.test_result(id,test_id,result_group,flags,tst_rslt_type,value,significant_digits,quant_limit,cont_level,lastupdated,scriptlet_id,sort_order,
+            is_quantifiable,is_active,is_normal) VALUES
+            (nextval('test_result_seq'), (select id from test where description = 'Microscopie – Etat frais-Qualitatif Spermatozoides'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Presence' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (nextval('test_result_seq'), (select id from test where description = 'Microscopie – Etat frais-Qualitatif Spermatozoides'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Absence' limit 1),null,null,null,now(),null,1,'f','t','f');
+]]></sql>
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="2024091750">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0"><![CDATA[
+SELECT count(*) FROM
+                clinlims.test_result WHERE test_id =(select id from clinlims.test where description = 'Microscopie – Etat frais-Qualitatif Cylindre')
+]]></sqlCheck>
+        </preConditions>
+        <sql><![CDATA[
+INSERT INTO
+            clinlims.test_result(id,test_id,result_group,flags,tst_rslt_type,value,significant_digits,quant_limit,cont_level,lastupdated,scriptlet_id,sort_order,
+            is_quantifiable,is_active,is_normal) VALUES
+            (nextval('test_result_seq'), (select id from test where description = 'Microscopie – Etat frais-Qualitatif Cylindre'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Presence' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (nextval('test_result_seq'), (select id from test where description = 'Microscopie – Etat frais-Qualitatif Cylindre'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Absence' limit 1),null,null,null,now(),null,1,'f','t','f');
+]]></sql>
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="2024090824">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0"><![CDATA[
+SELECT count(*) FROM
+                clinlims.test_result WHERE test_id =(select id from clinlims.test where description = 'Microscopie – Etat frais-Qualitatif Cellules épithéaliales')
+]]></sqlCheck>
+        </preConditions>
+        <sql><![CDATA[
+INSERT INTO
+            clinlims.test_result(id,test_id,result_group,flags,tst_rslt_type,value,significant_digits,quant_limit,cont_level,lastupdated,scriptlet_id,sort_order,
+            is_quantifiable,is_active,is_normal) VALUES
+            (nextval('test_result_seq'), (select id from test where description = 'Microscopie – Etat frais-Qualitatif Cellules épithéaliales'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Presence' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (nextval('test_result_seq'), (select id from test where description = 'Microscopie – Etat frais-Qualitatif Cellules épithéaliales'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Absence' limit 1),null,null,null,now(),null,1,'f','t','f');
+]]></sql>
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="2025070501">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0"><![CDATA[
+SELECT count(*) FROM
+                clinlims.test_result WHERE test_id =(select id from clinlims.test where description = 'Microscopie – Frottis-Coloration Gram-Bacteries')
+]]></sqlCheck>
+        </preConditions>
+        <sql><![CDATA[
+INSERT INTO
+            clinlims.test_result(id,test_id,result_group,flags,tst_rslt_type,value,significant_digits,quant_limit,cont_level,lastupdated,scriptlet_id,sort_order,
+            is_quantifiable,is_active,is_normal) VALUES
+            (nextval('test_result_seq'), (select id from test where description = 'Microscopie – Frottis-Coloration Gram-Bacteries'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Cocci Gram Positif' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (nextval('test_result_seq'), (select id from test where description = 'Microscopie – Frottis-Coloration Gram-Bacteries'),	null,null,'D',
+            (select id from dictionary where dict_entry = 'Cocci Gram Negatif' limit 1),null,null,null,now(),null,1,'f','t','f'),
+                (nextval('test_result_seq'), (select id from test where description = 'Microscopie – Frottis-Coloration Gram-Bacteries'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Bacille Gram Positif' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (nextval('test_result_seq'), (select id from test where description = 'Microscopie – Frottis-Coloration Gram-Bacteries'),	null,null,'D',
+            (select id from dictionary where dict_entry = 'Bacille Gram Negatif' limit 1),null,null,null,now(),null,1,'f','t','f');
+]]></sql>
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="2025060117">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0"><![CDATA[
+SELECT count(*) FROM
+                clinlims.test_result WHERE test_id =(select id from clinlims.test where description = 'Microscopie – Etat frais-Qualitatif Cellules')
+]]></sqlCheck>
+        </preConditions>
+        <sql><![CDATA[
+INSERT INTO
+            clinlims.test_result(id,test_id,result_group,flags,tst_rslt_type,value,significant_digits,quant_limit,cont_level,lastupdated,scriptlet_id,sort_order,
+            is_quantifiable,is_active,is_normal) VALUES
+            (nextval('test_result_seq'), (select id from test where description = 'Microscopie – Etat frais-Qualitatif Cellules'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Presence' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (nextval('test_result_seq'), (select id from test where description = 'Microscopie – Etat frais-Qualitatif Cellules'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Absence' limit 1),null,null,null,now(),null,1,'f','t','f');
+]]></sql>
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="2024090825">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0"><![CDATA[
+SELECT count(*) FROM
+                clinlims.test_result WHERE test_id =(select id from clinlims.test where description = 'Microscopie – Etat frais-Qualitatif Kystes')
+]]></sqlCheck>
+        </preConditions>
+        <sql><![CDATA[
+INSERT INTO
+            clinlims.test_result(id,test_id,result_group,flags,tst_rslt_type,value,significant_digits,quant_limit,cont_level,lastupdated,scriptlet_id,sort_order,
+            is_quantifiable,is_active,is_normal) VALUES
+            (nextval('test_result_seq'), (select id from test where description = 'Microscopie – Etat frais-Qualitatif Kystes'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Presence' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (nextval('test_result_seq'), (select id from test where description = 'Microscopie – Etat frais-Qualitatif Kystes'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Absence' limit 1),null,null,null,now(),null,1,'f','t','f');
+]]></sql>
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="2024090826">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0"><![CDATA[
+SELECT count(*) FROM
+                clinlims.test_result WHERE test_id =(select id from clinlims.test where description = 'Microscopie – Etat frais-Qualitatif Oeufs')
+]]></sqlCheck>
+        </preConditions>
+        <sql><![CDATA[
+INSERT INTO
+            clinlims.test_result(id,test_id,result_group,flags,tst_rslt_type,value,significant_digits,quant_limit,cont_level,lastupdated,scriptlet_id,sort_order,
+            is_quantifiable,is_active,is_normal) VALUES
+            (nextval('test_result_seq'), (select id from test where description = 'Microscopie – Etat frais-Qualitatif Oeufs'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Presence' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (nextval('test_result_seq'), (select id from test where description = 'Microscopie – Etat frais-Qualitatif Oeufs'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Absence' limit 1),null,null,null,now(),null,1,'f','t','f');
+]]></sql>
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="2024090828">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0"><![CDATA[
+SELECT count(*) FROM
+                clinlims.test_result WHERE test_id =(select id from clinlims.test where description = 'Microscopie – Etat frais-Qualitatif Flagellés')
+]]></sqlCheck>
+        </preConditions>
+        <sql><![CDATA[
+INSERT INTO
+            clinlims.test_result(id,test_id,result_group,flags,tst_rslt_type,value,significant_digits,quant_limit,cont_level,lastupdated,scriptlet_id,sort_order,
+            is_quantifiable,is_active,is_normal) VALUES
+            (nextval('test_result_seq'), (select id from test where description = 'Microscopie – Etat frais-Qualitatif Flagellés'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Presence' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (nextval('test_result_seq'), (select id from test where description = 'Microscopie – Etat frais-Qualitatif Flagellés'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Absence' limit 1),null,null,null,now(),null,1,'f','t','f');
+]]></sql>
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="2024090829">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0"><![CDATA[
+SELECT count(*) FROM
+                clinlims.test_result WHERE test_id =(select id from clinlims.test where description = 'Microscopie – Etat frais-Qualitatif Larves')
+]]></sqlCheck>
+        </preConditions>
+        <sql><![CDATA[
+INSERT INTO
+            clinlims.test_result(id,test_id,result_group,flags,tst_rslt_type,value,significant_digits,quant_limit,cont_level,lastupdated,scriptlet_id,sort_order,
+            is_quantifiable,is_active,is_normal) VALUES
+            (nextval('test_result_seq'), (select id from test where description = 'Microscopie – Etat frais-Qualitatif Larves'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Presence' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (nextval('test_result_seq'), (select id from test where description = 'Microscopie – Etat frais-Qualitatif Larves'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Absence' limit 1),	null,null,null,now(),null,1,'f','t','f');
+]]></sql>
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="2024090830">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0"><![CDATA[
+SELECT count(*) FROM
+                clinlims.test_result WHERE test_id =(select id from clinlims.test where description = 'Microscopie – Etat frais-Qualitatif Spores')
+]]></sqlCheck>
+        </preConditions>
+        <sql><![CDATA[
+INSERT INTO
+            clinlims.test_result(id,test_id,result_group,flags,tst_rslt_type,value,significant_digits,quant_limit,cont_level,lastupdated,scriptlet_id,sort_order,
+            is_quantifiable,is_active,is_normal) VALUES
+            (nextval('test_result_seq'), (select id from test where description = 'Microscopie – Etat frais-Qualitatif Spores'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Presence' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (nextval('test_result_seq'), (select id from test where description = 'Microscopie – Etat frais-Qualitatif Spores'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Absence' limit 1),null,null,null,now(),null,1,'f','t','f');
+]]></sql>
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="2024090831">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0"><![CDATA[
+SELECT count(*) FROM
+                clinlims.test_result WHERE test_id =(select id from clinlims.test where description = 'Microscopie – Etat frais-Qualitatif Encre de chine Cryptocoque')
+]]></sqlCheck>
+        </preConditions>
+        <sql><![CDATA[
+INSERT INTO
+            clinlims.test_result(id,test_id,result_group,flags,tst_rslt_type,value,significant_digits,quant_limit,cont_level,lastupdated,scriptlet_id,sort_order,
+            is_quantifiable,is_active,is_normal) VALUES
+            (nextval('test_result_seq'), (select id from test where description = 'Microscopie – Etat frais-Qualitatif Encre de chine Cryptocoque'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Presence' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (nextval('test_result_seq'), (select id from test where description = 'Microscopie – Etat frais-Qualitatif Encre de chine Cryptocoque'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Absence' limit 1),null,null,null,now(),null,1,'f','t','f');
+]]></sql>
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="2024090832">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0"><![CDATA[
+SELECT count(*) FROM
+                clinlims.test_result WHERE test_id =(select id from clinlims.test where description = 'Microscopie-Qualitatif Recherche Antigènes solubles Escherichia coli k1')
+]]></sqlCheck>
+        </preConditions>
+        <sql><![CDATA[
+INSERT INTO
+            clinlims.test_result(id,test_id,result_group,flags,tst_rslt_type,value,significant_digits,quant_limit,cont_level,lastupdated,scriptlet_id,sort_order,
+            is_quantifiable,is_active,is_normal) VALUES
+            (nextval('test_result_seq'), (select id from test where description = 'Microscopie-Qualitatif Recherche Antigènes solubles Escherichia coli k1'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Presence' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (nextval('test_result_seq'), (select id from test where description = 'Microscopie-Qualitatif Recherche Antigènes solubles Escherichia coli k1'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Absence' limit 1),null,null,null,now(),null,1,'f','t','f');
+]]></sql>
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="2024090833">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0"><![CDATA[
+SELECT count(*) FROM
+                clinlims.test_result WHERE test_id =(select id from clinlims.test where description = 'Microscopie-Qualitatif Recherche Antigènes solubles Streptococcus pneumoniae')
+]]></sqlCheck>
+        </preConditions>
+        <sql><![CDATA[
+INSERT INTO
+            clinlims.test_result(id,test_id,result_group,flags,tst_rslt_type,value,significant_digits,quant_limit,cont_level,lastupdated,scriptlet_id,sort_order,
+            is_quantifiable,is_active,is_normal) VALUES
+            (nextval('test_result_seq'), (select id from test where description = 'Microscopie-Qualitatif Recherche Antigènes solubles Streptococcus pneumoniae'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Presence' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (nextval('test_result_seq'), (select id from test where description = 'Microscopie-Qualitatif Recherche Antigènes solubles Streptococcus pneumoniae'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Absence' limit 1),null,null,null,now(),null,1,'f','t','f');
+]]></sql>
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="2024090834">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0"><![CDATA[
+SELECT count(*) FROM
+                clinlims.test_result WHERE test_id =(select id from clinlims.test where description = 'Microscopie Qualitatif Recherche Antigènes solubles Streptoccus B')
+]]></sqlCheck>
+        </preConditions>
+        <sql><![CDATA[
+INSERT INTO
+            clinlims.test_result(id,test_id,result_group,flags,tst_rslt_type,value,significant_digits,quant_limit,cont_level,lastupdated,scriptlet_id,sort_order,
+            is_quantifiable,is_active,is_normal) VALUES
+            (nextval('test_result_seq'), (select id from test where description = 'Microscopie Qualitatif Recherche Antigènes solubles Streptoccus B'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Presence' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (nextval('test_result_seq'), (select id from test where description = 'Microscopie Qualitatif Recherche Antigènes solubles Streptoccus B'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Absence' limit 1),null,null,null,now(),null,1,'f','t','f');
+]]></sql>
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="2024090835">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0"><![CDATA[
+SELECT count(*) FROM
+                clinlims.test_result WHERE test_id =(select id from clinlims.test where description = 'Microscopie qualitatif Recherche Antigènes solubles Hemophilus Influenzae B')
+]]></sqlCheck>
+        </preConditions>
+        <sql><![CDATA[
+INSERT INTO
+            clinlims.test_result(id,test_id,result_group,flags,tst_rslt_type,value,significant_digits,quant_limit,cont_level,lastupdated,scriptlet_id,sort_order,
+            is_quantifiable,is_active,is_normal) VALUES
+            (nextval('test_result_seq'), (select id from test where description = 'Microscopie qualitatif Recherche Antigènes solubles Hemophilus Influenzae B'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Presence' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (nextval('test_result_seq'), (select id from test where description = 'Microscopie qualitatif Recherche Antigènes solubles Hemophilus Influenzae B'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Absence' limit 1),null,null,null,now(),null,1,'f','t','f');
+]]></sql>
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="2024090836">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0"><![CDATA[
+SELECT count(*) FROM
+                clinlims.test_result WHERE test_id =(select id from clinlims.test where description = 'Microscopie-Qualitatif Recherche Antigènes solubles Neisseria meningitidis A')
+]]></sqlCheck>
+        </preConditions>
+        <sql><![CDATA[
+INSERT INTO
+            clinlims.test_result(id,test_id,result_group,flags,tst_rslt_type,value,significant_digits,quant_limit,cont_level,lastupdated,scriptlet_id,sort_order,
+            is_quantifiable,is_active,is_normal) VALUES
+            (nextval('test_result_seq'), (select id from test where description = 'Microscopie-Qualitatif Recherche Antigènes solubles Neisseria meningitidis A'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Presence' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (nextval('test_result_seq'), (select id from test where description = 'Microscopie-Qualitatif Recherche Antigènes solubles Neisseria meningitidis A'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Absence' limit 1),null,null,null,now(),null,1,'f','t','f');
+]]></sql>
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="2024090837">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0"><![CDATA[
+SELECT count(*) FROM
+                clinlims.test_result WHERE test_id =(select id from clinlims.test where description = 'Microscopie Qualitatif Recherche Antigènes solubles Neisseria meningitidis B')
+]]></sqlCheck>
+        </preConditions>
+        <sql><![CDATA[
+INSERT INTO
+            clinlims.test_result(id,test_id,result_group,flags,tst_rslt_type,value,significant_digits,quant_limit,cont_level,lastupdated,scriptlet_id,sort_order,
+            is_quantifiable,is_active,is_normal) VALUES
+            (nextval('test_result_seq'), (select id from test where description = 'Microscopie Qualitatif Recherche Antigènes solubles Neisseria meningitidis B'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Presence' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (nextval('test_result_seq'), (select id from test where description = 'Microscopie Qualitatif Recherche Antigènes solubles Neisseria meningitidis B'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Absence' limit 1),null,null,null,now(),null,1,'f','t','f');
+]]></sql>
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="2024090838">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0"><![CDATA[
+SELECT count(*) FROM
+                clinlims.test_result WHERE test_id =(select id from clinlims.test where description = 'microscopie-Qualitatif Recherche Antigènes solubles Neisseria meningitidis C')
+]]></sqlCheck>
+        </preConditions>
+        <sql><![CDATA[
+INSERT INTO
+            clinlims.test_result(id,test_id,result_group,flags,tst_rslt_type,value,significant_digits,quant_limit,cont_level,lastupdated,scriptlet_id,sort_order,
+            is_quantifiable,is_active,is_normal) VALUES
+            (nextval('test_result_seq'), (select id from test where description = 'microscopie-Qualitatif Recherche Antigènes solubles Neisseria meningitidis C'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Presence' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (nextval('test_result_seq'), (select id from test where description = 'microscopie-Qualitatif Recherche Antigènes solubles Neisseria meningitidis C'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Absence' limit 1),null,null,null,now(),null,1,'f','t','f');
+]]></sql>
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="2024090839">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0"><![CDATA[
+SELECT count(*) FROM
+                clinlims.test_result WHERE test_id =(select id from clinlims.test where description = 'Microscopie qualitatif Recherche Antigènes solubles Neisseria meningitidis Y/W135')
+]]></sqlCheck>
+        </preConditions>
+        <sql><![CDATA[
+INSERT INTO
+            clinlims.test_result(id,test_id,result_group,flags,tst_rslt_type,value,significant_digits,quant_limit,cont_level,lastupdated,scriptlet_id,sort_order,
+            is_quantifiable,is_active,is_normal) VALUES
+            (nextval('test_result_seq'), (select id from test where description = 'Microscopie qualitatif Recherche Antigènes solubles Neisseria meningitidis Y/W135'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Presence' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (nextval('test_result_seq'), (select id from test where description = 'Microscopie qualitatif Recherche Antigènes solubles Neisseria meningitidis Y/W135'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Absence' limit 1),null,null,null,now(),null,1,'f','t','f');
+]]></sql>
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="2024112509">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0"><![CDATA[
+SELECT count(*) FROM
+                clinlims.test_result WHERE test_id =(select id from clinlims.test where description = 'Microscopie – Frottis-Coloration Gram-Bactérie Flore Bactérienne')
+]]></sqlCheck>
+        </preConditions>
+        <sql><![CDATA[
+INSERT INTO
+            clinlims.test_result(id,test_id,result_group,flags,tst_rslt_type,value,significant_digits,quant_limit,cont_level,lastupdated,scriptlet_id,sort_order,
+            is_quantifiable,is_active,is_normal) VALUES
+                (nextval('test_result_seq'), (select id from test where description = 'Microscopie – Frottis-Coloration Gram-Bactérie Flore Bactérienne'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Equilibree' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (nextval('test_result_seq'), (select id from test where description = 'Microscopie – Frottis-Coloration Gram-Bactérie Flore Bactérienne'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Desequilibree' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (nextval('test_result_seq'), (select id from test where description = 'Microscopie – Frottis-Coloration Gram-Bactérie Flore Bactérienne'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Intermediaire' limit 1),null,null,null,now(),null,1,'f','t','f');
+]]></sql>
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="202409180000">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0"><![CDATA[
+SELECT count(*) FROM
+                clinlims.test_result WHERE test_id =(select id from clinlims.test where description = 'Macroscopie – Vulve Leucorrhées')
+]]></sqlCheck>
+        </preConditions>
+        <sql><![CDATA[
+INSERT INTO
+            clinlims.test_result(id,test_id,result_group,flags,tst_rslt_type,value,significant_digits,quant_limit,cont_level,lastupdated,scriptlet_id,sort_order,
+            is_quantifiable,is_active,is_normal) VALUES
+            (nextval('test_result_seq'), (select id from test where description = 'Macroscopie – Vulve Leucorrhées'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Presence' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (nextval('test_result_seq'), (select id from test where description = 'Macroscopie – Vulve Leucorrhées'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Absence' limit 1),null,null,null,now(),null,1,'f','t','f');
+]]></sql>
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="202409180001">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0"><![CDATA[
+SELECT count(*) FROM
+                clinlims.test_result WHERE test_id =(select id from clinlims.test where description = 'Macroscopie – Vulve Ulcération')
+]]></sqlCheck>
+        </preConditions>
+        <sql><![CDATA[
+INSERT INTO
+            clinlims.test_result(id,test_id,result_group,flags,tst_rslt_type,value,significant_digits,quant_limit,cont_level,lastupdated,scriptlet_id,sort_order,
+            is_quantifiable,is_active,is_normal) VALUES
+            (nextval('test_result_seq'), (select id from test where description = 'Macroscopie – Vulve Ulcération'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Presence' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (nextval('test_result_seq'), (select id from test where description = 'Macroscopie – Vulve Ulcération'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Absence' limit 1),null,null,null,now(),null,1,'f','t','f');
+]]></sql>
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="202409180002">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0"><![CDATA[
+SELECT count(*) FROM
+                clinlims.test_result WHERE test_id =(select id from clinlims.test where description = 'Macroscopie – Vulve Condylomes')
+]]></sqlCheck>
+        </preConditions>
+        <sql><![CDATA[
+INSERT INTO
+            clinlims.test_result(id,test_id,result_group,flags,tst_rslt_type,value,significant_digits,quant_limit,cont_level,lastupdated,scriptlet_id,sort_order,
+            is_quantifiable,is_active,is_normal) VALUES
+            (nextval('test_result_seq'), (select id from test where description = 'Macroscopie – Vulve Condylomes'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Presence' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (nextval('test_result_seq'), (select id from test where description = 'Macroscopie – Vulve Condylomes'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Absence' limit 1),null,null,null,now(),null,1,'f','t','f');
+]]></sql>
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="202409180003">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0"><![CDATA[
+SELECT count(*) FROM
+                clinlims.test_result WHERE test_id =(select id from clinlims.test where description = 'Macroscopie – Vulve Inflammation')
+]]></sqlCheck>
+        </preConditions>
+        <sql><![CDATA[
+INSERT INTO
+            clinlims.test_result(id,test_id,result_group,flags,tst_rslt_type,value,significant_digits,quant_limit,cont_level,lastupdated,scriptlet_id,sort_order,
+            is_quantifiable,is_active,is_normal) VALUES
+            (nextval('test_result_seq'), (select id from test where description = 'Macroscopie – Vulve Inflammation'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Presence' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (nextval('test_result_seq'), (select id from test where description = 'Macroscopie – Vulve Inflammation'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Absence' limit 1),null,null,null,now(),null,1,'f','t','f');
+]]></sql>
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="202409180004">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0"><![CDATA[
+SELECT count(*) FROM
+                clinlims.test_result WHERE test_id =(select id from clinlims.test where description = 'Macroscopie – Vulve Normale')
+]]></sqlCheck>
+        </preConditions>
+        <sql><![CDATA[
+INSERT INTO
+            clinlims.test_result(id,test_id,result_group,flags,tst_rslt_type,value,significant_digits,quant_limit,cont_level,lastupdated,scriptlet_id,sort_order,
+            is_quantifiable,is_active,is_normal) VALUES
+            (nextval('test_result_seq'), (select id from test where description = 'Macroscopie – Vulve Normale'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Oui' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (nextval('test_result_seq'), (select id from test where description = 'Macroscopie – Vulve Normale'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Non' limit 1),null,null,null,now(),null,1,'f','t','f');
+]]></sql>
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="202409180005">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0"><![CDATA[
+SELECT count(*) FROM
+                clinlims.test_result WHERE test_id =(select id from clinlims.test where description = 'Macroscopie – Muqueuse Vaginale Ulcération')
+]]></sqlCheck>
+        </preConditions>
+        <sql><![CDATA[
+INSERT INTO
+            clinlims.test_result(id,test_id,result_group,flags,tst_rslt_type,value,significant_digits,quant_limit,cont_level,lastupdated,scriptlet_id,sort_order,
+            is_quantifiable,is_active,is_normal) VALUES
+            (nextval('test_result_seq'), (select id from test where description = 'Macroscopie – Muqueuse Vaginale Ulcération'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Presence' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (nextval('test_result_seq'), (select id from test where description = 'Macroscopie – Muqueuse Vaginale Ulcération'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Absence' limit 1),null,null,null,now(),null,1,'f','t','f');
+]]></sql>
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="202409180006">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0"><![CDATA[
+SELECT count(*) FROM
+                clinlims.test_result WHERE test_id =(select id from clinlims.test where description = 'Macroscopie – Muqueuse Vaginale Leucorrhées')
+]]></sqlCheck>
+        </preConditions>
+        <sql><![CDATA[
+INSERT INTO
+            clinlims.test_result(id,test_id,result_group,flags,tst_rslt_type,value,significant_digits,quant_limit,cont_level,lastupdated,scriptlet_id,sort_order,
+            is_quantifiable,is_active,is_normal) VALUES
+            (nextval('test_result_seq'), (select id from test where description = 'Macroscopie – Muqueuse Vaginale Leucorrhées'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Presence' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (nextval('test_result_seq'), (select id from test where description = 'Macroscopie – Muqueuse Vaginale Leucorrhées'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Absence' limit 1),null,null,null,now(),null,1,'f','t','f');
+]]></sql>
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="202409180007">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0"><![CDATA[
+SELECT count(*) FROM
+                clinlims.test_result WHERE test_id =(select id from clinlims.test where description = 'Macroscopie – Muqueuse Vaginale Condylomes')
+]]></sqlCheck>
+        </preConditions>
+        <sql><![CDATA[
+INSERT INTO
+            clinlims.test_result(id,test_id,result_group,flags,tst_rslt_type,value,significant_digits,quant_limit,cont_level,lastupdated,scriptlet_id,sort_order,
+            is_quantifiable,is_active,is_normal) VALUES
+            (nextval('test_result_seq'), (select id from test where description = 'Macroscopie – Muqueuse Vaginale Condylomes'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Presence' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (nextval('test_result_seq'), (select id from test where description = 'Macroscopie – Muqueuse Vaginale Condylomes'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Absence' limit 1),null,null,null,now(),null,1,'f','t','f');
+]]></sql>
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="202409180008">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0"><![CDATA[
+SELECT count(*) FROM
+                clinlims.test_result WHERE test_id =(select id from clinlims.test where description = 'Macroscopie – Muqueuse Vaginale Inflammation')
+]]></sqlCheck>
+        </preConditions>
+        <sql><![CDATA[
+INSERT INTO
+            clinlims.test_result(id,test_id,result_group,flags,tst_rslt_type,value,significant_digits,quant_limit,cont_level,lastupdated,scriptlet_id,sort_order,
+            is_quantifiable,is_active,is_normal) VALUES
+            (nextval('test_result_seq'), (select id from test where description = 'Macroscopie – Muqueuse Vaginale Inflammation'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Presence' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (nextval('test_result_seq'), (select id from test where description = 'Macroscopie – Muqueuse Vaginale Inflammation'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Absence' limit 1),null,null,null,now(),null,1,'f','t','f');
+]]></sql>
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="202409180009">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0"><![CDATA[
+SELECT count(*) FROM
+                clinlims.test_result WHERE test_id =(select id from clinlims.test where description = 'Macroscopie – Muqueuse Vaginale Normale')
+]]></sqlCheck>
+        </preConditions>
+        <sql><![CDATA[
+INSERT INTO
+            clinlims.test_result(id,test_id,result_group,flags,tst_rslt_type,value,significant_digits,quant_limit,cont_level,lastupdated,scriptlet_id,sort_order,
+            is_quantifiable,is_active,is_normal) VALUES
+            (nextval('test_result_seq'), (select id from test where description = 'Macroscopie – Muqueuse Vaginale Normale'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Oui' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (nextval('test_result_seq'), (select id from test where description = 'Macroscopie – Muqueuse Vaginale Normale'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Non' limit 1),null,null,null,now(),null,1,'f','t','f');
+]]></sql>
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="202409180010">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0"><![CDATA[
+SELECT count(*) FROM
+                clinlims.test_result WHERE test_id =(select id from clinlims.test where description = 'Macroscopie – Col Leucorrhées')
+]]></sqlCheck>
+        </preConditions>
+        <sql><![CDATA[
+INSERT INTO
+            clinlims.test_result(id,test_id,result_group,flags,tst_rslt_type,value,significant_digits,quant_limit,cont_level,lastupdated,scriptlet_id,sort_order,
+            is_quantifiable,is_active,is_normal) VALUES
+            (nextval('test_result_seq'), (select id from test where description = 'Macroscopie – Col Leucorrhées'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Presence' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (nextval('test_result_seq'), (select id from test where description = 'Macroscopie – Col Leucorrhées'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Absence' limit 1),null,null,null,now(),null,1,'f','t','f');
+]]></sql>
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="202409180011">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0"><![CDATA[
+SELECT count(*) FROM
+                clinlims.test_result WHERE test_id =(select id from clinlims.test where description = 'Macroscopie – Col Ulcération')
+]]></sqlCheck>
+        </preConditions>
+        <sql><![CDATA[
+INSERT INTO
+            clinlims.test_result(id,test_id,result_group,flags,tst_rslt_type,value,significant_digits,quant_limit,cont_level,lastupdated,scriptlet_id,sort_order,
+            is_quantifiable,is_active,is_normal) VALUES
+            (nextval('test_result_seq'), (select id from test where description = 'Macroscopie – Col Ulcération'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Presence' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (nextval('test_result_seq'), (select id from test where description = 'Macroscopie – Col Ulcération'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Absence' limit 1),null,null,null,now(),null,1,'f','t','f');
+]]></sql>
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="202409180012">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0"><![CDATA[
+SELECT count(*) FROM
+                clinlims.test_result WHERE test_id =(select id from clinlims.test where description = 'Macroscopie – Col Condylomes')
+]]></sqlCheck>
+        </preConditions>
+        <sql><![CDATA[
+INSERT INTO
+            clinlims.test_result(id,test_id,result_group,flags,tst_rslt_type,value,significant_digits,quant_limit,cont_level,lastupdated,scriptlet_id,sort_order,
+            is_quantifiable,is_active,is_normal) VALUES
+            (nextval('test_result_seq'), (select id from test where description = 'Macroscopie – Col Condylomes'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Presence' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (nextval('test_result_seq'), (select id from test where description = 'Macroscopie – Col Condylomes'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Absence' limit 1),null,null,null,now(),null,1,'f','t','f');
+]]></sql>
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="202409180013">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0"><![CDATA[
+SELECT count(*) FROM
+                clinlims.test_result WHERE test_id =(select id from clinlims.test where description = 'Macroscopie – Col Inflammation')
+]]></sqlCheck>
+        </preConditions>
+        <sql><![CDATA[
+INSERT INTO
+            clinlims.test_result(id,test_id,result_group,flags,tst_rslt_type,value,significant_digits,quant_limit,cont_level,lastupdated,scriptlet_id,sort_order,
+            is_quantifiable,is_active,is_normal) VALUES
+            (nextval('test_result_seq'), (select id from test where description = 'Macroscopie – Col Inflammation'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Presence' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (nextval('test_result_seq'), (select id from test where description = 'Macroscopie – Col Inflammation'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Absence' limit 1),null,null,null,now(),null,1,'f','t','f');
+]]></sql>
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="202409180014">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0"><![CDATA[
+SELECT count(*) FROM
+                clinlims.test_result WHERE test_id =(select id from clinlims.test where description = 'Macroscopie – Col Normale')
+]]></sqlCheck>
+        </preConditions>
+        <sql><![CDATA[
+INSERT INTO
+            clinlims.test_result(id,test_id,result_group,flags,tst_rslt_type,value,significant_digits,quant_limit,cont_level,lastupdated,scriptlet_id,sort_order,
+            is_quantifiable,is_active,is_normal) VALUES
+            (nextval('test_result_seq'), (select id from test where description = 'Macroscopie – Col Normale'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Oui' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (nextval('test_result_seq'), (select id from test where description = 'Macroscopie – Col Normale'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Non' limit 1),null,null,null,now(),null,1,'f','t','f');
+]]></sql>
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="202409180050">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0"><![CDATA[
+SELECT count(*) FROM
+                clinlims.test_result WHERE test_id =(select id from clinlims.test where description = 'Microscopie – Etat Frais Qualitatif Sécrétion Leucocytes')
+]]></sqlCheck>
+        </preConditions>
+        <sql><![CDATA[
+INSERT INTO
+            clinlims.test_result(id,test_id,result_group,flags,tst_rslt_type,value,significant_digits,quant_limit,cont_level,lastupdated,scriptlet_id,sort_order,
+            is_quantifiable,is_active,is_normal) VALUES
+            (nextval('test_result_seq'), (select id from test where description = 'Microscopie – Etat Frais Qualitatif Sécrétion Leucocytes'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Oui' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (nextval('test_result_seq'), (select id from test where description = 'Microscopie – Etat Frais Qualitatif Sécrétion Leucocytes'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Non' limit 1),null,null,null,now(),null,1,'f','t','f');
+]]></sql>
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="202409180015">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0"><![CDATA[
+SELECT count(*) FROM
+                clinlims.test_result WHERE test_id =(select id from clinlims.test where description = 'Microscopie – Etat Frais Qualitatif Sécrétion Hématies')
+]]></sqlCheck>
+        </preConditions>
+        <sql><![CDATA[
+INSERT INTO
+            clinlims.test_result(id,test_id,result_group,flags,tst_rslt_type,value,significant_digits,quant_limit,cont_level,lastupdated,scriptlet_id,sort_order,
+            is_quantifiable,is_active,is_normal) VALUES
+            (nextval('test_result_seq'), (select id from test where description = 'Microscopie – Etat Frais Qualitatif Sécrétion Hématies'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Oui' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (nextval('test_result_seq'), (select id from test where description = 'Microscopie – Etat Frais Qualitatif Sécrétion Hématies'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Non' limit 1),null,null,null,now(),null,1,'f','t','f');
+]]></sql>
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="202409180016">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0"><![CDATA[
+SELECT count(*) FROM
+                clinlims.test_result WHERE test_id =(select id from clinlims.test where description = 'Microscopie – Etat Frais Qualitatif Sécrétion Cellules épithéliales')
+]]></sqlCheck>
+        </preConditions>
+        <sql><![CDATA[
+INSERT INTO
+            clinlims.test_result(id,test_id,result_group,flags,tst_rslt_type,value,significant_digits,quant_limit,cont_level,lastupdated,scriptlet_id,sort_order,
+            is_quantifiable,is_active,is_normal) VALUES
+            (nextval('test_result_seq'), (select id from test where description = 'Microscopie – Etat Frais Qualitatif Sécrétion Cellules épithéliales'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Oui' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (nextval('test_result_seq'), (select id from test where description = 'Microscopie – Etat Frais Qualitatif Sécrétion Cellules épithéliales'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Non' limit 1),null,null,null,now(),null,1,'f','t','f');
+]]></sql>
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="202409180017">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0"><![CDATA[
+SELECT count(*) FROM
+                clinlims.test_result WHERE test_id =(select id from clinlims.test where description = 'Microscopie – Etat Frais Qualitatif Sécrétion Cellules épithéliales')
+]]></sqlCheck>
+        </preConditions>
+        <sql><![CDATA[
+INSERT INTO
+            clinlims.test_result(id,test_id,result_group,flags,tst_rslt_type,value,significant_digits,quant_limit,cont_level,lastupdated,scriptlet_id,sort_order,
+            is_quantifiable,is_active,is_normal) VALUES
+            (nextval('test_result_seq'), (select id from test where description = 'Microscopie – Etat Frais Qualitatif Sécrétion Cellules épithéliales'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Oui' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (nextval('test_result_seq'), (select id from test where description = 'Microscopie – Etat Frais Qualitatif Sécrétion Cellules épithéliales'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Non' limit 1),null,null,null,now(),null,1,'f','t','f');
+]]></sql>
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="202409180019">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0"><![CDATA[
+SELECT count(*) FROM
+                clinlims.test_result WHERE test_id =(select id from clinlims.test where description = 'Microscopie – Etat Frais Qualitatif Sécrétion Spermatozoïdes')
+]]></sqlCheck>
+        </preConditions>
+        <sql><![CDATA[
+INSERT INTO
+            clinlims.test_result(id,test_id,result_group,flags,tst_rslt_type,value,significant_digits,quant_limit,cont_level,lastupdated,scriptlet_id,sort_order,
+            is_quantifiable,is_active,is_normal) VALUES
+            (nextval('test_result_seq'), (select id from test where description = 'Microscopie – Etat Frais Qualitatif Sécrétion Spermatozoïdes'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Oui' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (nextval('test_result_seq'), (select id from test where description = 'Microscopie – Etat Frais Qualitatif Sécrétion Spermatozoïdes'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Non' limit 1),null,null,null,now(),null,1,'f','t','f');
+]]></sql>
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="202409180018">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0"><![CDATA[
+SELECT count(*) FROM
+                clinlims.test_result WHERE test_id =(select id from clinlims.test where description = 'Microscopie – Etat Frais Qualitatif Sécrétion Lévures/Filaments mycéliens')
+]]></sqlCheck>
+        </preConditions>
+        <sql><![CDATA[
+INSERT INTO
+            clinlims.test_result(id,test_id,result_group,flags,tst_rslt_type,value,significant_digits,quant_limit,cont_level,lastupdated,scriptlet_id,sort_order,
+            is_quantifiable,is_active,is_normal) VALUES
+            (nextval('test_result_seq'), (select id from test where description = 'Microscopie – Etat Frais Qualitatif Sécrétion Lévures/Filaments mycéliens'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Oui' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (nextval('test_result_seq'), (select id from test where description = 'Microscopie – Etat Frais Qualitatif Sécrétion Lévures/Filaments mycéliens'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Non' limit 1),null,null,null,now(),null,1,'f','t','f');
+]]></sql>
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="202409180020">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0"><![CDATA[
+SELECT count(*) FROM
+                clinlims.test_result WHERE test_id =(select id from clinlims.test where description = 'Microscopie – Etat Frais Qualitatif Sécrétion Trichomonas vaginalis')
+]]></sqlCheck>
+        </preConditions>
+        <sql><![CDATA[
+INSERT INTO
+            clinlims.test_result(id,test_id,result_group,flags,tst_rslt_type,value,significant_digits,quant_limit,cont_level,lastupdated,scriptlet_id,sort_order,
+            is_quantifiable,is_active,is_normal) VALUES
+            (nextval('test_result_seq'), (select id from test where description = 'Microscopie – Etat Frais Qualitatif Sécrétion Trichomonas vaginalis'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Oui' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (nextval('test_result_seq'), (select id from test where description = 'Microscopie – Etat Frais Qualitatif Sécrétion Trichomonas vaginalis'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Non' limit 1),null,null,null,now(),null,1,'f','t','f');
+]]></sql>
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="202409220002">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0"><![CDATA[
+SELECT count(*) FROM
+                clinlims.test_result WHERE test_id =(select id from clinlims.test where description = 'Macroscopie – Vulve-Aspect')
+]]></sqlCheck>
+        </preConditions>
+        <sql><![CDATA[
+INSERT INTO
+            clinlims.test_result(id,test_id,result_group,flags,tst_rslt_type,value,significant_digits,quant_limit,cont_level,lastupdated,scriptlet_id,sort_order,
+            is_quantifiable,is_active,is_normal) VALUES
+            (nextval('test_result_seq'), (select id from test where description = 'Macroscopie – Vulve-Aspect'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Cailloboteuses' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (nextval('test_result_seq'), (select id from test where description = 'Macroscopie – Vulve-Aspect'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Fluide' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (nextval('test_result_seq'), (select id from test where description = 'Macroscopie – Vulve-Aspect'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Moussantes' limit 1),null,null,null,now(),null,1,'f','t','f');
+]]></sql>
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="202409220003">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0"><![CDATA[
+SELECT count(*) FROM
+                clinlims.test_result WHERE test_id =(select id from clinlims.test where description = 'Macroscopie – Vulve-Autre')
+]]></sqlCheck>
+        </preConditions>
+        <sql><![CDATA[
+INSERT INTO
+            clinlims.test_result(id,test_id,result_group,flags,tst_rslt_type,value,significant_digits,quant_limit,cont_level,lastupdated,scriptlet_id,sort_order,
+            is_quantifiable,is_active,is_normal) VALUES
+            (nextval('test_result_seq'), (select id from test where description = 'Macroscopie – Vulve-Autre'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Inodore' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (nextval('test_result_seq'), (select id from test where description = 'Macroscopie – Vulve-Aspect'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Fetide' limit 1),null,null,null,now(),null,1,'f','t','f');
+]]></sql>
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="202409220005">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0"><![CDATA[
+SELECT count(*) FROM
+                clinlims.test_result WHERE test_id =(select id from clinlims.test where description = 'Macroscopie – Muqueuse vaginale-Abondance')
+]]></sqlCheck>
+        </preConditions>
+        <sql><![CDATA[
+INSERT INTO
+            clinlims.test_result(id,test_id,result_group,flags,tst_rslt_type,value,significant_digits,quant_limit,cont_level,lastupdated,scriptlet_id,sort_order,
+            is_quantifiable,is_active,is_normal) VALUES
+            (nextval('test_result_seq'), (select id from test where description = 'Macroscopie – Muqueuse vaginale-Abondance'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Minime' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (nextval('test_result_seq'), (select id from test where description = 'Macroscopie – Muqueuse vaginale-Abondance'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Moyen' limit 1),null,null,null,now(),null,1,'f','t','f'),
+                        (nextval('test_result_seq'), (select id from test where description = 'Macroscopie – Muqueuse vaginale-Abondance'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Abondante' limit 1),null,null,null,now(),null,1,'f','t','f');
+]]></sql>
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="202409220006">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0"><![CDATA[
+SELECT count(*) FROM
+                clinlims.test_result WHERE test_id =(select id from clinlims.test where description = 'Macroscopie – Muqueuse vaginale-Aspect')
+]]></sqlCheck>
+        </preConditions>
+        <sql><![CDATA[
+INSERT INTO
+            clinlims.test_result(id,test_id,result_group,flags,tst_rslt_type,value,significant_digits,quant_limit,cont_level,lastupdated,scriptlet_id,sort_order,
+            is_quantifiable,is_active,is_normal) VALUES
+            (nextval('test_result_seq'), (select id from test where description = 'Macroscopie – Muqueuse vaginale-Aspect'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Cailloboteuses' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (nextval('test_result_seq'), (select id from test where description = 'Macroscopie – Muqueuse vaginale-Aspect'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Fluide' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (nextval('test_result_seq'), (select id from test where description = 'Macroscopie – Muqueuse vaginale-Aspect'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Moussantes' limit 1),null,null,null,now(),null,1,'f','t','f');
+]]></sql>
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="202409220007">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0"><![CDATA[
+SELECT count(*) FROM
+                clinlims.test_result WHERE test_id =(select id from clinlims.test where description = 'Macroscopie – Muqueuse vaginale-Autre')
+]]></sqlCheck>
+        </preConditions>
+        <sql><![CDATA[
+INSERT INTO
+            clinlims.test_result(id,test_id,result_group,flags,tst_rslt_type,value,significant_digits,quant_limit,cont_level,lastupdated,scriptlet_id,sort_order,
+            is_quantifiable,is_active,is_normal) VALUES
+            (nextval('test_result_seq'), (select id from test where description = 'Macroscopie – Muqueuse vaginale-Autre'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Inodore' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (nextval('test_result_seq'), (select id from test where description = 'Macroscopie – Muqueuse vaginale-Autre'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Fetide' limit 1),null,null,null,now(),null,1,'f','t','f');
+]]></sql>
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="202409220008">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0"><![CDATA[
+SELECT count(*) FROM
+                clinlims.test_result WHERE test_id =(select id from clinlims.test where description = 'Macroscopie – Muqueuse vaginale-Couleur')
+]]></sqlCheck>
+        </preConditions>
+        <sql><![CDATA[
+INSERT INTO
+            clinlims.test_result(id,test_id,result_group,flags,tst_rslt_type,value,significant_digits,quant_limit,cont_level,lastupdated,scriptlet_id,sort_order,
+            is_quantifiable,is_active,is_normal) VALUES
+            (nextval('test_result_seq'), (select id from test where description = 'Macroscopie – Muqueuse vaginale-Couleur'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Rougeatre' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (nextval('test_result_seq'), (select id from test where description = 'Macroscopie – Muqueuse vaginale-Couleur'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Blanchatre' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (nextval('test_result_seq'), (select id from test where description = 'Macroscopie – Muqueuse vaginale-Couleur'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Verdatre' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (nextval('test_result_seq'), (select id from test where description = 'Macroscopie – Muqueuse vaginale-Couleur'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Jaunatre' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (nextval('test_result_seq'), (select id from test where description = 'Macroscopie – Muqueuse vaginale-Couleur'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Grisatre' limit 1),null,null,null,now(),null,1,'f','t','f');
+]]></sql>
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="2025010300">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0"><![CDATA[
+SELECT count(*) FROM
+                clinlims.test_result WHERE test_id =(select id from clinlims.test where description = 'Macroscopie – Vulve-Couleur')
+]]></sqlCheck>
+        </preConditions>
+        <sql><![CDATA[
+INSERT INTO
+            clinlims.test_result(id,test_id,result_group,flags,tst_rslt_type,value,significant_digits,quant_limit,cont_level,lastupdated,scriptlet_id,sort_order,
+            is_quantifiable,is_active,is_normal) VALUES
+            (nextval('test_result_seq'), (select id from test where description = 'Macroscopie – Vulve-Couleur'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Rougeatre' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (nextval('test_result_seq'), (select id from test where description = 'Macroscopie – Vulve-Couleur'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Blanchatre' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (nextval('test_result_seq'), (select id from test where description = 'Macroscopie – Vulve-Couleur'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Verdatre' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (nextval('test_result_seq'), (select id from test where description = 'Macroscopie – Vulve-Couleur'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Jaunatre' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (nextval('test_result_seq'), (select id from test where description = 'Macroscopie – Vulve-Couleur'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Grisatre' limit 1),null,null,null,now(),null,1,'f','t','f');
+]]></sql>
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="202409220009">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0"><![CDATA[
+SELECT count(*) FROM
+                clinlims.test_result WHERE test_id =(select id from clinlims.test where description = 'Macroscopie – Col-Abondance')
+]]></sqlCheck>
+        </preConditions>
+        <sql><![CDATA[
+INSERT INTO
+            clinlims.test_result(id,test_id,result_group,flags,tst_rslt_type,value,significant_digits,quant_limit,cont_level,lastupdated,scriptlet_id,sort_order,
+            is_quantifiable,is_active,is_normal) VALUES
+            (nextval('test_result_seq'), (select id from test where description = 'Macroscopie – Col-Abondance'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Minime' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (nextval('test_result_seq'), (select id from test where description = 'Macroscopie – Col-Abondance'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Moyen' limit 1),null,null,null,now(),null,1,'f','t','f'),
+                        (nextval('test_result_seq'), (select id from test where description = 'Macroscopie – Col-Abondance'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Abondante' limit 1),null,null,null,now(),null,1,'f','t','f');
+]]></sql>
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="202409220010">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0"><![CDATA[
+SELECT count(*) FROM
+                clinlims.test_result WHERE test_id =(select id from clinlims.test where description = 'Macroscopie – Col-Aspect')
+]]></sqlCheck>
+        </preConditions>
+        <sql><![CDATA[
+INSERT INTO
+            clinlims.test_result(id,test_id,result_group,flags,tst_rslt_type,value,significant_digits,quant_limit,cont_level,lastupdated,scriptlet_id,sort_order,
+            is_quantifiable,is_active,is_normal) VALUES
+            (nextval('test_result_seq'), (select id from test where description = 'Macroscopie – Col-Aspect'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Cailloboteuses' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (nextval('test_result_seq'), (select id from test where description = 'Macroscopie – Col-Aspect'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Fluide' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (nextval('test_result_seq'), (select id from test where description = 'Macroscopie – Col-Aspect'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Moussantes' limit 1),null,null,null,now(),null,1,'f','t','f');
+]]></sql>
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="202409220011">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0"><![CDATA[
+SELECT count(*) FROM
+                clinlims.test_result WHERE test_id =(select id from clinlims.test where description = 'Macroscopie – Col-Autre')
+]]></sqlCheck>
+        </preConditions>
+        <sql><![CDATA[
+INSERT INTO
+            clinlims.test_result(id,test_id,result_group,flags,tst_rslt_type,value,significant_digits,quant_limit,cont_level,lastupdated,scriptlet_id,sort_order,
+            is_quantifiable,is_active,is_normal) VALUES
+            (nextval('test_result_seq'), (select id from test where description = 'Macroscopie – Col-Autre'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Inodore' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (nextval('test_result_seq'), (select id from test where description = 'Macroscopie – Col-Autre'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Fetide' limit 1),null,null,null,now(),null,1,'f','t','f');
+]]></sql>
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="20240922012">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0"><![CDATA[
+SELECT count(*) FROM
+                clinlims.test_result WHERE test_id =(select id from clinlims.test where description = 'Macroscopie – Col-Couleur')
+]]></sqlCheck>
+        </preConditions>
+        <sql><![CDATA[
+INSERT INTO
+            clinlims.test_result(id,test_id,result_group,flags,tst_rslt_type,value,significant_digits,quant_limit,cont_level,lastupdated,scriptlet_id,sort_order,
+            is_quantifiable,is_active,is_normal) VALUES
+            (nextval('test_result_seq'), (select id from test where description = 'Macroscopie – Col-Couleur'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Rougeatre' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (nextval('test_result_seq'), (select id from test where description = 'Macroscopie – Col-Couleur'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Blanchatre' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (nextval('test_result_seq'), (select id from test where description = 'Macroscopie – Col-Couleur'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Verdatre' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (nextval('test_result_seq'), (select id from test where description = 'Macroscopie – Col-Couleur'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Jaunatre' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (nextval('test_result_seq'), (select id from test where description = 'Macroscopie – Col-Couleur'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Grisatre' limit 1),null,null,null,now(),null,1,'f','t','f');
+]]></sql>
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="202410108">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0"><![CDATA[
+SELECT count(*) FROM
+                clinlims.test_result WHERE test_id =(select id from clinlims.test where description = 'Frottis-Coloration Gram-Bactérie-secretion vaginale clue cells')
+]]></sqlCheck>
+        </preConditions>
+        <sql><![CDATA[
+INSERT INTO
+            clinlims.test_result(id,test_id,result_group,flags,tst_rslt_type,value,significant_digits,quant_limit,cont_level,lastupdated,scriptlet_id,sort_order,
+            is_quantifiable,is_active,is_normal) VALUES
+            (nextval('test_result_seq'), (select id from test where description = 'Frottis-Coloration Gram-Bactérie-secretion vaginale clue cells'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Presence' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (nextval('test_result_seq'), (select id from test where description = 'Frottis-Coloration Gram-Bactérie-secretion vaginale clue cells'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Absence' limit 1),null,null,null,now(),null,1,'f','t','f');
+]]></sql>
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="202410006">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0"><![CDATA[
+SELECT count(*) FROM
+                clinlims.test_result WHERE test_id =(select id from clinlims.test where description = 'Microscopie-Frotis-Coloration Gram-Autres secretion vaginale Levure')
+]]></sqlCheck>
+        </preConditions>
+        <sql><![CDATA[
+INSERT INTO
+            clinlims.test_result(id,test_id,result_group,flags,tst_rslt_type,value,significant_digits,quant_limit,cont_level,lastupdated,scriptlet_id,sort_order,
+            is_quantifiable,is_active,is_normal) VALUES
+            (nextval('test_result_seq'), (select id from test where description = 'Microscopie-Frotis-Coloration Gram-Autres secretion vaginale Levure'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Presence' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (nextval('test_result_seq'), (select id from test where description = 'Microscopie-Frotis-Coloration Gram-Autres secretion vaginale Levure'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Absence' limit 1),null,null,null,now(),null,1,'f','t','f');
+]]></sql>
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="202410002">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0"><![CDATA[
+SELECT count(*) FROM
+                clinlims.test_result WHERE test_id =(select id from clinlims.test where description = 'Microscopie-frottis-Coloration Gram-Bactérie-secretion vaginale Type de flore')
+]]></sqlCheck>
+        </preConditions>
+        <sql><![CDATA[
+INSERT INTO
+            clinlims.test_result(id,test_id,result_group,flags,tst_rslt_type,value,significant_digits,quant_limit,cont_level,lastupdated,scriptlet_id,sort_order,
+            is_quantifiable,is_active,is_normal) VALUES
+            (nextval('test_result_seq'), (select id from test where description = 'Microscopie-frottis-Coloration Gram-Bactérie-secretion vaginale Type de flore'),null,null,'D',
+            (select id from dictionary where dict_entry = '1' limit 1),null,null,null,now(),null,1,'f','t','f'),
+                (nextval('test_result_seq'), (select id from test where description = 'Microscopie-frottis-Coloration Gram-Bactérie-secretion vaginale Type de flore'),null,null,'D',
+            (select id from dictionary where dict_entry = '2' limit 1),null,null,null,now(),null,1,'f','t','f'),
+                (nextval('test_result_seq'), (select id from test where description = 'Microscopie-frottis-Coloration Gram-Bactérie-secretion vaginale Type de flore'),null,null,'D',
+            (select id from dictionary where dict_entry = '3' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (nextval('test_result_seq'), (select id from test where description = 'Microscopie-frottis-Coloration Gram-Bactérie-secretion vaginale Type de flore'),null,null,'D',
+            (select id from dictionary where dict_entry = '>=4' limit 1),null,null,null,now(),null,1,'f','t','f');
+]]></sql>
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="202410003">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0"><![CDATA[
+SELECT count(*) FROM
+                clinlims.test_result WHERE test_id =(select id from clinlims.test where description = 'Microscopie frottis-Coloration Gram-Bactérie-secretion vaginale Flore Bactérienne')
+]]></sqlCheck>
+        </preConditions>
+        <sql><![CDATA[
+INSERT INTO
+            clinlims.test_result(id,test_id,result_group,flags,tst_rslt_type,value,significant_digits,quant_limit,cont_level,lastupdated,scriptlet_id,sort_order,
+            is_quantifiable,is_active,is_normal) VALUES
+                (nextval('test_result_seq'), (select id from test where description = 'Microscopie frottis-Coloration Gram-Bactérie-secretion vaginale Flore Bactérienne'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Equilibree' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (nextval('test_result_seq'), (select id from test where description = 'Microscopie frottis-Coloration Gram-Bactérie-secretion vaginale Flore Bactérienne'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Desequilibree' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (nextval('test_result_seq'), (select id from test where description = 'Microscopie frottis-Coloration Gram-Bactérie-secretion vaginale Flore Bactérienne'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Intermediaire' limit 1),null,null,null,now(),null,1,'f','t','f');
+]]></sql>
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="202410004">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0"><![CDATA[
+SELECT count(*) FROM
+                clinlims.test_result WHERE test_id =(select id from clinlims.test where description = 'microscopie-Frottis-Coloration Gram-Bactérie-secretion cervical Type de Gram')
+]]></sqlCheck>
+        </preConditions>
+        <sql><![CDATA[
+INSERT INTO
+            clinlims.test_result(id,test_id,result_group,flags,tst_rslt_type,value,significant_digits,quant_limit,cont_level,lastupdated,scriptlet_id,sort_order,
+            is_quantifiable,is_active,is_normal) VALUES
+                (nextval('test_result_seq'), (select id from test where description = 'microscopie-Frottis-Coloration Gram-Bactérie-secretion cervical Type de Gram'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Absence De Germes' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (nextval('test_result_seq'), (select id from test where description = 'microscopie-Frottis-Coloration Gram-Bactérie-secretion cervical Type de Gram'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Diplocoque Gram Negatif' limit 1),null,null,null,now(),null,1,'f','t','f');
+]]></sql>
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="2024102208">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0"><![CDATA[
+SELECT count(*) FROM
+                clinlims.test_result WHERE test_id =(select id from clinlims.test where description = 'Macroscopie-gland Ulceration')
+]]></sqlCheck>
+        </preConditions>
+        <sql><![CDATA[
+INSERT INTO
+            clinlims.test_result(id,test_id,result_group,flags,tst_rslt_type,value,significant_digits,quant_limit,cont_level,lastupdated,scriptlet_id,sort_order,
+            is_quantifiable,is_active,is_normal) VALUES
+            (nextval('test_result_seq'), (select id from test where description = 'Macroscopie-gland Ulceration'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Presence' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (nextval('test_result_seq'), (select id from test where description = 'Macroscopie-gland Ulceration'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Absence' limit 1),null,null,null,now(),null,1,'f','t','f');
+]]></sql>
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="2024102209">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0"><![CDATA[
+SELECT count(*) FROM
+                clinlims.test_result WHERE test_id =(select id from clinlims.test where description = 'Macroscopie-gland Condylomes')
+]]></sqlCheck>
+        </preConditions>
+        <sql><![CDATA[
+INSERT INTO
+            clinlims.test_result(id,test_id,result_group,flags,tst_rslt_type,value,significant_digits,quant_limit,cont_level,lastupdated,scriptlet_id,sort_order,
+            is_quantifiable,is_active,is_normal) VALUES
+            (nextval('test_result_seq'), (select id from test where description = 'Macroscopie-gland Condylomes'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Presence' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (nextval('test_result_seq'), (select id from test where description = 'Macroscopie-gland Condylomes'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Absence' limit 1),null,null,null,now(),null,1,'f','t','f');
+]]></sql>
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="2024102210">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0"><![CDATA[
+SELECT count(*) FROM
+                clinlims.test_result WHERE test_id =(select id from clinlims.test where description = 'Macroscopie-gland Inflammation')
+]]></sqlCheck>
+        </preConditions>
+        <sql><![CDATA[
+INSERT INTO
+            clinlims.test_result(id,test_id,result_group,flags,tst_rslt_type,value,significant_digits,quant_limit,cont_level,lastupdated,scriptlet_id,sort_order,
+            is_quantifiable,is_active,is_normal) VALUES
+            (nextval('test_result_seq'), (select id from test where description = 'Macroscopie-gland Inflammation'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Presence' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (nextval('test_result_seq'), (select id from test where description = 'Macroscopie-gland Inflammation'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Absence' limit 1),null,null,null,now(),null,1,'f','t','f');
+]]></sql>
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="2024102211">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0"><![CDATA[
+SELECT count(*) FROM
+                clinlims.test_result WHERE test_id =(select id from clinlims.test where description = 'Macroscopie-gland Normale')
+]]></sqlCheck>
+        </preConditions>
+        <sql><![CDATA[
+INSERT INTO
+            clinlims.test_result(id,test_id,result_group,flags,tst_rslt_type,value,significant_digits,quant_limit,cont_level,lastupdated,scriptlet_id,sort_order,
+            is_quantifiable,is_active,is_normal) VALUES
+            (nextval('test_result_seq'), (select id from test where description = 'Macroscopie-gland Normale'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Presence' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (nextval('test_result_seq'), (select id from test where description = 'Macroscopie-gland Normale'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Absence' limit 1),null,null,null,now(),null,1,'f','t','f');
+]]></sql>
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="2024102219">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0"><![CDATA[
+SELECT count(*) FROM
+                clinlims.test_result WHERE test_id =(select id from clinlims.test where description = 'Microscopie – Frottis-Coloration Gram-Autre Lévures')
+]]></sqlCheck>
+        </preConditions>
+        <sql><![CDATA[
+INSERT INTO
+            clinlims.test_result(id,test_id,result_group,flags,tst_rslt_type,value,significant_digits,quant_limit,cont_level,lastupdated,scriptlet_id,sort_order,
+            is_quantifiable,is_active,is_normal) VALUES
+            (nextval('test_result_seq'), (select id from test where description = 'Microscopie – Frottis-Coloration Gram-Autre Lévures'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Presence' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (nextval('test_result_seq'), (select id from test where description = 'Microscopie – Frottis-Coloration Gram-Autre Lévures'),null,null,'D',
+            (select id from dictionary where dict_entry = 'Absence' limit 1),null,null,null,now(),null,1,'f','t','f');
+]]></sql>
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="2025010410">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <sequenceExists sequenceName="bacterio_antibio_seq"
+                    schemaName="clinlims" />
+            </not>
+        </preConditions>
+        <createSequence sequenceName="bacterio_antibio_seq"
+            incrementBy="1" cycle="false" cacheSize="200" startValue="1"
+            schemaName="clinlims" />
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="2025010411">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="bacterio_list_antibio" />
+            </not>
+        </preConditions>
+        <createTable tableName="bacterio_list_antibio"
+            schemaName="clinlims">
+            <column name="id" type="numeric"
+                defaultValueComputed="nextval('bacterio_antibio_seq')">
+                <constraints primaryKey="true" />
+            </column>
+            <column name="name" type="varchar(255)">
+            </column>
+            <column name="lastupdated" type="timestamp">
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="2025052015">
+        <preConditions onFail="MARK_RAN">
+        </preConditions>
+        <sql><![CDATA[
+INSERT INTO clinlims.bacterio_list_antibio (id, name) VALUES
+  (nextval('bacterio_antibio_seq'), 'Amikacin Aminoglycosides'),
+  (nextval('bacterio_antibio_seq'), 'Ampicillin Penicillins'),
+  (nextval('bacterio_antibio_seq'), 'Azithromycin  Macrolides'),
+  (nextval('bacterio_antibio_seq'), 'Aztreonam Monobactams'),
+  (nextval('bacterio_antibio_seq'), 'Cefepime Cephems'),
+   (nextval('bacterio_antibio_seq'), 'Cefixime Oral');
+]]></sql>
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="2025010802">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <sequenceExists sequenceName="bacterio_analys_seq"
+                    schemaName="clinlims" />
+            </not>
+        </preConditions>
+        <createSequence sequenceName="bacterio_analys_seq"
+            incrementBy="1" cycle="false" cacheSize="200" startValue="1"
+            schemaName="clinlims" />
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="2025010804">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="bacterio_analysis_category_test"
+                    schemaName="clinlims" />
+            </not>
+        </preConditions>
+        <createTable tableName="bacterio_analysis_category_test"
+            schemaName="clinlims">
+            <column name="id" type="integer"
+                defaultValueComputed="nextval('bacterio_analys_seq')">
+                <constraints primaryKey="true" />
+            </column>
+            <column name="test_id" type="VARCHAR(255)">
+                <constraints nullable="false" />
+            </column>
+            <column name="sample_id" type="VARCHAR(255)">
+                <constraints nullable="false" />
+            </column>
+            <column name="name" type="VARCHAR(255)">
+            </column>
+            <column name="lastupdated" type="timestamp">
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="2025010805">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <sequenceExists
+                    sequenceName="bacterio_antibiogram_seq" schemaName="clinlims" />
+            </not>
+        </preConditions>
+        <createSequence sequenceName="bacterio_antibiogram_seq"
+            incrementBy="1" cycle="false" cacheSize="200" startValue="1"
+            schemaName="clinlims" />
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="2025010801">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <sequenceExists sequenceName="bact_identify_seq"
+                    schemaName="clinlims" />
+            </not>
+        </preConditions>
+        <createSequence sequenceName="bact_identify_seq"
+            incrementBy="1" cycle="false" cacheSize="200" startValue="1"
+            schemaName="clinlims" />
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="2025010800">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="bacterio_identification_test"
+                    schemaName="clinlims" />
+            </not>
+        </preConditions>
+        <createTable tableName="bacterio_identification_test"
+            schemaName="clinlims">
+            <column name="id" type="integer"
+                defaultValueComputed="nextval('bact_identify_seq')">
+                <constraints primaryKey="true" />
+            </column>
+            <column name="culture_id" type="VARCHAR(255)">
+                <constraints nullable="false" />
+            </column>
+            <column name="type_germe" type="VARCHAR(255)">
+            </column>
+            <column name="type_germe_two" type="VARCHAR(255)">
+            </column>
+            <column name="type_germe_three" type="VARCHAR(255)">
+            </column>
+            <column name="is_validated" type="BOOLEAN"
+                defaultValueBoolean="false">
+            </column>
+            <column name="lastupdated" type="timestamp">
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="2025022700">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <sequenceExists sequenceName="bact_germe_seq"
+                    schemaName="clinlims" />
+            </not>
+        </preConditions>
+        <createSequence sequenceName="bact_germe_seq"
+            incrementBy="1" cycle="false" cacheSize="200" startValue="1"
+            schemaName="clinlims" />
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="2025022701">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="bacterio_name_germe"
+                    schemaName="clinlims" />
+            </not>
+        </preConditions>
+        <createTable tableName="bacterio_name_germe"
+            schemaName="clinlims">
+            <column name="id" type="integer"
+                defaultValueComputed="nextval('bact_germe_seq')">
+                <constraints primaryKey="true" />
+            </column>
+            <column name="identif_id" type="VARCHAR(255)">
+                <constraints nullable="false" />
+            </column>
+            <column name="name_germe_one" type="VARCHAR(255)">
+            </column>
+            <column name="name_germe_two" type="VARCHAR(255)">
+            </column>
+            <column name="name_germe_three" type="VARCHAR(255)">
+            </column>
+            <column name="is_validated" type="BOOLEAN"
+                defaultValueBoolean="false">
+            </column>
+            <column name="lastupdated" type="timestamp">
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="2025010806">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="bacterio_antibiogramme"
+                    schemaName="clinlims" />
+            </not>
+        </preConditions>
+        <createTable tableName="bacterio_antibiogramme"
+            schemaName="clinlims">
+            <column name="id" type="integer"
+                defaultValueComputed="nextval('bacterio_antibiogram_seq')">
+                <constraints primaryKey="true" />
+            </column>
+            <column name="name_germe_id" type="VARCHAR(255)">
+                <constraints nullable="false" />
+            </column>
+            <column name="antibio_one" type="text">
+            </column>
+            <column name="antibio_two" type="text">
+            </column>
+            <column name="antibio_three" type="text">
+            </column>
+            <column name="statut_one" type="text">
+            </column>
+            <column name="statut_two" type="text">
+            </column>
+            <column name="statut_three" type="text">
+            </column>
+            <column name="is_validated" type="BOOLEAN"
+                defaultValueBoolean="false">
+            </column>
+            <!-- <column name="dict_id" type="VARCHAR(255)"> </column> -->
+            <column name="lastupdated" type="timestamp">
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="2025020501">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <sequenceExists sequenceName="bacterio_culture_seq"
+                    schemaName="clinlims" />
+            </not>
+        </preConditions>
+        <createSequence sequenceName="bacterio_culture_seq"
+            incrementBy="1" cycle="false" cacheSize="200" startValue="1"
+            schemaName="clinlims" />
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="2025020500">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="bacterio_culture"
+                    schemaName="clinlims" />
+            </not>
+        </preConditions>
+        <createTable tableName="bacterio_culture"
+            schemaName="clinlims">
+            <column name="id" type="Numeric">
+                <constraints primaryKey="true" />
+            </column>
+            <!-- <column name="antibio_id" type="VARCHAR(255)"> <constraints nullable="false"
+                /> </column> -->
+            <column name="sample_id" type="VARCHAR(255)">
+                <constraints nullable="false" />
+            </column>
+            <column name="culture" type="VARCHAR(255)">
+            </column>
+            <column name="is_validated" type="BOOLEAN"
+                defaultValueBoolean="false">
+            </column>
+            <!-- <column name="dict_id" type="VARCHAR(255)"> </column> -->
+            <column name="lastupdated" type="timestamp">
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="2025031500">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <sequenceExists
+                    sequenceName="bacterio_secretion_culture_seq" schemaName="clinlims" />
+            </not>
+        </preConditions>
+        <createSequence
+            sequenceName="bacterio_secretion_culture_seq" incrementBy="1"
+            cycle="false" cacheSize="200" startValue="1" schemaName="clinlims" />
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="2025031501">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="bacterio_secretion_culture"
+                    schemaName="clinlims" />
+            </not>
+        </preConditions>
+        <createTable tableName="bacterio_secretion_culture"
+            schemaName="clinlims">
+            <column name="id" type="Numeric">
+                <constraints primaryKey="true" />
+            </column>
+            <column name="sample_id" type="VARCHAR(255)">
+                <constraints nullable="false" />
+            </column>
+            <column name="culture_secretion" type="VARCHAR(255)">
+            </column>
+            <column name="is_validated" type="BOOLEAN"
+                defaultValueBoolean="false">
+            </column>
+            <column name="lastupdated" type="timestamp">
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="2025031502">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <sequenceExists
+                    sequenceName="bacterio_col_culture_seq" schemaName="clinlims" />
+            </not>
+        </preConditions>
+        <createSequence sequenceName="bacterio_col_culture_seq"
+            incrementBy="1" cycle="false" cacheSize="200" startValue="1"
+            schemaName="clinlims" />
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="2025031503">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="bacterio_col_culture"
+                    schemaName="clinlims" />
+            </not>
+        </preConditions>
+        <createTable tableName="bacterio_col_culture"
+            schemaName="clinlims">
+            <column name="id" type="Numeric">
+                <constraints primaryKey="true" />
+            </column>
+            <column name="sample_id" type="VARCHAR(255)">
+                <constraints nullable="false" />
+            </column>
+            <column name="culture_col" type="VARCHAR(255)">
+            </column>
+            <column name="is_validated" type="BOOLEAN"
+                defaultValueBoolean="false">
+            </column>
+            <column name="lastupdated" type="timestamp">
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="2025031504">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <sequenceExists
+                    sequenceName="bact_secretion_identify_seq" schemaName="clinlims" />
+            </not>
+        </preConditions>
+        <createSequence
+            sequenceName="bact_secretion_identify_seq" incrementBy="1"
+            cycle="false" cacheSize="200" startValue="1" schemaName="clinlims" />
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="2025031505">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists
+                    tableName="bacterio_secretion_identification" schemaName="clinlims" />
+            </not>
+        </preConditions>
+        <createTable tableName="bacterio_secretion_identification"
+            schemaName="clinlims">
+            <column name="id" type="integer"
+                defaultValueComputed="nextval('bact_identify_seq')">
+                <constraints primaryKey="true" />
+            </column>
+            <column name="culture_secretion_id" type="VARCHAR(255)">
+                <constraints nullable="false" />
+            </column>
+            <column name="type_germe" type="VARCHAR(255)">
+            </column>
+            <column name="type_germe_two" type="VARCHAR(255)">
+            </column>
+            <column name="type_germe_three" type="VARCHAR(255)">
+            </column>
+            <column name="is_validated" type="BOOLEAN"
+                defaultValueBoolean="false">
+            </column>
+            <column name="lastupdated" type="timestamp">
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="2025031506">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <sequenceExists
+                    sequenceName="bact_secretion_germe_seq" schemaName="clinlims" />
+            </not>
+        </preConditions>
+        <createSequence sequenceName="bact_secretion_germe_seq"
+            incrementBy="1" cycle="false" cacheSize="200" startValue="1"
+            schemaName="clinlims" />
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="2025031507">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="bacterio_secretion_name_germe"
+                    schemaName="clinlims" />
+            </not>
+        </preConditions>
+        <createTable tableName="bacterio_secretion_name_germe"
+            schemaName="clinlims">
+            <column name="id" type="integer"
+                defaultValueComputed="nextval('bact_secretion_germe_seq')">
+                <constraints primaryKey="true" />
+            </column>
+            <column name="identif_secretion_id" type="VARCHAR(255)">
+                <constraints nullable="false" />
+            </column>
+            <column name="name_germe_one" type="VARCHAR(255)">
+            </column>
+            <column name="name_germe_two" type="VARCHAR(255)">
+            </column>
+            <column name="name_germe_three" type="VARCHAR(255)">
+            </column>
+            <column name="is_validated" type="BOOLEAN"
+                defaultValueBoolean="false">
+            </column>
+            <column name="lastupdated" type="timestamp">
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="2025031508">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <sequenceExists
+                    sequenceName="bacterio_secretion_antibiogram_seq"
+                    schemaName="clinlims" />
+            </not>
+        </preConditions>
+        <createSequence
+            sequenceName="bacterio_secretion_antibiogram_seq" incrementBy="1"
+            cycle="false" cacheSize="200" startValue="1" schemaName="clinlims" />
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="2025031509">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists
+                    tableName="bacterio_secretion_antibiogramme" schemaName="clinlims" />
+            </not>
+        </preConditions>
+        <createTable tableName="bacterio_secretion_antibiogramme"
+            schemaName="clinlims">
+            <column name="id" type="integer"
+                defaultValueComputed="nextval('bacterio_secretion_antibiogram_seq')">
+                <constraints primaryKey="true" />
+            </column>
+            <column name="name_secretion_germe_id" type="VARCHAR(255)">
+                <constraints nullable="false" />
+            </column>
+            <column name="antibio_one" type="text">
+            </column>
+            <column name="antibio_two" type="text">
+            </column>
+            <column name="antibio_three" type="text">
+            </column>
+            <column name="statut_one" type="text">
+            </column>
+            <column name="statut_two" type="text">
+            </column>
+            <column name="statut_three" type="text">
+            </column>
+            <column name="is_validated" type="BOOLEAN"
+                defaultValueBoolean="false">
+            </column>
+            <column name="lastupdated" type="timestamp">
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="2025031511">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <sequenceExists sequenceName="bact_col_identify_seq"
+                    schemaName="clinlims" />
+            </not>
+        </preConditions>
+        <createSequence sequenceName="bact_col_identify_seq"
+            incrementBy="1" cycle="false" cacheSize="200" startValue="1"
+            schemaName="clinlims" />
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="2025031512">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="bacterio_col_identification"
+                    schemaName="clinlims" />
+            </not>
+        </preConditions>
+        <createTable tableName="bacterio_col_identification"
+            schemaName="clinlims">
+            <column name="id" type="integer"
+                defaultValueComputed="nextval('bact_col_identify_seq')">
+                <constraints primaryKey="true" />
+            </column>
+            <column name="culture_col_id" type="VARCHAR(255)">
+                <constraints nullable="false" />
+            </column>
+            <column name="type_germe" type="VARCHAR(255)">
+            </column>
+            <column name="type_germe_two" type="VARCHAR(255)">
+            </column>
+            <column name="type_germe_three" type="VARCHAR(255)">
+            </column>
+            <column name="lastupdated" type="timestamp">
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="2025031513">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <sequenceExists sequenceName="bact_col_namegerme_seq"
+                    schemaName="clinlims" />
+            </not>
+        </preConditions>
+        <createSequence sequenceName="bact_col_namegerme_seq"
+            incrementBy="1" cycle="false" cacheSize="200" startValue="1"
+            schemaName="clinlims" />
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="2025031514">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="bacterio_col_name_germe"
+                    schemaName="clinlims" />
+            </not>
+        </preConditions>
+        <createTable tableName="bacterio_col_name_germe"
+            schemaName="clinlims">
+            <column name="id" type="integer"
+                defaultValueComputed="nextval('bact_col_namegerme_seq')">
+                <constraints primaryKey="true" />
+            </column>
+            <column name="identif_col_id" type="VARCHAR(255)">
+                <constraints nullable="false" />
+            </column>
+            <column name="name_germe_one" type="VARCHAR(255)">
+            </column>
+            <column name="name_germe_two" type="VARCHAR(255)">
+            </column>
+            <column name="name_germe_three" type="VARCHAR(255)">
+            </column>
+            <column name="lastupdated" type="timestamp">
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="2025031515">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <sequenceExists
+                    sequenceName="bact_levure_col_one_seq" schemaName="clinlims" />
+            </not>
+        </preConditions>
+        <createSequence sequenceName="bact_levure_col_one_seq"
+            incrementBy="1" cycle="false" cacheSize="200" startValue="1"
+            schemaName="clinlims" />
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="2025031516">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="bacterio_levure_col_one"
+                    schemaName="clinlims" />
+            </not>
+        </preConditions>
+        <createTable tableName="bacterio_levure_col_one"
+            schemaName="clinlims">
+            <column name="id" type="integer"
+                defaultValueComputed="nextval('bact_levure_col_one_seq')">
+                <constraints primaryKey="true" />
+            </column>
+            <column name="identif_col_id" type="VARCHAR(255)">
+                <constraints nullable="false" />
+            </column>
+            <column name="neisseria_ghonoree" type="VARCHAR(255)">
+            </column>
+            <column name="chlamidya_trachomatis" type="VARCHAR(255)">
+            </column>
+            <column name="streptoccus" type="VARCHAR(255)">
+            </column>
+            <column name="haemophilus" type="VARCHAR(255)">
+            </column>
+            <column name="candida_albican" type="VARCHAR(255)">
+            </column>
+            <column name="urealyticum" type="VARCHAR(255)">
+            </column>
+            <column name="mycloplasma" type="VARCHAR(255)">
+            </column>
+            <column name="treponema" type="VARCHAR(255)">
+            </column>
+            <column name="herpes" type="VARCHAR(255)">
+            </column>
+            <column name="staphiloccus" type="VARCHAR(255)">
+            </column>
+            <column name="enterobact" type="VARCHAR(255)">
+            </column>
+            <column name="papillomavirus" type="VARCHAR(255)">
+            </column>
+            <column name="agalactiae" type="VARCHAR(255)">
+            </column>
+            <column name="lastupdated" type="timestamp">
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="2025031517">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <sequenceExists
+                    sequenceName="bact_levure_col_two_seq" schemaName="clinlims" />
+            </not>
+        </preConditions>
+        <createSequence sequenceName="bact_levure_col_two_seq"
+            incrementBy="1" cycle="false" cacheSize="200" startValue="1"
+            schemaName="clinlims" />
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="2025031518">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="bacterio_levure_col_two"
+                    schemaName="clinlims" />
+            </not>
+        </preConditions>
+        <createTable tableName="bacterio_levure_col_two"
+            schemaName="clinlims">
+            <column name="id" type="integer"
+                defaultValueComputed="nextval('bact_levure_col_two_seq')">
+                <constraints primaryKey="true" />
+            </column>
+            <column name="identif_col_id" type="VARCHAR(255)">
+                <constraints nullable="false" />
+            </column>
+            <column name="neisseria_ghonoree" type="VARCHAR(255)">
+            </column>
+            <column name="chlamidya_trachomatis" type="VARCHAR(255)">
+            </column>
+            <column name="streptoccus" type="VARCHAR(255)">
+            </column>
+            <column name="haemophilus" type="VARCHAR(255)">
+            </column>
+            <column name="candida_albican" type="VARCHAR(255)">
+            </column>
+            <column name="urealyticum" type="VARCHAR(255)">
+            </column>
+            <column name="mycloplasma" type="VARCHAR(255)">
+            </column>
+            <column name="treponema" type="VARCHAR(255)">
+            </column>
+            <column name="herpes" type="VARCHAR(255)">
+            </column>
+            <column name="staphiloccus" type="VARCHAR(255)">
+            </column>
+            <column name="enterobact" type="VARCHAR(255)">
+            </column>
+            <column name="papillomavirus" type="VARCHAR(255)">
+            </column>
+            <column name="agalactiae" type="VARCHAR(255)">
+            </column>
+            <column name="lastupdated" type="timestamp">
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="2025031519">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <sequenceExists
+                    sequenceName="bact_levure_col_three_seq" schemaName="clinlims" />
+            </not>
+        </preConditions>
+        <createSequence
+            sequenceName="bact_levure_col_three_seq" incrementBy="1"
+            cycle="false" cacheSize="200" startValue="1" schemaName="clinlims" />
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="2025031520">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="bacterio_levure_col_three"
+                    schemaName="clinlims" />
+            </not>
+        </preConditions>
+        <createTable tableName="bacterio_levure_col_three"
+            schemaName="clinlims">
+            <column name="id" type="integer"
+                defaultValueComputed="nextval('bact_levure_col_three_seq')">
+                <constraints primaryKey="true" />
+            </column>
+            <column name="identif_col_id" type="VARCHAR(255)">
+                <constraints nullable="false" />
+            </column>
+            <column name="neisseria_ghonoree" type="VARCHAR(255)">
+            </column>
+            <column name="chlamidya_trachomatis" type="VARCHAR(255)">
+            </column>
+            <column name="streptoccus" type="VARCHAR(255)">
+            </column>
+            <column name="haemophilus" type="VARCHAR(255)">
+            </column>
+            <column name="candida_albican" type="VARCHAR(255)">
+            </column>
+            <column name="urealyticum" type="VARCHAR(255)">
+            </column>
+            <column name="mycloplasma" type="VARCHAR(255)">
+            </column>
+            <column name="treponema" type="VARCHAR(255)">
+            </column>
+            <column name="herpes" type="VARCHAR(255)">
+            </column>
+            <column name="staphiloccus" type="VARCHAR(255)">
+            </column>
+            <column name="enterobact" type="VARCHAR(255)">
+            </column>
+            <column name="papillomavirus" type="VARCHAR(255)">
+            </column>
+            <column name="agalactiae" type="VARCHAR(255)">
+            </column>
+            <column name="lastupdated" type="timestamp">
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="2025031522">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <sequenceExists
+                    sequenceName="bacterio_col_antibiogram_seq" schemaName="clinlims" />
+            </not>
+        </preConditions>
+        <createSequence
+            sequenceName="bacterio_col_antibiogram_seq" incrementBy="1"
+            cycle="false" cacheSize="200" startValue="1" schemaName="clinlims" />
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="2025031523">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="bacterio_col_antibiogramme"
+                    schemaName="clinlims" />
+            </not>
+        </preConditions>
+        <createTable tableName="bacterio_col_antibiogramme"
+            schemaName="clinlims">
+            <column name="id" type="integer"
+                defaultValueComputed="nextval('bacterio_col_antibiogram_seq')">
+                <constraints primaryKey="true" />
+            </column>
+            <column name="culture_col_id" type="VARCHAR(255)">
+                <constraints nullable="false" />
+            </column>
+            <column name="antibio_three" type="VARCHAR(255)">
+            </column>
+            <column name="statut_three" type="VARCHAR(255)">
+            </column>
+            <column name="is_validated" type="BOOLEAN"
+                defaultValueBoolean="false">
+            </column>
+            <column name="lastupdated" type="timestamp">
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="2025060144">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <sequenceExists sequenceName="bacterio_secrcol_seq"
+                    schemaName="clinlims" />
+            </not>
+        </preConditions>
+        <createSequence sequenceName="bacterio_secrcol_seq"
+            incrementBy="1" cycle="false" cacheSize="200" startValue="1"
+            schemaName="clinlims" />
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="2025060145">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="bacterio_secretion_col"
+                    schemaName="clinlims" />
+            </not>
+        </preConditions>
+        <createTable tableName="bacterio_secretion_col"
+            schemaName="clinlims">
+            <column name="id" type="Numeric">
+                <constraints primaryKey="true" />
+            </column>
+            <column name="sample_id" type="VARCHAR(255)">
+                <constraints nullable="false" />
+            </column>
+            <column name="col_leucorrhee" type="VARCHAR(255)">
+            </column>
+            <column name="is_validated" type="BOOLEAN"
+                defaultValueBoolean="false">
+            </column>
+            <column name="lastupdated" type="timestamp">
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="2025060146">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <sequenceExists sequenceName="bact_secrecoltest_seq"
+                    schemaName="clinlims" />
+            </not>
+        </preConditions>
+        <createSequence sequenceName="bact_secrecoltest_seq"
+            incrementBy="1" cycle="false" cacheSize="200" startValue="1"
+            schemaName="clinlims" />
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="2025060147">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="bacterio_secretion_col_test"
+                    schemaName="clinlims" />
+            </not>
+        </preConditions>
+        <createTable tableName="bacterio_secretion_col_test"
+            schemaName="clinlims">
+            <column name="id" type="integer"
+                defaultValueComputed="nextval('bact_secrecoltest_seq')">
+                <constraints primaryKey="true" />
+            </column>
+            <column name="secretion_col_leucorhee" type="VARCHAR(255)">
+                <constraints nullable="false" />
+            </column>
+            <column name="col_abondance" type="VARCHAR(255)">
+            </column>
+            <column name="col_aspect" type="VARCHAR(255)">
+            </column>
+            <column name="col_autre" type="VARCHAR(255)">
+            </column>
+            <column name="col_couleur" type="VARCHAR(255)">
+            </column>
+            <column name="is_validated" type="BOOLEAN"
+                defaultValueBoolean="false">
+            </column>
+            <column name="lastupdated" type="timestamp">
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="2025060148">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <sequenceExists sequenceName="bacterio_secrmuq_seq"
+                    schemaName="clinlims" />
+            </not>
+        </preConditions>
+        <createSequence sequenceName="bacterio_secrmuq_seq"
+            incrementBy="1" cycle="false" cacheSize="200" startValue="1"
+            schemaName="clinlims" />
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="2025060149">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="bacterio_secretion_muqueuse"
+                    schemaName="clinlims" />
+            </not>
+        </preConditions>
+        <createTable tableName="bacterio_secretion_muqueuse"
+            schemaName="clinlims">
+            <column name="id" type="Numeric">
+                <constraints primaryKey="true" />
+            </column>
+            <column name="sample_id" type="VARCHAR(255)">
+                <constraints nullable="false" />
+            </column>
+            <column name="muqueuse_leucorrhee" type="VARCHAR(255)">
+            </column>
+            <column name="is_validated" type="BOOLEAN"
+                defaultValueBoolean="false">
+            </column>
+            <column name="lastupdated" type="timestamp">
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="2025060150">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <sequenceExists sequenceName="bact_secremuqtest_seq"
+                    schemaName="clinlims" />
+            </not>
+        </preConditions>
+        <createSequence sequenceName="bact_secremuqtest_seq"
+            incrementBy="1" cycle="false" cacheSize="200" startValue="1"
+            schemaName="clinlims" />
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="2025060151">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists
+                    tableName="bacterio_secretion_muqueuse_test" schemaName="clinlims" />
+            </not>
+        </preConditions>
+        <createTable tableName="bacterio_secretion_muqueuse_test"
+            schemaName="clinlims">
+            <column name="id" type="integer"
+                defaultValueComputed="nextval('bact_secremuqtest_seq')">
+                <constraints primaryKey="true" />
+            </column>
+            <column name="secretion_muqueuse_leucorhee_id"
+                type="VARCHAR(255)">
+                <constraints nullable="false" />
+            </column>
+            <column name="muqueuse_abondance" type="VARCHAR(255)">
+            </column>
+            <column name="muqueuse_aspect" type="VARCHAR(255)">
+            </column>
+            <column name="muqueuse_autre" type="VARCHAR(255)">
+            </column>
+            <column name="muqueuse_couleur" type="VARCHAR(255)">
+            </column>
+            <column name="is_validated" type="BOOLEAN"
+                defaultValueBoolean="false">
+            </column>
+            <column name="lastupdated" type="timestamp">
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="2025060152">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <sequenceExists sequenceName="bacterio_secrvulv_seq"
+                    schemaName="clinlims" />
+            </not>
+        </preConditions>
+        <createSequence sequenceName="bacterio_secrvulv_seq"
+            incrementBy="1" cycle="false" cacheSize="200" startValue="1"
+            schemaName="clinlims" />
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="2025060153">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="bacterio_secretion_vulve"
+                    schemaName="clinlims" />
+            </not>
+        </preConditions>
+        <createTable tableName="bacterio_secretion_vulve"
+            schemaName="clinlims">
+            <column name="id" type="Numeric">
+                <constraints primaryKey="true" />
+            </column>
+            <column name="sample_id" type="VARCHAR(255)">
+                <constraints nullable="false" />
+            </column>
+            <column name="vulve_leucorrhee" type="VARCHAR(255)">
+            </column>
+            <column name="is_validated" type="BOOLEAN"
+                defaultValueBoolean="false">
+            </column>
+            <column name="lastupdated" type="timestamp">
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="2025060154">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <sequenceExists sequenceName="bact_secrevulvtest_seq"
+                    schemaName="clinlims" />
+            </not>
+        </preConditions>
+        <createSequence sequenceName="bact_secrevulvtest_seq"
+            incrementBy="1" cycle="false" cacheSize="200" startValue="1"
+            schemaName="clinlims" />
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="2025060155">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="bacterio_secretion_vulve_test"
+                    schemaName="clinlims" />
+            </not>
+        </preConditions>
+        <createTable tableName="bacterio_secretion_vulve_test"
+            schemaName="clinlims">
+            <column name="id" type="integer"
+                defaultValueComputed="nextval('bact_secrevulvtest_seq')">
+                <constraints primaryKey="true" />
+            </column>
+            <column name="secretion_vulve_leucorhee_id"
+                type="VARCHAR(255)">
+                <constraints nullable="false" />
+            </column>
+            <column name="vulve_abondance" type="VARCHAR(255)">
+            </column>
+            <column name="vulve_aspect" type="VARCHAR(255)">
+            </column>
+            <column name="vulve_autre" type="VARCHAR(255)">
+            </column>
+            <column name="vulve_couleur" type="VARCHAR(255)">
+            </column>
+            <column name="is_validated" type="BOOLEAN"
+                defaultValueBoolean="false">
+            </column>
+            <column name="lastupdated" type="timestamp">
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="2025040100">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <sequenceExists sequenceName="bacterio_nbflore_seq"
+                    schemaName="clinlims" />
+            </not>
+        </preConditions>
+        <createSequence sequenceName="bacterio_nbflore_seq"
+            incrementBy="1" cycle="false" cacheSize="200" startValue="1"
+            schemaName="clinlims" />
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="2025040101">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="bacterio_flore"
+                    schemaName="clinlims" />
+            </not>
+        </preConditions>
+        <createTable tableName="bacterio_flore"
+            schemaName="clinlims">
+            <column name="id" type="Numeric">
+                <constraints primaryKey="true" />
+            </column>
+            <column name="sample_id" type="VARCHAR(255)">
+                <constraints nullable="false" />
+            </column>
+            <column name="nombre_flore" type="VARCHAR(255)">
+            </column>
+            <column name="is_validated" type="BOOLEAN"
+                defaultValueBoolean="false">
+            </column>
+            <column name="lastupdated" type="timestamp">
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="2025040102">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <sequenceExists sequenceName="bact_flortest_seq"
+                    schemaName="clinlims" />
+            </not>
+        </preConditions>
+        <createSequence sequenceName="bact_flortest_seq"
+            incrementBy="1" cycle="false" cacheSize="200" startValue="1"
+            schemaName="clinlims" />
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="2025040103">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="bacterio_flore_test"
+                    schemaName="clinlims" />
+            </not>
+        </preConditions>
+        <createTable tableName="bacterio_flore_test"
+            schemaName="clinlims">
+            <column name="id" type="integer"
+                defaultValueComputed="nextval('bact_flortest_seq')">
+                <constraints primaryKey="true" />
+            </column>
+            <column name="nombre_flore_id" type="VARCHAR(255)">
+                <constraints nullable="false" />
+            </column>
+            <column name="type_grame_one" type="VARCHAR(255)">
+            </column>
+            <column name="type_grame_two" type="VARCHAR(255)">
+            </column>
+            <column name="type_grame_three" type="VARCHAR(255)">
+            </column>
+            <column name="mod_regr_one" type="VARCHAR(255)">
+            </column>
+            <column name="mod_regr_two" type="VARCHAR(255)">
+            </column>
+            <column name="mod_regr_three" type="VARCHAR(255)">
+            </column>
+            <column name="autr_caract_one" type="VARCHAR(255)">
+            </column>
+            <column name="autr_caract_two" type="VARCHAR(255)">
+            </column>
+            <column name="autr_caract_three" type="VARCHAR(255)">
+            </column>
+            <column name="is_validated" type="BOOLEAN"
+                defaultValueBoolean="false">
+            </column>
+            <column name="lastupdated" type="timestamp">
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="2025060203">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <sequenceExists
+                    sequenceName="bacterio_uretrecoul_seq" schemaName="clinlims" />
+            </not>
+        </preConditions>
+        <createSequence sequenceName="bacterio_uretrecoul_seq"
+            incrementBy="1" cycle="false" cacheSize="200" startValue="1"
+            schemaName="clinlims" />
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="2025060204">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="bacterio_uretre_ecoulement"
+                    schemaName="clinlims" />
+            </not>
+        </preConditions>
+        <createTable tableName="bacterio_uretre_ecoulement"
+            schemaName="clinlims">
+            <column name="id" type="Numeric">
+                <constraints primaryKey="true" />
+            </column>
+            <column name="sample_id" type="VARCHAR(255)">
+                <constraints nullable="false" />
+            </column>
+            <column name="macro_ecoulement" type="VARCHAR(255)">
+            </column>
+            <column name="is_validated" type="BOOLEAN"
+                defaultValueBoolean="false">
+            </column>
+            <column name="lastupdated" type="timestamp">
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="2025060205">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <sequenceExists sequenceName="bact_urecouletest_seq"
+                    schemaName="clinlims" />
+            </not>
+        </preConditions>
+        <createSequence sequenceName="bact_urecouletest_seq"
+            incrementBy="1" cycle="false" cacheSize="200" startValue="1"
+            schemaName="clinlims" />
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="2025060206">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="bacterio_uretre_ecoulement_test"
+                    schemaName="clinlims" />
+            </not>
+        </preConditions>
+        <createTable tableName="bacterio_uretre_ecoulement_test"
+            schemaName="clinlims">
+            <column name="id" type="integer"
+                defaultValueComputed="nextval('bact_urecouletest_seq')">
+                <constraints primaryKey="true" />
+            </column>
+            <column name="macro_ecoulement_id" type="VARCHAR(255)">
+                <constraints nullable="false" />
+            </column>
+            <column name="macro_abondance" type="VARCHAR(255)">
+            </column>
+            <column name="macro_aspect" type="VARCHAR(255)">
+            </column>
+            <column name="macro_autre" type="VARCHAR(255)">
+            </column>
+            <column name="macro_couleur" type="VARCHAR(255)">
+            </column>
+            <column name="is_validated" type="BOOLEAN"
+                defaultValueBoolean="false">
+            </column>
+            <column name="lastupdated" type="timestamp">
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="2025060207">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <sequenceExists
+                    sequenceName="bacterio_uret_culture_seq" schemaName="clinlims" />
+            </not>
+        </preConditions>
+        <createSequence
+            sequenceName="bacterio_uret_culture_seq" incrementBy="1"
+            cycle="false" cacheSize="200" startValue="1" schemaName="clinlims" />
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="2025060208">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="bacterio_uretrale_culture"
+                    schemaName="clinlims" />
+            </not>
+        </preConditions>
+        <createTable tableName="bacterio_uretrale_culture"
+            schemaName="clinlims">
+            <column name="id" type="Numeric">
+                <constraints primaryKey="true" />
+            </column>
+            <column name="sample_id" type="VARCHAR(255)">
+                <constraints nullable="false" />
+            </column>
+            <column name="culture_uretrale" type="VARCHAR(255)">
+            </column>
+            <column name="is_validated" type="BOOLEAN"
+                defaultValueBoolean="false">
+            </column>
+            <column name="lastupdated" type="timestamp">
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="2025060211">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <sequenceExists
+                    sequenceName="bacterio_uret_antibiogram_seq" schemaName="clinlims" />
+            </not>
+        </preConditions>
+        <createSequence
+            sequenceName="bacterio_uret_antibiogram_seq" incrementBy="1"
+            cycle="false" cacheSize="200" startValue="1" schemaName="clinlims" />
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="2025060212">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="bacterio_uretrale_antibiogramme"
+                    schemaName="clinlims" />
+            </not>
+        </preConditions>
+        <createTable tableName="bacterio_uretrale_antibiogramme"
+            schemaName="clinlims">
+            <column name="id" type="integer"
+                defaultValueComputed="nextval('bacterio_uret_antibiogram_seq')">
+                <constraints primaryKey="true" />
+            </column>
+            <column name="culture_uretrale_id" type="VARCHAR(255)">
+                <constraints nullable="false" />
+            </column>
+            <column name="antibiotique_name" type="text">
+            </column>
+            <column name="statut_antibio" type="text">
+            </column>
+            <column name="is_validated" type="BOOLEAN"
+                defaultValueBoolean="false">
+            </column>
+            <column name="lastupdated" type="timestamp">
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="2025070250">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <sequenceExists
+                    sequenceName="bact_secretion_identify_levure_seq"
+                    schemaName="clinlims" />
+            </not>
+        </preConditions>
+        <createSequence
+            sequenceName="bact_secretion_identify_levure_seq" incrementBy="1"
+            cycle="false" cacheSize="200" startValue="1" schemaName="clinlims" />
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="2025070251">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists
+                    tableName="bacterio_secretion_identification_levure"
+                    schemaName="clinlims" />
+            </not>
+        </preConditions>
+        <createTable
+            tableName="bacterio_secretion_identification_levure"
+            schemaName="clinlims">
+            <column name="id" type="integer"
+                defaultValueComputed="nextval('bact_secretion_identify_levure_seq')">
+                <constraints primaryKey="true" />
+            </column>
+            <column name="culture_secretion_id" type="VARCHAR(255)">
+                <constraints nullable="false" />
+            </column>
+            <column name="levure_one" type="VARCHAR(255)">
+            </column>
+            <column name="levure_two" type="VARCHAR(255)">
+            </column>
+            <column name="levure_three" type="VARCHAR(255)">
+            </column>
+            <column name="lastupdated" type="timestamp">
+            </column>
+            <column name="is_validated" type="BOOLEAN"
+                defaultValueBoolean="false">
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="2025070252">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <sequenceExists sequenceName="bacterio_quanttes_seq"
+                    schemaName="clinlims" />
+            </not>
+        </preConditions>
+        <createSequence sequenceName="bacterio_quanttes_seq"
+            incrementBy="1" cycle="false" cacheSize="200" startValue="1"
+            schemaName="clinlims" />
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="2025070253">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="bacterio_quantitatif_test"
+                    schemaName="clinlims" />
+            </not>
+        </preConditions>
+        <createTable tableName="bacterio_quantitatif_test"
+            schemaName="clinlims">
+            <column name="id" type="Numeric">
+                <constraints primaryKey="true" />
+            </column>
+            <column name="sample_id" type="VARCHAR(255)">
+                <constraints nullable="false" />
+            </column>
+            <column name="macro_quant_hematie" type="VARCHAR(255)">
+            </column>
+            <column name="macro_quant_leucocyte" type="VARCHAR(255)">
+            </column>
+            <column name="quant_hematie" type="VARCHAR(255)">
+            </column>
+            <column name="uni_mesure_hematie" type="VARCHAR(255)">
+            </column>
+            <column name="quant_leuco" type="VARCHAR(255)">
+            </column>
+            <column name="uni_mesure_leuco" type="VARCHAR(255)">
+            </column>
+            <column name="macro_quant_pus" type="VARCHAR(255)">
+            </column>
+            <column name="quant_pus" type="VARCHAR(255)">
+            </column>
+            <column name="uni_mesure_pus" type="VARCHAR(255)">
+            </column>
+            <column name="is_validated" type="BOOLEAN"
+                defaultValueBoolean="false">
+            </column>
+            <column name="lastupdated" type="timestamp">
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="2025051001">
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="project" schemaName="clinlims" />
+            <sqlCheck expectedResult="0"><![CDATA[
+SELECT count(*) FROM
+                clinlims.project
+                WHERE name = 'BACTERIO'
+]]></sqlCheck>
+        </preConditions>
+        <comment>BACTERIO</comment>
+        <insert tableName="project" schemaName="clinlims">
+            <column name="id" valueSequenceNext="project_seq" />
+            <column name="name" value="BACTERIO" />
+            <column name="description" value="BACTERIO" />
+            <column name="is_active" value="Y" />
+            <column name="program_code" value="BACT" />
+            <column name="lastupdated" value="now()" />
+            <column name="display_key" value="project.BACT.name" />
+        </insert>
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="2025100120">
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="system_role"
+                schemaName="clinlims" />
+            <sqlCheck expectedResult="1"><![CDATA[
+SELECT COUNT(*) FROM
+                clinlims.system_role WHERE name = 'Reception'
+]]></sqlCheck>
+            <sqlCheck expectedResult="1"><![CDATA[
+SELECT COUNT(*) FROM
+                clinlims.system_module WHERE name = 'SampleBacterioEdit'
+                limit 1
+]]></sqlCheck>
+        </preConditions>
+        <insert tableName="system_role_module" schemaName="clinlims">
+            <column name="id" valueSequenceNext="system_role_module_seq" />
+            <column name="has_select" value="Y" />
+            <column name="has_add" value="Y" />
+            <column name="has_update" value="Y" />
+            <column name="has_delete" value="Y" />
+            <column name="system_role_id"
+                valueComputed="(SELECT id FROM system_role WHERE name = 'Reception')" />
+            <column name="system_module_id"
+                valueComputed="(SELECT id FROM system_module WHERE name = 'SampleBacterioEdit' limit 1)" />
+        </insert>
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="2025100122">
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="system_module"
+                schemaName="clinlims" />
+            <sqlCheck expectedResult="0"><![CDATA[
+SELECT count(*) FROM clinlims.system_module WHERE name = 'SampleBacterioEdit'
+]]></sqlCheck>
+        </preConditions>
+        <comment>Add SampleBacterioEdit a module for Bacterio</comment>
+        <insert tableName="system_module" schemaName="clinlims">
+            <column name="id" valueSequenceNext="system_module_seq" />
+            <column name="name" value="SampleBacterioEdit" />
+            <column name="description" value="SampleBacterio=>edit" />
+            <column name="has_select_flag" value="Y" />
+            <column name="has_add_flag" value="Y" />
+            <column name="has_update_flag" value="Y" />
+            <column name="has_delete_flag" value="Y" />
+        </insert>
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="2025100123">
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="system_role_module"
+                schemaName="clinlims" />
+            <sqlCheck expectedResult="1"><![CDATA[
+SELECT COUNT(*) FROM clinlims.system_role WHERE name = 'Reception'
+]]></sqlCheck>
+            <sqlCheck expectedResult="1"><![CDATA[
+SELECT COUNT(*) FROM clinlims.system_module WHERE name = 'SampleBacterioEdit'
+]]></sqlCheck>
+        </preConditions>
+        <comment>Add roles for Microbiology </comment>
+        <insert tableName="system_module_url" schemaName="clinlims">
+            <column name="id" valueSequenceNext="system_module_url_seq" />
+            <column name="url_path" value="/SampleBacterioEdit" />
+            <column name="system_module_id"
+                valueComputed="(SELECT id FROM clinlims.system_module WHERE name = 'SampleBacterioEdit')" />
+        </insert>
+        <insert tableName="system_role_module" schemaName="clinlims">
+            <column name="id" valueSequenceNext="system_role_module_seq" />
+            <column name="has_select" value="Y" />
+            <column name="has_add" value="Y" />
+            <column name="has_update" value="Y" />
+            <column name="system_role_id"
+                valueComputed="(SELECT id FROM clinlims.system_role WHERE name = 'Reception')" />
+            <column name="system_module_id"
+                valueComputed="(SELECT id FROM clinlims.system_module WHERE name = 'SampleBacterioEdit')" />
+        </insert>
+    </changeSet>
+
+</databaseChangeLog>

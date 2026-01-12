@@ -446,6 +446,125 @@ public class ResultServiceImpl extends AuditableBaseObjectServiceImpl<Result, St
         return test != null && test.getUnitOfMeasure() != null ? test.getUnitOfMeasure().getUnitOfMeasureName() : "";
     }
 
+    // SI Unit Conversion methods implementation
+
+    @Override
+    @Transactional(readOnly = true)
+    public String getSiValue(Result result) {
+        if (result == null) {
+            return null;
+        }
+        return result.getValueSi();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public String getSiUom(Result result) {
+        if (result == null) {
+            return "";
+        }
+
+        try {
+            // Try to access the UOM - may throw LazyInitializationException
+            if (result.getUomSi() == null) {
+                return "";
+            }
+
+            // Load UOM using service to avoid lazy loading issues
+            String uomSiId = result.getUomSi().getId();
+            if (uomSiId != null) {
+                org.openelisglobal.unitofmeasure.service.UnitOfMeasureService uomService = SpringContext
+                        .getBean(org.openelisglobal.unitofmeasure.service.UnitOfMeasureService.class);
+                org.openelisglobal.unitofmeasure.valueholder.UnitOfMeasure loadedUomSi = uomService.get(uomSiId);
+                if (loadedUomSi != null) {
+                    return loadedUomSi.getUnitOfMeasureName();
+                }
+            }
+        } catch (org.hibernate.LazyInitializationException e) {
+            // Proxy not initialized, return empty
+            org.openelisglobal.common.log.LogEvent.logDebug(this.getClass().getSimpleName(), "getSiUom",
+                    "UOM SI proxy not initialized, returning empty");
+        } catch (Exception e) {
+            org.openelisglobal.common.log.LogEvent.logWarn(this.getClass().getSimpleName(), "getSiUom",
+                    "Could not load SI UOM: " + e.getMessage());
+        }
+        return "";
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public String getFormattedValueWithSi(Result result, String separator, boolean printable, boolean includeUOM) {
+        if (result == null) {
+            return "";
+        }
+
+        // Get the traditional value formatted normally
+        String traditionalValue = getResultValue(result, separator, printable, includeUOM);
+
+        // If no SI conversion exists, return just the traditional value
+        if (!hasSiConversion(result)) {
+            return traditionalValue;
+        }
+
+        // Build SI part
+        StringBuilder siPart = new StringBuilder();
+        siPart.append(result.getValueSi());
+
+        if (includeUOM) {
+            // Load UOM using service to avoid lazy loading issues
+            String siUomName = getSiUom(result); // Use the method we just fixed
+            if (!GenericValidator.isBlankOrNull(siUomName)) {
+                if (!GenericValidator.isBlankOrNull(separator)) {
+                    siPart.append(separator);
+                } else {
+                    siPart.append(" ");
+                }
+                siPart.append(siUomName);
+            }
+        }
+
+        // Combine: "12.5 g/dL (125.0 g/L)"
+        return traditionalValue + " (" + siPart.toString() + ")";
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public boolean hasSiConversion(Result result) {
+        return result != null && !GenericValidator.isBlankOrNull(result.getValueSi());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public String getSiReferenceRange(Result result) {
+        if (result == null) {
+            return "";
+        }
+
+        Double minSi = result.getMinNormalSi();
+        Double maxSi = result.getMaxNormalSi();
+
+        if (minSi == null && maxSi == null) {
+            return "";
+        }
+
+        String uom = getSiUom(result);
+        StringBuilder range = new StringBuilder();
+
+        if (minSi != null && maxSi != null) {
+            range.append(minSi).append(" - ").append(maxSi);
+        } else if (minSi != null) {
+            range.append("> ").append(minSi);
+        } else {
+            range.append("< ").append(maxSi);
+        }
+
+        if (!GenericValidator.isBlankOrNull(uom)) {
+            range.append(" ").append(uom);
+        }
+
+        return range.toString();
+    }
+
     @Transactional(readOnly = true)
     public double getlowNormalRange(Result result) {
         return result.getMinNormal();

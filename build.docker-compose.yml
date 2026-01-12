@@ -90,7 +90,7 @@ services:
     restart: always
     environment:
       SPRING_CONFIG_LOCATION: file:///run/secrets/hapi_application.yaml
-      TZ: Africa/Nairobi
+      TZ: Africa/Abidjan
       JAVA_OPTS: "-Djavax.net.ssl.trustStore=/etc/openelis-global/truststore 
                       -Djavax.net.ssl.trustStorePassword=tspass
                       -Djavax.net.ssl.trustStoreType=pkcs12 

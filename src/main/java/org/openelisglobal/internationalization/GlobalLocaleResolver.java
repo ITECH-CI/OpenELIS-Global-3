@@ -117,7 +117,6 @@ public class GlobalLocaleResolver extends AbstractLocaleContextResolver implemen
     public void refreshConfiguration() {
         String localeTag = SpringContext.getBean(DefaultConfigurationProperties.class)
                 .getPropertyValue(Property.DEFAULT_LANG_LOCALE);
-        System.out.println("LOCALE IS: " + localeTag);
         Locale locale = GenericValidator.isBlankOrNull(localeTag) ? Locale.US : Locale.forLanguageTag(localeTag);
         setDefaultLocale(locale);
         LocaleContextHolder.setDefaultLocale(locale);

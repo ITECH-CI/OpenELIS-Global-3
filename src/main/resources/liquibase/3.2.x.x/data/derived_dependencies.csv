@@ -1,0 +1,28 @@
+derived_test_name,dependency_token
+CCMH,HCT
+CCMH,Hb
+Concentration Corpusculaire Moyenne en Hémoglobine,HCT
+Concentration Corpusculaire Moyenne en Hémoglobine,Hb
+Lymphocytes (Abs),GB
+Lymphocytes (Abs),Lymph
+Lymphocytes (Abs),Lymph %
+Monocytes (Abs),GB
+Monocytes (Abs),Mono
+Monocytes (Abs),Mono %
+Polynucléaires basophiles (Abs),Baso
+Polynucléaires basophiles (Abs),Baso %
+Polynucléaires basophiles (Abs),GB
+Polynucléaires Eosinophiles (Abs),Eo
+Polynucléaires Eosinophiles (Abs),Eo %
+Polynucléaires Eosinophiles (Abs),GB
+Polynucléaires Neutrophiles (Abs),GB
+Polynucléaires Neutrophiles (Abs),Ne
+Polynucléaires Neutrophiles (Abs),Ne %
+TCMH,GR
+TCMH,Hb
+Teneur Corpusculaire Moyenne en Hémoglobine,GR
+Teneur Corpusculaire Moyenne en Hémoglobine,Hb
+VGM,GR
+VGM,HCT
+Volume Globulaire Moyen,GR
+Volume Globulaire Moyen,HCT

@@ -1,0 +1,17 @@
+test_name,from_uom,to_uom,factor
+Acide Urique,mg/L,µmol/L,5.952
+Albumine,g/L,µmol/L,14.493
+Albumine recherche miction,g/L,µmol/L,14.493
+Bilirubine directe conjuguee,mg/L,µmol/L,1.709
+Bilirubine Totale,mg/L,µmol/L,1.709
+Calcium,mg/L,mmol/L,0.025
+Cholestérol HDL,g/L,mmol/L,2.58
+Cholestérol total,g/L,mmol/L,2.58
+Créatinine,mg/L,µmol/L,8.85
+Créatininémie,mg/L,µmol/L,8.85
+Fer sérique,mg/L,µmol/L,5.58
+Glucose,g/L,mmol/L,5.56
+Glycémie,g/L,mmol/L,5.56
+Magnesium plasmatique,mg/L,mmol/L,0.041
+Triglycérides,g/L,mmol/L,1.14
+Uree,g/L,mmol/L,16.667

@@ -1,40 +1,40 @@
-import React, { useContext, useEffect, useState, useRef } from "react";
-import { FormattedMessage, injectIntl, useIntl } from "react-intl";
-import "../Style.css";
+import { ArrowLeft, ArrowRight, Copy } from "@carbon/icons-react";
 import {
-  getFromOpenElisServer,
-  postToOpenElisServerJsonResponse,
-  convertAlphaNumLabNumForDisplay,
-  Roles,
-} from "../utils/Utils";
-import {
-  Form,
-  TextInput,
-  TextArea,
-  Checkbox,
   Button,
-  Grid,
+  Checkbox,
   Column,
-  Stack,
+  Form,
+  Grid,
+  Link,
+  Loading,
   Pagination,
   Select,
   SelectItem,
-  Loading,
-  Link,
+  Stack,
+  TextArea,
+  TextInput,
 } from "@carbon/react";
-import { Copy, ArrowLeft, ArrowRight } from "@carbon/icons-react";
-import CustomLabNumberInput from "../common/CustomLabNumberInput";
+import { Field, Formik } from "formik";
+import { useContext, useEffect, useRef, useState } from "react";
 import DataTable from "react-data-table-component";
-import { Formik, Field } from "formik";
-import SearchResultFormValues from "../formModel/innitialValues/SearchResultFormValues";
-import { AlertDialog, NotificationKinds } from "../common/CustomNotification";
-import { NotificationContext } from "../layout/Layout";
-import SearchPatientForm from "../patient/SearchPatientForm";
-import ReferredOutTests from "./resultsReferredOut/ReferredOutTests";
-import { ConfigurationContext } from "../layout/Layout";
+import { FormattedMessage, injectIntl, useIntl } from "react-intl";
 import config from "../../config.json";
 import CustomDatePicker from "../common/CustomDatePicker";
+import CustomLabNumberInput from "../common/CustomLabNumberInput";
+import { AlertDialog, NotificationKinds } from "../common/CustomNotification";
+import SiValueDisplay from "../common/SiValueDisplay";
 import { priorities } from "../data/orderOptions";
+import SearchResultFormValues from "../formModel/innitialValues/SearchResultFormValues";
+import { ConfigurationContext, NotificationContext } from "../layout/Layout";
+import SearchPatientForm from "../patient/SearchPatientForm";
+import "../Style.css";
+import {
+  convertAlphaNumLabNumForDisplay,
+  getFromOpenElisServer,
+  postToOpenElisServerJsonResponse,
+  Roles,
+} from "../utils/Utils";
+import ReferredOutTests from "./resultsReferredOut/ReferredOutTests";
 
 function ResultSearchPage() {
   const [originalResultForm, setOriginalResultForm] = useState({
@@ -817,6 +817,7 @@ export function SearchResults(props) {
 
   useEffect(() => {
     if (props.results.testResult) {
+      console.log(props.results.testResult);
       let newValidationState = { ...validationState };
       props.results.testResult.forEach((row) => {
         if (row.resultType === "N") {
@@ -1043,7 +1044,7 @@ export function SearchResults(props) {
             )}
           </>
         );
-      case "priority":
+      case "priority": {
         const priorityObj = priorities.find((p) => p.value === row.priority);
         return (
           <div
@@ -1057,6 +1058,7 @@ export function SearchResults(props) {
             {priorityObj ? priorityObj.icon : null}
           </div>
         );
+      }
       case "testName":
         return (
           <div className="sampleInfo">
@@ -1177,12 +1179,13 @@ export function SearchResults(props) {
                 id={"ResultValue" + row.id}
                 name={"testResult[" + row.id + "].resultValue"}
                 labelText=""
+                helperText={row.unitsOfMeasure || ""}
                 type="number"
                 value={row.resultValue}
                 style={validationState[row.id]?.style}
                 onBlur={(e) => {
                   if (
-                    validationState[row.id].isInvalid &&
+                    validationState[row.id]?.isInvalid &&
                     configurationProperties.ALERT_FOR_INVALID_RESULTS
                   ) {
                     addNotification({
@@ -1203,7 +1206,7 @@ export function SearchResults(props) {
                 onChange={(e) => {
                   handleChange(e, row.id);
                   if (
-                    validationState[row.id].isInvalid &&
+                    validationState[row.id]?.isInvalid &&
                     configurationProperties.ALERT_FOR_INVALID_RESULTS
                   ) {
                     addNotification({
@@ -1268,6 +1271,24 @@ export function SearchResults(props) {
             );
 
           default:
+            // Display current numeric result with SI conversion if available
+            if (row.shadowValueSi && row.shadowUomSiName) {
+              var sDigit =
+                row.siSignificantDigits && row.siSignificantDigits >= 0
+                  ? row.siSignificantDigits
+                  : 3;
+              return (
+                <SiValueDisplay
+                  traditionalValue={row.shadowResultValue}
+                  traditionalUom={row.shadowUom || ""}
+                  siValue={row.shadowValueSi}
+                  siUom={row.shadowUomSiName}
+                  className="compact"
+                  showTooltip={true}
+                  significantDigits={sDigit}
+                />
+              );
+            }
             return row.shadowResultValue;
         }
       default:
@@ -1679,7 +1700,7 @@ export function SearchResults(props) {
       setPageSize(pageInfo.pageSize);
     }
   };
-  
+
   const findPriorityByValue = (searchValue) => {
     return priorities.find((item) => item.value === searchValue);
   };
@@ -1705,10 +1726,10 @@ export function SearchResults(props) {
                 {" "}
                 <FormattedMessage id="validation.label.nonconform" />
               </b>
-               <br/>
+              <br />
               {findPriorityByValue("ASAP").icon} ={" "}
               <FormattedMessage id="result.priority.asap" />
-              <br/>
+              <br />
               {findPriorityByValue("STAT").icon} ={" "}
               <FormattedMessage id="result.priority.stat" />
             </Column>

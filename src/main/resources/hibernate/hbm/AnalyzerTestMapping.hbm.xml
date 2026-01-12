@@ -18,5 +18,8 @@
 
         <property name="testId" column="test_id"
             type="org.openelisglobal.hibernate.resources.usertype.LIMSStringNumberUserType" />
+
+        <property name="methodId" column="method_id"
+            type="org.openelisglobal.hibernate.resources.usertype.LIMSStringNumberUserType" />
     </class>
 </hibernate-mapping>

@@ -43,6 +43,8 @@ import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.validator.GenericValidator;
 import org.openelisglobal.analysis.service.AnalysisService;
 import org.openelisglobal.analysis.valueholder.Analysis;
+import org.openelisglobal.analyzerimport.service.AnalyzerTestMappingService;
+import org.openelisglobal.analyzerimport.valueholder.AnalyzerTestMapping;
 import org.openelisglobal.common.action.IActionConstants;
 import org.openelisglobal.common.exception.LIMSException;
 import org.openelisglobal.common.exception.LIMSInvalidConfigurationException;
@@ -59,6 +61,8 @@ import org.openelisglobal.common.util.ConfigurationProperties;
 import org.openelisglobal.common.util.DateUtil;
 import org.openelisglobal.common.util.StringUtil;
 import org.openelisglobal.dataexchange.fhir.service.FhirTransformService;
+import org.openelisglobal.method.service.MethodService;
+import org.openelisglobal.method.valueholder.Method;
 import org.openelisglobal.note.service.NoteService;
 import org.openelisglobal.note.service.NoteServiceImpl;
 import org.openelisglobal.note.valueholder.Note;
@@ -1045,6 +1049,29 @@ public abstract class Accessioner implements IAccessioner {
         analysis.setStatusId(SpringContext.getBean(IStatusService.class).getStatusID(AnalysisStatus.NotStarted));
         analysis.setTestSection(test.getTestSection());
         analysis.setSysUserId(sysUserId);
+
+        // Pre-select method from analyzer-test mapping if available
+        try {
+            AnalyzerTestMappingService mappingService = SpringContext.getBean(AnalyzerTestMappingService.class);
+            List<AnalyzerTestMapping> mappings = mappingService.getAllByTestId(test.getId());
+            if (mappings != null && !mappings.isEmpty()) {
+                // Use the first mapping that has a method configured
+                for (AnalyzerTestMapping mapping : mappings) {
+                    if (mapping.getMethodId() != null && !mapping.getMethodId().isEmpty()) {
+                        MethodService methodService = SpringContext.getBean(MethodService.class);
+                        Method method = methodService.get(mapping.getMethodId());
+                        if (method != null) {
+                            analysis.setMethod(method);
+                            break;
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            LogEvent.logWarn(this.getClass().getSimpleName(), "buildAnalysis",
+                    "Could not pre-select method from analyzer-test mapping: " + e.getMessage());
+        }
+
         return analysis;
     }
 

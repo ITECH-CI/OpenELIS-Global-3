@@ -135,7 +135,6 @@ public class SampleOrderService {
         return orderItems;
     }
 
-
     private void setDefaultReferringSite(SampleOrderItem orderItems) {
         try {
             SiteInformation siteIdConfig = siteInformationService.getSiteInformationByName("siteId");
@@ -197,6 +196,8 @@ public class SampleOrderService {
                                     .withId(programSample.getQuestionnaireResponseUuid().toString()).execute());
                 }
             }
+            sampleOrder.setClinicalInformations(
+                    observationHistoryService.getValueForSample(ObservationType.CLINICAL_INFOS_OTHER, sample.getId()));
 
             RequesterService requesterService = new RequesterService(sample.getId());
             sampleOrder.setProviderPersonId(requesterService.getRequesterPersonId());
@@ -353,6 +354,8 @@ public class SampleOrderService {
                 sampleOrder.getProgram(), ValueType.DICTIONARY);
         createOrUpdateObservation(currentUserId, observations, patientId, ObservationType.BILLING_REFERENCE_NUMBER,
                 sampleOrder.getBillingReferenceNumber(), ValueType.LITERAL);
+        createOrUpdateObservation(currentUserId, observations, patientId, ObservationType.CLINICAL_INFOS_OTHER,
+                sampleOrder.getClinicalInformations(), ValueType.LITERAL);
 
         artifacts.setObservations(observations);
     }
