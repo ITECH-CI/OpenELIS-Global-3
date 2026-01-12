@@ -334,6 +334,7 @@
   "sample.select.type": "Select sample type",
   "sample.type": "Sample Type",
   "sample.reject.label": "Reject Sample",
+  "sample.tb.checkbox.label": "Sample concerns TB",
   "sample.collection.date": "Collection Date",
   "sample.collection.time": "Collection Time",
   "collector.label": "Collector",
