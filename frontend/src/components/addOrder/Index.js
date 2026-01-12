@@ -57,7 +57,6 @@ const Index = () => {
     primaryPhone: { body: "", status: true },
     contactPhone: { body: "", status: true },
   });
-  const [hasUnsavedLabNo, setHasUnsavedLabNo] = useState(false);
 
   let SampleTypes = [];
   let sampleTypeMap = {};
@@ -557,8 +556,6 @@ const Index = () => {
         <FormattedMessage id="save.order.success.msg" />,
         NotificationKinds.success,
       );
-      // Réinitialiser l'état après enregistrement réussi
-      setHasUnsavedLabNo(false);
       setPage(page + 1);
     } else {
       showAlertMessage(
@@ -829,8 +826,6 @@ const Index = () => {
                   orderFormValues.sampleOrderItems.programCode ===
                   BACTERIOLOGY_PROGRAM_CODE
                 }
-                hasUnsavedLabNo={hasUnsavedLabNo}
-                setHasUnsavedLabNo={setHasUnsavedLabNo}
               />
             )}
 

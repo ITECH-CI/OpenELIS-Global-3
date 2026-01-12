@@ -21,7 +21,9 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import java.io.Serializable;
+import java.text.SimpleDateFormat;
 import java.util.Collection;
+import java.util.Date;
 import java.util.List;
 import org.hl7.fhir.r4.model.QuestionnaireResponse;
 import org.openelisglobal.common.formfields.FormFields.Field;
@@ -294,35 +296,63 @@ public class SampleOrderItem implements Serializable {
     }
 
     public String getRequestDate() {
+        if (requestDate == null || requestDate.isEmpty()) {
+            requestDate = new SimpleDateFormat("dd/MM/yyyy").format(new Date());
+        }
         return requestDate;
     }
 
     public void setRequestDate(String requestDate) {
-        this.requestDate = requestDate;
+        if (requestDate == null || requestDate.isEmpty()) {
+            this.requestDate = new SimpleDateFormat("dd/MM/yyyy").format(new Date());
+        } else {
+            this.requestDate = requestDate;
+        }
     }
 
     public String getReceivedDateForDisplay() {
+        if (receivedDateForDisplay == null || receivedDateForDisplay.isEmpty()) {
+            receivedDateForDisplay = new SimpleDateFormat("dd/MM/yyyy").format(new Date());
+        }
         return receivedDateForDisplay;
     }
 
     public void setReceivedDateForDisplay(String receivedDateForDisplay) {
-        this.receivedDateForDisplay = receivedDateForDisplay;
+        if (receivedDateForDisplay == null || receivedDateForDisplay.isEmpty()) {
+            this.receivedDateForDisplay = new SimpleDateFormat("dd/MM/yyyy").format(new Date());
+        } else {
+            this.receivedDateForDisplay = receivedDateForDisplay;
+        }
     }
 
     public String getReceivedTime() {
+        if (receivedTime == null || receivedTime.isEmpty()) {
+            receivedTime = new SimpleDateFormat("HH:mm").format(new Date());
+        }
         return receivedTime;
     }
 
     public void setReceivedTime(String receivedTime) {
-        this.receivedTime = receivedTime;
+        if (receivedTime == null || receivedTime.isEmpty()) {
+            this.receivedTime = new SimpleDateFormat("HH:mm").format(new Date());
+        } else {
+            this.receivedTime = receivedTime;
+        }
     }
 
     public String getNextVisitDate() {
+        if (nextVisitDate == null || nextVisitDate.isEmpty()) {
+            nextVisitDate = new SimpleDateFormat("dd/MM/yyyy").format(new Date());
+        }
         return nextVisitDate;
     }
 
     public void setNextVisitDate(String nextVisitDate) {
-        this.nextVisitDate = nextVisitDate;
+        if (nextVisitDate == null || nextVisitDate.isEmpty()) {
+            this.nextVisitDate = new SimpleDateFormat("dd/MM/yyyy").format(new Date());
+        } else {
+            this.nextVisitDate = nextVisitDate;
+        }
     }
 
     public String getRequesterSampleID() {

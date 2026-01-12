@@ -37,9 +37,7 @@ const AddOrder = (props) => {
     isModifyOrder,
     changed,
     setChanged,
-    isBacterio,
-    hasUnsavedLabNo,
-    setHasUnsavedLabNo,
+    isBacterio
   } = props;
   const [otherSamplingVisible, setOtherSamplingVisible] = useState(false);
   const [providers, setProviders] = useState([]);
@@ -220,19 +218,6 @@ const AddOrder = (props) => {
   const handleLabNoGeneration = (e) => {
     if (e) {
       e.preventDefault();
-    }
-
-    if (hasUnsavedLabNo) {
-      setNotificationVisible(true);
-      addNotification({
-        kind: NotificationKinds.warning,
-        title: intl.formatMessage({ id: "notification.title" }),
-        message: intl.formatMessage({
-          id: "notification.unsaved.labnumber",
-          defaultMessage: "Veuillez enregistrer le numéro de laboratoire actuel avant d'en générer un nouveau."
-        }),
-      });
-      return;
     }
 
     getFromOpenElisServer(
@@ -463,9 +448,6 @@ const AddOrder = (props) => {
           },
         });
       }
-
-      // Marquer qu'un numéro de labo a été généré mais pas encore enregistré
-      setHasUnsavedLabNo(true);
       setNotificationVisible(false);
     }
   }
@@ -488,7 +470,6 @@ const AddOrder = (props) => {
       setSamplingPerformed(response.sampleOrderItems.testLocationCodeList);
       setProviders(response.sampleOrderItems.providersList);
 
-      // Set default referring site if provided by backend
       if (response.sampleOrderItems.referringSiteId &&
           !orderFormValues.sampleOrderItems.referringSiteId) {
         setOrderFormValues({

@@ -1473,6 +1473,7 @@
   "test.modify.fr": "Fr",
   "test.show.guide": "Consulter l'aide",
   "input.placeholder.searchTestName": "Search testName Here",
+  "sample.tb.checkbox.label": "Échantillon concerne TB",
   "sample.tb.examen.reason": "Motif de l'examen TB",
   "sample.tb.followup.code": "Code TB (XX-XXXXX):",
   "sample.tb.followup.reason": "Motif du suivi :",
