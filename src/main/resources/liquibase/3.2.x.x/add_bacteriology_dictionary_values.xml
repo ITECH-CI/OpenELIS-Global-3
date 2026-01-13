@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+    <changeSet id="1" author="system" context="ci">
+        <comment>Add dictionary categories for bacteriology</comment>
+
+        <!-- Category: Bacteria (Nom des organismes) -->
+        <sql>
+            INSERT INTO clinlims.dictionary_category (id, name, description, lastupdated)
+            SELECT nextval('clinlims.dictionary_category_seq'), 'Bacteria', 'Liste des bactéries et organismes', now()
+            WHERE NOT EXISTS (SELECT 1 FROM clinlims.dictionary_category WHERE name = 'Bacteria');
+        </sql>
+
+        <!-- Category: Bacteriology Grouping Mode (Mode de regroupement) -->
+        <sql>
+            INSERT INTO clinlims.dictionary_category (id, name, description, lastupdated)
+            SELECT nextval('clinlims.dictionary_category_seq'), 'Bacteriology Grouping Mode', 'Modes de regroupement des bactéries', now()
+            WHERE NOT EXISTS (SELECT 1 FROM clinlims.dictionary_category WHERE name = 'Bacteriology Grouping Mode');
+        </sql>
+
+        <!-- Category: Bacteriology Gram Type (Type de Gram) -->
+        <sql>
+            INSERT INTO clinlims.dictionary_category (id, name, description, lastupdated)
+            SELECT nextval('clinlims.dictionary_category_seq'), 'Bacteriology Gram Type', 'Types de coloration de Gram', now()
+            WHERE NOT EXISTS (SELECT 1 FROM clinlims.dictionary_category WHERE name = 'Bacteriology Gram Type');
+        </sql>
+
+        <!-- Category: Bacteriology Culture Result (Résultat de culture) -->
+        <sql>
+            INSERT INTO clinlims.dictionary_category (id, name, description, lastupdated)
+            SELECT nextval('clinlims.dictionary_category_seq'), 'Bacteriology Culture Result', 'Résultats possibles pour une culture', now()
+            WHERE NOT EXISTS (SELECT 1 FROM clinlims.dictionary_category WHERE name = 'Bacteriology Culture Result');
+        </sql>
+    </changeSet>
+
+    <changeSet id="2" author="system" context="ci">
+        <comment>Add grouping mode dictionary values</comment>
+
+        <sql>
+            WITH category AS (
+                SELECT id FROM clinlims.dictionary_category WHERE name = 'Bacteriology Grouping Mode' LIMIT 1
+            )
+            INSERT INTO clinlims.dictionary (id, is_active, dict_entry, lastupdated, category_id, display_key, sort_order)
+            SELECT
+                nextval('clinlims.dictionary_seq'),
+                'Y',
+                entry,
+                now(),
+                (SELECT id FROM category),
+                'dictionary.bacteriology.grouping.' || lower(replace(entry, ' ', '_')),
+                sort_ord
+            FROM (VALUES
+                ('Isolées', 1),
+                ('Amas', 2),
+                ('Courte chaînette', 3),
+                ('Longue Chaînette', 4),
+                ('Grappe', 5),
+                ('Tétrade', 6),
+                ('Diplo', 7)
+            ) AS data(entry, sort_ord)
+            WHERE NOT EXISTS (
+                SELECT 1 FROM clinlims.dictionary d
+                JOIN category c ON d.category_id = c.id
+                WHERE d.dict_entry = data.entry
+            );
+        </sql>
+    </changeSet>
+
+    <changeSet id="3" author="system" context="ci">
+        <comment>Add Gram type dictionary values</comment>
+
+        <sql>
+            WITH category AS (
+                SELECT id FROM clinlims.dictionary_category WHERE name = 'Bacteriology Gram Type' LIMIT 1
+            )
+            INSERT INTO clinlims.dictionary (id, is_active, dict_entry, lastupdated, category_id, display_key, sort_order)
+            SELECT
+                nextval('clinlims.dictionary_seq'),
+                'Y',
+                entry,
+                now(),
+                (SELECT id FROM category),
+                'dictionary.bacteriology.gram.' || lower(replace(replace(entry, ' ', '_'), 'é', 'e')),
+                sort_ord
+            FROM (VALUES
+                ('Bacilles Gram négatif', 1),
+                ('Bacilles Gram positif', 2),
+                ('Cocci Gram négatif', 3),
+                ('Cocci Gram positif', 4),
+                ('Coccobacilles Gram négatif', 5),
+                ('Coccobacilles Gram positif', 6)
+            ) AS data(entry, sort_ord)
+            WHERE NOT EXISTS (
+                SELECT 1 FROM clinlims.dictionary d
+                JOIN category c ON d.category_id = c.id
+                WHERE d.dict_entry = data.entry
+            );
+        </sql>
+    </changeSet>
+
+    <changeSet id="4" author="system" context="ci">
+        <comment>Add culture result dictionary values</comment>
+
+        <sql>
+            WITH category AS (
+                SELECT id FROM clinlims.dictionary_category WHERE name = 'Bacteriology Culture Result' LIMIT 1
+            )
+            INSERT INTO clinlims.dictionary (id, is_active, dict_entry, lastupdated, category_id, display_key, sort_order)
+            SELECT
+                nextval('clinlims.dictionary_seq'),
+                'Y',
+                entry,
+                now(),
+                (SELECT id FROM category),
+                'dictionary.bacteriology.culture.' || lower(replace(replace(entry, ' ', '_'), 'é', 'e')),
+                sort_ord
+            FROM (VALUES
+                ('Négative', 1),
+                ('Positive', 2),
+                ('Contaminée', 3)
+            ) AS data(entry, sort_ord)
+            WHERE NOT EXISTS (
+                SELECT 1 FROM clinlims.dictionary d
+                JOIN category c ON d.category_id = c.id
+                WHERE d.dict_entry = data.entry
+            );
+        </sql>
+    </changeSet>
+
+    <changeSet id="5" author="system" context="ci">
+        <comment>Add some common bacteria to dictionary</comment>
+
+        <sql>
+            WITH category AS (
+                SELECT id FROM clinlims.dictionary_category WHERE name = 'Bacteria' LIMIT 1
+            )
+            INSERT INTO clinlims.dictionary (id, is_active, dict_entry, lastupdated, category_id, display_key, sort_order)
+            SELECT
+                nextval('clinlims.dictionary_seq'),
+                'Y',
+                entry,
+                now(),
+                (SELECT id FROM category),
+                'dictionary.bacteria.' || lower(replace(replace(replace(entry, ' ', '_'), '.', ''), '(', '')),
+                sort_ord
+            FROM (VALUES
+                ('Escherichia coli', 1),
+                ('Staphylococcus aureus', 2),
+                ('Streptococcus pneumoniae', 3),
+                ('Klebsiella pneumoniae', 4),
+                ('Pseudomonas aeruginosa', 5),
+                ('Enterococcus faecalis', 6),
+                ('Candida albicans', 7),
+                ('Neisseria gonorrhoeae', 8),
+                ('Proteus mirabilis', 9),
+                ('Salmonella spp.', 10),
+                ('Shigella spp.', 11),
+                ('Haemophilus influenzae', 12),
+                ('Streptococcus agalactiae', 13),
+                ('Enterobacter spp.', 14),
+                ('Acinetobacter baumannii', 15)
+            ) AS data(entry, sort_ord)
+            WHERE NOT EXISTS (
+                SELECT 1 FROM clinlims.dictionary d
+                JOIN category c ON d.category_id = c.id
+                WHERE d.dict_entry = data.entry
+            );
+        </sql>
+    </changeSet>
+
+</databaseChangeLog>

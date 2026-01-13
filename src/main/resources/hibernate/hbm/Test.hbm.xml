@@ -126,6 +126,24 @@
 
         <property name="antimicrobialResistance"
             type="java.lang.Boolean" column="antimicrobial_resistance" />
+
+        <!-- Bacteriology conditional tests and specialized cultures -->
+        <property name="parentTestId"
+            type="org.openelisglobal.hibernate.resources.usertype.LIMSStringNumberUserType">
+            <column name="parent_test_id" precision="10" scale="0" />
+        </property>
+        <property name="parentTriggerValue" type="java.lang.String">
+            <column name="parent_trigger_value" length="255" />
+        </property>
+        <property name="isCultureTest" type="java.lang.Boolean">
+            <column name="is_culture_test" />
+        </property>
+        <property name="cultureType" type="java.lang.String">
+            <column name="culture_type" length="50" />
+        </property>
+        <property name="isFloraCountTest" type="java.lang.Boolean">
+            <column name="is_flora_count_test" />
+        </property>
     </class>
     <!-- <query name="test.getNext"> -->
     <!-- from Test t order by t.testSection.testSectionName, t.testName -->

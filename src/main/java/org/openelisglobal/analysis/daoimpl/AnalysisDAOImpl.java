@@ -182,7 +182,7 @@ public class AnalysisDAOImpl extends BaseDAOImpl<Analysis, String> implements An
             return new ArrayList<>();
         }
         try {
-            String sql = "from Analysis a where a.testSection.id = :testSectionId and a.statusId IN"
+            String sql = "from Analysis a LEFT JOIN FETCH a.testSection where a.testSection.id = :testSectionId and a.statusId IN"
                     + " (:statusIdList) order by a.id";
 
             if (sortedByDateAndAccession) {
@@ -1257,7 +1257,7 @@ public class AnalysisDAOImpl extends BaseDAOImpl<Analysis, String> implements An
     public List<Analysis> getAllAnalysisByTestSectionAndStatus(String testSectionId, List<Integer> analysisStatusList,
             List<Integer> sampleStatusList) throws LIMSRuntimeException {
 
-        String sql = "From Analysis a WHERE a.testSection.id = :testSectionId AND a.statusId IN"
+        String sql = "From Analysis a LEFT JOIN FETCH a.testSection WHERE a.testSection.id = :testSectionId AND a.statusId IN"
                 + " (:analysisStatusList) AND a.sampleItem.sample.statusId IN (:sampleStatusList) ORDER"
                 + " BY a.sampleItem.sample.accessionNumber";
         try {

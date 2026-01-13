@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+     http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+    <property name="now" value="now()" dbms="postgresql" />
+
+    <changeSet author="CIV Developer - Pk" id="add-test-conditional-columns-2026-01-12">
+        <preConditions onFail="MARK_RAN">
+            <tableExists schemaName="clinlims" tableName="test" />
+            <not>
+                <columnExists schemaName="clinlims" tableName="test" columnName="parent_test_id" />
+            </not>
+        </preConditions>
+        <comment>Add columns to test table for conditional tests and specialized cultures</comment>
+
+        <!-- Columns for conditional tests (parent-child relationships) -->
+        <addColumn schemaName="clinlims" tableName="test">
+            <column name="parent_test_id" type="INTEGER">
+                <constraints nullable="true"
+                             foreignKeyName="fk_test_parent_test"
+                             references="clinlims.test(id)" />
+            </column>
+        </addColumn>
+
+        <addColumn schemaName="clinlims" tableName="test">
+            <column name="parent_trigger_value" type="VARCHAR(255)">
+                <constraints nullable="true" />
+            </column>
+        </addColumn>
+
+        <!-- Columns for specialized culture tests -->
+        <addColumn schemaName="clinlims" tableName="test">
+            <column name="is_culture_test" type="BOOLEAN" defaultValueBoolean="false">
+                <constraints nullable="false" />
+            </column>
+        </addColumn>
+
+        <addColumn schemaName="clinlims" tableName="test">
+            <column name="culture_type" type="VARCHAR(50)">
+                <constraints nullable="true" />
+            </column>
+        </addColumn>
+
+        <!-- Column for flora count tests -->
+        <addColumn schemaName="clinlims" tableName="test">
+            <column name="is_flora_count_test" type="BOOLEAN" defaultValueBoolean="false">
+                <constraints nullable="false" />
+            </column>
+        </addColumn>
+
+        <rollback>
+            <dropColumn schemaName="clinlims" tableName="test" columnName="parent_test_id" />
+            <dropColumn schemaName="clinlims" tableName="test" columnName="parent_trigger_value" />
+            <dropColumn schemaName="clinlims" tableName="test" columnName="is_culture_test" />
+            <dropColumn schemaName="clinlims" tableName="test" columnName="culture_type" />
+            <dropColumn schemaName="clinlims" tableName="test" columnName="is_flora_count_test" />
+        </rollback>
+    </changeSet>
+
+    <changeSet author="CIV Developer - Pk" id="create-bacteriology-flora-table-2026-01-12">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists schemaName="clinlims" tableName="bacteriology_flora" />
+            </not>
+        </preConditions>
+        <comment>Create bacteriology_flora table to store bacterial flora information</comment>
+
+        <createTable schemaName="clinlims" tableName="bacteriology_flora">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false" />
+            </column>
+
+            <column name="analysis_id" type="INTEGER">
+                <constraints nullable="false"
+                             foreignKeyName="fk_bacteriology_flora_analysis"
+                             references="clinlims.analysis(id)" />
+            </column>
+
+            <column name="flora_count_test_id" type="INTEGER">
+                <constraints nullable="false"
+                             foreignKeyName="fk_bacteriology_flora_test"
+                             references="clinlims.test(id)" />
+            </column>
+
+            <column name="flora_count" type="VARCHAR(10)">
+                <constraints nullable="false" />
+            </column>
+
+            <column name="lastupdated" type="TIMESTAMP">
+                <constraints nullable="false" />
+            </column>
+        </createTable>
+
+        <createIndex schemaName="clinlims" tableName="bacteriology_flora" indexName="idx_bacteriology_flora_analysis">
+            <column name="analysis_id" />
+        </createIndex>
+
+        <rollback>
+            <dropTable schemaName="clinlims" tableName="bacteriology_flora" />
+        </rollback>
+    </changeSet>
+
+    <changeSet author="CIV Developer - Pk" id="create-bacteriology-flora-detail-table-2026-01-12">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists schemaName="clinlims" tableName="bacteriology_flora_detail" />
+            </not>
+        </preConditions>
+        <comment>Create bacteriology_flora_detail table to store individual flora details</comment>
+
+        <createTable schemaName="clinlims" tableName="bacteriology_flora_detail">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false" />
+            </column>
+
+            <column name="flora_id" type="BIGINT">
+                <constraints nullable="false"
+                             foreignKeyName="fk_flora_detail_flora"
+                             references="clinlims.bacteriology_flora(id)"
+                             deleteCascade="true" />
+            </column>
+
+            <column name="flora_number" type="INTEGER">
+                <constraints nullable="false" />
+            </column>
+
+            <column name="gram_type_dict_id" type="INTEGER">
+                <constraints nullable="true"
+                             foreignKeyName="fk_flora_detail_gram_type"
+                             references="clinlims.dictionary(id)" />
+            </column>
+
+            <column name="grouping_mode_dict_id" type="INTEGER">
+                <constraints nullable="true"
+                             foreignKeyName="fk_flora_detail_grouping"
+                             references="clinlims.dictionary(id)" />
+            </column>
+
+            <column name="capsulated" type="BOOLEAN" defaultValueBoolean="false">
+                <constraints nullable="false" />
+            </column>
+
+            <column name="lastupdated" type="TIMESTAMP">
+                <constraints nullable="false" />
+            </column>
+        </createTable>
+
+        <createIndex schemaName="clinlims" tableName="bacteriology_flora_detail" indexName="idx_flora_detail_flora">
+            <column name="flora_id" />
+        </createIndex>
+
+        <rollback>
+            <dropTable schemaName="clinlims" tableName="bacteriology_flora_detail" />
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

@@ -2099,6 +2099,15 @@
   "test.show.guide": "Show Guide",
   "input.placeholder.searchTestName": "Search testName Here",
   "dictionary.program.bacteriology": "Routine Bacteriology",
+  "bacteriology.title": "Bacteriology Results",
+  "bacteriology.section.macroscopy": "Macroscopy",
+  "bacteriology.section.microscopy": "Microscopy",
+  "bacteriology.section.culture": "Culture",
+  "bacteriology.organisms.title": "Identified Organisms",
+  "bacteriology.organism.add": "Add Organism",
+  "bacteriology.organisms.empty": "No organisms added. Click 'Add Organism' to start.",
+  "bacteriology.antibiogram.add": "Add Antibiotic",
+  "bacteriology.antibiogram.empty": "No antibiotics added",
   "program.ROUTINE.name": "Routine Testing",
   "program.HIV_INIT.name": "HIV Program - Initial Visit",
   "program.HIV_FOLLOW.name": "HIV Program - Follow-up Visit",
@@ -2143,5 +2152,7 @@
   "label.yes": "Yes",
   "label.no": "No",
   "validation.sampleInterpretation.label": "General interpretation for sample",
-  "validation.sampleInterpretation.placeholder": "Enter general interpretation note for this sample/request..."
+  "validation.sampleInterpretation.placeholder": "Enter general interpretation note for this sample/request...",
+  "label.button.reset": "Reset",
+  "sample.entry.project.testSection": "Test Section"
 }

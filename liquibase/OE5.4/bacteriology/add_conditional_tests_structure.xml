@@ -1,0 +1,237 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+    <changeSet id="1" author="claude" context="bacteriology">
+        <comment>Add columns to test table for conditional tests and specialized cultures</comment>
+
+        <!-- Columns for conditional tests (parent-child relationships) -->
+        <addColumn tableName="test">
+            <column name="parent_test_id" type="INTEGER">
+                <constraints nullable="true"
+                             foreignKeyName="fk_test_parent_test"
+                             references="test(id)"/>
+            </column>
+        </addColumn>
+
+        <addColumn tableName="test">
+            <column name="parent_trigger_value" type="VARCHAR(255)">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+
+        <!-- Columns for specialized culture tests -->
+        <addColumn tableName="test">
+            <column name="is_culture_test" type="BOOLEAN" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+
+        <addColumn tableName="test">
+            <column name="culture_type" type="VARCHAR(50)">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+
+        <!-- Column for flora count tests -->
+        <addColumn tableName="test">
+            <column name="is_flora_count_test" type="BOOLEAN" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+
+        <rollback>
+            <dropColumn tableName="test" columnName="parent_test_id"/>
+            <dropColumn tableName="test" columnName="parent_trigger_value"/>
+            <dropColumn tableName="test" columnName="is_culture_test"/>
+            <dropColumn tableName="test" columnName="culture_type"/>
+            <dropColumn tableName="test" columnName="is_flora_count_test"/>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="2" author="claude" context="bacteriology">
+        <comment>Create bacteriology_flora table to store bacterial flora information</comment>
+
+        <createTable tableName="bacteriology_flora">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+
+            <column name="analysis_id" type="INTEGER">
+                <constraints nullable="false"
+                             foreignKeyName="fk_bacteriology_flora_analysis"
+                             references="analysis(id)"/>
+            </column>
+
+            <column name="flora_count_test_id" type="INTEGER">
+                <constraints nullable="false"
+                             foreignKeyName="fk_bacteriology_flora_test"
+                             references="test(id)"/>
+            </column>
+
+            <column name="flora_count" type="VARCHAR(10)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="lastupdated" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createIndex tableName="bacteriology_flora" indexName="idx_bacteriology_flora_analysis">
+            <column name="analysis_id"/>
+        </createIndex>
+
+        <rollback>
+            <dropTable tableName="bacteriology_flora"/>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="3" author="claude" context="bacteriology">
+        <comment>Create bacteriology_flora_detail table to store individual flora details</comment>
+
+        <createTable tableName="bacteriology_flora_detail">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+
+            <column name="flora_id" type="BIGINT">
+                <constraints nullable="false"
+                             foreignKeyName="fk_flora_detail_flora"
+                             references="bacteriology_flora(id)"
+                             deleteCascade="true"/>
+            </column>
+
+            <column name="flora_number" type="INTEGER">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="gram_type" type="VARCHAR(255)">
+                <constraints nullable="true"/>
+            </column>
+
+            <column name="grouping_mode" type="VARCHAR(255)">
+                <constraints nullable="true"/>
+            </column>
+
+            <column name="capsulated" type="BOOLEAN" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="lastupdated" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createIndex tableName="bacteriology_flora_detail" indexName="idx_flora_detail_flora">
+            <column name="flora_id"/>
+        </createIndex>
+
+        <rollback>
+            <dropTable tableName="bacteriology_flora_detail"/>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="4" author="claude" context="bacteriology">
+        <comment>Create dictionary category for flora gram types</comment>
+
+        <insert tableName="dictionary_category">
+            <column name="id" valueNumeric="nextval('dictionary_category_seq')"/>
+            <column name="description" value="Bacteriology Flora Gram Type"/>
+            <column name="name" value="Bacteriology Flora Gram Type"/>
+            <column name="lastupdated" valueDate="now()"/>
+            <column name="local_abbrev" value="BACT_FLORA_GRAM"/>
+        </insert>
+
+        <rollback>
+            <delete tableName="dictionary_category">
+                <where>name = 'Bacteriology Flora Gram Type'</where>
+            </delete>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="5" author="claude" context="bacteriology">
+        <comment>Add flora gram type dictionary values</comment>
+
+        <sql>
+            INSERT INTO dictionary (id, dict_entry, dictionary_category_id, is_active, display_key, lastupdated, sort_order)
+            SELECT
+                nextval('dictionary_seq'),
+                gram_type,
+                (SELECT id FROM dictionary_category WHERE name = 'Bacteriology Flora Gram Type'),
+                'Y',
+                'dictionary.bacteriology.flora.gram.' || lower(replace(gram_type, ' ', '_')),
+                now(),
+                row_num
+            FROM (
+                VALUES
+                    ('Bacilles Gram négatif', 1),
+                    ('Bacilles Gram positif', 2),
+                    ('Cocci Gram négatif', 3),
+                    ('Cocci Gram positif', 4),
+                    ('Coccobacilles Gram négatif', 5),
+                    ('Coccobacilles Gram positif', 6)
+            ) AS gram_types(gram_type, row_num);
+        </sql>
+
+        <rollback>
+            <delete tableName="dictionary">
+                <where>dictionary_category_id = (SELECT id FROM dictionary_category WHERE name = 'Bacteriology Flora Gram Type')</where>
+            </delete>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="6" author="claude" context="bacteriology">
+        <comment>Create dictionary category for flora grouping modes</comment>
+
+        <insert tableName="dictionary_category">
+            <column name="id" valueNumeric="nextval('dictionary_category_seq')"/>
+            <column name="description" value="Bacteriology Flora Grouping Mode"/>
+            <column name="name" value="Bacteriology Flora Grouping Mode"/>
+            <column name="lastupdated" valueDate="now()"/>
+            <column name="local_abbrev" value="BACT_FLORA_GROUP"/>
+        </insert>
+
+        <rollback>
+            <delete tableName="dictionary_category">
+                <where>name = 'Bacteriology Flora Grouping Mode'</where>
+            </delete>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="7" author="claude" context="bacteriology">
+        <comment>Add flora grouping mode dictionary values</comment>
+
+        <sql>
+            INSERT INTO dictionary (id, dict_entry, dictionary_category_id, is_active, display_key, lastupdated, sort_order)
+            SELECT
+                nextval('dictionary_seq'),
+                grouping_mode,
+                (SELECT id FROM dictionary_category WHERE name = 'Bacteriology Flora Grouping Mode'),
+                'Y',
+                'dictionary.bacteriology.flora.grouping.' || lower(replace(grouping_mode, ' ', '_')),
+                now(),
+                row_num
+            FROM (
+                VALUES
+                    ('Isolées', 1),
+                    ('Amas', 2),
+                    ('Courte chainette', 3),
+                    ('Longue chainette', 4),
+                    ('Grappe', 5),
+                    ('Tétrade', 6),
+                    ('Diplo', 7)
+            ) AS grouping_modes(grouping_mode, row_num);
+        </sql>
+
+        <rollback>
+            <delete tableName="dictionary">
+                <where>dictionary_category_id = (SELECT id FROM dictionary_category WHERE name = 'Bacteriology Flora Grouping Mode')</where>
+            </delete>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

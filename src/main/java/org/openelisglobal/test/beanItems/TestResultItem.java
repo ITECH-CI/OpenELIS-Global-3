@@ -214,6 +214,28 @@ public class TestResultItem implements ResultItem, Serializable {
     private String qualifiedDictionaryId = null;
     private String priority = "";
 
+    @SafeHtml(level = SafeHtml.SafeListLevel.NONE)
+    private String testSectionName = "";
+
+    @SafeHtml(level = SafeHtml.SafeListLevel.NONE)
+    private String bacteriologyGroupType = "";
+
+    // Conditional test fields
+    @Pattern(regexp = ValidationHelper.ID_REGEX, groups = { LogbookResultsForm.LogbookResults.class })
+    private String parentTestId;
+
+    @SafeHtml(level = SafeHtml.SafeListLevel.NONE, groups = { LogbookResultsForm.LogbookResults.class })
+    private String parentTriggerValue;
+
+    // Specialized culture test fields
+    private boolean isCultureTest = false;
+
+    @SafeHtml(level = SafeHtml.SafeListLevel.NONE, groups = { LogbookResultsForm.LogbookResults.class })
+    private String cultureType;
+
+    // Flora count test field
+    private boolean isFloraCountTest = false;
+
     @SafeHtml(level = SafeHtml.SafeListLevel.NONE, groups = { LogbookResultsForm.LogbookResults.class })
     private String qualifiedResultValue = "";
 
@@ -1031,5 +1053,61 @@ public class TestResultItem implements ResultItem, Serializable {
 
     public void setPriority(String priority) {
         this.priority = priority;
+    }
+
+    public String getTestSectionName() {
+        return testSectionName;
+    }
+
+    public void setTestSectionName(String testSectionName) {
+        this.testSectionName = testSectionName;
+    }
+
+    public String getBacteriologyGroupType() {
+        return bacteriologyGroupType;
+    }
+
+    public void setBacteriologyGroupType(String bacteriologyGroupType) {
+        this.bacteriologyGroupType = bacteriologyGroupType;
+    }
+
+    public String getParentTestId() {
+        return parentTestId;
+    }
+
+    public void setParentTestId(String parentTestId) {
+        this.parentTestId = parentTestId;
+    }
+
+    public String getParentTriggerValue() {
+        return parentTriggerValue;
+    }
+
+    public void setParentTriggerValue(String parentTriggerValue) {
+        this.parentTriggerValue = parentTriggerValue;
+    }
+
+    public boolean getIsCultureTest() {
+        return isCultureTest;
+    }
+
+    public void setIsCultureTest(boolean isCultureTest) {
+        this.isCultureTest = isCultureTest;
+    }
+
+    public String getCultureType() {
+        return cultureType;
+    }
+
+    public void setCultureType(String cultureType) {
+        this.cultureType = cultureType;
+    }
+
+    public boolean getIsFloraCountTest() {
+        return isFloraCountTest;
+    }
+
+    public void setIsFloraCountTest(boolean isFloraCountTest) {
+        this.isFloraCountTest = isFloraCountTest;
     }
 }

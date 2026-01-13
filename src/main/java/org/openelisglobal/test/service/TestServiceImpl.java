@@ -313,7 +313,12 @@ public class TestServiceImpl extends AuditableBaseObjectServiceImpl<Test, String
         Localization localization = test.getLocalizedTestName();
 
         try {
-            return localization.getLocalizedValue();
+            if (localization != null) {
+                return localization.getLocalizedValue();
+            } else {
+                // Fallback to the name field if localization is not available
+                return test.getName() != null ? test.getName() : test.getDescription();
+            }
             // if
             // (LANGUAGE_LOCALE.equals(ConfigurationProperties.LOCALE.FRENCH.getRepresentation()))
             // {
@@ -323,7 +328,8 @@ public class TestServiceImpl extends AuditableBaseObjectServiceImpl<Test, String
             // }
         } catch (RuntimeException e) {
             LogEvent.logInfo("TestServiceImpl", "buildTestName", "buildTestName caught LAZY");
-            return "ts:btn:284:name";
+            // Fallback to the name field if there's an error
+            return test.getName() != null ? test.getName() : test.getDescription();
         }
     }
 
@@ -357,7 +363,12 @@ public class TestServiceImpl extends AuditableBaseObjectServiceImpl<Test, String
         Localization localization = test.getLocalizedReportingName();
 
         try {
-            return localization.getLocalizedValue();
+            if (localization != null) {
+                return localization.getLocalizedValue();
+            } else {
+                // Fallback to the name field if localization is not available
+                return test.getName() != null ? test.getName() : test.getDescription();
+            }
             // if
             // (LANGUAGE_LOCALE.equals(ConfigurationProperties.LOCALE.FRENCH.getRepresentation()))
             // {
@@ -367,7 +378,8 @@ public class TestServiceImpl extends AuditableBaseObjectServiceImpl<Test, String
             // }
         } catch (RuntimeException e) {
             LogEvent.logInfo("TestServiceImpl", "buildReportingTestName", "reporting caught LAZY");
-            return "ts:brtn:322:name";
+            // Fallback to the name field if there's an error
+            return test.getName() != null ? test.getName() : test.getDescription();
         }
     }
 
@@ -385,7 +397,13 @@ public class TestServiceImpl extends AuditableBaseObjectServiceImpl<Test, String
         }
 
         try {
-            return localization.getLocalizedValue() + sampleName;
+            if (localization != null) {
+                return localization.getLocalizedValue() + sampleName;
+            } else {
+                // Fallback to the name field if localization is not available
+                String baseName = test.getName() != null ? test.getName() : test.getDescription();
+                return baseName + sampleName;
+            }
             // if
             // (LANGUAGE_LOCALE.equals(ConfigurationProperties.LOCALE.FRENCH.getRepresentation()))
             // {
@@ -396,7 +414,9 @@ public class TestServiceImpl extends AuditableBaseObjectServiceImpl<Test, String
             // }
         } catch (RuntimeException e) {
             LogEvent.logInfo(this.getClass().getSimpleName(), "buildAugmentedTestName", "augmented caught LAZY");
-            return "ts:batn:345:name:" + test.getDescription();
+            // Fallback to the name field if there's an error
+            String baseName = test.getName() != null ? test.getName() : test.getDescription();
+            return baseName + sampleName;
         }
     }
 

@@ -1,0 +1,40 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+    "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+    "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping>
+    <class name="org.openelisglobal.bacteriology.valueholder.BacteriologyAntibiogram"
+           table="bacteriology_antibiogram" schema="clinlims">
+        <id name="id" type="java.lang.Integer">
+            <column name="id" precision="10" scale="0" />
+            <generator class="sequence">
+                <param name="sequence">clinlims.bacteriology_antibiogram_seq</param>
+            </generator>
+        </id>
+        <property name="organismId" type="java.lang.Integer">
+            <column name="organism_id" precision="10" scale="0" not-null="true" />
+        </property>
+        <property name="antibioticDictId" type="java.lang.Integer">
+            <column name="antibiotic_dict_id" precision="10" scale="0" not-null="true" />
+        </property>
+        <property name="result" type="string">
+            <column name="result" length="1" not-null="true" />
+        </property>
+        <property name="diameterMm" type="big_decimal">
+            <column name="diameter_mm" precision="5" scale="2" />
+        </property>
+        <property name="micValue" type="string">
+            <column name="mic_value" length="50" />
+        </property>
+        <property name="interpretationComment" type="text">
+            <column name="interpretation_comment" />
+        </property>
+        <property name="isActive" type="java.lang.Boolean">
+            <column name="is_active" />
+        </property>
+        <property name="lastupdated" type="timestamp">
+            <column name="lastupdated" length="29" />
+        </property>
+    </class>
+</hibernate-mapping>

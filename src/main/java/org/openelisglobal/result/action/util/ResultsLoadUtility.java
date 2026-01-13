@@ -260,15 +260,9 @@ public class ResultsLoadUtility {
 
     public List<TestResultItem> getUnfinishedTestResultItemsInTestSection(String testSectionId) {
 
-        LogEvent.logInfo(this.getClass().getSimpleName(), "getUnfinishedTestResultItemsInTestSection",
-                "TestSection: " + testSectionId + ", AnalysisStatusList: " + analysisStatusList + ", SampleStatusList: "
-                        + sampleStatusList);
-
         List<Analysis> fullAnalysisList = analysisService.getAllAnalysisByTestSectionAndStatus(testSectionId,
                 analysisStatusList, sampleStatusList);
 
-        LogEvent.logInfo(this.getClass().getSimpleName(), "getUnfinishedTestResultItemsInTestSection",
-                "Found " + fullAnalysisList.size() + " analyses");
         // request.setAttribute("analysisesSize", fullAnalysisList.size());
         // List<Analysis> analysisList =
         // analysisService.getPageAnalysisByTestSectionAndStatus(testSectionId,
@@ -291,30 +285,43 @@ public class ResultsLoadUtility {
 
         List<TestResultItem> selectedTestList = new ArrayList<>();
 
+        int analysisIndex = 0;
         for (Analysis analysis : filteredAnalysisList) {
-            patientService = SpringContext.getBean(PatientService.class);
-            SampleService sampleService = SpringContext.getBean(SampleService.class);
-            Sample sample = analysis.getSampleItem().getSample();
-            currentPatient = sampleService.getPatient(sample);
+            analysisIndex++;
+            try {
+               
+                patientService = SpringContext.getBean(PatientService.class);
+                SampleService sampleService = SpringContext.getBean(SampleService.class);
+                Sample sample = analysis.getSampleItem().getSample();
 
-            String patientName = "";
-            String patientInfo;
-            String nationalId = patientService.getNationalId(currentPatient);
-            if (depersonalize) {
-                patientInfo = GenericValidator.isBlankOrNull(nationalId) ? patientService.getExternalId(currentPatient)
-                        : nationalId;
-            } else {
-                patientName = patientService.getLastFirstName(currentPatient);
-                patientInfo = nationalId + ", " + patientService.getGender(currentPatient) + ", "
-                        + patientService.getBirthdayForDisplay(currentPatient);
-            }
+                currentPatient = sampleService.getPatient(sample);
 
-            currSample = analysis.getSampleItem().getSample();
-            List<TestResultItem> testResultItemList = getTestResultItemFromAnalysis(analysis, patientName, patientInfo,
-                    nationalId);
 
-            for (TestResultItem selectionItem : testResultItemList) {
-                selectedTestList.add(selectionItem);
+                String patientName = "";
+                String patientInfo;
+                String nationalId = patientService.getNationalId(currentPatient);
+                if (depersonalize) {
+                    patientInfo = GenericValidator.isBlankOrNull(nationalId) ? patientService.getExternalId(currentPatient)
+                            : nationalId;
+                } else {
+                    patientName = patientService.getLastFirstName(currentPatient);
+                    patientInfo = nationalId + ", " + patientService.getGender(currentPatient) + ", "
+                            + patientService.getBirthdayForDisplay(currentPatient);
+                }
+
+
+                currSample = analysis.getSampleItem().getSample();
+                List<TestResultItem> testResultItemList = getTestResultItemFromAnalysis(analysis, patientName,
+                        patientInfo, nationalId);
+
+                for (TestResultItem selectionItem : testResultItemList) {
+                    selectedTestList.add(selectionItem);
+                }
+            } catch (Exception e) {
+                LogEvent.logError(this.getClass().getSimpleName(), "getGroupedTestsForAnalysisList",
+                        "Error processing analysis " + analysisIndex + ", ID: " + analysis.getId() + " - " + e.getMessage());
+                LogEvent.logError(e);
+                throw e;
             }
         }
 
@@ -409,8 +416,10 @@ public class ResultsLoadUtility {
             String patientInfo, String nationalId) throws LIMSRuntimeException {
         List<TestResultItem> testResultList = new ArrayList<>();
 
+
         SampleItem sampleItem = analysis.getSampleItem();
         List<Result> resultList = resultService.getResultsByAnalysis(analysis);
+
 
         ResultInventory testKit = null;
 
@@ -432,7 +441,9 @@ public class ResultsLoadUtility {
         }
 
         boolean multiSelectionResult = false;
+        int resultIndex = 0;
         for (Result result : resultList) {
+            resultIndex++;
             // If the parentResult has a value then this result was handled with
             // the parent
             if (result != null && result.getParentResult() != null) {
@@ -458,16 +469,19 @@ public class ResultsLoadUtility {
                         .isMultiSelectVariant(result.getResultType());
             }
 
+
             String initialConditions = getInitialSampleConditionString(sampleItem);
             NoteType[] noteTypes = { NoteType.EXTERNAL, NoteType.INTERNAL, NoteType.REJECTION_REASON,
                     NoteType.NON_CONFORMITY };
             NoteService noteService = SpringContext.getBean(NoteService.class);
             String notes = noteService.getNotesAsString(analysis, true, true, "<br/>", noteTypes, false);
 
+
             TestResultItem resultItem = createTestResultItem(analysis, testKit, notes, sampleItem.getSortOrder(),
                     result, sampleItem.getSample().getAccessionNumber(), patientName, patientInfo, techSignature,
                     techSignatureId, initialConditions, SpringContext.getBean(TypeOfSampleService.class)
                             .getTypeOfSampleNameForId(sampleItem.getTypeOfSampleId()));
+
             resultItem.setNationalId(nationalId);
             testResultList.add(resultItem);
 
@@ -634,10 +648,17 @@ public class ResultsLoadUtility {
             String sequenceNumber, Result result, String accessionNumber, String patientName, String patientInfo,
             String techSignature, String techSignatureId, String initialSampleConditions, String sampleType) {
 
+
         TestService testService = SpringContext.getBean(TestService.class);
         Test test = analysisService.getTest(analysis);
-        ResultLimit resultLimit = SpringContext.getBean(ResultLimitService.class).getResultLimitForTestAndPatient(test,
-                currentPatient);
+
+        ResultLimit resultLimit = null;
+        if (currentPatient != null && currentPatient.getId() != null) {
+            
+            resultLimit = SpringContext.getBean(ResultLimitService.class).getResultLimitForTestAndPatient(test,
+                    currentPatient);
+            
+        }
 
         String receivedDate = currSample == null ? getCurrentDate() : currSample.getReceivedDateForDisplay();
         String testMethodName = testService.getTestMethodName(test);
@@ -651,10 +672,12 @@ public class ResultsLoadUtility {
         if (testKit != null) {
             testKitId = testKit.getId();
             testKitInventoryId = testKit.getInventoryLocationId();
-            testKitResult.setId(testKit.getResultId());
-            resultService.getData(testKitResult);
+            if (testKit.getResultId() != null) {
+                testKitResult.setId(testKit.getResultId());
+                resultService.getData(testKitResult);
+            }
             testKitInactive = kitNotInActiveKitList(testKitInventoryId);
-        }
+        } 
 
         String displayTestName = analysisService.getTestDisplayName(analysis);
 
@@ -686,15 +709,18 @@ public class ResultsLoadUtility {
             }
         }
 
+
         String uom = testService.getUOM(test, isCD4Conclusion);
 
         String testDate = GenericValidator.isBlankOrNull(analysisService.getCompletedDateForDisplay(analysis))
                 ? getCurrentDate()
                 : analysisService.getCompletedDateForDisplay(analysis);
+
         ResultDisplayType resultDisplayType = testService.getDisplayTypeForTestMethod(test);
         if (resultDisplayType != ResultDisplayType.TEXT) {
             inventoryNeeded = true;
         }
+
         TestResultItem testItem = new TestResultItem();
 
         testItem.setAccessionNumber(accessionNumber);
@@ -703,7 +729,21 @@ public class ResultsLoadUtility {
         testItem.setReceivedDate(receivedDate);
         testItem.setTestName(displayTestName);
         testItem.setTestId(test.getId());
+
+        // Get test section name - now properly loaded via JOIN FETCH in DAO
+        if (analysis.getTestSection() != null) {
+            System.out.println("analysis.getTestSection().getId(): "+analysis.getTestSection().getId());
+            System.out.println("analysis.getTestSection().getName(): "+analysis.getTestSection().getTestSectionName());
+            System.out.println("analysis.getTestSection().toString(): "+analysis.getTestSection().toString());
+            testItem.setTestSectionName(analysis.getTestSection().getTestSectionName());
+            System.out.println("ResultsLoadUtility - createTestResultItem: Test Section Name: " + analysis.getTestSection().getName());
+        } else {
+            testItem.setTestSectionName("");
+            System.out.println("ResultsLoadUtility - createTestResultItem: Test Section is NULL");
+        }
+
         setResultLimitDependencies(resultLimit, testItem, testResults);
+
         testItem.setPatientName(patientName);
         testItem.setPatientInfo(patientInfo);
         testItem.setReportable(testService.isReportable(test));
@@ -734,42 +774,54 @@ public class ResultsLoadUtility {
         testItem.setInitialSampleCondition(initialSampleConditions);
         testItem.setSampleType(sampleType);
         testItem.setTestSortOrder(testService.getSortOrder(test));
+        LogEvent.logInfo(this.getClass().getSimpleName(), "createTestResultItem", "Checking failed validation");
         testItem.setFailedValidation(statusRules.hasFailedValidation(analysisService.getStatusId(analysis)));
         if (useCurrentUserAsTechDefault && GenericValidator.isBlankOrNull(testItem.getTechnician())) {
             testItem.setTechnician(currentUserName);
         }
+        LogEvent.logInfo(this.getClass().getSimpleName(), "createTestResultItem", "Getting reflex group");
         testItem.setReflexGroup(analysisService.getTriggeredReflex(analysis));
+        LogEvent.logInfo(this.getClass().getSimpleName(), "createTestResultItem", "Checking child reflex");
         testItem.setChildReflex(
                 analysisService.getTriggeredReflex(analysis) && analysisService.resultIsConclusion(result, analysis));
         testItem.setPastNotes(notes);
+        LogEvent.logInfo(this.getClass().getSimpleName(), "createTestResultItem", "Checking log value");
         testItem.setDisplayResultAsLog(hasLogValue(test));
+        LogEvent.logInfo(this.getClass().getSimpleName(), "createTestResultItem", "Checking parent non-conforming");
         testItem.setNonconforming(
                 analysisService.isParentNonConforming(analysis) || SpringContext.getBean(IStatusService.class)
                         .matches(analysisService.getStatusId(analysis), AnalysisStatus.TechnicalRejected));
+        LogEvent.logInfo(this.getClass().getSimpleName(), "createTestResultItem", "Checking QA events by section");
         if (FormFields.getInstance().useField(Field.QaEventsBySection)) {
             testItem.setNonconforming(testItem.isNonconforming() || getQaEventByTestSection(analysis));
         }
 
+        LogEvent.logInfo(this.getClass().getSimpleName(), "createTestResultItem", "Getting quantified result");
         Result quantifiedResult = analysisService.getQuantifiedResult(analysis);
+        LogEvent.logInfo(this.getClass().getSimpleName(), "createTestResultItem", "Quantified result: " + (quantifiedResult != null ? quantifiedResult.getId() : "null"));
         if (quantifiedResult != null) {
             testItem.setQualifiedResultId(quantifiedResult.getId());
             testItem.setQualifiedResultValue(quantifiedResult.getValue());
             testItem.setHasQualifiedResult(true);
         }
 
+        LogEvent.logInfo(this.getClass().getSimpleName(), "createTestResultItem", "Processing significant digits");
         if (!testResults.isEmpty() && NUMERIC_RESULT_TYPE.equals(testResults.get(0).getTestResultType())
                 && !GenericValidator.isBlankOrNull(testResults.get(0).getSignificantDigits())) {
             testItem.setSignificantDigits(Integer.parseInt(testResults.get(0).getSignificantDigits()));
         }
 
+        LogEvent.logInfo(this.getClass().getSimpleName(), "createTestResultItem", "Processing default test result");
         if (test.getDefaultTestResult() != null) {
             testItem.setDefaultResultValue(test.getDefaultTestResult().getValue());
         }
 
+        LogEvent.logInfo(this.getClass().getSimpleName(), "createTestResultItem", "Processing sample priority");
         if (currSample != null && currSample.getPriority() != null) {
             testItem.setPriority(currSample.getPriority().name());
         }
 
+        LogEvent.logInfo(this.getClass().getSimpleName(), "createTestResultItem", "Populating SI unit conversion fields");
         // Populate SI unit conversion fields
         if (result != null) {
             String valueSi = result.getValueSi();
@@ -869,6 +921,12 @@ public class ResultsLoadUtility {
             String qualifiedDictionaryIds = "";
             for (TestResult testResult : testResults) {
                 if (TypeOfTestResultServiceImpl.ResultType.isDictionaryVariant(testResult.getTestResultType())) {
+                    // Skip if value is null to avoid Hibernate "id to load is required" error
+                    if (GenericValidator.isBlankOrNull(testResult.getValue())) {
+                        LogEvent.logWarn(this.getClass().getSimpleName(), "setDictionaryResults",
+                                "Skipping dictionary result with null value");
+                        continue;
+                    }
                     dictionary = new Dictionary();
                     dictionary.setId(testResult.getValue());
                     dictionaryService.getData(dictionary);
@@ -941,6 +999,13 @@ public class ResultsLoadUtility {
         List<IdValuePair> values = null;
 
         if (result != null && TypeOfTestResultServiceImpl.ResultType.isDictionaryVariant(result.getResultType())) {
+            // Check if result value is null to avoid Hibernate "id to load is required" error
+            if (GenericValidator.isBlankOrNull(result.getValue())) {
+                LogEvent.logWarn(this.getClass().getSimpleName(), "getAnyDictionaryValues",
+                        "Result has null value, cannot load dictionary");
+                return values;
+            }
+
             values = new ArrayList<>();
 
             Dictionary dictionaryValue = new Dictionary();

@@ -352,4 +352,38 @@ public class DictionaryRestController extends BaseController {
     protected String getPageSubtitleKey() {
         return "dictionary.edit.title";
     }
+
+    /**
+     * Get all dictionary entries for a given category name
+     * @param categoryName the name of the dictionary category
+     * @return list of dictionary entries
+     */
+    @GetMapping("/dictionary/category/{categoryName}")
+    public ResponseEntity<List<IdValuePair>> getDictionaryByCategory(@PathVariable String categoryName) {
+        try {
+            // Find category by name
+            DictionaryCategory category = dictionaryCategoryService.getDictionaryCategoryByName(categoryName);
+
+            if (category == null) {
+                return ResponseEntity.notFound().build();
+            }
+
+            // Get all active dictionaries for this category
+            List<Dictionary> dictionaries = dictionaryService.getDictionaryEntriesByCategoryId(category.getId());
+
+            // Convert to IdValuePair (standard format for dropdowns) and filter active only
+            List<IdValuePair> activeDictionaries = new ArrayList<>();
+            for (Dictionary dict : dictionaries) {
+                if ("Y".equals(dict.getIsActive())) {
+                    IdValuePair pair = new IdValuePair(dict.getId(), dict.getDictEntry());
+                    activeDictionaries.add(pair);
+                }
+            }
+
+            return ResponseEntity.ok(activeDictionaries);
+        } catch (Exception e) {
+            LogEvent.logError(e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
 }

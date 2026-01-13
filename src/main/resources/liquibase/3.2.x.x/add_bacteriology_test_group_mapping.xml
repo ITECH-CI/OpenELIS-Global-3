@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+    <!-- Create table to map tests to bacteriology groups -->
+    <changeSet id="1" author="system" context="ci">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="bacteriology_test_group_mapping" schemaName="clinlims"/>
+            </not>
+        </preConditions>
+        <comment>Create bacteriology test to group mapping table</comment>
+        <createTable tableName="bacteriology_test_group_mapping" schemaName="clinlims">
+            <column name="id" type="INTEGER">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="test_id" type="INTEGER">
+                <constraints nullable="false"/>
+            </column>
+            <column name="group_type" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="lastupdated" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <!-- Create sequence for bacteriology_test_group_mapping -->
+    <changeSet id="2" author="system" context="ci">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <sequenceExists sequenceName="bacteriology_test_group_mapping_seq" schemaName="clinlims"/>
+            </not>
+        </preConditions>
+        <createSequence sequenceName="bacteriology_test_group_mapping_seq"
+                       schemaName="clinlims"
+                       startValue="1"
+                       incrementBy="1"/>
+    </changeSet>
+
+    <!-- Add foreign key constraint -->
+    <changeSet id="3" author="system" context="ci">
+        <addForeignKeyConstraint
+            baseTableName="bacteriology_test_group_mapping"
+            baseTableSchemaName="clinlims"
+            baseColumnNames="test_id"
+            constraintName="fk_bact_test_group_test"
+            referencedTableName="test"
+            referencedTableSchemaName="clinlims"
+            referencedColumnNames="id"/>
+    </changeSet>
+
+    <!-- Add unique constraint to prevent duplicate mappings -->
+    <changeSet id="4" author="system" context="ci">
+        <addUniqueConstraint
+            tableName="bacteriology_test_group_mapping"
+            schemaName="clinlims"
+            columnNames="test_id, group_type"
+            constraintName="uk_test_group"/>
+    </changeSet>
+
+    <!-- Insert example mappings for common bacteriology tests -->
+    <changeSet id="5" author="system" context="ci">
+        <comment>Map common bacteriology tests to their groups</comment>
+        <sql>
+            -- Map tests to MACROSCOPY group
+            INSERT INTO clinlims.bacteriology_test_group_mapping (id, test_id, group_type, lastupdated)
+            SELECT
+                nextval('clinlims.bacteriology_test_group_mapping_seq'),
+                t.id,
+                'MACROSCOPY',
+                now()
+            FROM clinlims.test t
+            WHERE LOWER(t.description) LIKE '%macroscopi%'
+            AND NOT EXISTS (
+                SELECT 1 FROM clinlims.bacteriology_test_group_mapping btgm
+                WHERE btgm.test_id = t.id AND btgm.group_type = 'MACROSCOPY'
+            );
+
+            -- Map tests to MICROSCOPY group
+            INSERT INTO clinlims.bacteriology_test_group_mapping (id, test_id, group_type, lastupdated)
+            SELECT
+                nextval('clinlims.bacteriology_test_group_mapping_seq'),
+                t.id,
+                'MICROSCOPY',
+                now()
+            FROM clinlims.test t
+            WHERE LOWER(t.description) LIKE '%microscopi%'
+            AND NOT EXISTS (
+                SELECT 1 FROM clinlims.bacteriology_test_group_mapping btgm
+                WHERE btgm.test_id = t.id AND btgm.group_type = 'MICROSCOPY'
+            );
+
+            -- Map tests to CULTURE group (usually tests containing 'culture' or 'identification')
+            INSERT INTO clinlims.bacteriology_test_group_mapping (id, test_id, group_type, lastupdated)
+            SELECT
+                nextval('clinlims.bacteriology_test_group_mapping_seq'),
+                t.id,
+                'CULTURE',
+                now()
+            FROM clinlims.test t
+            WHERE (LOWER(t.description) LIKE '%culture%' OR LOWER(t.description) LIKE '%identification%')
+            AND NOT EXISTS (
+                SELECT 1 FROM clinlims.bacteriology_test_group_mapping btgm
+                WHERE btgm.test_id = t.id AND btgm.group_type = 'CULTURE'
+            );
+        </sql>
+    </changeSet>
+
+</databaseChangeLog>

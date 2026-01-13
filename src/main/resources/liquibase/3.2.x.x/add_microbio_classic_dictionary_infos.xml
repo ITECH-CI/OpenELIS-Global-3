@@ -302,4 +302,46 @@ SELECT count(*) FROM
         ]]>
         </sql>
     </changeSet>
+
+    <!-- Add missing dictionary entry '3' for flora type (was skipped in original SQL) -->
+    <changeSet author="CIV developer Group" id="2026011004">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0"><![CDATA[
+                SELECT count(*) FROM clinlims.dictionary WHERE dict_entry = '3']]>
+            </sqlCheck>
+        </preConditions>
+        <sql><![CDATA[
+            INSERT INTO clinlims.dictionary (
+                id,
+                is_active,
+                dict_entry,
+                lastupdated,
+                local_abbrev,
+                dictionary_category_id,
+                display_key,
+                sort_order,
+                name_localization_id
+            ) VALUES
+            (nextval('dictionary_seq'), 'Y', '3', now(), '3',
+            (SELECT dictionary_category_id FROM clinlims.dictionary WHERE dict_entry = '1' LIMIT 1),
+            'dictionary.bacterio.3', 4000034, NULL);]]>
+        </sql>
+    </changeSet>
+
+    <!-- Fix NULL value in test_result for 'Microscopie-frottis-Coloration Gram-Bactérie-secretion vaginale Type de flore' test -->
+    <changeSet author="CIV developer Group" id="2026011005">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="1"><![CDATA[
+                SELECT count(*) FROM clinlims.test_result tr
+                WHERE tr.test_id = (SELECT id FROM clinlims.test WHERE description = 'Microscopie-frottis-Coloration Gram-Bactérie-secretion vaginale Type de flore' LIMIT 1)
+                AND tr.value IS NULL]]>
+            </sqlCheck>
+        </preConditions>
+        <sql><![CDATA[
+            UPDATE clinlims.test_result
+            SET value = (SELECT id FROM clinlims.dictionary WHERE dict_entry = '3' LIMIT 1)
+            WHERE test_id = (SELECT id FROM clinlims.test WHERE description = 'Microscopie-frottis-Coloration Gram-Bactérie-secretion vaginale Type de flore' LIMIT 1)
+            AND value IS NULL;]]>
+        </sql>
+    </changeSet>
 </databaseChangeLog>

@@ -231,7 +231,8 @@ export const getFromOpenElisServerV2 = (url) => {
 };
 
 export const convertAlphaNumLabNumForDisplay = (labNumber) => {
-  if (!labNumber) {
+  return labNumber;
+  /*if (!labNumber) {
     return labNumber;
   }
   if (labNumber.length > 15) {
@@ -275,7 +276,7 @@ export const convertAlphaNumLabNumForDisplay = (labNumber) => {
   if (isAnalysisLabNumber) {
     labNumberForDisplay = labNumberForDisplay + "-" + labNumberParts[1];
   }
-  return labNumberForDisplay.toUpperCase();
+  return labNumberForDisplay.toUpperCase();*/
 };
 
 export function encodeDate(dateString) {

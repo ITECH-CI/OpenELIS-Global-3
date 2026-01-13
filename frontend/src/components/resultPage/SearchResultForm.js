@@ -35,6 +35,10 @@ import {
   Roles,
 } from "../utils/Utils";
 import ReferredOutTests from "./resultsReferredOut/ReferredOutTests";
+import {
+  BacteriologyResultsContainer,
+  isBacteriologyTestSection,
+} from "../bacteriology";
 
 function ResultSearchPage() {
   const [originalResultForm, setOriginalResultForm] = useState({
@@ -784,6 +788,7 @@ export function SearchResults(props) {
   const saveStatus = "";
   const [referTest, setReferTest] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isBacteriology, setIsBacteriology] = useState(false);
 
   const componentMounted = useRef(false);
 
@@ -814,6 +819,23 @@ export function SearchResults(props) {
       componentMounted.current = false;
     };
   }, []);
+
+  useEffect(() => {
+    // Detect if this is a Routine Bacteriology analysis
+    if (props.results && props.results.testResult && props.results.testResult.length > 0) {
+      const firstResult = props.results.testResult[0];
+      console.log("Bacteriology Detection - First Result:", firstResult);
+      console.log("Bacteriology Detection - testSectionName:", firstResult.testSectionName);
+      console.log("Bacteriology Detection - testSection:", firstResult.testSection);
+      const testSectionName = firstResult.testSectionName || firstResult.testSection || "";
+      console.log("Bacteriology Detection - Using name:", testSectionName);
+      const isBacterio = isBacteriologyTestSection(testSectionName);
+      console.log("Bacteriology Detection - isBacteriology:", isBacterio);
+      setIsBacteriology(isBacterio);
+    } else {
+      setIsBacteriology(false);
+    }
+  }, [props.results]);
 
   useEffect(() => {
     if (props.results.testResult) {
@@ -1735,34 +1757,50 @@ export function SearchResults(props) {
             </Column>
           </Grid>
         )}
-        <Formik
-          initialValues={SearchResultFormValues}
-          //validationSchema={}
-          onSubmit
-          onChange
-        >
-          {({
-            // values,
-            // errors,
-            // touched,
-            handleChange,
-            //handleBlur,
-            // handleSubmit,
-          }) => (
-            <Form
-              onChange={handleChange}
-              //onBlur={handleBlur}
-            >
-              <DataTable
-                data={props.results?.testResult?.slice(
-                  (page - 1) * pageSize,
-                  page * pageSize,
-                )}
-                columns={columns}
-                isSortable
-                expandableRows
-                expandableRowsComponent={renderReferral}
-              ></DataTable>
+        {isBacteriology ? (
+          <BacteriologyResultsContainer
+            testResults={props.results?.testResult || []}
+            sysUserId={props.results?.sysUserId || "1"}
+            onSave={() => {
+              if (props.refreshOnSubmit) {
+                // Trigger refresh if needed
+                addNotification({
+                  kind: NotificationKinds.success,
+                  title: intl.formatMessage({ id: "notification.title" }),
+                  message: intl.formatMessage({ id: "save.config.success.msg" }),
+                });
+              }
+            }}
+          />
+        ) : (
+          <Formik
+            initialValues={SearchResultFormValues}
+            //validationSchema={}
+            onSubmit
+            onChange
+          >
+            {({
+              // values,
+              // errors,
+              // touched,
+              handleChange,
+              //handleBlur,
+              // handleSubmit,
+            }) => (
+              <Form
+                onChange={handleChange}
+                //onBlur={handleBlur}
+              >
+                <DataTable
+                  data={props.results?.testResult?.slice(
+                    (page - 1) * pageSize,
+                    page * pageSize,
+                  )}
+                  columns={columns}
+                  isSortable
+                  expandableRows
+                  expandableRowsComponent={renderReferral}
+                ></DataTable>
               <Pagination
                 onChange={handlePageChange}
                 page={page}
@@ -1815,6 +1853,7 @@ export function SearchResults(props) {
             </Form>
           )}
         </Formik>
+        )}
       </>
     </>
   );

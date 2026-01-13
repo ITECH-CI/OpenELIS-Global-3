@@ -474,7 +474,11 @@ public class Test extends EnumValueItemImpl {
 
     @Override
     public String getName() {
-        return getLocalizedTestName().getLocalizedValue();
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 
     public TestResult getDefaultTestResult() {
@@ -514,6 +518,81 @@ public class Test extends EnumValueItemImpl {
 
     public Boolean getAntimicrobialResistance() {
         return antimicrobialResistance;
+    }
+
+    // ========== Bacteriology Conditional Tests Fields ==========
+    // Added for conditional test support (parent-child relationships)
+    // and specialized culture tests. These fields are nullable/false by default
+    // to maintain backward compatibility with existing tests.
+
+    private String parentTestId;
+
+    private String parentTriggerValue;
+
+    private Boolean isCultureTest = false;
+
+    private String cultureType;
+
+    private Boolean isFloraCountTest = false;
+
+    /**
+     * Get the parent test ID for conditional tests
+     * @return parent test ID or null if this is not a child test
+     */
+    public String getParentTestId() {
+        return parentTestId;
+    }
+
+    public void setParentTestId(String parentTestId) {
+        this.parentTestId = parentTestId;
+    }
+
+    /**
+     * Get the trigger value that causes this child test to be displayed
+     * @return trigger value or null if this is not a child test
+     */
+    public String getParentTriggerValue() {
+        return parentTriggerValue;
+    }
+
+    public void setParentTriggerValue(String parentTriggerValue) {
+        this.parentTriggerValue = parentTriggerValue;
+    }
+
+    /**
+     * Check if this is a specialized culture test
+     * @return true if this is a culture test, false otherwise (default: false)
+     */
+    public Boolean getIsCultureTest() {
+        return isCultureTest != null ? isCultureTest : false;
+    }
+
+    public void setIsCultureTest(Boolean isCultureTest) {
+        this.isCultureTest = isCultureTest;
+    }
+
+    /**
+     * Get the culture type for specialized cultures
+     * @return culture type (NORMAL, NEISSERIA_GONORRHOEAE) or null
+     */
+    public String getCultureType() {
+        return cultureType;
+    }
+
+    public void setCultureType(String cultureType) {
+        this.cultureType = cultureType;
+    }
+
+    /**
+     * Check if this is a flora count test (dynamic flora management)
+     * @return true if this is a flora count test, false otherwise (default: false)
+     */
+    public Boolean getIsFloraCountTest() {
+        return isFloraCountTest != null ? isFloraCountTest : false;
+    }
+
+    public void setIsFloraCountTest(Boolean isFloraCountTest) {
+        this.isFloraCountTest = isFloraCountTest;
     }
 
     @Override
