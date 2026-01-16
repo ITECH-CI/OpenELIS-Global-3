@@ -1,0 +1,505 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="
+      http://www.liquibase.org/xml/ns/dbchangelog
+      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+
+    <!-- 1) Extend unit_of_measure for SI/UCUM -->
+    <changeSet id="si-001-uom-extend" author="pkomena">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists schemaName="clinlims"
+                    tableName="unit_of_measure" columnName="is_si" />
+            </not>
+        </preConditions>
+        <addColumn schemaName="clinlims" tableName="unit_of_measure">
+            <column name="ucum_code" type="varchar(32)" />
+            <column name="is_si" type="boolean"
+                defaultValueBoolean="false" />
+        </addColumn>
+    </changeSet>
+
+    <!-- 2) Ensure sequences for new tables -->
+    <changeSet id="si-002-create-seqs" author="pkomena">
+        <sql>
+            CREATE SEQUENCE IF NOT EXISTS clinlims.test_unit_conversion_seq;
+            CREATE SEQUENCE IF NOT EXISTS clinlims.test_alias_seq;
+            CREATE SEQUENCE
+            IF NOT EXISTS clinlims.test_derived_formula_seq;
+            CREATE SEQUENCE IF
+            NOT EXISTS clinlims.test_derived_dependency_seq;
+        </sql>
+    </changeSet>
+
+    <!-- 3) Create test_unit_conversion table (simple conversions) -->
+    <changeSet id="si-003-create-test-unit-conversion"
+        author="pkomena">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists schemaName="clinlims"
+                    tableName="test_unit_conversion" />
+            </not>
+        </preConditions>
+
+        <createTable schemaName="clinlims"
+            tableName="test_unit_conversion">
+            <column name="id" type="numeric(10)">
+                <constraints primaryKey="true" nullable="false" />
+            </column>
+            <column name="test_id" type="numeric(10)">
+                <constraints nullable="false" referencedTableName="test"
+                    referencedColumnNames="id" foreignKeyName="fk_tuc_test" />
+            </column>
+            <column name="from_uom_id" type="numeric(10)">
+                <constraints nullable="false"
+                    referencedTableName="unit_of_measure" referencedColumnNames="id"
+                    foreignKeyName="fk_tuc_from_uom" />
+            </column>
+            <column name="to_uom_id" type="numeric(10)">
+                <constraints nullable="false"
+                    referencedTableName="unit_of_measure" referencedColumnNames="id"
+                    foreignKeyName="fk_tuc_to_uom" />
+            </column>
+            <column name="factor" type="numeric(18,8)"
+                defaultValueNumeric="1" />
+            <column name="offset_value" type="numeric(18,8)"
+                defaultValueNumeric="0" />
+            <column name="decimals" type="integer" />
+            <column name="active" type="boolean"
+                defaultValueBoolean="true" />
+            <column name="lastupdated" type="timestamp(6)" />
+        </createTable>
+
+        <addUniqueConstraint schemaName="clinlims"
+            tableName="test_unit_conversion" columnNames="test_id, from_uom_id"
+            constraintName="uq_tuc_test_from_uom" />
+
+        <createIndex schemaName="clinlims"
+            tableName="test_unit_conversion" indexName="idx_tuc_lookup">
+            <column name="test_id" />
+            <column name="from_uom_id" />
+            <column name="active" />
+        </createIndex>
+    </changeSet>
+
+    <!-- 4) Create alias table (robust token resolution) -->
+    <changeSet id="si-004-create-test-alias" author="pkomena">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists schemaName="clinlims"
+                    tableName="test_alias" />
+            </not>
+        </preConditions>
+
+        <createTable schemaName="clinlims" tableName="test_alias">
+            <column name="id" type="numeric(10)">
+                <constraints primaryKey="true" nullable="false" />
+            </column>
+            <column name="test_id" type="numeric(10)">
+                <constraints nullable="false" referencedTableName="test"
+                    referencedColumnNames="id" foreignKeyName="fk_test_alias_test" />
+            </column>
+            <column name="alias" type="varchar(255)">
+                <constraints nullable="false" />
+            </column>
+            <column name="lastupdated" type="timestamp(6)" />
+        </createTable>
+
+        <addUniqueConstraint schemaName="clinlims"
+            tableName="test_alias" columnNames="test_id, alias"
+            constraintName="uq_test_alias" />
+
+        <createIndex schemaName="clinlims" tableName="test_alias"
+            indexName="idx_test_alias_alias">
+            <column name="alias" />
+        </createIndex>
+    </changeSet>
+
+    <!-- 5) Create derived formula + dependencies tables -->
+    <changeSet id="si-005-create-derived-tables" author="pkomena">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists schemaName="clinlims"
+                    tableName="test_derived_formula" />
+            </not>
+        </preConditions>
+
+        <createTable schemaName="clinlims"
+            tableName="test_derived_formula">
+            <column name="id" type="numeric(10)">
+                <constraints primaryKey="true" nullable="false" />
+            </column>
+            <column name="test_id" type="numeric(10)">
+                <constraints nullable="false" referencedTableName="test"
+                    referencedColumnNames="id" foreignKeyName="fk_tdf_test" />
+            </column>
+            <column name="expression" type="varchar(255)">
+                <constraints nullable="false" />
+            </column>
+            <column name="from_uom_id" type="numeric(10)">
+                <constraints nullable="true"
+                    referencedTableName="unit_of_measure" referencedColumnNames="id"
+                    foreignKeyName="fk_tdf_from_uom" />
+            </column>
+            <column name="to_uom_si_id" type="numeric(10)">
+                <constraints nullable="true"
+                    referencedTableName="unit_of_measure" referencedColumnNames="id"
+                    foreignKeyName="fk_tdf_to_uom_si" />
+            </column>
+            <column name="decimals" type="integer" />
+            <column name="active" type="boolean"
+                defaultValueBoolean="true" />
+            <column name="lastupdated" type="timestamp(6)" />
+        </createTable>
+
+        <addUniqueConstraint schemaName="clinlims"
+            tableName="test_derived_formula" columnNames="test_id"
+            constraintName="uq_tdf_test" />
+
+        <createTable schemaName="clinlims"
+            tableName="test_derived_dependency">
+            <column name="id" type="numeric(10)">
+                <constraints primaryKey="true" nullable="false" />
+            </column>
+            <column name="derived_formula_id" type="numeric(10)">
+                <constraints nullable="false"
+                    referencedTableName="test_derived_formula"
+                    referencedColumnNames="id" foreignKeyName="fk_tdd_formula" />
+            </column>
+            <column name="source_test_id" type="numeric(10)">
+                <constraints nullable="false" referencedTableName="test"
+                    referencedColumnNames="id" foreignKeyName="fk_tdd_source_test" />
+            </column>
+        </createTable>
+
+        <addUniqueConstraint schemaName="clinlims"
+            tableName="test_derived_dependency"
+            columnNames="derived_formula_id, source_test_id"
+            constraintName="uq_tdd_formula_source" />
+
+        <createIndex schemaName="clinlims"
+            tableName="test_derived_dependency" indexName="idx_tdd_formula">
+            <column name="derived_formula_id" />
+        </createIndex>
+    </changeSet>
+
+    <!-- 6) Extend result table with SI fields -->
+    <changeSet id="si-006-result-add-si-fields" author="pkomena">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists schemaName="clinlims" tableName="result"
+                    columnName="value_si" />
+            </not>
+        </preConditions>
+
+        <addColumn schemaName="clinlims" tableName="result">
+            <column name="value_si" type="varchar(200)" />
+            <column name="uom_si_id" type="numeric(10)" />
+            <column name="si_rule_id" type="numeric(10)" />
+            <column name="si_lastupdated" type="timestamp(6)" />
+        </addColumn>
+
+        <addForeignKeyConstraint
+            baseTableSchemaName="clinlims" baseTableName="result"
+            baseColumnNames="uom_si_id" referencedTableSchemaName="clinlims"
+            referencedTableName="unit_of_measure" referencedColumnNames="id"
+            constraintName="fk_result_uom_si" />
+
+        <addForeignKeyConstraint
+            baseTableSchemaName="clinlims" baseTableName="result"
+            baseColumnNames="si_rule_id" referencedTableSchemaName="clinlims"
+            referencedTableName="test_unit_conversion" referencedColumnNames="id"
+            constraintName="fk_result_si_rule" />
+    </changeSet>
+
+    <!-- 7) Staging tables -->
+    <changeSet id="si-007-create-staging" author="pkomena">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists schemaName="clinlims"
+                    tableName="uom_import" />
+            </not>
+        </preConditions>
+
+        <createTable schemaName="clinlims" tableName="uom_import">
+            <column name="name" type="varchar(64)" />
+            <column name="description" type="varchar(255)" />
+            <column name="is_si" type="varchar(10)" />
+        </createTable>
+
+        <createTable schemaName="clinlims"
+            tableName="test_unit_conversion_import">
+            <column name="test_name" type="varchar(255)" />
+            <column name="from_uom" type="varchar(64)" />
+            <column name="to_uom" type="varchar(64)" />
+            <column name="factor" type="numeric(18,8)" />
+        </createTable>
+
+        <createTable schemaName="clinlims"
+            tableName="test_alias_import">
+            <column name="test_name" type="varchar(255)" />
+            <column name="alias" type="varchar(255)" />
+        </createTable>
+
+        <createTable schemaName="clinlims"
+            tableName="test_derived_formula_import">
+            <column name="derived_test_name" type="varchar(255)" />
+            <column name="from_uom" type="varchar(64)" />
+            <column name="to_uom_si" type="varchar(64)" />
+            <column name="expression" type="varchar(255)" />
+            <column name="decimals" type="varchar(20)" />
+        </createTable>
+
+        <createTable schemaName="clinlims"
+            tableName="test_derived_dependency_import">
+            <column name="derived_test_name" type="varchar(255)" />
+            <column name="dependency_token" type="varchar(255)" />
+        </createTable>
+    </changeSet>
+
+    <!-- 8) Load CSVs -->
+    <changeSet id="si-008-load-csvs" author="pkomena">
+        <loadData schemaName="clinlims" tableName="uom_import"
+            file="data/units.csv" separator="," encoding="UTF-8"
+            quotchar="&quot;" relativeToChangelogFile="true" />
+
+        <loadData schemaName="clinlims"
+            tableName="test_unit_conversion_import"
+            file="data/test_unit_conversion.csv" separator="," encoding="UTF-8"
+            quotchar="&quot;" relativeToChangelogFile="true" />
+
+        <loadData schemaName="clinlims" tableName="test_alias_import"
+            file="data/test_aliases.csv" separator="," encoding="UTF-8"
+            quotchar="&quot;" relativeToChangelogFile="true" />
+
+        <loadData schemaName="clinlims"
+            tableName="test_derived_formula_import"
+            file="data/derived_formulas.csv" separator="," encoding="UTF-8"
+            quotchar="&quot;" relativeToChangelogFile="true" />
+
+        <loadData schemaName="clinlims"
+            tableName="test_derived_dependency_import"
+            file="data/derived_dependencies.csv" separator="," encoding="UTF-8"
+            quotchar="&quot;" relativeToChangelogFile="true" />
+    </changeSet>
+
+    <!-- 9) Insert missing units (no dependency on unit_of_measure sequence) -->
+    <changeSet id="si-009-insert-units" author="pkomena">
+        <sql> <![CDATA[
+            INSERT INTO clinlims.unit_of_measure (id, name, description, is_si, lastupdated)
+            SELECT
+                (SELECT COALESCE(MAX(u.id),0) FROM clinlims.unit_of_measure u) +
+                ROW_NUMBER() OVER (ORDER BY lower(trim(i.name))) AS id,
+                trim(i.name),
+                NULLIF(trim(i.description),''),
+                CASE WHEN lower(trim(i.is_si)) IN ('true','t','1','yes','y') THEN true ELSE false END,
+                now()
+            FROM clinlims.uom_import i
+            WHERE i.name IS NOT NULL AND trim(i.name) <> ''
+              AND NOT EXISTS (
+                SELECT 1 FROM clinlims.unit_of_measure u
+                WHERE lower(trim(u.name)) = lower(trim(i.name))
+              );
+              ]]>
+        </sql>
+    </changeSet>
+
+    <!-- 10) Insert aliases -->
+    <changeSet id="si-010-insert-aliases" author="pkomena">
+        <sql>
+        <![CDATA[
+            INSERT INTO clinlims.test_alias (id, test_id, alias, lastupdated)
+            SELECT
+                nextval('clinlims.test_alias_seq')::numeric,
+                t.id,
+                i.alias,
+                now()
+            FROM clinlims.test_alias_import i
+            JOIN clinlims.test t
+              ON lower(trim(t.name)) = lower(trim(i.test_name))
+            WHERE i.alias IS NOT NULL AND trim(i.alias) <> ''
+              AND NOT EXISTS (
+                SELECT 1 FROM clinlims.test_alias a
+                WHERE a.test_id = t.id AND lower(trim(a.alias)) = lower(trim(i.alias))
+              );
+              ]]>
+        </sql>
+    </changeSet>
+
+    <!-- 11) Upsert simple conversion rules -->
+    <changeSet id="si-011-upsert-conversions" author="pkomena">
+        <sql>
+        <![CDATA[
+            INSERT INTO clinlims.test_unit_conversion
+              (id, test_id, from_uom_id, to_uom_id, factor, offset_value, active, lastupdated)
+            SELECT
+              nextval('clinlims.test_unit_conversion_seq')::numeric,
+              t.id,
+              uf.id,
+              ut.id,
+              COALESCE(i.factor, 1),
+              0,
+              true,
+              now()
+            FROM clinlims.test_unit_conversion_import i
+            JOIN clinlims.test t
+              ON lower(trim(t.name)) = lower(trim(i.test_name))
+            JOIN clinlims.unit_of_measure uf
+              ON lower(trim(uf.name)) = lower(trim(i.from_uom))
+            JOIN clinlims.unit_of_measure ut
+              ON lower(trim(ut.name)) = lower(trim(i.to_uom))
+            ON CONFLICT (test_id, from_uom_id) DO UPDATE
+              SET to_uom_id   = EXCLUDED.to_uom_id,
+                  factor      = EXCLUDED.factor,
+                  offset_value      = EXCLUDED.offset_value,
+                  active      = true,
+                  lastupdated = now();
+                  ]]>
+        </sql>
+    </changeSet>
+
+    <!-- 12) Upsert derived formulas -->
+    <changeSet id="si-012-upsert-derived-formulas"
+        author="pkomena">
+        <sql>
+<![CDATA[
+INSERT INTO clinlims.test_derived_formula
+  (id, test_id, expression, from_uom_id, to_uom_si_id, decimals, active, lastupdated)
+SELECT
+  nextval('clinlims.test_derived_formula_seq')::numeric,
+  x.test_id,
+  x.expression,
+  x.from_uom_id,
+  x.to_uom_si_id,
+  x.decimals,
+  true,
+  now()
+FROM (
+  SELECT DISTINCT ON (t.id)
+    t.id AS test_id,
+    f.expression,
+    u_from.id AS from_uom_id,
+    u_to.id AS to_uom_si_id,
+    NULLIF(trim(f.decimals),'')::int AS decimals
+  FROM clinlims.test_derived_formula_import f
+  JOIN clinlims.test t
+    ON lower(trim(t.name)) = lower(trim(f.derived_test_name))
+  LEFT JOIN clinlims.unit_of_measure u_from
+    ON lower(trim(u_from.name)) = lower(trim(f.from_uom))
+  LEFT JOIN clinlims.unit_of_measure u_to
+    ON lower(trim(u_to.name)) = lower(trim(f.to_uom_si))
+  ORDER BY t.id, length(coalesce(f.expression,'')) DESC
+) x
+ON CONFLICT (test_id) DO UPDATE
+  SET expression   = EXCLUDED.expression,
+      from_uom_id  = EXCLUDED.from_uom_id,
+      to_uom_si_id = EXCLUDED.to_uom_si_id,
+      decimals     = EXCLUDED.decimals,
+      active       = true,
+      lastupdated  = now();
+]]>
+        </sql>
+    </changeSet>
+
+    <!-- 13) Insert derived dependencies (ignores unknown tokens) -->
+    <changeSet id="si-013-insert-derived-deps" author="pkomena">
+        <sql>
+        <![CDATA[
+            INSERT INTO clinlims.test_derived_dependency (id, derived_formula_id, source_test_id)
+            SELECT
+              nextval('clinlims.test_derived_dependency_seq')::numeric,
+              df.id,
+              src.id
+            FROM clinlims.test_derived_dependency_import d
+            JOIN clinlims.test t
+              ON lower(trim(t.name)) = lower(trim(d.derived_test_name))
+            JOIN clinlims.test_derived_formula df
+              ON df.test_id = t.id AND df.active = true
+            JOIN LATERAL (
+              SELECT tt.id
+              FROM clinlims.test tt
+              WHERE lower(trim(tt.name)) = lower(trim(d.dependency_token))
+              UNION
+              SELECT ta.test_id
+              FROM clinlims.test_alias ta
+              WHERE lower(trim(ta.alias)) = lower(trim(d.dependency_token))
+              LIMIT 1
+            ) src ON true
+            WHERE NOT EXISTS (
+              SELECT 1 FROM clinlims.test_derived_dependency x
+              WHERE x.derived_formula_id = df.id AND x.source_test_id = src.id
+            );
+            ]]>
+        </sql>
+    </changeSet>
+
+    <!-- 14) Add SI reference range columns to result table -->
+    <changeSet id="si-014-result-add-reference-range-si" author="pkomena">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists schemaName="clinlims" tableName="result"
+                    columnName="min_normal_si" />
+            </not>
+        </preConditions>
+
+        <addColumn schemaName="clinlims" tableName="result">
+            <column name="min_normal_si" type="double precision" />
+            <column name="max_normal_si" type="double precision" />
+        </addColumn>
+    </changeSet>
+
+    <!-- 15) Add SI unit conversion configuration properties -->
+    <changeSet id="si-015-add-config-properties" author="pkomena">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">
+                SELECT COUNT(*) FROM clinlims.site_information
+                WHERE name = 'siUnitConversion'
+            </sqlCheck>
+        </preConditions>
+
+        <sql>
+            INSERT INTO clinlims.site_information (id, name, description, value, encrypted, value_type, instruction_key, lastupdated, dictionary_category_id, tag)
+            VALUES
+                (nextval('clinlims.site_information_seq'), 'siUnitConversion',
+                 'Enable automatic SI unit conversion for test results',
+                 'true', false, 'boolean', null, now(), null, 'lab_unit'),
+                (nextval('clinlims.site_information_seq'), 'siUnitConversionInReports',
+                 'Display SI values in reports alongside traditional values',
+                 'true', false, 'boolean', null, now(), null, 'lab_unit'),
+                (nextval('clinlims.site_information_seq'), 'siUnitConversionInUI',
+                 'Display SI values in the user interface',
+                 'true', false, 'boolean', null, now(), null, 'lab_unit');
+        </sql>
+    </changeSet>
+
+    <changeSet id="si-020-drop-staging-tables" author="pkomena">
+        <preConditions onFail="MARK_RAN">
+            <or>
+                <tableExists schemaName="clinlims"
+                    tableName="uom_import" />
+                <tableExists schemaName="clinlims"
+                    tableName="test_unit_conversion_import" />
+                <tableExists schemaName="clinlims"
+                    tableName="test_alias_import" />
+                <tableExists schemaName="clinlims"
+                    tableName="test_derived_formula_import" />
+                <tableExists schemaName="clinlims"
+                    tableName="test_derived_dependency_import" />
+            </or>
+        </preConditions>
+
+        <dropTable schemaName="clinlims" tableName="uom_import" />
+        <dropTable schemaName="clinlims"
+            tableName="test_unit_conversion_import" />
+        <dropTable schemaName="clinlims"
+            tableName="test_alias_import" />
+        <dropTable schemaName="clinlims"
+            tableName="test_derived_formula_import" />
+        <dropTable schemaName="clinlims"
+            tableName="test_derived_dependency_import" />
+    </changeSet>
+
+</databaseChangeLog>

@@ -295,14 +295,12 @@ public class UserServiceImpl implements UserService {
                 }
             });
         }
-
         sampleIds.forEach(id -> {
             TypeOfSample type = typeOfSampleService.get(id);
             if (type != null) {
                 userSampleTypes.add(new IdValuePair(type.getId(), type.getLocalizedName()));
             }
         });
-
         return userSampleTypes;
     }
 

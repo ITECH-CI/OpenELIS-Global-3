@@ -37,6 +37,10 @@ public class SampleFhirTransformEventListener {
         } catch (FhirTransformationException | FhirPersistanceException e) {
             LogEvent.logError(this.getClass().getSimpleName(), "handleSamplePatientUpdateDataCreatedEvent",
                     "Error during FHIR transformation: " + e.getMessage());
+        } catch (Exception e) {
+            LogEvent.logError(this.getClass().getSimpleName(), "handleSamplePatientUpdateDataCreatedEvent",
+                    "Unexpected error during FHIR transformation");
+            LogEvent.logError(e);
         }
     }
 }

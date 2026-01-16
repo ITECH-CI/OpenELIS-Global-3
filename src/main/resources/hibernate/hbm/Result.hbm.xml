@@ -59,5 +59,27 @@
             class="org.openelisglobal.result.valueholder.Result" fetch="select">
             <column name="parent_id" precision="10" scale="0" />
         </many-to-one>
+
+        <!-- SI Unit Conversion fields -->
+        <property name="valueSi" type="java.lang.String">
+            <column name="value_si" length="200" />
+        </property>
+        <many-to-one name="uomSi"
+            class="org.openelisglobal.unitofmeasure.valueholder.UnitOfMeasure"
+            fetch="select">
+            <column name="uom_si_id" precision="10" scale="0" />
+        </many-to-one>
+        <many-to-one name="siRule"
+            class="org.openelisglobal.testunitconversion.valueholder.TestUnitConversion"
+            fetch="select">
+            <column name="si_rule_id" precision="10" scale="0" />
+        </many-to-one>
+        <property name="siLastupdated" type="java.sql.Timestamp">
+            <column name="si_lastupdated" />
+        </property>
+        <property name="minNormalSi" type="java.lang.Double"
+            column="min_normal_si" />
+        <property name="maxNormalSi" type="java.lang.Double"
+            column="max_normal_si" />
     </class>
 </hibernate-mapping>

@@ -129,6 +129,9 @@ public class AnalyzerTestNameMenuRestController extends BaseMenuController<Named
             namedMapping.setActualTestName(test.getOpenElisTestName());
             namedMapping.setAnalyzerTestName(test.getAnalyzerTestName());
             namedMapping.setAnalyzerName(analyzerName);
+            namedMapping.setMethodName(test.getMethodName());
+            namedMapping.setTestId(test.getTestId());
+            namedMapping.setMethodId(test.getMethodId());
 
             namedMappingList.add(namedMapping);
         }

@@ -1,0 +1,293 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+    <changeSet author="CIV developer Group"
+        id="add-bacterio-sampletype-panel-01">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="1"><![CDATA[SELECT count(*) FROM panel WHERE name ='ECBU' LIMIT 1]]></sqlCheck>
+            <sqlCheck expectedResult="1"><![CDATA[SELECT count(*) FROM type_of_sample WHERE description ='Urines' LIMIT 1]]></sqlCheck>
+        </preConditions>
+        <sql>
+            <![CDATA[
+            INSERT INTO clinlims.sampletype_panel(id,sample_type_id,panel_id) VALUES
+            (nextval('sample_type_panel_seq'),(select id from clinlims.type_of_sample where description ='Urines' limit 1),
+            (select id from clinlims.panel where name ='ECBU' limit 1));
+            ]]>
+        </sql>
+    </changeSet>
+
+    <changeSet author="CIV developer Group"
+        id="add-bacterio-sampletype-panel-02">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="1"><![CDATA[SELECT count(*) FROM panel WHERE name ='HLM' LIMIT 1]]></sqlCheck>
+            <sqlCheck expectedResult="1"><![CDATA[SELECT count(*) FROM type_of_sample WHERE description ='Urines' LIMIT 1]]></sqlCheck>
+        </preConditions>
+        <sql>
+            <![CDATA[
+            INSERT INTO clinlims.sampletype_panel(id,sample_type_id,panel_id) VALUES
+            (nextval('sample_type_panel_seq'),(select id from clinlims.type_of_sample where description ='Urines' limit 1),
+            (select id from clinlims.panel where name ='HLM' limit 1));
+            ]]>
+        </sql>
+    </changeSet>
+
+    <changeSet author="CIV developer Group"
+        id="add-bacterio-sampletype-panel-03">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="1"><![CDATA[SELECT count(*) FROM type_of_sample WHERE description ='Selles' LIMIT 1]]></sqlCheck>
+            <sqlCheck expectedResult="1"><![CDATA[SELECT count(*) FROM panel WHERE name ='Parasitologie-Selles' LIMIT 1]]></sqlCheck>
+        </preConditions>
+        <sql>
+            <![CDATA[
+            INSERT INTO clinlims.sampletype_panel(id,sample_type_id,panel_id) VALUES
+            (nextval('sample_type_panel_seq'),(select id from clinlims.type_of_sample where description ='Selles' limit 1),
+            (select id from clinlims.panel where name ='Parasitologie-Selles' limit 1));
+            ]]>
+        </sql>
+    </changeSet>
+
+    <changeSet author="CIV developer Group"
+        id="add-bacterio-sampletype-panel-04">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="1"><![CDATA[SELECT count(*) FROM type_of_sample WHERE description ='Selles' LIMIT 1]]></sqlCheck>
+            <sqlCheck expectedResult="1"><![CDATA[SELECT count(*) FROM panel WHERE name ='ECB-Selles' LIMIT 1]]></sqlCheck>
+        </preConditions>
+        <sql>
+            <![CDATA[
+            INSERT INTO clinlims.sampletype_panel(id,sample_type_id,panel_id) VALUES
+            (nextval('sample_type_panel_seq'),(select id from clinlims.type_of_sample where description ='Selles' limit 1),
+            (select id from clinlims.panel where name ='ECB-Selles' limit 1));
+            ]]>
+        </sql>
+    </changeSet>
+
+    <changeSet author="CIV developer Group"
+        id="add-bacterio-sampletype-panel-05">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="1"><![CDATA[SELECT count(*) FROM type_of_sample WHERE description ='Liquide de ponction' LIMIT 1]]></sqlCheck>
+            <sqlCheck expectedResult="1"><![CDATA[SELECT count(*) FROM panel WHERE name ='ECB-LP' LIMIT 1]]></sqlCheck>
+        </preConditions>
+        <sql>
+            <![CDATA[
+            INSERT INTO clinlims.sampletype_panel(id,sample_type_id,panel_id) VALUES
+            (nextval('sample_type_panel_seq'),(select id from clinlims.type_of_sample where description ='Liquide de ponction' limit 1),
+            (select id from clinlims.panel where name ='ECB-LP' limit 1));
+            ]]>
+        </sql>
+    </changeSet>
+
+    <changeSet author="CIV developer Group"
+        id="add-bacterio-sampletype-panel-06">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="1"><![CDATA[SELECT count(*) FROM type_of_sample WHERE description ='Sperme' LIMIT 1]]></sqlCheck>
+            <sqlCheck expectedResult="1"><![CDATA[SELECT count(*) FROM panel WHERE name ='ECB-Sperme' LIMIT 1]]></sqlCheck>
+        </preConditions>
+        <sql>
+            <![CDATA[
+            INSERT INTO clinlims.sampletype_panel(id,sample_type_id,panel_id) VALUES
+            (nextval('sample_type_panel_seq'),(select id from clinlims.type_of_sample where description ='Sperme' limit 1),
+            (select id from clinlims.panel where name ='ECB-Sperme' limit 1));
+            ]]>
+        </sql>
+    </changeSet>
+
+    <changeSet author="CIV developer Group"
+        id="add-bacterio-sampletype-panel-07">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="1"><![CDATA[SELECT count(*) FROM type_of_sample WHERE description ='Sang (hémoculture)' LIMIT 1]]></sqlCheck>
+            <sqlCheck expectedResult="1"><![CDATA[SELECT count(*) FROM panel WHERE name ='ECB-Sang' LIMIT 1]]></sqlCheck>
+        </preConditions>
+        <sql>
+            <![CDATA[
+            INSERT INTO clinlims.sampletype_panel(id,sample_type_id,panel_id) VALUES
+            (nextval('sample_type_panel_seq'),(select id from clinlims.type_of_sample where description ='Sang (hémoculture)' limit 1),
+            (select id from clinlims.panel where name ='ECB-Sang' limit 1));
+            ]]>
+        </sql>
+    </changeSet>
+
+    <changeSet author="CIV developer Group"
+        id="add-bacterio-sampletype-panel-09">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="1"><![CDATA[SELECT count(*) FROM type_of_sample WHERE description ='Crachat/Expectoration' LIMIT 1]]></sqlCheck>
+            <sqlCheck expectedResult="1"><![CDATA[SELECT count(*) FROM panel WHERE name ='ECB-Crachat' LIMIT 1]]></sqlCheck>
+        </preConditions>
+        <sql>
+            <![CDATA[
+            INSERT INTO clinlims.sampletype_panel(id,sample_type_id,panel_id) VALUES
+            (nextval('sample_type_panel_seq'),(select id from clinlims.type_of_sample where description ='Crachat/Expectoration' limit 1),
+            (select id from clinlims.panel where name ='ECB-Crachat' limit 1));
+            ]]>
+        </sql>
+    </changeSet>
+
+    <changeSet author="CIV developer Group"
+        id="add-bacterio-sampletype-panel-10">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="1"><![CDATA[SELECT count(*) FROM type_of_sample WHERE description ='Matériels (Prothèse, Sonde, Stérilet)' LIMIT 1]]></sqlCheck>
+            <sqlCheck expectedResult="1"><![CDATA[SELECT count(*) FROM panel WHERE name ='ECB-Materiel' LIMIT 1]]></sqlCheck>
+        </preConditions>
+        <sql>
+            <![CDATA[
+            INSERT INTO clinlims.sampletype_panel(id,sample_type_id,panel_id) VALUES
+            (nextval('sample_type_panel_seq'),(select id from clinlims.type_of_sample where description ='Matériels (Prothèse, Sonde, Stérilet)' limit 1),
+            (select id from clinlims.panel where name ='ECB-Materiel' limit 1));
+            ]]>
+        </sql>
+    </changeSet>
+
+    <changeSet author="CIV developer Group"
+        id="add-bacterio-sampletype-panel-11">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="1"><![CDATA[SELECT count(*) FROM type_of_sample WHERE description ='Secrétions vaginales' LIMIT 1]]></sqlCheck>
+            <sqlCheck expectedResult="1"><![CDATA[SELECT count(*) FROM panel WHERE name ='ECB-PV' LIMIT 1]]></sqlCheck>
+        </preConditions>
+        <sql>
+            <![CDATA[
+            INSERT INTO clinlims.sampletype_panel(id,sample_type_id,panel_id) VALUES
+            (nextval('sample_type_panel_seq'),(select id from clinlims.type_of_sample where description ='Secrétions vaginales' limit 1),
+            (select id from clinlims.panel where name ='ECB-PV' limit 1));
+            ]]>
+        </sql>
+    </changeSet>
+
+    <changeSet author="CIV developer Group"
+        id="add-bacterio-sampletype-panel-12">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="1"><![CDATA[SELECT count(*) FROM type_of_sample WHERE description ='Secrétions vaginales' LIMIT 1]]></sqlCheck>
+            <sqlCheck expectedResult="1"><![CDATA[SELECT count(*) FROM panel WHERE name ='ECB-COL' LIMIT 1]]></sqlCheck>
+        </preConditions>
+        <sql>
+            <![CDATA[
+            INSERT INTO clinlims.sampletype_panel(id,sample_type_id,panel_id) VALUES
+            (nextval('sample_type_panel_seq'),(select id from clinlims.type_of_sample where description ='Secrétions vaginales' limit 1),
+            (select id from clinlims.panel where name ='ECB-COL' limit 1));
+            ]]>
+        </sql>
+    </changeSet>
+
+    <changeSet author="CIV developer Group"
+        id="add-bacterio-sampletype-panel-13">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="1"><![CDATA[SELECT count(*) FROM type_of_sample WHERE description ='Secrétions vaginales' LIMIT 1]]></sqlCheck>
+            <sqlCheck expectedResult="1"><![CDATA[SELECT count(*) FROM panel WHERE name ='ECB-MUQUEUSE' LIMIT 1]]></sqlCheck>
+        </preConditions>
+        <sql>
+            <![CDATA[
+            INSERT INTO clinlims.sampletype_panel(id,sample_type_id,panel_id) VALUES
+            (nextval('sample_type_panel_seq'),(select id from clinlims.type_of_sample where description ='Secrétions vaginales' limit 1),
+            (select id from clinlims.panel where name ='ECB-MUQUEUSE' limit 1));
+            ]]>
+        </sql>
+    </changeSet>
+
+    <changeSet author="CIV developer Group"
+        id="add-bacterio-sampletype-panel-14">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="1"><![CDATA[SELECT count(*) FROM type_of_sample WHERE description ='Secrétions vaginales' LIMIT 1]]></sqlCheck>
+            <sqlCheck expectedResult="1"><![CDATA[SELECT count(*) FROM panel WHERE name ='ECB-VULVE' LIMIT 1]]></sqlCheck>
+        </preConditions>
+        <sql>
+            <![CDATA[
+            INSERT INTO clinlims.sampletype_panel(id,sample_type_id,panel_id) VALUES
+            (nextval('sample_type_panel_seq'),(select id from clinlims.type_of_sample where description ='Secrétions vaginales' limit 1),
+            (select id from clinlims.panel where name ='ECB-VULVE' limit 1));
+            ]]>
+        </sql>
+    </changeSet>
+
+    <changeSet author="CIV developer Group"
+        id="add-bacterio-sampletype-panel-15">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="1"><![CDATA[SELECT count(*) FROM type_of_sample WHERE description ='Secrétions urétrales' LIMIT 1]]></sqlCheck>
+            <sqlCheck expectedResult="1"><![CDATA[SELECT count(*) FROM panel WHERE name ='ECB-PU' LIMIT 1]]></sqlCheck>
+        </preConditions>
+        <sql>
+            <![CDATA[
+            INSERT INTO clinlims.sampletype_panel(id,sample_type_id,panel_id) VALUES
+            (nextval('sample_type_panel_seq'),(select id from clinlims.type_of_sample where description ='Secrétions urétrales' limit 1),
+            (select id from clinlims.panel where name ='ECB-PU' limit 1));
+            ]]>
+        </sql>
+    </changeSet>
+
+    <changeSet author="CIV developer Group"
+        id="add-bacterio-sampletype-panel-16">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="1"><![CDATA[SELECT count(*) FROM type_of_sample WHERE description ='LCR' LIMIT 1]]></sqlCheck>
+            <sqlCheck expectedResult="1"><![CDATA[SELECT count(*) FROM panel WHERE name ='ECB-LCR' LIMIT 1]]></sqlCheck>
+        </preConditions>
+        <sql>
+            <![CDATA[
+            INSERT INTO clinlims.sampletype_panel(id,sample_type_id,panel_id) VALUES
+            (nextval('sample_type_panel_seq'),(select id from clinlims.type_of_sample where description ='LCR' limit 1),
+            (select id from clinlims.panel where name ='ECB-LCR' limit 1));
+            ]]>
+        </sql>
+    </changeSet>
+
+    <changeSet author="CIV developer Group"
+        id="add-bacterio-sampletype-panel-17">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="1"><![CDATA[SELECT count(*) FROM type_of_sample WHERE description ='LCR' LIMIT 1]]></sqlCheck>
+            <sqlCheck expectedResult="1"><![CDATA[SELECT count(*) FROM panel WHERE name ='PARASITOLOGIE-LCR' LIMIT 1]]></sqlCheck>
+        </preConditions>
+        <sql>
+            <![CDATA[
+            INSERT INTO clinlims.sampletype_panel(id,sample_type_id,panel_id) VALUES
+            (nextval('sample_type_panel_seq'),(select id from clinlims.type_of_sample where description ='LCR' limit 1),
+            (select id from clinlims.panel where name ='PARASITOLOGIE-LCR' limit 1));
+            ]]>
+        </sql>
+    </changeSet>
+
+    <changeSet author="CIV developer Group"
+        id="add-bacterio-sampletype-panel-18">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="1"><![CDATA[SELECT count(*) FROM type_of_sample WHERE description ='LCR' LIMIT 1]]></sqlCheck>
+            <sqlCheck expectedResult="1"><![CDATA[SELECT count(*) FROM panel WHERE name ='ANTIGÈNES-SOLUBLES' LIMIT 1]]></sqlCheck>
+        </preConditions>
+        <sql>
+            <![CDATA[
+            INSERT INTO clinlims.sampletype_panel(id,sample_type_id,panel_id) VALUES
+            (nextval('sample_type_panel_seq'),(select id from clinlims.type_of_sample where description ='LCR' limit 1),
+            (select id from clinlims.panel where name ='ANTIGÈNES-SOLUBLES' limit 1));
+            ]]>
+        </sql>
+    </changeSet>
+
+    <changeSet author="CIV developer Group"
+        id="add-bacterio-sampletype-panel-19">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="1"><![CDATA[SELECT count(*) FROM type_of_sample WHERE description ='LCR' LIMIT 1]]></sqlCheck>
+            <sqlCheck expectedResult="1"><![CDATA[SELECT count(*) FROM panel WHERE name ='CHIMIE-LCR' LIMIT 1]]></sqlCheck>
+        </preConditions>
+        <sql>
+            <![CDATA[
+            INSERT INTO clinlims.sampletype_panel(id,sample_type_id,panel_id) VALUES
+            (nextval('sample_type_panel_seq'),(select id from clinlims.type_of_sample where description ='LCR' limit 1),
+            (select id from clinlims.panel where name ='CHIMIE-LCR' limit 1));
+            ]]>
+        </sql>
+    </changeSet>
+
+    <changeSet author="CIV developer Group"
+        id="add-bacterio-sampletype-panel-20">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="1"><![CDATA[SELECT count(*) FROM type_of_sample WHERE description ='Pus' LIMIT 1]]></sqlCheck>
+            <sqlCheck expectedResult="1"><![CDATA[SELECT count(*) FROM panel WHERE name ='ECB-Pus' LIMIT 1]]></sqlCheck>
+        </preConditions>
+        <sql>
+            <![CDATA[
+            INSERT INTO clinlims.sampletype_panel(id,sample_type_id,panel_id) VALUES
+            (nextval('sample_type_panel_seq'),(select id from clinlims.type_of_sample where description ='Pus' limit 1),
+            (select id from clinlims.panel where name ='ECB-Pus' limit 1));
+            ]]>
+        </sql>
+    </changeSet>
+
+</databaseChangeLog>

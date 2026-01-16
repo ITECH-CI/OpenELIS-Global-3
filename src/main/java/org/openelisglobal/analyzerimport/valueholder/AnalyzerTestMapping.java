@@ -24,6 +24,7 @@ public class AnalyzerTestMapping extends BaseObject<AnalyzerTestMappingPK> {
 
     private AnalyzerTestMappingPK compoundId = new AnalyzerTestMappingPK();
     private String testId;
+    private String methodId;
     private String uniqueIdentifyer;
 
     public void setCompoundId(AnalyzerTestMappingPK compoundId) {
@@ -64,6 +65,14 @@ public class AnalyzerTestMapping extends BaseObject<AnalyzerTestMappingPK> {
 
     public String getTestId() {
         return testId;
+    }
+
+    public void setMethodId(String methodId) {
+        this.methodId = methodId;
+    }
+
+    public String getMethodId() {
+        return methodId;
     }
 
     public void setUniqueIdentifyer(String uniqueIdentifyer) {

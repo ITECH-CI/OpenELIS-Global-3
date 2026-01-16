@@ -166,3 +166,4 @@ public class NonConformityDAOImpl extends BaseDAOImpl<NonConformity, String> imp
         throw new LIMSRuntimeException("Error in " + methodName, e);
     }
 }
+

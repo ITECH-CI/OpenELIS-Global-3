@@ -418,7 +418,7 @@ public class BarcodeLabelMaker {
             // Add code text in larger font and bold
             com.itextpdf.text.Font boldFont = new com.itextpdf.text.Font(label.getValueFont());
             boldFont.setSize(15); // Larger font size
-            boldFont.setStyle(com.lowagie.text.Font.BOLD);
+            boldFont.setStyle(com.itextpdf.text.Font.BOLD);
 
             Paragraph codeText = new Paragraph(label.getCode(), boldFont);
             codeText.setAlignment(Paragraph.ALIGN_CENTER);

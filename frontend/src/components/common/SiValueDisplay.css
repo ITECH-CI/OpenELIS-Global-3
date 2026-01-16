@@ -1,0 +1,90 @@
+.si-value-display {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  line-height: 1.3;
+}
+
+.si-value-display .traditional-line {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.si-value-display .si-line {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding-left: 0.25rem;
+}
+
+.si-value-display .traditional-value {
+  font-weight: 500;
+  color: var(--cds-text-primary, #161616);
+  white-space: nowrap;
+}
+
+.si-value-display .si-value {
+  font-weight: 400;
+  color: var(--cds-text-secondary, #525252);
+  font-style: italic;
+  font-size: 0.875rem;
+  white-space: nowrap;
+}
+
+.si-value-display .uom {
+  font-size: 0.875rem;
+  color: var(--cds-text-secondary, #525252);
+  margin-left: 0.125rem;
+}
+
+.si-value-display .si-info-button {
+  background: transparent;
+  border: none;
+  padding: 0;
+  margin-left: 0.25rem;
+  cursor: help;
+  display: inline-flex;
+  align-items: center;
+  color: var(--cds-icon-secondary, #525252);
+  transition: color 0.11s;
+}
+
+.si-value-display .si-info-button:hover {
+  color: var(--cds-icon-primary, #161616);
+}
+
+.si-value-display .si-info-button:focus {
+  outline: 2px solid var(--cds-focus, #0f62fe);
+  outline-offset: 2px;
+}
+
+/* Tooltip styling */
+.si-tooltip {
+  margin-left: 0.25rem;
+}
+
+/* Compact variant for tables */
+.si-value-display.compact {
+  font-size: 0.875rem;
+}
+
+.si-value-display.compact .traditional-value,
+.si-value-display.compact .si-value {
+  font-size: 0.875rem;
+}
+
+.si-value-display.compact .uom {
+  font-size: 0.75rem;
+}
+
+/* Print styles */
+@media print {
+  .si-value-display .si-info-button {
+    display: none;
+  }
+
+  .si-value-display .si-value {
+    color: #000;
+  }
+}

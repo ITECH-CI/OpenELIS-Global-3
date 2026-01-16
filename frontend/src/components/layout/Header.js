@@ -3,14 +3,13 @@ import {
   ChevronUp,
   Close,
   Language,
+  LocationFilled,
   Logout,
   Notification,
   Search,
   UserAvatarFilledAlt,
-  LocationFilled,
 } from "@carbon/icons-react";
 import { Select, SelectItem } from "@carbon/react";
-import HelpMenu from "./HelpMenu";
 import React, {
   createRef,
   useContext,
@@ -22,10 +21,11 @@ import React, {
 import { FormattedMessage, injectIntl, useIntl } from "react-intl";
 import { withRouter } from "react-router-dom";
 import UserSessionDetailsContext from "../../UserSessionDetailsContext";
+import { languages } from "../../languages";
 import "../Style.css";
 import { ConfigurationContext } from "../layout/Layout";
 import SlideOver from "../notifications/SlideOver";
-import { languages } from "../../languages";
+import HelpMenu from "./HelpMenu";
 
 import {
   Header,
@@ -69,6 +69,7 @@ function OEHeader(props) {
   const [readNotifications, setReadNotifications] = useState([]);
   const [searchBar, setSearchBar] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
+  const [isTrainingInstallation, setIsTrainingInstallation] = useState(false);
   scrollRef.current = window.scrollY;
   useLayoutEffect(() => {
     window.scrollTo(0, scrollRef.current);
@@ -154,6 +155,12 @@ function OEHeader(props) {
 
   useEffect(() => {
     getNotifications();
+  }, []);
+
+  useEffect(() => {
+    getFromOpenElisServer("/rest/database-cleaning/status", (response) => {
+      setIsTrainingInstallation(response.trainingInstallation);
+    });
   }, []);
 
   const panelSwitchIcon = () => {
@@ -254,7 +261,14 @@ function OEHeader(props) {
               style={{ width: "100%" }}
               rel="noreferrer"
             >
-              <span style={{ display: "flex", width: "100%" }}>
+              <span
+                style={{
+                  display: "flex",
+                  width: "100%",
+                  alignItems: "flex-start",
+                  minHeight: "2rem",
+                }}
+              >
                 {!menuItem.menu.actionURL &&
                   !hasActiveChildMenu(menuItem) &&
                   console.warn("menu entry has no action url and no child")}
@@ -453,6 +467,21 @@ function OEHeader(props) {
                         <FormattedMessage id="header.label.version" /> &nbsp;{" "}
                         {configurationProperties?.releaseNumber}
                       </p>
+                      {isTrainingInstallation && (
+                        <p
+                          style={{
+                            backgroundColor: "#ff8800",
+                            color: "white",
+                            padding: "4px 8px",
+                            marginTop: "4px",
+                            borderRadius: "4px",
+                            fontWeight: "bold",
+                            fontSize: "0.9em",
+                          }}
+                        >
+                          <FormattedMessage id="training.installation.message" />
+                        </p>
+                      )}
                     </div>
                   </HeaderName>
                   <HeaderGlobalBar>

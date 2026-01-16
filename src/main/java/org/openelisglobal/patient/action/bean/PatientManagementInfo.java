@@ -88,7 +88,6 @@ public class PatientManagementInfo implements Serializable {
             SamplePatientEntryBatch.class })
     private String otherIdentifier;
 
-
     private List<String> clinicalInformations = new ArrayList<>();
 
     @Pattern(regexp = ValidationHelper.PATIENT_ID_REGEX, groups = { SamplePatientEntryForm.SamplePatientEntry.class,
@@ -182,7 +181,7 @@ public class PatientManagementInfo implements Serializable {
         this.email = email;
     }
 
-   public String getPregnant() {
+    public String getPregnant() {
         return pregnant;
     }
 
@@ -193,6 +192,7 @@ public class PatientManagementInfo implements Serializable {
     public List<String> getClinicalInformations() {
         return clinicalInformations;
     }
+
     public void setClinicalInformations(List<String> clinicalInformations) {
         this.clinicalInformations = clinicalInformations;
     }

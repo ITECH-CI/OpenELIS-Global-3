@@ -29,6 +29,8 @@ public class AnalyzerTestNameForm extends BaseForm {
     @SafeHtml(level = SafeHtml.SafeListLevel.NONE)
     private String analyzerTestName;
 
+    private String methodId;
+
     private boolean newMapping = true;
 
     public AnalyzerTestNameForm() {
@@ -73,6 +75,14 @@ public class AnalyzerTestNameForm extends BaseForm {
 
     public void setAnalyzerTestName(String analyzerTestName) {
         this.analyzerTestName = analyzerTestName;
+    }
+
+    public String getMethodId() {
+        return methodId;
+    }
+
+    public void setMethodId(String methodId) {
+        this.methodId = methodId;
     }
 
     public boolean isNewMapping() {

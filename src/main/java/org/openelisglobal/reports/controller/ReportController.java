@@ -126,15 +126,31 @@ public class ReportController extends BaseController {
 
                 byte[] bytes = reportCreator.runReport();
 
-                response.setContentLength(bytes.length);
+                if (bytes != null && bytes.length > 0) {
+                    response.setContentLength(bytes.length);
 
-                ServletOutputStream servletOutputStream = response.getOutputStream();
+                    ServletOutputStream servletOutputStream = response.getOutputStream();
 
-                servletOutputStream.write(bytes, 0, bytes.length);
-                servletOutputStream.flush();
-                servletOutputStream.close();
+                    servletOutputStream.write(bytes, 0, bytes.length);
+                    servletOutputStream.flush();
+                    servletOutputStream.close();
+                } else {
+                    LogEvent.logWarn("ReportController", "printReport",
+                            "Report generation returned null or empty bytes for report: "
+                                    + request.getParameter("report"));
+                    response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                    response.getWriter().write("Error generating report: No data returned");
+                }
             } catch (IOException | SQLException | JRException | DocumentException | ParseException e) {
                 LogEvent.logError(e);
+                try {
+                    if (!response.isCommitted()) {
+                        response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                        response.getWriter().write("Error generating report: " + e.getMessage());
+                    }
+                } catch (Exception ex) {
+                    LogEvent.logError(ex);
+                }
             }
         }
 
