@@ -19,7 +19,9 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import java.io.Serializable;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import org.apache.commons.validator.GenericValidator;
 import org.openelisglobal.common.formfields.FormFields.Field;
@@ -282,7 +284,12 @@ public class PatientManagementInfo implements Serializable {
     }
 
     public void setNationalId(String nationalId) {
-        this.nationalId = nationalId;
+        if (nationalId == null || nationalId.isEmpty()) {
+            // add empty string to avoid null issues
+            this.nationalId = "";
+        } else {
+            this.nationalId = nationalId;
+        }
     }
 
     public String getOtherIdentifier() {

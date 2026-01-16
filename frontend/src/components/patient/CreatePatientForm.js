@@ -680,6 +680,7 @@ function CreatePatientForm(props) {
                 <Field name="nationalId">
                   {({ field }) => (
                     <TextInput
+                      type={'number'}
                       value={values.nationalId || ""}
                       name={field.name}
                       labelText={
@@ -687,22 +688,9 @@ function CreatePatientForm(props) {
                           {intl.formatMessage({
                             id: "patient.natioanalid",
                           })}
-                          <span className="requiredlabel">*</span>
                         </>
                       }
                       id={field.name}
-                      invalid={
-                        props.error
-                          ? props.error("patientProperties.nationalId")
-                            ? true
-                            : false
-                          : false
-                      }
-                      invalidText={
-                        props.error
-                          ? props.error("patientProperties.nationalId")
-                          : ""
-                      }
                       onMouseOut={() => {
                         handleSubjectNoValidation(
                           "nationalId",
