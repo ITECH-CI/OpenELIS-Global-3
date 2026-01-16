@@ -8,6 +8,10 @@
     <include relativeToChangelogFile="true"
         file="routine_bacteriology.xml" />
     <include relativeToChangelogFile="true" file="update_menu.xml" />
+    <include relativeToChangelogFile="true" file="update_program.xml" />
+    <include relativeToChangelogFile="true" file="update_test_section.xml" />
+    <include relativeToChangelogFile="true" file="add_free_payment_option.xml" />
+    <include relativeToChangelogFile="true" file="add_paid_notpaid_payment_option.xml" />
     <include relativeToChangelogFile="true"
         file="update_program.xml" />
     <include relativeToChangelogFile="true"

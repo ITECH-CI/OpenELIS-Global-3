@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+  xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+  <changeSet id="1" author="azizdiakite" context="CI_GENERAL or CSC_GENERAL or MLW_GENERAL or HAITI_GENERAL or HAITI_LNSP or CDI_GENERAL">
+    <comment>Add paid and not paid payment options to patientPayment dictionary category</comment>
+
+
+    <insert  schemaName="clinlims" tableName="localization">
+      <column name="id" valueSequenceNext="localization_seq"/>
+      <column name="description" value="Patient payment status - paid"/>
+      <column name="english" value="Paid"/>
+      <column name="french" value="Payé"/>
+      <column name="lastupdated" valueDate="now()"/>
+    </insert>
+
+    <insert schemaName="clinlims" tableName="dictionary">
+      <column name="id" valueSequenceNext="dictionary_seq"/>
+      <column name="is_active" value="Y"/>
+      <column name="dict_entry" value="paid"/>
+      <column name="lastupdated" valueDate="now()"/>
+      <column name="local_abbrev" valueComputed="(SELECT currval('localization_seq'))"/>
+      <column name="dictionary_category_id" value="177"/>
+      <column name="display_key" value="dictionary.patient.payment.paid"/>
+      <column name="sort_order" value="112410"/>
+    </insert>
+
+    <insert  schemaName="clinlims" tableName="localization">
+      <column name="id" valueSequenceNext="localization_seq"/>
+      <column name="description" value="Patient payment status - not paid"/>
+      <column name="english" value="Not Paid"/>
+      <column name="french" value="Non payé"/>
+      <column name="lastupdated" valueDate="now()"/>
+    </insert>
+
+    <insert schemaName="clinlims" tableName="dictionary">
+      <column name="id" valueSequenceNext="dictionary_seq"/>
+      <column name="is_active" value="Y"/>
+      <column name="dict_entry" value="notpaid"/>
+      <column name="lastupdated" valueDate="now()"/>
+      <column name="local_abbrev" valueComputed="(SELECT currval('localization_seq'))"/>
+      <column name="dictionary_category_id" value="177"/>
+      <column name="display_key" value="dictionary.patient.payment.notpaid"/>
+      <column name="sort_order" value="112420"/>
+    </insert>
+  </changeSet>
+
+</databaseChangeLog>
