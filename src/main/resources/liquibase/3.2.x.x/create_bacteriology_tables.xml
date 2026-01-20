@@ -95,8 +95,8 @@
             <column name="organism_type" type="VARCHAR(20)"/>
             <column name="organism_name_dict_id" type="INTEGER"/>
             <column name="organism_name_text" type="VARCHAR(255)"/>
-            <column name="gram_type" type="VARCHAR(10)"/>
-            <column name="grouping_mode" type="VARCHAR(50)"/>
+            <column name="gram_type" type="VARCHAR(100)"/>
+            <column name="grouping_mode" type="VARCHAR(100)"/>
             <column name="capsule_presence" type="BOOLEAN"/>
             <column name="other_characteristics" type="TEXT"/>
             <column name="is_active" type="BOOLEAN" defaultValueBoolean="true"/>

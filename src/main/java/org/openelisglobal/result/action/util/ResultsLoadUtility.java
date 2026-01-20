@@ -774,54 +774,42 @@ public class ResultsLoadUtility {
         testItem.setInitialSampleCondition(initialSampleConditions);
         testItem.setSampleType(sampleType);
         testItem.setTestSortOrder(testService.getSortOrder(test));
-        LogEvent.logInfo(this.getClass().getSimpleName(), "createTestResultItem", "Checking failed validation");
         testItem.setFailedValidation(statusRules.hasFailedValidation(analysisService.getStatusId(analysis)));
         if (useCurrentUserAsTechDefault && GenericValidator.isBlankOrNull(testItem.getTechnician())) {
             testItem.setTechnician(currentUserName);
         }
-        LogEvent.logInfo(this.getClass().getSimpleName(), "createTestResultItem", "Getting reflex group");
         testItem.setReflexGroup(analysisService.getTriggeredReflex(analysis));
-        LogEvent.logInfo(this.getClass().getSimpleName(), "createTestResultItem", "Checking child reflex");
         testItem.setChildReflex(
                 analysisService.getTriggeredReflex(analysis) && analysisService.resultIsConclusion(result, analysis));
         testItem.setPastNotes(notes);
-        LogEvent.logInfo(this.getClass().getSimpleName(), "createTestResultItem", "Checking log value");
         testItem.setDisplayResultAsLog(hasLogValue(test));
-        LogEvent.logInfo(this.getClass().getSimpleName(), "createTestResultItem", "Checking parent non-conforming");
         testItem.setNonconforming(
                 analysisService.isParentNonConforming(analysis) || SpringContext.getBean(IStatusService.class)
                         .matches(analysisService.getStatusId(analysis), AnalysisStatus.TechnicalRejected));
-        LogEvent.logInfo(this.getClass().getSimpleName(), "createTestResultItem", "Checking QA events by section");
         if (FormFields.getInstance().useField(Field.QaEventsBySection)) {
             testItem.setNonconforming(testItem.isNonconforming() || getQaEventByTestSection(analysis));
         }
 
-        LogEvent.logInfo(this.getClass().getSimpleName(), "createTestResultItem", "Getting quantified result");
         Result quantifiedResult = analysisService.getQuantifiedResult(analysis);
-        LogEvent.logInfo(this.getClass().getSimpleName(), "createTestResultItem", "Quantified result: " + (quantifiedResult != null ? quantifiedResult.getId() : "null"));
         if (quantifiedResult != null) {
             testItem.setQualifiedResultId(quantifiedResult.getId());
             testItem.setQualifiedResultValue(quantifiedResult.getValue());
             testItem.setHasQualifiedResult(true);
         }
 
-        LogEvent.logInfo(this.getClass().getSimpleName(), "createTestResultItem", "Processing significant digits");
         if (!testResults.isEmpty() && NUMERIC_RESULT_TYPE.equals(testResults.get(0).getTestResultType())
                 && !GenericValidator.isBlankOrNull(testResults.get(0).getSignificantDigits())) {
             testItem.setSignificantDigits(Integer.parseInt(testResults.get(0).getSignificantDigits()));
         }
 
-        LogEvent.logInfo(this.getClass().getSimpleName(), "createTestResultItem", "Processing default test result");
         if (test.getDefaultTestResult() != null) {
             testItem.setDefaultResultValue(test.getDefaultTestResult().getValue());
         }
 
-        LogEvent.logInfo(this.getClass().getSimpleName(), "createTestResultItem", "Processing sample priority");
         if (currSample != null && currSample.getPriority() != null) {
             testItem.setPriority(currSample.getPriority().name());
         }
 
-        LogEvent.logInfo(this.getClass().getSimpleName(), "createTestResultItem", "Populating SI unit conversion fields");
         // Populate SI unit conversion fields
         if (result != null) {
             String valueSi = result.getValueSi();

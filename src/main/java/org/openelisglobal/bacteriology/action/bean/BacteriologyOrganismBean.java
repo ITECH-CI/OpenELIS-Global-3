@@ -33,11 +33,10 @@ public class BacteriologyOrganismBean {
     @SafeHtml(level = SafeHtml.SafeListLevel.NONE)
     private String organismNameText;
 
-    @Pattern(regexp = "^(POSITIVE|NEGATIVE)?$", message = "Gram type must be POSITIVE or NEGATIVE")
+    // Gram type - can be dictionary ID or dictionary value text
     private String gramType;
 
-    @Size(max = 100)
-    @SafeHtml(level = SafeHtml.SafeListLevel.NONE)
+    // Grouping mode - can be dictionary ID or dictionary value text
     private String groupingMode;
 
     private Boolean capsulePresence;

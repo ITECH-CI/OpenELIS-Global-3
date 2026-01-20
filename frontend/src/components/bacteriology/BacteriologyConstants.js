@@ -30,6 +30,9 @@ export const GROUP_TYPES = {
 
 export const MAX_ORGANISMS = 3;
 
+// Display list categories
+export const ANTIBIOTICS_CATEGORY = "BACTERIOLOGY_ANTIBIOTICS";
+
 export const API_ENDPOINTS = {
   ANTIBIOTICS: "/rest/bacteriology/antibiotics",
   ORGANISMS: "/rest/bacteriology/organisms",

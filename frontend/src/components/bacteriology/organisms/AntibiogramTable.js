@@ -12,11 +12,12 @@ import {
   RadioButton,
   TextInput,
   Button,
+  ComboBox,
 } from "@carbon/react";
 import { Add, TrashCan } from "@carbon/icons-react";
 import { FormattedMessage } from "react-intl";
 import { getFromOpenElisServer } from "../../utils/Utils";
-import { API_ENDPOINTS, ANTIBIOGRAM_RESULTS } from "../BacteriologyConstants";
+import { ANTIBIOTICS_CATEGORY, ANTIBIOGRAM_RESULTS } from "../BacteriologyConstants";
 
 const AntibiogramTable = ({
   accessionNumber,
@@ -32,11 +33,15 @@ const AntibiogramTable = ({
   const idPrefix = accessionNumber ? accessionNumber.replace(/[^a-zA-Z0-9]/g, '_') : 'atb';
 
   useEffect(() => {
-    // Load antibiotics from backend
-    getFromOpenElisServer(API_ENDPOINTS.ANTIBIOTICS, (data) => {
-      setAntibioticList(data);
-      setLoading(false);
-    });
+    // Load antibiotics from DisplayListService
+    getFromOpenElisServer(
+      `/rest/displayList/${encodeURIComponent(ANTIBIOTICS_CATEGORY)}`,
+      (data) => {
+        console.log("Antibiotics Response:", data);
+        setAntibioticList(data || []);
+        setLoading(false);
+      }
+    );
   }, []);
 
   const handleAddAntibiotic = () => {
@@ -62,6 +67,12 @@ const AntibiogramTable = ({
     onChange(updated);
   };
 
+  // Transform antibiotics list for ComboBox
+  const antibioticItems = antibioticList.map((ab) => ({
+    id: String(ab.id),
+    label: ab.value || ab.localAbbreviation || ab.name || String(ab.id),
+  }));
+
   const headers = [
     { key: "antibiotic", header: "Antibiotic" },
     { key: "result", header: "Résultat (S/I/R)" },
@@ -76,7 +87,7 @@ const AntibiogramTable = ({
   }
 
   return (
-    <div className="antibiogram-table">
+    <div className="antibiogram-table" style={{ marginBottom: "3rem" }}>
       <div style={{ marginBottom: "1rem" }}>
         <Button
           size="sm"
@@ -106,29 +117,41 @@ const AntibiogramTable = ({
                 </TableCell>
               </TableRow>
             ) : (
-              antibiograms.map((antibiogram, index) => (
-                <TableRow key={index}>
-                  <TableCell>
-                    <select
-                      value={antibiogram.antibioticDictId || ""}
-                      onChange={(e) =>
-                        handleFieldChange(
-                          index,
-                          "antibioticDictId",
-                          parseInt(e.target.value),
-                        )
-                      }
-                      disabled={disabled}
-                      style={{ width: "100%" }}
-                    >
-                      <option value="">Select...</option>
-                      {antibioticList.map((ab) => (
-                        <option key={ab.id} value={ab.id}>
-                          {ab.localAbbreviation || ab.name}
-                        </option>
-                      ))}
-                    </select>
-                  </TableCell>
+              antibiograms.map((antibiogram, index) => {
+                // Find selected antibiotic item
+                const selectedItem = antibioticItems.find(
+                  (item) => item.id === String(antibiogram.antibioticDictId)
+                );
+
+                return (
+                  <TableRow key={index}>
+                    <TableCell>
+                      <ComboBox
+                        id={`antibiotic_${idPrefix}_${organismNumber}_${index}`}
+                        items={antibioticItems}
+                        selectedItem={selectedItem || null}
+                        onChange={({ selectedItem }) => {
+                          if (selectedItem) {
+                            handleFieldChange(
+                              index,
+                              "antibioticDictId",
+                              parseInt(selectedItem.id)
+                            );
+                          } else {
+                            handleFieldChange(index, "antibioticDictId", "");
+                          }
+                        }}
+                        itemToString={(item) => (item ? item.label : "")}
+                        placeholder="Rechercher un antibiotique..."
+                        disabled={disabled}
+                        size="sm"
+                        titleText=""
+                        shouldFilterItem={({ item, inputValue }) => {
+                          if (!inputValue) return true;
+                          return item.label.toLowerCase().includes(inputValue.toLowerCase());
+                        }}
+                      />
+                    </TableCell>
                   <TableCell>
                     <RadioButtonGroup
                       name={`result_${idPrefix}_${organismNumber}_${index}`}
@@ -161,6 +184,7 @@ const AntibiogramTable = ({
                   <TableCell>
                     <TextInput
                       id={`diameter_${idPrefix}_${organismNumber}_${index}`}
+                      labelText="Diamètre"
                       type="number"
                       value={antibiogram.diameterMm || ""}
                       onChange={(e) =>
@@ -174,6 +198,7 @@ const AntibiogramTable = ({
                   <TableCell>
                     <TextInput
                       id={`mic_${idPrefix}_${organismNumber}_${index}`}
+                      labelText="MIC"
                       value={antibiogram.micValue || ""}
                       onChange={(e) =>
                         handleFieldChange(index, "micValue", e.target.value)
@@ -186,6 +211,7 @@ const AntibiogramTable = ({
                   <TableCell>
                     <TextInput
                       id={`comment_${idPrefix}_${organismNumber}_${index}`}
+                      labelText="Commentaire"
                       value={antibiogram.interpretationComment || ""}
                       onChange={(e) =>
                         handleFieldChange(
@@ -211,7 +237,8 @@ const AntibiogramTable = ({
                     />
                   </TableCell>
                 </TableRow>
-              ))
+                );
+              })
             )}
           </TableBody>
         </Table>

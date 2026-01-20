@@ -13,11 +13,11 @@ public class AntibiogramResultBean {
 
     private Integer id;
 
-    @NotNull
+    @NotNull(message = "Antibiotic must be selected")
     private Integer antibioticDictId;
 
-    @NotNull
-    @Pattern(regexp = "^[SIR]$", message = "Result must be S (Sensible), I (Intermédiaire), or R (Résistant)")
+    // Result can be empty during entry, but if provided must be S, I, or R
+    @Pattern(regexp = "^[SIR]?$", message = "Result must be S (Sensible), I (Intermédiaire), or R (Résistant)")
     private String result;
 
     private BigDecimal diameterMm;

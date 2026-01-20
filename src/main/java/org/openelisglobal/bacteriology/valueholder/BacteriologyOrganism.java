@@ -1,18 +1,20 @@
 package org.openelisglobal.bacteriology.valueholder;
 
 import java.sql.Timestamp;
+
 import org.openelisglobal.common.valueholder.BaseObject;
 
 public class BacteriologyOrganism extends BaseObject<Integer> {
 
-    private Integer id;
+    private static final long serialVersionUID = 1L;
+	private Integer id;
     private Integer resultGroupId;
     private Integer organismNumber; // 1, 2, or 3
     private String organismType; // BACTERIA or YEAST
     private Integer organismNameDictId;
     private String organismNameText;
-    private String gramType; // POSITIVE, NEGATIVE
-    private String groupingMode; // Isolated, Clustered, Chains, etc.
+    private String gramType; 
+    private String groupingMode; 
     private Boolean capsulePresence;
     private String otherCharacteristics;
     private Boolean isActive = true;

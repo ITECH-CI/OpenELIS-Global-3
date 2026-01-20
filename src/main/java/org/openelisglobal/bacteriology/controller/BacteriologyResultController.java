@@ -246,19 +246,50 @@ public class BacteriologyResultController {
 
     private BacteriologyResultData convertFormToResultData(BacteriologyResultForm form) {
         BacteriologyResultData resultData = new BacteriologyResultData();
+        Timestamp now = new Timestamp(System.currentTimeMillis());
 
-        // For now, we'll focus on organisms. Macroscopy and microscopy results
-        // would typically be handled through standard result entry
-        // and stored in the standard result table
+        // Create macroscopy groups if macroscopy results are provided
+        if (form.getMacroscopyResults() != null && !form.getMacroscopyResults().isEmpty()) {
+            List<BacteriologyResultGroup> macroscopyGroups = new ArrayList<>();
+            BacteriologyResultGroup macroscopyGroup = new BacteriologyResultGroup();
+            macroscopyGroup.setAnalysisId(form.getAnalysisId());
+            macroscopyGroup.setGroupType("MACROSCOPY");
+            macroscopyGroup.setDisplayOrder(1);
+            macroscopyGroup.setIsActive(true);
+            macroscopyGroup.setCreatedDate(now);
+            macroscopyGroups.add(macroscopyGroup);
+            resultData.setMacroscopyGroups(macroscopyGroups);
+
+            // Note: The actual test result values in macroscopyResults map (testId -> dictionaryId)
+            // should be saved to the standard result table via the Result service.
+            // This is handled separately from the bacteriology workflow.
+        }
+
+        // Create microscopy groups if microscopy results are provided
+        if (form.getMicroscopyResults() != null && !form.getMicroscopyResults().isEmpty()) {
+            List<BacteriologyResultGroup> microscopyGroups = new ArrayList<>();
+            BacteriologyResultGroup microscopyGroup = new BacteriologyResultGroup();
+            microscopyGroup.setAnalysisId(form.getAnalysisId());
+            microscopyGroup.setGroupType("MICROSCOPY");
+            microscopyGroup.setDisplayOrder(1);
+            microscopyGroup.setIsActive(true);
+            microscopyGroup.setCreatedDate(now);
+            microscopyGroups.add(microscopyGroup);
+            resultData.setMicroscopyGroups(microscopyGroups);
+
+            // Note: The actual test result values in microscopyResults map (testId -> dictionaryId)
+            // should be saved to the standard result table via the Result service.
+            // This is handled separately from the bacteriology workflow.
+        }
 
         // Create culture group if culture result is provided
-        if (form.getCultureResult() != null) {
+        if (form.getCultureResult() != null && !form.getCultureResult().isEmpty()) {
             BacteriologyResultGroup cultureGroup = new BacteriologyResultGroup();
             cultureGroup.setAnalysisId(form.getAnalysisId());
             cultureGroup.setGroupType("CULTURE");
             cultureGroup.setDisplayOrder(1);
             cultureGroup.setIsActive(true);
-            cultureGroup.setCreatedDate(new Timestamp(System.currentTimeMillis()));
+            cultureGroup.setCreatedDate(now);
             resultData.setCultureGroup(cultureGroup);
         }
 

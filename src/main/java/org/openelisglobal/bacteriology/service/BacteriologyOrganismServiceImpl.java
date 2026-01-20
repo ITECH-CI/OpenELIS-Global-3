@@ -1,12 +1,13 @@
 package org.openelisglobal.bacteriology.service;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
+
 import org.openelisglobal.bacteriology.dao.BacteriologyOrganismDAO;
 import org.openelisglobal.bacteriology.valueholder.BacteriologyOrganism;
 import org.openelisglobal.common.log.LogEvent;
 import org.openelisglobal.common.service.BaseObjectServiceImpl;
+import org.openelisglobal.common.services.DisplayListService;
 import org.openelisglobal.dictionary.service.DictionaryService;
 import org.openelisglobal.dictionary.valueholder.Dictionary;
 import org.openelisglobal.dictionarycategory.service.DictionaryCategoryService;
@@ -18,9 +19,6 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class BacteriologyOrganismServiceImpl extends BaseObjectServiceImpl<BacteriologyOrganism, Integer>
         implements BacteriologyOrganismService {
-
-    private static final List<String> VALID_ORGANISM_TYPES = Arrays.asList("BACTERIA", "YEAST");
-    private static final List<String> VALID_GRAM_TYPES = Arrays.asList("POSITIVE", "NEGATIVE");
 
     @Autowired
     private BacteriologyOrganismDAO baseObjectDAO;
@@ -44,19 +42,6 @@ public class BacteriologyOrganismServiceImpl extends BaseObjectServiceImpl<Bacte
     @Transactional
     public BacteriologyOrganism save(BacteriologyOrganism organism) {
         try {
-            // Validate organism type
-            if (!isValidOrganismType(organism.getOrganismType())) {
-                throw new IllegalArgumentException(
-                        "Invalid organism type: " + organism.getOrganismType() + ". Must be BACTERIA or YEAST");
-            }
-
-            // Validate gram type if provided (only for bacteria)
-            if ("BACTERIA".equals(organism.getOrganismType()) && organism.getGramType() != null
-                    && !isValidGramType(organism.getGramType())) {
-                throw new IllegalArgumentException("Invalid gram type: " + organism.getGramType()
-                        + ". Must be POSITIVE or NEGATIVE");
-            }
-
             if (organism.getId() == null) {
                 Integer id = insert(organism);
                 organism.setId(id);
@@ -147,13 +132,4 @@ public class BacteriologyOrganismServiceImpl extends BaseObjectServiceImpl<Bacte
         }
     }
 
-    @Override
-    public boolean isValidOrganismType(String organismType) {
-        return organismType != null && VALID_ORGANISM_TYPES.contains(organismType.toUpperCase());
-    }
-
-    @Override
-    public boolean isValidGramType(String gramType) {
-        return gramType != null && VALID_GRAM_TYPES.contains(gramType.toUpperCase());
-    }
 }

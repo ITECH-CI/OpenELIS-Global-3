@@ -1,6 +1,9 @@
 package org.openelisglobal.bacteriology.daoimpl;
 
+import java.util.ArrayList;
 import java.util.List;
+
+import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.query.Query;
 import org.openelisglobal.bacteriology.dao.BacteriologyResultGroupDAO;
@@ -93,4 +96,32 @@ public class BacteriologyResultGroupDAOImpl extends BaseDAOImpl<BacteriologyResu
             throw new LIMSRuntimeException("Error in deactivateGroupsForAnalysis", e);
         }
     }
+
+	@Override
+	public Integer insert(BacteriologyResultGroup object) {
+        try {
+        	object.setSysUserId(null);
+            entityManager.persist(object);
+            entityManager.flush();
+            return object.getId();
+        } catch (HibernateException e) {
+            LogEvent.logError(e);
+            throw new LIMSRuntimeException("Error in " + this.getClass().getSimpleName() + " " + "insert", e);
+        }
+	}
+
+	@Override
+	public BacteriologyResultGroup update(BacteriologyResultGroup object) {
+        try {
+        	object.setSysUserId(null);
+        	BacteriologyResultGroup  dbObject = entityManager.merge(object);
+            entityManager.flush();
+            return dbObject;
+        } catch (HibernateException e) {
+            LogEvent.logError(e);
+            throw new LIMSRuntimeException("Error in " + this.getClass().getSimpleName() + " " + "save", e);
+        }
+	}
+	
+    
 }

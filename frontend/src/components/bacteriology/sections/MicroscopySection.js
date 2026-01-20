@@ -1,5 +1,5 @@
+import { Column, Grid, Section } from "@carbon/react";
 import { useMemo } from "react";
-import { Grid, Column, Section } from "@carbon/react";
 import { FormattedMessage } from "react-intl";
 import BacteriologyResultField from "../common/BacteriologyResultField";
 import ConditionalTestGroup from "../ConditionalTestGroup";
@@ -40,7 +40,7 @@ const MicroscopySection = ({
 
   // Clean test name by removing trailing parentheses (sample type)
   const cleanTestName = (testName) => {
-    // Remove trailing parentheses content like "(Secrétions vaginales)"
+    // Remove trailing parentheses content like "(Sécrétions vaginales)"
     return testName.replace(/\s*\([^)]*\)\s*$/, "").trim();
   };
 

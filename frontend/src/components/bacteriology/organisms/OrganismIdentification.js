@@ -1,24 +1,20 @@
-import React, { useState, useEffect } from "react";
 import {
-  Grid,
-  Column,
-  Select,
-  SelectItem,
-  RadioButtonGroup,
-  RadioButton,
-  TextInput,
-  Checkbox,
   Accordion,
   AccordionItem,
+  Checkbox,
+  Column,
+  Grid,
+  RadioButton,
+  RadioButtonGroup,
+  TextInput,
 } from "@carbon/react";
-import { FormattedMessage } from "react-intl";
+import { useEffect, useState } from "react";
 import { getFromOpenElisServer } from "../../utils/Utils";
 import {
-  API_ENDPOINTS,
-  ORGANISM_TYPES,
-  GRAM_TYPES,
+  ORGANISM_TYPES
 } from "../BacteriologyConstants";
 import AntibiogramTable from "./AntibiogramTable";
+import SearchableSelect from "./SearchableSelect";
 
 const OrganismIdentification = ({
   accessionNumber,
@@ -36,8 +32,8 @@ const OrganismIdentification = ({
   const idPrefix = accessionNumber ? accessionNumber.replace(/[^a-zA-Z0-9]/g, '_') : 'org';
 
   useEffect(() => {
-    // Load organism names from backend
-    getFromOpenElisServer(API_ENDPOINTS.ORGANISMS, (data) => {
+    // Load organism names from dictionary category "Bacteria"
+    getFromOpenElisServer("/rest/dictionary/category/Bacteria", (data) => {
       console.log("Organism Names Response:", data);
       setOrganismNames(data);
     });
@@ -63,6 +59,7 @@ const OrganismIdentification = ({
   };
 
   const isBacteria = organism.organismType === ORGANISM_TYPES.BACTERIA;
+  const isYeast = organism.organismType === ORGANISM_TYPES.YEAST;
   const showAntibiogram = isBacteria;
 
   return (
@@ -94,24 +91,18 @@ const OrganismIdentification = ({
           </Column>
 
           <Column lg={8} md={8} sm={4}>
-            <Select
+            <SearchableSelect
               id={`organismName_${idPrefix}_${organismNumber}`}
-              labelText="Nom de l'organisme"
-              value={organism.organismNameDictId || ""}
-              onChange={(e) =>
-                handleFieldChange("organismNameDictId", parseInt(e.target.value))
+              labelText="Nom de l'organisme (recherchez ou sélectionnez)"
+              items={organismNames}
+              selectedValue={organism.organismNameDictId}
+              onChange={(value) =>
+                handleFieldChange("organismNameDictId", value ? parseInt(value) : null)
               }
+              returnType="id"
               disabled={disabled || loading}
-            >
-              <SelectItem value="" text="Sélectionner..." />
-              {organismNames.map((name) => (
-                <SelectItem
-                  key={name.id}
-                  value={name.id}
-                  text={name.name}
-                />
-              ))}
-            </Select>
+              placeholder="Rechercher un organisme..."
+            />
 
             <TextInput
               id={`organismNameText_${idPrefix}_${organismNumber}`}
@@ -122,49 +113,34 @@ const OrganismIdentification = ({
               }
               disabled={disabled}
               placeholder="Si non trouvé dans la liste"
+              style={{ marginTop: "1rem" }}
             />
           </Column>
 
           {isBacteria && (
             <>
               <Column lg={4} md={4} sm={4}>
-                <Select
+                <SearchableSelect
                   id={`gramType_${idPrefix}_${organismNumber}`}
                   labelText="Type de Gram"
-                  value={organism.gramType || ""}
-                  onChange={(e) => handleFieldChange("gramType", e.target.value)}
+                  items={gramTypes}
+                  selectedValue={organism.gramType}
+                  onChange={(value) => handleFieldChange("gramType", value)}
                   disabled={disabled || loading}
-                >
-                  <SelectItem value="" text="Sélectionner..." />
-                  {gramTypes.map((type) => (
-                    <SelectItem
-                      key={type.id}
-                      value={type.value}
-                      text={type.value}
-                    />
-                  ))}
-                </Select>
+                  placeholder="Rechercher..."
+                />
               </Column>
 
               <Column lg={4} md={4} sm={4}>
-                <Select
+                <SearchableSelect
                   id={`groupingMode_${idPrefix}_${organismNumber}`}
                   labelText="Mode de regroupement"
-                  value={organism.groupingMode || ""}
-                  onChange={(e) =>
-                    handleFieldChange("groupingMode", e.target.value)
-                  }
+                  items={groupingModes}
+                  selectedValue={organism.groupingMode}
+                  onChange={(value) => handleFieldChange("groupingMode", value)}
                   disabled={disabled || loading}
-                >
-                  <SelectItem value="" text="Sélectionner..." />
-                  {groupingModes.map((mode) => (
-                    <SelectItem
-                      key={mode.id}
-                      value={mode.value}
-                      text={mode.value}
-                    />
-                  ))}
-                </Select>
+                  placeholder="Rechercher..."
+                />
               </Column>
 
               <Column lg={4} md={4} sm={4}>
@@ -193,6 +169,23 @@ const OrganismIdentification = ({
                 />
               </Column>
             </>
+          )}
+
+          {/* Show info message for yeast */}
+          {isYeast && (
+            <Column lg={16} md={8} sm={4}>
+              <div style={{
+                marginTop: "1rem",
+                padding: "1rem",
+                backgroundColor: "#f4f4f4",
+                borderRadius: "4px",
+                borderLeft: "4px solid #0f62fe"
+              }}>
+                <p style={{ margin: 0, color: "#161616", fontStyle: "italic" }}>
+                  Pour les levures, l'antibiogramme n'est pas disponible. Seule l'identification est requise.
+                </p>
+              </div>
+            </Column>
           )}
 
           {showAntibiogram && (

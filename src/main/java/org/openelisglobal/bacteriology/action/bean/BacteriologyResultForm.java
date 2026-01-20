@@ -27,6 +27,9 @@ public class BacteriologyResultForm {
     // Culture result - positive or negative (dictionary ID)
     private String cultureResult;
 
+    // Flora data - map of test ID to flora information (count and details)
+    private Map<String, Object> floraData = new HashMap<>();
+
     // Organisms identified (1-3)
     @Valid
     private List<BacteriologyOrganismBean> organisms = new ArrayList<>();
@@ -72,6 +75,14 @@ public class BacteriologyResultForm {
 
     public void setCultureResult(String cultureResult) {
         this.cultureResult = cultureResult;
+    }
+
+    public Map<String, Object> getFloraData() {
+        return floraData;
+    }
+
+    public void setFloraData(Map<String, Object> floraData) {
+        this.floraData = floraData;
     }
 
     public List<BacteriologyOrganismBean> getOrganisms() {

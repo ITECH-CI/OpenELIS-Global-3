@@ -75,28 +75,50 @@ export const TestStepForm = ({ initialData, mode = "add", postCall }) => {
   const [ageRanges, setAgeRanges] = useState([{ raw: "Infinity", unit: "Y" }]);
 
   useEffect(() => {
-    if (resultTypeList.length > 0) {
+    if (resultTypeList && resultTypeList.length > 0) {
+      // Filter coded result types (Multiselect, Cascading multiselect, Select List)
       const codedList = resultTypeList
         .filter(
           (item) =>
-            item.value === "Multiselect" ||
-            item.value === "Cascading multiselect" ||
-            item.value === "Select List",
+            item?.value === "Multiselect" ||
+            item?.value === "Cascading multiselect" ||
+            item?.value === "Select List",
         )
-        .map((item) => item.id);
+        .map((item) => item.id)
+        .filter(Boolean); // Remove any undefined/null values
       setCodedResultList(codedList);
 
+      // Filter free text result types (Free text, Alphanumeric)
       const freeTextList = resultTypeList
         .filter(
-          (item) => item.value === "Free text" || item.value === "Alphanumeric",
+          (item) => item?.value === "Free text" || item?.value === "Alphanumeric",
         )
-        .map((item) => item.id);
+        .map((item) => item.id)
+        .filter(Boolean); // Remove any undefined/null values
       setFreeResultList(freeTextList);
 
-      const numericId = resultTypeList.find(
-        (item) => item.value === "Numeric",
-      ).id;
-      setNumericResultId(numericId);
+      // Find numeric result type
+      const numericItem = resultTypeList.find(
+        (item) => item?.value === "Numeric",
+      );
+      if (numericItem?.id) {
+        setNumericResultId(numericItem.id);
+      } else {
+        console.warn(
+          "[TestStepForm] Warning: 'Numeric' result type not found in resultTypeList.",
+          "\nAvailable result types:", resultTypeList.map(item => item?.value || 'undefined'),
+          "\nCurrent test data:", formData
+        );
+      }
+    } else {
+      console.warn(
+        "[TestStepForm] Warning: resultTypeList is empty or undefined.",
+        "\nCurrent test data:", formData
+      );
+      // Reset to empty arrays if resultTypeList is empty or undefined
+      setCodedResultList([]);
+      setFreeResultList([]);
+      setNumericResultId(null);
     }
   }, [resultTypeList]);
 

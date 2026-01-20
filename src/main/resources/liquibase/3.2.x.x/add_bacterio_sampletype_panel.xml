@@ -143,13 +143,13 @@
     <changeSet author="CIV developer Group"
         id="add-bacterio-sampletype-panel-11">
         <preConditions onFail="MARK_RAN">
-            <sqlCheck expectedResult="1"><![CDATA[SELECT count(*) FROM type_of_sample WHERE description ='Secrétions vaginales' LIMIT 1]]></sqlCheck>
+            <sqlCheck expectedResult="1"><![CDATA[SELECT count(*) FROM type_of_sample WHERE description ='Sécrétions vaginales' LIMIT 1]]></sqlCheck>
             <sqlCheck expectedResult="1"><![CDATA[SELECT count(*) FROM panel WHERE name ='ECB-PV' LIMIT 1]]></sqlCheck>
         </preConditions>
         <sql>
             <![CDATA[
             INSERT INTO clinlims.sampletype_panel(id,sample_type_id,panel_id) VALUES
-            (nextval('sample_type_panel_seq'),(select id from clinlims.type_of_sample where description ='Secrétions vaginales' limit 1),
+            (nextval('sample_type_panel_seq'),(select id from clinlims.type_of_sample where description ='Sécrétions vaginales' limit 1),
             (select id from clinlims.panel where name ='ECB-PV' limit 1));
             ]]>
         </sql>
@@ -158,13 +158,13 @@
     <changeSet author="CIV developer Group"
         id="add-bacterio-sampletype-panel-12">
         <preConditions onFail="MARK_RAN">
-            <sqlCheck expectedResult="1"><![CDATA[SELECT count(*) FROM type_of_sample WHERE description ='Secrétions vaginales' LIMIT 1]]></sqlCheck>
+            <sqlCheck expectedResult="1"><![CDATA[SELECT count(*) FROM type_of_sample WHERE description ='Sécrétions vaginales' LIMIT 1]]></sqlCheck>
             <sqlCheck expectedResult="1"><![CDATA[SELECT count(*) FROM panel WHERE name ='ECB-COL' LIMIT 1]]></sqlCheck>
         </preConditions>
         <sql>
             <![CDATA[
             INSERT INTO clinlims.sampletype_panel(id,sample_type_id,panel_id) VALUES
-            (nextval('sample_type_panel_seq'),(select id from clinlims.type_of_sample where description ='Secrétions vaginales' limit 1),
+            (nextval('sample_type_panel_seq'),(select id from clinlims.type_of_sample where description ='Sécrétions vaginales' limit 1),
             (select id from clinlims.panel where name ='ECB-COL' limit 1));
             ]]>
         </sql>
@@ -173,13 +173,13 @@
     <changeSet author="CIV developer Group"
         id="add-bacterio-sampletype-panel-13">
         <preConditions onFail="MARK_RAN">
-            <sqlCheck expectedResult="1"><![CDATA[SELECT count(*) FROM type_of_sample WHERE description ='Secrétions vaginales' LIMIT 1]]></sqlCheck>
+            <sqlCheck expectedResult="1"><![CDATA[SELECT count(*) FROM type_of_sample WHERE description ='Sécrétions vaginales' LIMIT 1]]></sqlCheck>
             <sqlCheck expectedResult="1"><![CDATA[SELECT count(*) FROM panel WHERE name ='ECB-MUQUEUSE' LIMIT 1]]></sqlCheck>
         </preConditions>
         <sql>
             <![CDATA[
             INSERT INTO clinlims.sampletype_panel(id,sample_type_id,panel_id) VALUES
-            (nextval('sample_type_panel_seq'),(select id from clinlims.type_of_sample where description ='Secrétions vaginales' limit 1),
+            (nextval('sample_type_panel_seq'),(select id from clinlims.type_of_sample where description ='Sécrétions vaginales' limit 1),
             (select id from clinlims.panel where name ='ECB-MUQUEUSE' limit 1));
             ]]>
         </sql>
@@ -188,13 +188,13 @@
     <changeSet author="CIV developer Group"
         id="add-bacterio-sampletype-panel-14">
         <preConditions onFail="MARK_RAN">
-            <sqlCheck expectedResult="1"><![CDATA[SELECT count(*) FROM type_of_sample WHERE description ='Secrétions vaginales' LIMIT 1]]></sqlCheck>
+            <sqlCheck expectedResult="1"><![CDATA[SELECT count(*) FROM type_of_sample WHERE description ='Sécrétions vaginales' LIMIT 1]]></sqlCheck>
             <sqlCheck expectedResult="1"><![CDATA[SELECT count(*) FROM panel WHERE name ='ECB-VULVE' LIMIT 1]]></sqlCheck>
         </preConditions>
         <sql>
             <![CDATA[
             INSERT INTO clinlims.sampletype_panel(id,sample_type_id,panel_id) VALUES
-            (nextval('sample_type_panel_seq'),(select id from clinlims.type_of_sample where description ='Secrétions vaginales' limit 1),
+            (nextval('sample_type_panel_seq'),(select id from clinlims.type_of_sample where description ='Sécrétions vaginales' limit 1),
             (select id from clinlims.panel where name ='ECB-VULVE' limit 1));
             ]]>
         </sql>
@@ -203,13 +203,13 @@
     <changeSet author="CIV developer Group"
         id="add-bacterio-sampletype-panel-15">
         <preConditions onFail="MARK_RAN">
-            <sqlCheck expectedResult="1"><![CDATA[SELECT count(*) FROM type_of_sample WHERE description ='Secrétions urétrales' LIMIT 1]]></sqlCheck>
+            <sqlCheck expectedResult="1"><![CDATA[SELECT count(*) FROM type_of_sample WHERE description ='Sécrétions urétrales' LIMIT 1]]></sqlCheck>
             <sqlCheck expectedResult="1"><![CDATA[SELECT count(*) FROM panel WHERE name ='ECB-PU' LIMIT 1]]></sqlCheck>
         </preConditions>
         <sql>
             <![CDATA[
             INSERT INTO clinlims.sampletype_panel(id,sample_type_id,panel_id) VALUES
-            (nextval('sample_type_panel_seq'),(select id from clinlims.type_of_sample where description ='Secrétions urétrales' limit 1),
+            (nextval('sample_type_panel_seq'),(select id from clinlims.type_of_sample where description ='Sécrétions urétrales' limit 1),
             (select id from clinlims.panel where name ='ECB-PU' limit 1));
             ]]>
         </sql>

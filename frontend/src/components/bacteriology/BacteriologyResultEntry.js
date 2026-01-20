@@ -1,22 +1,22 @@
-import React, { useState, useEffect, useContext } from "react";
+import { Reset, Save } from "@carbon/icons-react";
 import {
-  Form,
-  Stack,
   Button,
-  InlineLoading,
   ButtonSet,
+  Form,
+  InlineLoading,
+  Stack,
 } from "@carbon/react";
-import { Save, Reset } from "@carbon/icons-react";
+import { useContext, useEffect, useState } from "react";
 import { FormattedMessage } from "react-intl";
+import { NotificationContext } from "../layout/Layout";
 import {
   getFromOpenElisServer,
   postToOpenElisServerJsonResponse,
 } from "../utils/Utils";
-import { NotificationContext } from "../layout/Layout";
 import { API_ENDPOINTS } from "./BacteriologyConstants";
+import CultureSection from "./sections/CultureSection";
 import MacroscopySection from "./sections/MacroscopySection";
 import MicroscopySection from "./sections/MicroscopySection";
-import CultureSection from "./sections/CultureSection";
 import ResultHeader from "./sections/ResultHeader";
 
 const BacteriologyResultEntry = ({
@@ -73,8 +73,8 @@ const BacteriologyResultEntry = ({
     setSaving(true);
 
     const formData = {
-      analysisId,
-      sysUserId,
+      analysisId: parseInt(analysisId),
+      sysUserId: parseInt(sysUserId),
       macroscopyResults,
       microscopyResults,
       floraData,
@@ -82,9 +82,13 @@ const BacteriologyResultEntry = ({
       organisms: organisms.map((organism, index) => ({
         ...organism,
         organismNumber: index + 1,
+        // Filter out antibiograms that don't have an antibiotic selected
+        antibiograms: (organism.antibiograms || []).filter(
+          (ab) => ab.antibioticDictId && ab.antibioticDictId !== ""
+        ),
       })),
     };
-
+console.log("Saving Bacteriology Results:", formData);
     postToOpenElisServerJsonResponse(
       API_ENDPOINTS.SAVE_RESULTS,
       JSON.stringify(formData),
@@ -161,6 +165,7 @@ const BacteriologyResultEntry = ({
 
         <CultureSection
           accessionNumber={accessionNumber}
+          testResults={testResults}
           cultureResult={cultureResult}
           onCultureResultChange={handleCultureResultChange}
           organisms={organisms}

@@ -16,7 +16,7 @@ VALUES
   ('Minime','Minime','dictionary.bacterio.minime',400001),
   ('Moyen','Moyen','dictionary.bacterio.moyen',400002),
   ('Abondante','Abondante','dictionary.bacterio.abondante',400003),
-  ('Cailloboteuses','Caillobote','dictionary.bacterio.cailloboteuses',4000130),
+  ('Cailleboteuses','Caillebote','dictionary.bacterio.cailleboteuses',4000130),
   ('Moussantes','Moussantes','dictionary.bacterio.moussantes',4000131),
   ('Rougeatre','Rougeatre','dictionary.bacterio.rougeatre',4000132),
   ('Resistant','Resistant','dictionary.bacterio.resistant',1),

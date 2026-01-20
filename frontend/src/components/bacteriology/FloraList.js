@@ -40,13 +40,13 @@ const FloraList = ({
     Promise.all([
       new Promise((resolve) => {
         getFromOpenElisServer(
-          "/rest/dictionary-category/Bacteriology Flora Gram Type",
+          "/rest/dictionary/category/Bacteriology Flora Gram Type",
           (data) => resolve(data || []),
         );
       }),
       new Promise((resolve) => {
         getFromOpenElisServer(
-          "/rest/dictionary-category/Bacteriology Flora Grouping Mode",
+          "/rest/dictionary/category/Bacteriology Flora Grouping Mode",
           (data) => resolve(data || []),
         );
       }),

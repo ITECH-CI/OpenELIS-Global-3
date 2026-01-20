@@ -4,7 +4,7 @@
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
 
-    <changeSet id="1" author="system" context="ci">
+    <changeSet id="1" author="pkomena">
         <comment>Add dictionary categories for bacteriology</comment>
 
         <!-- Category: Bacteria (Nom des organismes) -->
@@ -36,14 +36,14 @@
         </sql>
     </changeSet>
 
-    <changeSet id="2" author="system" context="ci">
+    <changeSet id="2" author="pkomena">
         <comment>Add grouping mode dictionary values</comment>
 
         <sql>
             WITH category AS (
                 SELECT id FROM clinlims.dictionary_category WHERE name = 'Bacteriology Grouping Mode' LIMIT 1
             )
-            INSERT INTO clinlims.dictionary (id, is_active, dict_entry, lastupdated, category_id, display_key, sort_order)
+            INSERT INTO clinlims.dictionary (id, is_active, dict_entry, lastupdated, dictionary_category_id, display_key, sort_order)
             SELECT
                 nextval('clinlims.dictionary_seq'),
                 'Y',
@@ -63,20 +63,20 @@
             ) AS data(entry, sort_ord)
             WHERE NOT EXISTS (
                 SELECT 1 FROM clinlims.dictionary d
-                JOIN category c ON d.category_id = c.id
+                JOIN category c ON d.dictionary_category_id = c.id
                 WHERE d.dict_entry = data.entry
             );
         </sql>
     </changeSet>
 
-    <changeSet id="3" author="system" context="ci">
+    <changeSet id="3" author="pkomena" >
         <comment>Add Gram type dictionary values</comment>
 
         <sql>
             WITH category AS (
                 SELECT id FROM clinlims.dictionary_category WHERE name = 'Bacteriology Gram Type' LIMIT 1
             )
-            INSERT INTO clinlims.dictionary (id, is_active, dict_entry, lastupdated, category_id, display_key, sort_order)
+            INSERT INTO clinlims.dictionary (id, is_active, dict_entry, lastupdated, dictionary_category_id, display_key, sort_order)
             SELECT
                 nextval('clinlims.dictionary_seq'),
                 'Y',
@@ -95,20 +95,20 @@
             ) AS data(entry, sort_ord)
             WHERE NOT EXISTS (
                 SELECT 1 FROM clinlims.dictionary d
-                JOIN category c ON d.category_id = c.id
+                JOIN category c ON d.dictionary_category_id = c.id
                 WHERE d.dict_entry = data.entry
             );
         </sql>
     </changeSet>
 
-    <changeSet id="4" author="system" context="ci">
+    <changeSet id="4" author="pkomena" >
         <comment>Add culture result dictionary values</comment>
 
         <sql>
             WITH category AS (
                 SELECT id FROM clinlims.dictionary_category WHERE name = 'Bacteriology Culture Result' LIMIT 1
             )
-            INSERT INTO clinlims.dictionary (id, is_active, dict_entry, lastupdated, category_id, display_key, sort_order)
+            INSERT INTO clinlims.dictionary (id, is_active, dict_entry, lastupdated, dictionary_category_id, display_key, sort_order)
             SELECT
                 nextval('clinlims.dictionary_seq'),
                 'Y',
@@ -124,20 +124,20 @@
             ) AS data(entry, sort_ord)
             WHERE NOT EXISTS (
                 SELECT 1 FROM clinlims.dictionary d
-                JOIN category c ON d.category_id = c.id
+                JOIN category c ON d.dictionary_category_id = c.id
                 WHERE d.dict_entry = data.entry
             );
         </sql>
     </changeSet>
 
-    <changeSet id="5" author="system" context="ci">
+    <changeSet id="5" author="pkomena" >
         <comment>Add some common bacteria to dictionary</comment>
 
         <sql>
             WITH category AS (
                 SELECT id FROM clinlims.dictionary_category WHERE name = 'Bacteria' LIMIT 1
             )
-            INSERT INTO clinlims.dictionary (id, is_active, dict_entry, lastupdated, category_id, display_key, sort_order)
+            INSERT INTO clinlims.dictionary (id, is_active, dict_entry, lastupdated, dictionary_category_id, display_key, sort_order)
             SELECT
                 nextval('clinlims.dictionary_seq'),
                 'Y',
@@ -165,7 +165,7 @@
             ) AS data(entry, sort_ord)
             WHERE NOT EXISTS (
                 SELECT 1 FROM clinlims.dictionary d
-                JOIN category c ON d.category_id = c.id
+                JOIN category c ON d.dictionary_category_id = c.id
                 WHERE d.dict_entry = data.entry
             );
         </sql>

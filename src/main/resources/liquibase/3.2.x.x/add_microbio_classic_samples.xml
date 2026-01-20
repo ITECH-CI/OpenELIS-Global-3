@@ -105,46 +105,32 @@ SELECT count(*) FROM clinlims.localization WHERE french = 'Urines'
             <column name="lastupdated" valueDate="now()" />
         </insert>
     </changeSet>
-    <!-- Secrétions vaginales -->
+    <!-- Sécrétions vaginales -->
     <changeSet author="CIV developer Group" id="20242622150">
         <preConditions onFail="MARK_RAN">
             <sqlCheck expectedResult="0"><![CDATA[
-SELECT count(*) FROM clinlims.localization WHERE french = 'Secrétions vaginales'
+SELECT count(*) FROM clinlims.localization WHERE french = 'Sécrétions vaginales'
 ]]></sqlCheck>
         </preConditions>
         <insert tableName="localization" schemaName="clinlims">
             <column name="id" valueSequenceNext="localization_seq" />
             <column name="description" value="sampleType name" />
             <column name="english" value="vaginal secretion" />
-            <column name="french" value="Secrétions vaginales" />
+            <column name="french" value="Sécrétions vaginales" />
             <column name="lastupdated" valueDate="now()" />
         </insert>
     </changeSet>
     <changeSet author="CIV developer Group" id="20242622151">
         <preConditions onFail="MARK_RAN">
             <sqlCheck expectedResult="0"><![CDATA[
-SELECT count(*) FROM clinlims.localization WHERE french = 'Secrétions urétrales'
+SELECT count(*) FROM clinlims.localization WHERE french = 'Sécrétions urétrales'
 ]]></sqlCheck>
         </preConditions>
         <insert tableName="localization" schemaName="clinlims">
             <column name="id" valueSequenceNext="localization_seq" />
             <column name="description" value="sampleType name" />
             <column name="english" value="urethral secretions" />
-            <column name="french" value="Secrétions urétrales" />
-            <column name="lastupdated" valueDate="now()" />
-        </insert>
-    </changeSet>
-    <changeSet author="CIV developer Group" id="20242622152">
-        <preConditions onFail="MARK_RAN">
-            <sqlCheck expectedResult="0"><![CDATA[
-SELECT count(*) FROM clinlims.localization WHERE french = 'Liquide d''ascite'
-]]></sqlCheck>
-        </preConditions>
-        <insert tableName="localization" schemaName="clinlims">
-            <column name="id" valueSequenceNext="localization_seq" />
-            <column name="description" value="sampleType name" />
-            <column name="english" value="Ascitic fluid" />
-            <column name="french" value="Liquide d'ascite" />
+            <column name="french" value="Sécrétions urétrales" />
             <column name="lastupdated" valueDate="now()" />
         </insert>
     </changeSet>
@@ -327,17 +313,17 @@ SELECT count(*) FROM clinlims.type_of_sample WHERE description = 'Matériels (Pr
             <tableExists tableName="type_of_sample"
                 schemaName="clinlims" />
             <sqlCheck expectedResult="0"><![CDATA[
-SELECT count(*) FROM clinlims.type_of_sample WHERE description = 'Secrétions vaginales'
+SELECT count(*) FROM clinlims.type_of_sample WHERE description = 'Sécrétions vaginales'
 ]]></sqlCheck>
         </preConditions>
         <insert tableName="type_of_sample" schemaName="clinlims">
             <column name="id" valueSequenceNext="type_of_sample_seq" />
-            <column name="description" value="Secrétions vaginales" />
+            <column name="description" value="Sécrétions vaginales" />
             <column name="domain" value="H" />
             <column name="local_abbrev" value="CrachatExp" />
             <column name="is_active" valueBoolean="true" />
             <column name="name_localization_id"
-                valueComputed="(SELECT id FROM clinlims.localization WHERE french = 'Secrétions vaginales' limit 1)" />
+                valueComputed="(SELECT id FROM clinlims.localization WHERE french = 'Sécrétions vaginales' limit 1)" />
             <column name="display_key"
                 value="Sample.type.secretionsvaginales" />
         </insert>
@@ -347,38 +333,19 @@ SELECT count(*) FROM clinlims.type_of_sample WHERE description = 'Secrétions va
             <tableExists tableName="type_of_sample"
                 schemaName="clinlims" />
             <sqlCheck expectedResult="0"><![CDATA[
-SELECT count(*) FROM clinlims.type_of_sample WHERE description = 'Secrétions urétrales'
+SELECT count(*) FROM clinlims.type_of_sample WHERE description = 'Sécrétions urétrales'
 ]]></sqlCheck>
         </preConditions>
         <insert tableName="type_of_sample" schemaName="clinlims">
             <column name="id" valueSequenceNext="type_of_sample_seq" />
-            <column name="description" value="Secrétions urétrales" />
+            <column name="description" value="Sécrétions urétrales" />
             <column name="domain" value="H" />
             <column name="local_abbrev" value="CrachatExp" />
             <column name="is_active" valueBoolean="true" />
             <column name="name_localization_id"
-                valueComputed="(SELECT id FROM clinlims.localization WHERE french = 'Secrétions urétrales' limit 1)" />
+                valueComputed="(SELECT id FROM clinlims.localization WHERE french = 'Sécrétions urétrales' limit 1)" />
             <column name="display_key"
                 value="Sample.type.secretionsuretales" />
-        </insert>
-    </changeSet>
-    <changeSet author="CIV developer Group" id="20241222172">
-        <preConditions onFail="MARK_RAN">
-            <tableExists tableName="type_of_sample"
-                schemaName="clinlims" />
-            <sqlCheck expectedResult="0"><![CDATA[
-SELECT count(*) FROM clinlims.type_of_sample WHERE description = 'Liquide d''ascite'
-]]></sqlCheck>
-        </preConditions>
-        <insert tableName="type_of_sample" schemaName="clinlims">
-            <column name="id" valueSequenceNext="type_of_sample_seq" />
-            <column name="description" value="Liquide d'ascite" />
-            <column name="domain" value="H" />
-            <column name="local_abbrev" value="CrachatExp" />
-            <column name="is_active" valueBoolean="true" />
-            <column name="name_localization_id"
-                valueComputed="(SELECT id FROM clinlims.localization WHERE french =  'Liquide d''ascite' limit 1)" />
-            <column name="display_key" value="Sample.type.liquideascite" />
         </insert>
     </changeSet>
     <!-- Add Bacterio test section -->
@@ -414,14 +381,5 @@ SELECT count(*) FROM clinlims.unit_of_measure WHERE name = '/champ'
             <column name="description" value="num/champ" />
             <column name="lastupdated" valueDate="now()" />
         </insert>
-    </changeSet>
-    <changeSet author="CIV developer Group" id="2025010915">
-        <!-- Mise à jour des enregistrements spécifiques au système 'LogbookResults:bacteriology' -->
-        <update tableName="system_module_url" schemaName="clinlims">
-            <column name="url_path" value="/LogbooKbacterioResults" />
-            <where><![CDATA[
-url_path = '/LogbookResults' AND system_module_id = (SELECT id FROM clinlims.system_module WHERE name = 'LogbookResults:bacteriology')
-]]></where>
-        </update>
     </changeSet>
 </databaseChangeLog>

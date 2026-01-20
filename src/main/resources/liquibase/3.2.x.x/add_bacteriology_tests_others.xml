@@ -1,0 +1,2034 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+     http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+    <property name="now" value="now()" dbms="postgresql" />
+    <changeSet id="1-add-normal-culture-result-dictionary-categories" author="pkomena">
+        <comment>Add additional dictionary categories for bacteriology tests</comment>
+        <sql><![CDATA[
+            INSERT INTO clinlims.dictionary_category (id, name, description, lastupdated)
+            SELECT nextval('clinlims.dictionary_category_seq'), 'CulureNRes', 'CultureNRes', now()
+            WHERE NOT EXISTS (SELECT 1 FROM clinlims.dictionary_category WHERE name = 'CulureNRes');
+            INSERT INTO clinlims.dictionary_category (id, name, description, lastupdated)
+            SELECT nextval('clinlims.dictionary_category_seq'), 'Bacteriology Culture Gonorrhoeae', 'CultureSRes', now()
+            WHERE NOT EXISTS (SELECT 1 FROM clinlims.dictionary_category WHERE name = 'Bacteriology Culture Gonorrhoeae');
+            INSERT INTO clinlims.dictionary_category (id, name, description, lastupdated)
+            SELECT nextval('clinlims.dictionary_category_seq'), 'Bacteriology Capsule', 'Capsule', now()
+            WHERE NOT EXISTS (SELECT 1 FROM clinlims.dictionary_category WHERE name = 'Bacteriology Capsule');
+            INSERT INTO clinlims.dictionary_category (id, name, description, lastupdated)
+            SELECT nextval('clinlims.dictionary_category_seq'), 'Bacteriology GramType', 'GramType', now()
+            WHERE NOT EXISTS (SELECT 1 FROM clinlims.dictionary_category WHERE name = 'Bacteriology GramType');
+            INSERT INTO clinlims.dictionary_category (id, name, description, lastupdated)
+            SELECT nextval('clinlims.dictionary_category_seq'), 'Bacteriology GroupMode', 'GroupMode', now()
+            WHERE NOT EXISTS (SELECT 1 FROM clinlims.dictionary_category WHERE name = 'Bacteriology GroupMode');
+             ]]>
+        </sql>
+        
+    </changeSet>
+
+    <changeSet id="2-add-normal-culture-result-dictionaries" author="pkomena">
+        <sql>
+        <![CDATA[
+            INSERT INTO clinlims.dictionary (id, is_active, dict_entry, lastupdated, dictionary_category_id, display_key, sort_order)
+            SELECT
+                nextval('clinlims.dictionary_seq'),
+                'Y',
+                'Négative',
+                now(),
+                (SELECT id FROM clinlims.dictionary_category WHERE name = 'CulureNRes' LIMIT 1),
+                'dictionary.negative',
+                1
+            WHERE NOT EXISTS (
+                SELECT 1 FROM clinlims.dictionary d
+                JOIN clinlims.dictionary_category dc ON d.dictionary_category_id = dc.id
+                WHERE dc.name = 'CulureNRes' AND d.dict_entry = 'Négative'
+            );
+            INSERT INTO clinlims.dictionary (id, is_active, dict_entry, lastupdated, dictionary_category_id, display_key, sort_order)
+            SELECT
+                nextval('clinlims.dictionary_seq'),
+                'Y',
+                'Positive',
+                now(),
+                (SELECT id FROM clinlims.dictionary_category WHERE name = 'CulureNRes' LIMIT 1),
+                'dictionary.positive',
+                1
+            WHERE NOT EXISTS (
+                SELECT 1 FROM clinlims.dictionary d
+                JOIN clinlims.dictionary_category dc ON d.dictionary_category_id = dc.id
+                WHERE dc.name = 'CulureNRes' AND d.dict_entry = 'Positive'
+            );
+            INSERT INTO clinlims.dictionary (id, is_active, dict_entry, lastupdated, dictionary_category_id, display_key, sort_order)
+            SELECT
+                nextval('clinlims.dictionary_seq'),
+                'Y',
+                'Contaminée',
+                now(),
+                (SELECT id FROM clinlims.dictionary_category WHERE name = 'CulureNRes' LIMIT 1),
+                'dictionary.contaminee',
+                1
+            WHERE NOT EXISTS (
+                SELECT 1 FROM clinlims.dictionary d
+                JOIN clinlims.dictionary_category dc ON d.dictionary_category_id = dc.id
+                WHERE dc.name = 'CulureNRes' AND d.dict_entry = 'Contaminée'
+            );
+             ]]>
+        </sql>
+    </changeSet>
+    <changeSet id="3-add-gram-type-result-dictionaries" author="pkomena">
+        <sql>
+        <![CDATA[
+            INSERT INTO clinlims.dictionary (id, is_active, dict_entry, lastupdated, dictionary_category_id, display_key, sort_order)
+            SELECT
+                nextval('clinlims.dictionary_seq'),
+                'Y',
+                'Bacilles Gram négatif',
+                now(),
+                (SELECT id FROM clinlims.dictionary_category WHERE name = 'Bacteriology GramType' LIMIT 1),
+                'dictionary.bacteriology.gramtype.baccil.negative',
+                1
+            WHERE NOT EXISTS (
+                SELECT 1 FROM clinlims.dictionary d
+                JOIN clinlims.dictionary_category dc ON d.dictionary_category_id = dc.id
+                WHERE dc.name = 'Bacteriology GramType' AND d.dict_entry = 'Bacilles Gram négatif'
+            );
+            INSERT INTO clinlims.dictionary (id, is_active, dict_entry, lastupdated, dictionary_category_id, display_key, sort_order)
+            SELECT
+                nextval('clinlims.dictionary_seq'),
+                'Y',
+                'Bacilles Gram positif',
+                now(),
+                (SELECT id FROM clinlims.dictionary_category WHERE name = 'Bacteriology GramType' LIMIT 1),
+                'dictionary.bacteriology.gramtype.baccil.positive',
+                1
+            WHERE NOT EXISTS (
+                SELECT 1 FROM clinlims.dictionary d
+                JOIN clinlims.dictionary_category dc ON d.dictionary_category_id = dc.id
+                WHERE dc.name = 'Bacteriology GramType' AND d.dict_entry = 'Bacilles Gram positif'
+            );
+
+            INSERT INTO clinlims.dictionary (id, is_active, dict_entry, lastupdated, dictionary_category_id, display_key, sort_order)
+            SELECT
+                nextval('clinlims.dictionary_seq'),
+                'Y',
+                'Cocci Gram négatif',
+                now(),
+                (SELECT id FROM clinlims.dictionary_category WHERE name = 'Bacteriology GramType' LIMIT 1),
+                'dictionary.bacteriology.gramtype.cocci.negative',
+                1
+            WHERE NOT EXISTS (
+                SELECT 1 FROM clinlims.dictionary d
+                JOIN clinlims.dictionary_category dc ON d.dictionary_category_id = dc.id
+                WHERE dc.name = 'Bacteriology GramType' AND d.dict_entry = 'Cocci Gram négatif'
+            );
+            INSERT INTO clinlims.dictionary (id, is_active, dict_entry, lastupdated, dictionary_category_id, display_key, sort_order)
+            SELECT
+                nextval('clinlims.dictionary_seq'),
+                'Y',
+                'Cocci Gram positif',
+                now(),
+                (SELECT id FROM clinlims.dictionary_category WHERE name = 'Bacteriology GramType' LIMIT 1),
+                'dictionary.bacteriology.gramtype.cocci.positive',
+                1
+            WHERE NOT EXISTS (
+                SELECT 1 FROM clinlims.dictionary d
+                JOIN clinlims.dictionary_category dc ON d.dictionary_category_id = dc.id
+                WHERE dc.name = 'Bacteriology GramType' AND d.dict_entry = 'Cocci Gram positif'
+            );
+            INSERT INTO clinlims.dictionary (id, is_active, dict_entry, lastupdated, dictionary_category_id, display_key, sort_order)
+            SELECT
+                nextval('clinlims.dictionary_seq'),
+                'Y',
+                'Coccobacilles Gram négatif',
+                now(),
+                (SELECT id FROM clinlims.dictionary_category WHERE name = 'Bacteriology GramType' LIMIT 1),
+                'dictionary.bacteriology.gramtype.coccobac.negative',
+                1
+            WHERE NOT EXISTS (
+                SELECT 1 FROM clinlims.dictionary d
+                JOIN clinlims.dictionary_category dc ON d.dictionary_category_id = dc.id
+                WHERE dc.name = 'Bacteriology GramType' AND d.dict_entry = 'Coccobacilles Gram négatif'
+            );
+
+            INSERT INTO clinlims.dictionary (id, is_active, dict_entry, lastupdated, dictionary_category_id, display_key, sort_order)
+            SELECT
+                nextval('clinlims.dictionary_seq'),
+                'Y',
+                'Coccobacilles Gram positif',
+                now(),
+                (SELECT id FROM clinlims.dictionary_category WHERE name = 'Bacteriology GramType' LIMIT 1),
+                'dictionary.bacteriology.gramtype.coccobac.positive',
+                1
+            WHERE NOT EXISTS (
+                SELECT 1 FROM clinlims.dictionary d
+                JOIN clinlims.dictionary_category dc ON d.dictionary_category_id = dc.id
+                WHERE dc.name = 'Bacteriology GramType' AND d.dict_entry = 'Coccobacilles Gram positif'
+            );
+             ]]>
+        </sql>
+    </changeSet>
+
+     <changeSet id="4-add-group-mode-result-dictionaries" author="pkomena">
+        <sql>
+        <![CDATA[
+            INSERT INTO clinlims.dictionary (id, is_active, dict_entry, lastupdated, dictionary_category_id, display_key, sort_order)
+            SELECT
+                nextval('clinlims.dictionary_seq'),
+                'Y',
+                'Isolées',
+                now(),
+                (SELECT id FROM clinlims.dictionary_category WHERE name = 'Bacteriology GroupMode' LIMIT 1),
+                'dictionary.bacteriology.groupmode.isolees',
+                1
+            WHERE NOT EXISTS (
+                SELECT 1 FROM clinlims.dictionary d
+                JOIN clinlims.dictionary_category dc ON d.dictionary_category_id = dc.id
+                WHERE dc.name = 'Bacteriology GroupMode' AND d.dict_entry = 'Isolées'
+            );
+            INSERT INTO clinlims.dictionary (id, is_active, dict_entry, lastupdated, dictionary_category_id, display_key, sort_order)
+            SELECT
+                nextval('clinlims.dictionary_seq'),
+                'Y',
+                'Amas',
+                now(),
+                (SELECT id FROM clinlims.dictionary_category WHERE name = 'Bacteriology GroupMode' LIMIT 1),
+                'dictionary.bacteriology.groupmode.amas',
+                1
+            WHERE NOT EXISTS (
+                SELECT 1 FROM clinlims.dictionary d
+                JOIN clinlims.dictionary_category dc ON d.dictionary_category_id = dc.id
+                WHERE dc.name = 'Bacteriology GroupMode' AND d.dict_entry = 'Amas'
+            );
+
+            INSERT INTO clinlims.dictionary (id, is_active, dict_entry, lastupdated, dictionary_category_id, display_key, sort_order)
+            SELECT
+                nextval('clinlims.dictionary_seq'),
+                'Y',
+                'Courte chainette',
+                now(),
+                (SELECT id FROM clinlims.dictionary_category WHERE name = 'Bacteriology GroupMode' LIMIT 1),
+                'dictionary.bacteriology.groupmode.courte.chainette',
+                1
+            WHERE NOT EXISTS (
+                SELECT 1 FROM clinlims.dictionary d
+                JOIN clinlims.dictionary_category dc ON d.dictionary_category_id = dc.id
+                WHERE dc.name = 'Bacteriology GramType' AND d.dict_entry = 'Courte chainette'
+            );
+            INSERT INTO clinlims.dictionary (id, is_active, dict_entry, lastupdated, dictionary_category_id, display_key, sort_order)
+            SELECT
+                nextval('clinlims.dictionary_seq'),
+                'Y',
+                'Longue chainette',
+                now(),
+                (SELECT id FROM clinlims.dictionary_category WHERE name = 'Bacteriology GroupMode' LIMIT 1),
+                'dictionary.bacteriology.groupmode.longue.chainette',
+                1
+            WHERE NOT EXISTS (
+                SELECT 1 FROM clinlims.dictionary d
+                JOIN clinlims.dictionary_category dc ON d.dictionary_category_id = dc.id
+                WHERE dc.name = 'Bacteriology GramType' AND d.dict_entry = 'Longue chainette'
+            );
+
+            INSERT INTO clinlims.dictionary (id, is_active, dict_entry, lastupdated, dictionary_category_id, display_key, sort_order)
+            SELECT
+                nextval('clinlims.dictionary_seq'),
+                'Y',
+                'Grappe',
+                now(),
+                (SELECT id FROM clinlims.dictionary_category WHERE name = 'Bacteriology GroupMode' LIMIT 1),
+                'dictionary.bacteriology.groupmode.grappe',
+                1
+            WHERE NOT EXISTS (
+                SELECT 1 FROM clinlims.dictionary d
+                JOIN clinlims.dictionary_category dc ON d.dictionary_category_id = dc.id
+                WHERE dc.name = 'Bacteriology GroupMode' AND d.dict_entry = 'Grappe'
+            );
+
+            INSERT INTO clinlims.dictionary (id, is_active, dict_entry, lastupdated, dictionary_category_id, display_key, sort_order)
+            SELECT
+                nextval('clinlims.dictionary_seq'),
+                'Y',
+                'Tétrade',
+                now(),
+                (SELECT id FROM clinlims.dictionary_category WHERE name = 'Bacteriology GroupMode' LIMIT 1),
+                'dictionary.bacteriology.groupmode.tetrade',
+                1
+            WHERE NOT EXISTS (
+                SELECT 1 FROM clinlims.dictionary d
+                JOIN clinlims.dictionary_category dc ON d.dictionary_category_id = dc.id
+                WHERE dc.name = 'Bacteriology GroupMode' AND d.dict_entry = 'Tétrade'
+            );
+
+            INSERT INTO clinlims.dictionary (id, is_active, dict_entry, lastupdated, dictionary_category_id, display_key, sort_order)
+            SELECT
+                nextval('clinlims.dictionary_seq'),
+                'Y',
+                'Diplo',
+                now(),
+                (SELECT id FROM clinlims.dictionary_category WHERE name = 'Bacteriology GroupMode' LIMIT 1),
+                'dictionary.bacteriology.groupmode.diplo',
+                1
+            WHERE NOT EXISTS (
+                SELECT 1 FROM clinlims.dictionary d
+                JOIN clinlims.dictionary_category dc ON d.dictionary_category_id = dc.id
+                WHERE dc.name = 'Bacteriology GroupMode' AND d.dict_entry = 'Diplo'
+            );
+             ]]>
+        </sql>
+    </changeSet>
+
+    <changeSet id="5-add-culture-gonorrhoeae-values" author="pkomena">
+        <comment>Add culture gonorrhoeae result values</comment>
+
+        <sql>
+        <![CDATA[
+            WITH category AS (
+                SELECT id FROM clinlims.dictionary_category WHERE name = 'Bacteriology Culture Gonorrhoeae' LIMIT 1
+            )
+            INSERT INTO clinlims.dictionary (id, is_active, dict_entry, lastupdated, dictionary_category_id, display_key, sort_order)
+            SELECT
+                nextval('clinlims.dictionary_seq'),
+                'Y',
+                entry,
+                now(),
+                (SELECT id FROM category),
+                display,
+                sort_ord
+            FROM (VALUES
+                ('Négative', 'dictionary.bacterio.culture.gono.negative', 1),
+                ('Positive', 'dictionary.bacterio.culture.gono.positive', 2),
+                ('Neisseria gonorrhoeae Positive', 'dictionary.bacterio.culture.gono.ng_pos', 3),
+                ('Neisseria gonorrhoeae Négative', 'dictionary.bacterio.culture.gono.ng_neg', 4)
+            ) AS data(entry, display, sort_ord)
+            WHERE NOT EXISTS (
+                SELECT 1 FROM clinlims.dictionary d
+                JOIN category c ON d.dictionary_category_id = c.id
+                WHERE d.dict_entry = data.entry
+            );
+             ]]>
+        </sql>
+    </changeSet>
+
+    <changeSet id="6-add-capsule-values" author="pkomena">
+        <comment>Add capsule presence values</comment>
+
+        <sql>
+        <![CDATA[
+            WITH category AS (
+                SELECT id FROM clinlims.dictionary_category WHERE name = 'Bacteriology Capsule' LIMIT 1
+            )
+            INSERT INTO clinlims.dictionary (id, is_active, dict_entry, lastupdated, dictionary_category_id, display_key, sort_order)
+            SELECT
+                nextval('clinlims.dictionary_seq'),
+                'Y',
+                entry,
+                now(),
+                (SELECT id FROM category),
+                'dictionary.bacteriology.capsule.' || lower(replace(replace(entry, ' ', '_'), 'é', 'e')),
+                sort_ord
+            FROM (VALUES
+                ('Capsulé', 1),
+                ('Non Capsulé', 2)
+            ) AS data(entry, sort_ord)
+            WHERE NOT EXISTS (
+                SELECT 1 FROM clinlims.dictionary d
+                JOIN category c ON d.dictionary_category_id = c.id
+                WHERE d.dict_entry = data.entry
+            );
+             ]]>
+        </sql>
+    </changeSet>
+
+    <changeSet id="7-add-test-localizations-vaginal" author="pkomena">
+        <comment>Add localizations for vaginal secretion tests</comment>
+
+        <sql><![CDATA[
+            -- Culture tests
+            INSERT INTO clinlims.localization(id, description, english, french, lastupdated)
+            SELECT nextval('localization_seq'), 'test name', 'Culture - Vaginal Secretion', 'Culture - Sécrétions vaginales', now()
+            WHERE NOT EXISTS (SELECT 1 FROM clinlims.localization WHERE description = 'test name' AND french = 'Culture - Sécrétions vaginales');
+            INSERT INTO clinlims.localization(id, description, english, french, lastupdated)
+            SELECT nextval('localization_seq'), 'test report name', 'Culture - Vaginal Secretion', 'Culture - Sécrétions vaginales', now()
+            WHERE NOT EXISTS (SELECT 1 FROM clinlims.localization WHERE description = 'test report name' AND french = 'Culture - Sécrétions vaginales');
+
+            INSERT INTO clinlims.localization(id, description, english, french, lastupdated)
+            SELECT nextval('localization_seq'), 'test name', 'Culture - Cervix', 'Culture - Col', now()
+            WHERE NOT EXISTS (SELECT 1 FROM clinlims.localization WHERE description = 'test name' AND french = 'Culture - Col');
+            INSERT INTO clinlims.localization(id, description, english, french, lastupdated)
+            SELECT nextval('localization_seq'), 'test report name', 'Culture - Cervix', 'Culture - Col', now()
+            WHERE NOT EXISTS (SELECT 1 FROM clinlims.localization WHERE description = 'test report name' AND french = 'Culture - Col');
+        ]]></sql>
+    </changeSet>
+
+    <changeSet id="8-add-test-localizations-urethral" author="pkomena">
+        <comment>Add localizations for urethral secretion tests</comment>
+
+        <sql><![CDATA[
+            -- Macroscopie gland tests
+            INSERT INTO clinlims.localization(id, description, english, french, lastupdated)
+            SELECT nextval('localization_seq'), 'test name', 'Macroscopy - Discharge', 'Macroscopie - Ecoulement', now()
+            WHERE NOT EXISTS (SELECT 1 FROM clinlims.localization WHERE description = 'test name' AND french = 'Macroscopie - Ecoulement');
+            INSERT INTO clinlims.localization(id, description, english, french, lastupdated)
+            SELECT nextval('localization_seq'), 'test report name', 'Macroscopy - Discharge', 'Macroscopie - Ecoulement', now()
+            WHERE NOT EXISTS (SELECT 1 FROM clinlims.localization WHERE description = 'test report name' AND french = 'Macroscopie - Ecoulement');
+
+            INSERT INTO clinlims.localization(id, description, english, french, lastupdated)
+            SELECT nextval('localization_seq'), 'test name', 'Macroscopy - Gland - Abundance', 'Macroscopie - Gland - Abondance', now()
+            WHERE NOT EXISTS (SELECT 1 FROM clinlims.localization WHERE description = 'test name' AND french = 'Macroscopie - Gland - Abondance');
+            INSERT INTO clinlims.localization(id, description, english, french, lastupdated)
+            SELECT nextval('localization_seq'), 'test report name', 'Macroscopy - Gland - Abundance', 'Macroscopie - Gland - Abondance', now()
+            WHERE NOT EXISTS (SELECT 1 FROM clinlims.localization WHERE description = 'test report name' AND french = 'Macroscopie - Gland - Abondance');
+
+            INSERT INTO clinlims.localization(id, description, english, french, lastupdated)
+            SELECT nextval('localization_seq'), 'test name', 'Macroscopy - Gland - Aspect', 'Macroscopie - Gland - Aspect', now()
+            WHERE NOT EXISTS (SELECT 1 FROM clinlims.localization WHERE description = 'test name' AND french = 'Macroscopie - Gland - Aspect');
+            INSERT INTO clinlims.localization(id, description, english, french, lastupdated)
+            SELECT nextval('localization_seq'), 'test report name', 'Macroscopy - Gland - Aspect', 'Macroscopie - Gland - Aspect', now()
+            WHERE NOT EXISTS (SELECT 1 FROM clinlims.localization WHERE description = 'test report name' AND french = 'Macroscopie - Gland - Aspect');
+            
+            INSERT INTO clinlims.localization(id, description, english, french, lastupdated)
+            SELECT nextval('localization_seq'), 'test name', 'Macroscopy - Gland - Color', 'Macroscopie - Gland - Couleur', now()
+            WHERE NOT EXISTS (SELECT 1 FROM clinlims.localization WHERE description = 'test name' AND french = 'Macroscopie - Gland - Couleur');
+            INSERT INTO clinlims.localization(id, description, english, french, lastupdated)
+            SELECT nextval('localization_seq'), 'test report name', 'Macroscopy - Gland - Color', 'Macroscopie - Gland - Couleur', now()
+            WHERE NOT EXISTS (SELECT 1 FROM clinlims.localization WHERE description = 'test report name' AND french = 'Macroscopie - Gland - Couleur');
+
+            INSERT INTO clinlims.localization(id, description, english, french, lastupdated)
+            SELECT nextval('localization_seq'), 'test name', 'Macroscopy - Gland - Odor', 'Macroscopie - Gland - Autre', now()
+            WHERE NOT EXISTS (SELECT 1 FROM clinlims.localization WHERE description = 'test name' AND french = 'Macroscopie - Gland - Autre');
+            INSERT INTO clinlims.localization(id, description, english, french, lastupdated)
+            SELECT nextval('localization_seq'), 'test report name', 'Macroscopy - Gland - Odor', 'Macroscopie - Gland - Autre', now()
+            WHERE NOT EXISTS (SELECT 1 FROM clinlims.localization WHERE description = 'test report name' AND french = 'Macroscopie - Gland - Autre');
+
+            -- Culture urethral
+            INSERT INTO clinlims.localization(id, description, english, french, lastupdated)
+            SELECT nextval('localization_seq'), 'test name', 'Culture - Urethral Secretions', 'Culture - Sécrétions urétrales', now()
+            WHERE NOT EXISTS (SELECT 1 FROM clinlims.localization WHERE description = 'test name' AND french = 'Cultures - Sécrétions urétrales');
+            INSERT INTO clinlims.localization(id, description, english, french, lastupdated)
+            SELECT nextval('localization_seq'), 'test report name', 'Culture - Urethral Secretions', 'Culture - Sécrétions urétrales', now()
+            WHERE NOT EXISTS (SELECT 1 FROM clinlims.localization WHERE description = 'test report name' AND french = 'Culture - Sécrétions urétrales');
+        ]]></sql>
+    </changeSet>
+
+    <changeSet id="8-add-test-localizations-others-smapletye" author="pkomena">
+        <comment>Add localizations for others bacterio sample type</comment>
+
+    <sql><![CDATA[
+            -- Macroscopie gland tests
+            INSERT INTO clinlims.localization(id, description, english, french, lastupdated)
+            SELECT nextval('localization_seq'), 'test name', 'Microscopy - Smear Gram stain - Bacteria - Flora count', 'Microscopie - Frottis Coloration Gram - Bactéries - Nombre de flore', now()
+            WHERE NOT EXISTS (SELECT 1 FROM clinlims.localization WHERE description = 'test name' AND french = 'Microscopie - Frottis Coloration Gram - Bactéries - Nombre de flore');
+            INSERT INTO clinlims.localization(id, description, english, french, lastupdated)
+            SELECT nextval('localization_seq'), 'test report name', 'Microscopy - Smear Gram stain - Bacteria - Flora count', 'Microscopie - Frottis Coloration Gram - Bactéries - Nombre de flore', now()
+            WHERE NOT EXISTS (SELECT 1 FROM clinlims.localization WHERE description = 'test report name' AND french = 'Microscopie - Frottis Coloration Gram - Bactéries - Nombre de flore');
+
+            INSERT INTO clinlims.localization(id, description, english, french, lastupdated)
+            SELECT nextval('localization_seq'), 'test name', 'Microscopy - Gram Staining Smear - Bacteria - Gram Type', 'Microscopie - Frottis Coloration Gram - Bactéries - Type de Gram', now()
+            WHERE NOT EXISTS (SELECT 1 FROM clinlims.localization WHERE description = 'test name' AND french = 'Microscopie - Frottis Coloration Gram - Bactéries - Type de Gram');
+            INSERT INTO clinlims.localization(id, description, english, french, lastupdated)
+            SELECT nextval('localization_seq'), 'test report name', 'Microscopy - Gram Staining Smear - Bacteria - Gram Type', 'Microscopie - Frottis Coloration Gram - Bactéries - Type de Gram', now()
+            WHERE NOT EXISTS (SELECT 1 FROM clinlims.localization WHERE description = 'test report name' AND french = 'Microscopie - Frottis Coloration Gram - Bactéries - Type de Gram');
+
+            INSERT INTO clinlims.localization(id, description, english, french, lastupdated)
+            SELECT nextval('localization_seq'), 'test name', 'Microscopy - Smear - Gram staining - Bacteria - Grouping pattern', 'Microscopie - Frottis Coloration Gram - Bactéries - Mode de regroupement', now()
+            WHERE NOT EXISTS (SELECT 1 FROM clinlims.localization WHERE description = 'test name' AND french = 'Microscopie - Frottis Coloration Gram - Bactéries - Mode de regroupement');
+            INSERT INTO clinlims.localization(id, description, english, french, lastupdated)
+            SELECT nextval('localization_seq'), 'test report name', 'Microscopy - Smear - Gram staining - Bacteria - Grouping pattern', 'Microscopie - Frottis Coloration Gram - Bactéries - Mode de regroupement', now()
+            WHERE NOT EXISTS (SELECT 1 FROM clinlims.localization WHERE description = 'test report name' AND french = 'Microscopie - Frottis Coloration Gram - Bactéries - Mode de regroupement');
+
+            INSERT INTO clinlims.localization(id, description, english, french, lastupdated)
+            SELECT nextval('localization_seq'), 'test name', 'Microscopy - Smear Gram stain - Bacteria - Other characteristics', 'Microscopie - Frottis Coloration Gram - Bactéries - Autre caractère', now()
+            WHERE NOT EXISTS (SELECT 1 FROM clinlims.localization WHERE description = 'test name' AND french = 'Microscopie - Frottis Coloration Gram - Bactéries - Autre caractère');
+            INSERT INTO clinlims.localization(id, description, english, french, lastupdated)
+            SELECT nextval('localization_seq'), 'test report name', 'Microscopy - Smear Gram stain - Bacteria - Other characteristics', 'Microscopie - Frottis Coloration Gram - Bactéries - Autre caractère', now()
+            WHERE NOT EXISTS (SELECT 1 FROM clinlims.localization WHERE description = 'test report name' AND french = 'Microscopie - Frottis Coloration Gram - Bactéries - Autre caractère');
+            
+            INSERT INTO clinlims.localization(id, description, english, french, lastupdated)
+            SELECT nextval('localization_seq'), 'test name', 'Microscopy - Wet state Quantitative - Red blood cells', 'Microscopie - Etat frais Quantitatif - Hématies', now()
+            WHERE NOT EXISTS (SELECT 1 FROM clinlims.localization WHERE description = 'test name' AND french = 'Microscopie - Etat frais Quantitatif - Hématies');
+            INSERT INTO clinlims.localization(id, description, english, french, lastupdated)
+            SELECT nextval('localization_seq'), 'test report name', 'Microscopy - Wet state Quantitative - Red blood cells', 'Microscopie - Etat frais Quantitatif - Hématies', now()
+            WHERE NOT EXISTS (SELECT 1 FROM clinlims.localization WHERE description = 'test report name' AND french = 'Microscopie - Etat frais Quantitatif - Hématies');
+           
+            INSERT INTO clinlims.localization(id, description, english, french, lastupdated)
+            SELECT nextval('localization_seq'), 'test name', 'Microscopy - Wet state Quantitative - Leukocytes', 'Microscopie - Etat frais Quantitatif - Leucocytes', now()
+            WHERE NOT EXISTS (SELECT 1 FROM clinlims.localization WHERE description = 'test name' AND french = 'Microscopie - Etat frais Quantitatif - Leucocytes');
+            INSERT INTO clinlims.localization(id, description, english, french, lastupdated)
+            SELECT nextval('localization_seq'), 'test report name', 'Microscopy - Wet state Quantitative - Leukocytes', 'Microscopie - Etat frais Quantitatif - Leucocytes', now()
+            WHERE NOT EXISTS (SELECT 1 FROM clinlims.localization WHERE description = 'test report name' AND french = 'Microscopie - Etat frais Quantitatif - Leucocytes');
+        
+            INSERT INTO clinlims.localization(id, description, english, french, lastupdated)
+            SELECT nextval('localization_seq'), 'test name', 'Microscopy - Smear - Giemsa staining - Polymorphonuclear leukocytes', 'Microscopie - Frottis Coloration Giemsa - Polynucléaires', now()
+            WHERE NOT EXISTS (SELECT 1 FROM clinlims.localization WHERE description = 'test name' AND french = 'Microscopie - Frottis Coloration Giemsa - Polynucléaires');
+            INSERT INTO clinlims.localization(id, description, english, french, lastupdated)
+            SELECT nextval('localization_seq'), 'test report name', 'Microscopy - Smear - Giemsa staining - Polymorphonuclear leukocytes', 'Microscopie - Frottis Coloration Giemsa - Polynucléaires', now()
+            WHERE NOT EXISTS (SELECT 1 FROM clinlims.localization WHERE description = 'test report name' AND french = 'Microscopie - Frottis Coloration Giemsa - Polynucléaires');
+                        
+            INSERT INTO clinlims.localization(id, description, english, french, lastupdated)
+            SELECT nextval('localization_seq'), 'test name', 'Microscopy - Giemsa Staining Smear - Lymphocytes', 'Microscopie - Frottis Coloration Giemsa - Lymphocytes', now()
+            WHERE NOT EXISTS (SELECT 1 FROM clinlims.localization WHERE description = 'test name' AND french = 'Microscopie - Frottis Coloration Giemsa - Lymphocytes');
+            INSERT INTO clinlims.localization(id, description, english, french, lastupdated)
+            SELECT nextval('localization_seq'), 'test report name', 'Microscopy - Giemsa Staining Smear - Lymphocytes', 'Microscopie - Frottis Coloration Giemsa - Lymphocytes', now()
+            WHERE NOT EXISTS (SELECT 1 FROM clinlims.localization WHERE description = 'test report name' AND french = 'Microscopie - Frottis Coloration Giemsa - Lymphocytes');
+                       
+            INSERT INTO clinlims.localization(id, description, english, french, lastupdated)
+            SELECT nextval('localization_seq'), 'test name', 'Microscopy - Wet state Quantitative - Leukocytes', 'Microscopie - Etat frais Quantitatif - Leucocytes', now()
+            WHERE NOT EXISTS (SELECT 1 FROM clinlims.localization WHERE description = 'test name' AND french = 'Microscopie - Etat frais Quantitatif - Leucocytes');
+            INSERT INTO clinlims.localization(id, description, english, french, lastupdated)
+            SELECT nextval('localization_seq'), 'test report name', 'Microscopy - Wet state Quantitative - Leukocytes', 'Microscopie - Etat frais Quantitatif - Leucocytes', now()
+            WHERE NOT EXISTS (SELECT 1 FROM clinlims.localization WHERE description = 'test report name' AND french = 'Microscopie - Etat frais Quantitatif - Leucocytes');
+        
+            -- Culture - Others
+            INSERT INTO clinlims.localization(id, description, english, french, lastupdated)
+            SELECT nextval('localization_seq'), 'test name', 'Culture', 'Culture', now()
+            WHERE NOT EXISTS (SELECT 1 FROM clinlims.localization WHERE description = 'test name' AND french = 'Culture');
+            INSERT INTO clinlims.localization(id, description, english, french, lastupdated)
+            SELECT nextval('localization_seq'), 'test report name', 'Culture', 'Culture', now()
+            WHERE NOT EXISTS (SELECT 1 FROM clinlims.localization WHERE description = 'test report name' AND french = 'Culture');
+        ]]>
+        </sql>
+    </changeSet>
+
+    <changeSet id="09-create-vaginal-secretion-tests" author="pkomena">
+        <comment>Create all tests for Sécrétions vaginales with conditional logic</comment>
+        <sql>
+        <![CDATA[
+            INSERT INTO clinlims.test(
+                id, method_id, uom_id, description, loinc, reporting_description,
+                sticker_req_flag, is_active, active_begin, active_end, is_reportable,
+                time_holding, time_wait, time_ta_average, time_ta_warning, time_ta_max,
+                label_qty, lastupdated, label_id, test_trailer_id, test_section_id,
+                scriptlet_id, test_format_id, local_code, sort_order, name, orderable,
+                guid, name_localization_id, reporting_name_localization_id,
+                default_test_result_id, notify_results
+            )
+            SELECT
+                nextval('test_seq'), null, null,
+                'Macroscopie - Col - Leucorrhées', '', null, null, 'Y', null, null, 'Y',
+                null, null, null, null, null, null, now(), null,
+                (SELECT id FROM clinlims.test_trailer WHERE name = 'Général' LIMIT 1),
+                (SELECT id FROM clinlims.test_section WHERE name = 'Routine Bacteriology' LIMIT 1),
+                null,
+                null,
+                'Macroscopie - Col - Leucorrhées', 5010,
+                'Macroscopie - Col - Leucorrhées', 't',
+                'eba846d4-0813-4545-8b85-378a65b9824f',
+                (SELECT id FROM clinlims.localization WHERE description = 'test name' AND french = 'Macroscopie - Col - Leucorrhées' LIMIT 1),
+                (SELECT id FROM clinlims.localization WHERE description = 'test report name' AND french = 'Macroscopie - Col - Leucorrhées' LIMIT 1),
+                null, 'f'
+            WHERE NOT EXISTS (
+                SELECT 1 FROM clinlims.test WHERE name = 'Macroscopie - Col - Leucorrhées'
+            );
+        -- Child Tests for Col 
+            INSERT INTO clinlims.test(
+                id, method_id, uom_id, description, loinc, reporting_description,
+                sticker_req_flag, is_active, active_begin, active_end, is_reportable,
+                time_holding, time_wait, time_ta_average, time_ta_warning, time_ta_max,
+                label_qty, lastupdated, label_id, test_trailer_id, test_section_id,
+                scriptlet_id, test_format_id, local_code, sort_order, name, orderable,
+                guid, name_localization_id, reporting_name_localization_id,
+                default_test_result_id, notify_results,
+                parent_test_id, parent_trigger_value
+            )
+            SELECT
+                nextval('test_seq'), null, null,
+                'Macroscopie - Col - Abondance', '', null, null, 'Y', null, null, 'Y',
+                null, null, null, null, null, null, now(), null,
+                (SELECT id FROM clinlims.test_trailer WHERE name = 'Général' LIMIT 1),
+                (SELECT id FROM clinlims.test_section WHERE name = 'Routine Bacteriology' LIMIT 1),
+                null,
+                null,
+                'Macroscopie - Col - Abondance', 5011,
+                'Macroscopie - Col - Abondance', 'f',
+                'd788ff37-79a2-4420-a08e-f0647886c171',
+                (SELECT id FROM clinlims.localization WHERE description = 'test name' AND french = 'Macroscopie - Col - Abondance' LIMIT 1),
+                (SELECT id FROM clinlims.localization WHERE description = 'test report name' AND french = 'Macroscopie - Col - Abondance' LIMIT 1),
+                null, 'f',
+                (SELECT id FROM clinlims.test WHERE name = 'Macroscopie - Col - Leucorrhées' LIMIT 1),
+                (SELECT d.id FROM clinlims.dictionary d WHERE d.dict_entry = 'Presence' LIMIT 1)
+            WHERE NOT EXISTS (
+                SELECT 1 FROM clinlims.test WHERE name = 'Macroscopie - Col - Abondance'
+            );
+
+            INSERT INTO clinlims.test(
+                id, method_id, uom_id, description, loinc, reporting_description,
+                sticker_req_flag, is_active, active_begin, active_end, is_reportable,
+                time_holding, time_wait, time_ta_average, time_ta_warning, time_ta_max,
+                label_qty, lastupdated, label_id, test_trailer_id, test_section_id,
+                scriptlet_id, test_format_id, local_code, sort_order, name, orderable,
+                guid, name_localization_id, reporting_name_localization_id,
+                default_test_result_id, notify_results,
+                parent_test_id, parent_trigger_value
+            )
+            SELECT
+                nextval('test_seq'), null, null,
+                'Macroscopie - Col - Aspect', '', null, null, 'Y', null, null, 'Y',
+                null, null, null, null, null, null, now(), null,
+                (SELECT id FROM clinlims.test_trailer WHERE name = 'Général' LIMIT 1),
+                (SELECT id FROM clinlims.test_section WHERE name = 'Routine Bacteriology' LIMIT 1),
+                null,
+                null,
+                'Macroscopie - Col - Aspect', 5011,
+                'Macroscopie - Col - Aspect', 'f',
+                '4a6fd480-d450-44c9-8366-2a5e10a094c6',
+                (SELECT id FROM clinlims.localization WHERE description = 'test name' AND french = 'Macroscopie - Col - Aspect' LIMIT 1),
+                (SELECT id FROM clinlims.localization WHERE description = 'test report name' AND french = 'Macroscopie - Col - Aspect' LIMIT 1),
+                null, 'f',
+                (SELECT id FROM clinlims.test WHERE name = 'Macroscopie - Col - Leucorrhées' LIMIT 1),
+                (SELECT d.id FROM clinlims.dictionary d WHERE d.dict_entry = 'Presence' LIMIT 1)
+            WHERE NOT EXISTS (
+                SELECT 1 FROM clinlims.test WHERE name = 'Macroscopie - Col - Aspect'
+            );
+
+            INSERT INTO clinlims.test(
+                id, method_id, uom_id, description, loinc, reporting_description,
+                sticker_req_flag, is_active, active_begin, active_end, is_reportable,
+                time_holding, time_wait, time_ta_average, time_ta_warning, time_ta_max,
+                label_qty, lastupdated, label_id, test_trailer_id, test_section_id,
+                scriptlet_id, test_format_id, local_code, sort_order, name, orderable,
+                guid, name_localization_id, reporting_name_localization_id,
+                default_test_result_id, notify_results,
+                parent_test_id, parent_trigger_value
+            )
+            SELECT
+                nextval('test_seq'), null, null,
+                'Macroscopie - Col - Couleur', '', null, null, 'Y', null, null, 'Y',
+                null, null, null, null, null, null, now(), null,
+                (SELECT id FROM clinlims.test_trailer WHERE name = 'Général' LIMIT 1),
+                (SELECT id FROM clinlims.test_section WHERE name = 'Routine Bacteriology' LIMIT 1),
+                null,
+                null,
+                'Macroscopie - Col - Couleur', 5011,
+                'Macroscopie - Col - Couleur', 'f',
+                '61fd27eb-cb33-42a8-ae61-ee940e631c17',
+                (SELECT id FROM clinlims.localization WHERE description = 'test name' AND french = 'Macroscopie - Col - Couleur' LIMIT 1),
+                (SELECT id FROM clinlims.localization WHERE description = 'test report name' AND french = 'Macroscopie - Col - Couleur' LIMIT 1),
+                null, 'f',
+                (SELECT id FROM clinlims.test WHERE name = 'Macroscopie - Col - Leucorrhées' LIMIT 1),
+                (SELECT d.id FROM clinlims.dictionary d WHERE d.dict_entry = 'Presence' LIMIT 1)
+            WHERE NOT EXISTS (
+                SELECT 1 FROM clinlims.test WHERE name = 'Macroscopie - Col - Couleur'
+            );
+
+            INSERT INTO clinlims.test(
+                id, method_id, uom_id, description, loinc, reporting_description,
+                sticker_req_flag, is_active, active_begin, active_end, is_reportable,
+                time_holding, time_wait, time_ta_average, time_ta_warning, time_ta_max,
+                label_qty, lastupdated, label_id, test_trailer_id, test_section_id,
+                scriptlet_id, test_format_id, local_code, sort_order, name, orderable,
+                guid, name_localization_id, reporting_name_localization_id,
+                default_test_result_id, notify_results,
+                parent_test_id, parent_trigger_value
+            )
+            SELECT
+                nextval('test_seq'), null, null,
+                'Macroscopie - Col - Autre', '', null, null, 'Y', null, null, 'Y',
+                null, null, null, null, null, null, now(), null,
+                (SELECT id FROM clinlims.test_trailer WHERE name = 'Général' LIMIT 1),
+                (SELECT id FROM clinlims.test_section WHERE name = 'Routine Bacteriology' LIMIT 1),
+                null,
+                null,
+                'Macroscopie - Col - Autre', 5011,
+                'Macroscopie - Col - Autre', 'f',
+                'e22ef783-b160-480a-adcd-f2c5bcb1bf47',
+                (SELECT id FROM clinlims.localization WHERE description = 'test name' AND french = 'Macroscopie - Col - Autre' LIMIT 1),
+                (SELECT id FROM clinlims.localization WHERE description = 'test report name' AND french = 'Macroscopie - Col - Autre' LIMIT 1),
+                null, 'f',
+                (SELECT id FROM clinlims.test WHERE name = 'Macroscopie - Col - Leucorrhées' LIMIT 1),
+                (SELECT d.id FROM clinlims.dictionary d WHERE d.dict_entry = 'Presence' LIMIT 1)
+            WHERE NOT EXISTS (
+                SELECT 1 FROM clinlims.test WHERE name = 'Macroscopie - Col - Autre'
+            );
+
+
+        -- Parent Test 2: Macroscopie - Muqueuse - Leucorrhées 
+            INSERT INTO clinlims.test(
+                id, method_id, uom_id, description, loinc, reporting_description,
+                sticker_req_flag, is_active, active_begin, active_end, is_reportable,
+                time_holding, time_wait, time_ta_average, time_ta_warning, time_ta_max,
+                label_qty, lastupdated, label_id, test_trailer_id, test_section_id,
+                scriptlet_id, test_format_id, local_code, sort_order, name, orderable,
+                guid, name_localization_id, reporting_name_localization_id,
+                default_test_result_id, notify_results
+            )
+            SELECT
+                nextval('test_seq'), null, null,
+                'Macroscopie - Muqueuse vaginale - Leucorrhées', '', null, null, 'Y', null, null, 'Y',
+                null, null, null, null, null, null, now(), null,
+                (SELECT id FROM clinlims.test_trailer WHERE name = 'Général' LIMIT 1),
+                (SELECT id FROM clinlims.test_section WHERE name = 'Routine Bacteriology' LIMIT 1),
+                null,
+                null,
+                'Macroscopie - Muqueuse vaginale - Leucorrhées', 5020,
+                'Macroscopie - Muqueuse vaginale - Leucorrhées', 't',
+                'ad329a9a-db24-414c-a44a-987e744bc867',
+                (SELECT id FROM clinlims.localization WHERE description = 'test name' AND french = 'Macroscopie - Muqueuse vaginale - Leucorrhées' LIMIT 1),
+                (SELECT id FROM clinlims.localization WHERE description = 'test report name' AND french = 'Macroscopie - Muqueuse vaginale - Leucorrhées' LIMIT 1),
+                null, 'f'
+            WHERE NOT EXISTS (
+                SELECT 1 FROM clinlims.test WHERE name = 'Macroscopie - Muqueuse vaginale - Leucorrhées'
+            );
+
+        -- Child Tests for Muqueuse 
+            INSERT INTO clinlims.test(
+                id, method_id, uom_id, description, loinc, reporting_description,
+                sticker_req_flag, is_active, active_begin, active_end, is_reportable,
+                time_holding, time_wait, time_ta_average, time_ta_warning, time_ta_max,
+                label_qty, lastupdated, label_id, test_trailer_id, test_section_id,
+                scriptlet_id, test_format_id, local_code, sort_order, name, orderable,
+                guid, name_localization_id, reporting_name_localization_id,
+                default_test_result_id, notify_results,
+                parent_test_id, parent_trigger_value
+            )
+            SELECT
+                nextval('test_seq'), null, null,
+                'Macroscopie - Muqueuse vaginale - Abondance', '', null, null, 'Y', null, null, 'Y',
+                null, null, null, null, null, null, now(), null,
+                (SELECT id FROM clinlims.test_trailer WHERE name = 'Général' LIMIT 1),
+                (SELECT id FROM clinlims.test_section WHERE name = 'Routine Bacteriology' LIMIT 1),
+                null,
+                null,
+                'Macroscopie - Muqueuse vaginale - Abondance', 5021,
+                'Macroscopie - Muqueuse vaginale - Abondance', 'f',
+                '69d1e8b3-4429-4d5f-849c-a9363e9fb755',
+                (SELECT id FROM clinlims.localization WHERE description = 'test name' AND french = 'Macroscopie - Muqueuse vaginale - Abondance' LIMIT 1),
+                (SELECT id FROM clinlims.localization WHERE description = 'test report name' AND french = 'Macroscopie - Muqueuse vaginale - Abondance' LIMIT 1),
+                null, 'f',
+                (SELECT id FROM clinlims.test WHERE name = 'Macroscopie - Muqueuse vaginale - Leucorrhées' LIMIT 1),
+                (SELECT d.id FROM clinlims.dictionary d WHERE d.dict_entry = 'Presence' LIMIT 1)
+            WHERE NOT EXISTS (
+                SELECT 1 FROM clinlims.test WHERE name = 'Macroscopie - Muqueuse vaginale - Abondance'
+            );
+
+            INSERT INTO clinlims.test(
+                id, method_id, uom_id, description, loinc, reporting_description,
+                sticker_req_flag, is_active, active_begin, active_end, is_reportable,
+                time_holding, time_wait, time_ta_average, time_ta_warning, time_ta_max,
+                label_qty, lastupdated, label_id, test_trailer_id, test_section_id,
+                scriptlet_id, test_format_id, local_code, sort_order, name, orderable,
+                guid, name_localization_id, reporting_name_localization_id,
+                default_test_result_id, notify_results,
+                parent_test_id, parent_trigger_value
+            )
+            SELECT
+                nextval('test_seq'), null, null,
+                'Macroscopie - Muqueuse vaginale - Aspect', '', null, null, 'Y', null, null, 'Y',
+                null, null, null, null, null, null, now(), null,
+                (SELECT id FROM clinlims.test_trailer WHERE name = 'Général' LIMIT 1),
+                (SELECT id FROM clinlims.test_section WHERE name = 'Routine Bacteriology' LIMIT 1),
+                null,
+                null,
+                'Macroscopie - Muqueuse vaginale - Aspect', 5022,
+                'Macroscopie - Muqueuse vaginale - Aspect', 'f',
+                'daa2876c-3440-42e7-a1e7-e888bddea90b',
+                (SELECT id FROM clinlims.localization WHERE description = 'test name' AND french = 'Macroscopie - Muqueuse vaginale - Aspect' LIMIT 1),
+                (SELECT id FROM clinlims.localization WHERE description = 'test report name' AND french = 'Macroscopie - Muqueuse vaginale - Aspect' LIMIT 1),
+                null, 'f',
+                (SELECT id FROM clinlims.test WHERE name = 'Macroscopie - Muqueuse vaginale - Leucorrhées' LIMIT 1),
+                (SELECT d.id FROM clinlims.dictionary d WHERE d.dict_entry = 'Presence' LIMIT 1)
+            WHERE NOT EXISTS (
+                SELECT 1 FROM clinlims.test WHERE name = 'Macroscopie - Muqueuse vaginale - Aspect'
+            );
+
+            INSERT INTO clinlims.test(
+                id, method_id, uom_id, description, loinc, reporting_description,
+                sticker_req_flag, is_active, active_begin, active_end, is_reportable,
+                time_holding, time_wait, time_ta_average, time_ta_warning, time_ta_max,
+                label_qty, lastupdated, label_id, test_trailer_id, test_section_id,
+                scriptlet_id, test_format_id, local_code, sort_order, name, orderable,
+                guid, name_localization_id, reporting_name_localization_id,
+                default_test_result_id, notify_results,
+                parent_test_id, parent_trigger_value
+            )
+            SELECT
+                nextval('test_seq'), null, null,
+                'Macroscopie - Muqueuse vaginale - Couleur', '', null, null, 'Y', null, null, 'Y',
+                null, null, null, null, null, null, now(), null,
+                (SELECT id FROM clinlims.test_trailer WHERE name = 'Général' LIMIT 1),
+                (SELECT id FROM clinlims.test_section WHERE name = 'Routine Bacteriology' LIMIT 1),
+                null,
+                null,
+                'Macroscopie - Muqueuse vaginale - Couleur', 5023,
+                'Macroscopie - Muqueuse vaginale - Couleur', 'f',
+                '8bbdaa9f-ab60-4f1d-806a-f62356f391d1',
+                (SELECT id FROM clinlims.localization WHERE description = 'test name' AND french = 'Macroscopie - Muqueuse vaginale - Couleur' LIMIT 1),
+                (SELECT id FROM clinlims.localization WHERE description = 'test report name' AND french = 'Macroscopie - Muqueuse vaginale - Couleur' LIMIT 1),
+                null, 'f',
+                (SELECT id FROM clinlims.test WHERE name = 'Macroscopie - Muqueuse vaginale - Leucorrhées' LIMIT 1),
+                (SELECT d.id FROM clinlims.dictionary d WHERE d.dict_entry = 'Presence' LIMIT 1)
+            WHERE NOT EXISTS (
+                SELECT 1 FROM clinlims.test WHERE name = 'Macroscopie - Muqueuse vaginale - Couleur'
+            );
+
+            INSERT INTO clinlims.test(
+                id, method_id, uom_id, description, loinc, reporting_description,
+                sticker_req_flag, is_active, active_begin, active_end, is_reportable,
+                time_holding, time_wait, time_ta_average, time_ta_warning, time_ta_max,
+                label_qty, lastupdated, label_id, test_trailer_id, test_section_id,
+                scriptlet_id, test_format_id, local_code, sort_order, name, orderable,
+                guid, name_localization_id, reporting_name_localization_id,
+                default_test_result_id, notify_results,
+                parent_test_id, parent_trigger_value
+            )
+            SELECT
+                nextval('test_seq'), null, null,
+                'Macroscopie - Muqueuse vaginale - Autre', '', null, null, 'Y', null, null, 'Y',
+                null, null, null, null, null, null, now(), null,
+                (SELECT id FROM clinlims.test_trailer WHERE name = 'Général' LIMIT 1),
+                (SELECT id FROM clinlims.test_section WHERE name = 'Routine Bacteriology' LIMIT 1),
+                null,
+                null,
+                'Macroscopie - Muqueuse vaginale - Autre', 5024,
+                'Macroscopie - Muqueuse vaginale - Autre', 'f',
+                'daa7647a-a403-446b-a4c2-65f67dbe1f97',
+                (SELECT id FROM clinlims.localization WHERE description = 'test name' AND french = 'Macroscopie - Muqueuse vaginale - Autre' LIMIT 1),
+                (SELECT id FROM clinlims.localization WHERE description = 'test report name' AND french = 'Macroscopie - Muqueuse vaginale - Autre' LIMIT 1),
+                null, 'f',
+                (SELECT id FROM clinlims.test WHERE name = 'Macroscopie - Muqueuse vaginale - Leucorrhées' LIMIT 1),
+                (SELECT d.id FROM clinlims.dictionary d WHERE d.dict_entry = 'Presence' LIMIT 1)
+            WHERE NOT EXISTS (
+                SELECT 1 FROM clinlims.test WHERE name = 'Macroscopie - Muqueuse vaginale - Autre'
+            );
+
+        -- Parent Test 3: Macroscopie - Vulve - Leucorrhées 
+            INSERT INTO clinlims.test(
+                id, method_id, uom_id, description, loinc, reporting_description,
+                sticker_req_flag, is_active, active_begin, active_end, is_reportable,
+                time_holding, time_wait, time_ta_average, time_ta_warning, time_ta_max,
+                label_qty, lastupdated, label_id, test_trailer_id, test_section_id,
+                scriptlet_id, test_format_id, local_code, sort_order, name, orderable,
+                guid, name_localization_id, reporting_name_localization_id,
+                default_test_result_id, notify_results
+            )
+            SELECT
+                nextval('test_seq'), null, null,
+                'Macroscopie - Vulve - Leucorrhées', '', null, null, 'Y', null, null, 'Y',
+                null, null, null, null, null, null, now(), null,
+                (SELECT id FROM clinlims.test_trailer WHERE name = 'Général' LIMIT 1),
+                (SELECT id FROM clinlims.test_section WHERE name = 'Routine Bacteriology' LIMIT 1),
+                null,
+                null,
+                'Macroscopie - Vulve - Leucorrhées', 5030,
+                'Macroscopie - Vulve - Leucorrhées', 't',
+                '821eb0ad-f413-4fd5-a028-7be860125435',
+                (SELECT id FROM clinlims.localization WHERE description = 'test name' AND french = 'Macroscopie - Vulve - Leucorrhées' LIMIT 1),
+                (SELECT id FROM clinlims.localization WHERE description = 'test report name' AND french = 'Macroscopie - Vulve - Leucorrhées' LIMIT 1),
+                null, 'f'
+            WHERE NOT EXISTS (
+                SELECT 1 FROM clinlims.test WHERE name = 'Macroscopie - Vulve - Leucorrhées'
+            );
+
+        -- Child Tests for Vulve 
+            INSERT INTO clinlims.test(
+                id, method_id, uom_id, description, loinc, reporting_description,
+                sticker_req_flag, is_active, active_begin, active_end, is_reportable,
+                time_holding, time_wait, time_ta_average, time_ta_warning, time_ta_max,
+                label_qty, lastupdated, label_id, test_trailer_id, test_section_id,
+                scriptlet_id, test_format_id, local_code, sort_order, name, orderable,
+                guid, name_localization_id, reporting_name_localization_id,
+                default_test_result_id, notify_results,
+                parent_test_id, parent_trigger_value
+            )
+            SELECT
+                nextval('test_seq'), null, null,
+                'Macroscopie - Vulve - Abondance', '', null, null, 'Y', null, null, 'Y',
+                null, null, null, null, null, null, now(), null,
+                (SELECT id FROM clinlims.test_trailer WHERE name = 'Général' LIMIT 1),
+                (SELECT id FROM clinlims.test_section WHERE name = 'Routine Bacteriology' LIMIT 1),
+                null,
+                null,
+                'Macroscopie - Vulve - Abondance', 5031,
+                'Macroscopie - Vulve - Abondance', 'f',
+                'b396722b-2e98-487b-9cdb-650d9e2804df',
+                (SELECT id FROM clinlims.localization WHERE description = 'test name' AND french = 'Macroscopie - Vulve - Abondance' LIMIT 1),
+                (SELECT id FROM clinlims.localization WHERE description = 'test report name' AND french = 'Macroscopie - Vulve - Abondance' LIMIT 1),
+                null, 'f',
+                (SELECT id FROM clinlims.test WHERE name = 'Macroscopie - Vulve - Leucorrhées' LIMIT 1),
+                (SELECT d.id FROM clinlims.dictionary d WHERE d.dict_entry = 'Presence' LIMIT 1)
+            WHERE NOT EXISTS (
+                SELECT 1 FROM clinlims.test WHERE name = 'Macroscopie - Vulve - Abondance'
+            );
+
+            INSERT INTO clinlims.test(
+                id, method_id, uom_id, description, loinc, reporting_description,
+                sticker_req_flag, is_active, active_begin, active_end, is_reportable,
+                time_holding, time_wait, time_ta_average, time_ta_warning, time_ta_max,
+                label_qty, lastupdated, label_id, test_trailer_id, test_section_id,
+                scriptlet_id, test_format_id, local_code, sort_order, name, orderable,
+                guid, name_localization_id, reporting_name_localization_id,
+                default_test_result_id, notify_results,
+                parent_test_id, parent_trigger_value
+            )
+            SELECT
+                nextval('test_seq'), null, null,
+                'Macroscopie - Vulve - Aspect', '', null, null, 'Y', null, null, 'Y',
+                null, null, null, null, null, null, now(), null,
+                (SELECT id FROM clinlims.test_trailer WHERE name = 'Général' LIMIT 1),
+                (SELECT id FROM clinlims.test_section WHERE name = 'Routine Bacteriology' LIMIT 1),
+                null,
+                null,
+                'Macroscopie - Vulve - Aspect', 5032,
+                'Macroscopie - Vulve - Aspect', 'f',
+                'de715b7b-42a1-4fc4-8d72-04b3e0d28b86',
+                (SELECT id FROM clinlims.localization WHERE description = 'test name' AND french = 'Macroscopie - Vulve - Aspect' LIMIT 1),
+                (SELECT id FROM clinlims.localization WHERE description = 'test report name' AND french = 'Macroscopie - Vulve - Aspect' LIMIT 1),
+                null, 'f',
+                (SELECT id FROM clinlims.test WHERE name = 'Macroscopie - Vulve - Leucorrhées' LIMIT 1),
+                (SELECT d.id FROM clinlims.dictionary d WHERE d.dict_entry = 'Presence' LIMIT 1)
+            WHERE NOT EXISTS (
+                SELECT 1 FROM clinlims.test WHERE name = 'Macroscopie - Vulve - Aspect'
+            );
+
+            INSERT INTO clinlims.test(
+                id, method_id, uom_id, description, loinc, reporting_description,
+                sticker_req_flag, is_active, active_begin, active_end, is_reportable,
+                time_holding, time_wait, time_ta_average, time_ta_warning, time_ta_max,
+                label_qty, lastupdated, label_id, test_trailer_id, test_section_id,
+                scriptlet_id, test_format_id, local_code, sort_order, name, orderable,
+                guid, name_localization_id, reporting_name_localization_id,
+                default_test_result_id, notify_results,
+                parent_test_id, parent_trigger_value
+            )
+            SELECT
+                nextval('test_seq'), null, null,
+                'Macroscopie - Vulve - Couleur', '', null, null, 'Y', null, null, 'Y',
+                null, null, null, null, null, null, now(), null,
+                (SELECT id FROM clinlims.test_trailer WHERE name = 'Général' LIMIT 1),
+                (SELECT id FROM clinlims.test_section WHERE name = 'Routine Bacteriology' LIMIT 1),
+                null,
+                null,
+                'Macroscopie - Vulve - Couleur', 5033,
+                'Macroscopie - Vulve - Couleur', 'f',
+                '104a5f6b-b27a-4c91-aa4d-93c33f94377b',
+                (SELECT id FROM clinlims.localization WHERE description = 'test name' AND french = 'Macroscopie - Vulve - Couleur' LIMIT 1),
+                (SELECT id FROM clinlims.localization WHERE description = 'test report name' AND french = 'Macroscopie - Vulve - Couleur' LIMIT 1),
+                null, 'f',
+                (SELECT id FROM clinlims.test WHERE name = 'Macroscopie - Vulve - Leucorrhées' LIMIT 1),
+                (SELECT d.id FROM clinlims.dictionary d WHERE d.dict_entry = 'Presence' LIMIT 1)
+            WHERE NOT EXISTS (
+                SELECT 1 FROM clinlims.test WHERE name = 'Macroscopie - Vulve - Couleur'
+            );
+
+            INSERT INTO clinlims.test(
+                id, method_id, uom_id, description, loinc, reporting_description,
+                sticker_req_flag, is_active, active_begin, active_end, is_reportable,
+                time_holding, time_wait, time_ta_average, time_ta_warning, time_ta_max,
+                label_qty, lastupdated, label_id, test_trailer_id, test_section_id,
+                scriptlet_id, test_format_id, local_code, sort_order, name, orderable,
+                guid, name_localization_id, reporting_name_localization_id,
+                default_test_result_id, notify_results,
+                parent_test_id, parent_trigger_value
+            )
+            SELECT
+                nextval('test_seq'), null, null,
+                'Macroscopie - Vulve - Autre', '', null, null, 'Y', null, null, 'Y',
+                null, null, null, null, null, null, now(), null,
+                (SELECT id FROM clinlims.test_trailer WHERE name = 'Général' LIMIT 1),
+                (SELECT id FROM clinlims.test_section WHERE name = 'Routine Bacteriology' LIMIT 1),
+                null,
+                null,
+                'Macroscopie - Vulve - Autre', 5034,
+                'Macroscopie - Vulve - Autre', 'f',
+                '6248868a-2d35-4c3d-a170-13f2534c39a7',
+                (SELECT id FROM clinlims.localization WHERE description = 'test name' AND french = 'Macroscopie - Vulve - Autre' LIMIT 1),
+                (SELECT id FROM clinlims.localization WHERE description = 'test report name' AND french = 'Macroscopie - Vulve - Autre' LIMIT 1),
+                null, 'f',
+                (SELECT id FROM clinlims.test WHERE name = 'Macroscopie - Vulve - Leucorrhées' LIMIT 1),
+                (SELECT d.id FROM clinlims.dictionary d WHERE d.dict_entry = 'Presence' LIMIT 1)
+            WHERE NOT EXISTS (
+                SELECT 1 FROM clinlims.test WHERE name = 'Macroscopie - Vulve - Autre'
+            );
+
+        -- Culture Tests
+            INSERT INTO clinlims.test(
+                id, method_id, uom_id, description, loinc, reporting_description,
+                sticker_req_flag, is_active, active_begin, active_end, is_reportable,
+                time_holding, time_wait, time_ta_average, time_ta_warning, time_ta_max,
+                label_qty, lastupdated, label_id, test_trailer_id, test_section_id,
+                scriptlet_id, test_format_id, local_code, sort_order, name, orderable,
+                guid, name_localization_id, reporting_name_localization_id,
+                default_test_result_id, notify_results,
+                is_culture_test, culture_type
+            )
+            SELECT
+                nextval('test_seq'), null, null,
+                'Culture - Sécrétions vaginales', '', null, null, 'Y', null, null, 'Y',
+                null, null, null, null, null, null, now(), null,
+                (SELECT id FROM clinlims.test_trailer WHERE name = 'Général' LIMIT 1),
+                (SELECT id FROM clinlims.test_section WHERE name = 'Routine Bacteriology' LIMIT 1),
+                null,
+                null,
+                'Culture - Sécrétions vaginales', 5040,
+                'Culture - Sécrétions vaginales', 't',
+                '6db29270-44a1-423d-98db-347a0b12118c',
+                (SELECT id FROM clinlims.localization WHERE description = 'test name' AND french = 'Culture - Sécrétions vaginales' LIMIT 1),
+                (SELECT id FROM clinlims.localization WHERE description = 'test report name' AND french = 'Culture - Sécrétions vaginales' LIMIT 1),
+                null, 'f',
+                true, 'NORMAL'
+            WHERE NOT EXISTS (
+                SELECT 1 FROM clinlims.test WHERE name = 'Culture - Sécrétions vaginales'
+            );
+
+            INSERT INTO clinlims.test(
+                id, method_id, uom_id, description, loinc, reporting_description,
+                sticker_req_flag, is_active, active_begin, active_end, is_reportable,
+                time_holding, time_wait, time_ta_average, time_ta_warning, time_ta_max,
+                label_qty, lastupdated, label_id, test_trailer_id, test_section_id,
+                scriptlet_id, test_format_id, local_code, sort_order, name, orderable,
+                guid, name_localization_id, reporting_name_localization_id,
+                default_test_result_id, notify_results,
+                is_culture_test, culture_type
+            )
+            SELECT
+                nextval('test_seq'), null, null,
+                'Culture - Col', '', null, null, 'Y', null, null, 'Y',
+                null, null, null, null, null, null, now(), null,
+                (SELECT id FROM clinlims.test_trailer WHERE name = 'Général' LIMIT 1),
+                (SELECT id FROM clinlims.test_section WHERE name = 'Routine Bacteriology' LIMIT 1),
+                null,
+                null,
+                'Culture - Col', 5041,
+                'Culture - Col', 't',
+                '174eeb27-7680-419e-b1e8-fe8ebb643070',
+                (SELECT id FROM clinlims.localization WHERE description = 'test name' AND french = 'Culture - Col' LIMIT 1),
+                (SELECT id FROM clinlims.localization WHERE description = 'test report name' AND french = 'Culture - Col' LIMIT 1),
+                null, 'f',
+                true, 'NEISSERIA_GONORRHOEAE'
+            WHERE NOT EXISTS (
+                SELECT 1 FROM clinlims.test WHERE name = 'Culture - Col'
+            );
+             ]]>
+        </sql>
+    </changeSet>
+
+    <changeSet id="10-create-vaginal-test-result-mappings" author="pkomena">
+        <comment>Map dictionary values to vaginal secretion tests as possible results</comment>
+        
+        <!-- Macroscopie - Col - Leucorrhées -->
+        <sql>
+        <![CDATA[
+            INSERT INTO clinlims.test_result (id, test_id, tst_rslt_type, value, lastupdated, sort_order, is_active)
+            values (nextval('clinlims.test_result_seq'),
+                (SELECT id FROM clinlims.test WHERE name = 'Macroscopie - Col - Leucorrhées' LIMIT 1),
+                'D',(SELECT d.id FROM clinlims.dictionary d WHERE d.dict_entry = 'Absence' LIMIT 1),
+                now(),10,'Y'),
+                (nextval('clinlims.test_result_seq'),
+                (SELECT id FROM clinlims.test WHERE name = 'Macroscopie - Col - Leucorrhées' LIMIT 1),
+                'D',(SELECT d.id FROM clinlims.dictionary d WHERE d.dict_entry = 'Presence' LIMIT 1),
+                now(),20,'Y');
+
+        -- Macroscopie - Col - Abondance 
+            INSERT INTO clinlims.test_result (id, test_id, tst_rslt_type, value, lastupdated, sort_order, is_active)
+            values (nextval('clinlims.test_result_seq'),
+                (SELECT id FROM clinlims.test WHERE name = 'Macroscopie - Col - Abondance' LIMIT 1),
+                'D',(SELECT d.id FROM clinlims.dictionary d WHERE d.dict_entry = 'Minime' LIMIT 1),
+                now(),10,'Y'),
+                (nextval('clinlims.test_result_seq'),
+                (SELECT id FROM clinlims.test WHERE name = 'Macroscopie - Col - Abondance' LIMIT 1),
+                'D',(SELECT d.id FROM clinlims.dictionary d WHERE d.dict_entry = 'Moyen' LIMIT 1),
+                now(),20,'Y'),
+                (nextval('clinlims.test_result_seq'),
+                (SELECT id FROM clinlims.test WHERE name = 'Macroscopie - Col - Abondance' LIMIT 1),
+                'D',(SELECT d.id FROM clinlims.dictionary d WHERE d.dict_entry = 'Abondante' LIMIT 1),
+                now(),30,'Y');
+                -- Macroscopie - Col - Aspect
+            INSERT INTO clinlims.test_result (id, test_id, tst_rslt_type, value, lastupdated, sort_order, is_active)
+            values (nextval('clinlims.test_result_seq'),
+                (SELECT id FROM clinlims.test WHERE name = 'Macroscopie - Col - Aspect' LIMIT 1),
+                'D',(SELECT d.id FROM clinlims.dictionary d WHERE d.dict_entry = 'Cailleboteuses' LIMIT 1),
+                now(),10,'Y'),
+                (nextval('clinlims.test_result_seq'),
+                (SELECT id FROM clinlims.test WHERE name = 'Macroscopie - Col - Aspect' LIMIT 1),
+                'D',(SELECT d.id FROM clinlims.dictionary d WHERE d.dict_entry = 'Fluide' LIMIT 1),
+                now(),20,'Y'),
+                (nextval('clinlims.test_result_seq'),
+                (SELECT id FROM clinlims.test WHERE name = 'Macroscopie - Col - Aspect' LIMIT 1),
+                'D',(SELECT d.id FROM clinlims.dictionary d WHERE d.dict_entry = 'Moussantes' LIMIT 1),
+                now(),30,'Y');
+            -- Macroscopie - Col - Couleur
+            INSERT INTO clinlims.test_result (id, test_id, tst_rslt_type, value, lastupdated, sort_order, is_active)
+            values (nextval('clinlims.test_result_seq'),
+                (SELECT id FROM clinlims.test WHERE name = 'Macroscopie - Col - Couleur' LIMIT 1),
+                'D',(SELECT d.id FROM clinlims.dictionary d WHERE d.dict_entry = 'Rougeatre' LIMIT 1),
+                now(),10,'Y'),
+                (nextval('clinlims.test_result_seq'),
+                (SELECT id FROM clinlims.test WHERE name = 'Macroscopie - Col - Couleur' LIMIT 1),
+                'D',(SELECT d.id FROM clinlims.dictionary d WHERE d.dict_entry = 'Blanchatre' LIMIT 1),
+                now(),20,'Y'),
+                (nextval('clinlims.test_result_seq'),
+                (SELECT id FROM clinlims.test WHERE name = 'Macroscopie - Col - Couleur' LIMIT 1),
+                'D',(SELECT d.id FROM clinlims.dictionary d WHERE d.dict_entry = 'Verdatre' LIMIT 1),
+                now(),30,'Y'),
+                (nextval('clinlims.test_result_seq'),
+                (SELECT id FROM clinlims.test WHERE name = 'Macroscopie - Col - Couleur' LIMIT 1),
+                'D',(SELECT d.id FROM clinlims.dictionary d WHERE d.dict_entry = 'Jaunatre' LIMIT 1),
+                now(),40,'Y'),
+                (nextval('clinlims.test_result_seq'),
+                (SELECT id FROM clinlims.test WHERE name = 'Macroscopie - Col - Couleur' LIMIT 1),
+                'D',(SELECT d.id FROM clinlims.dictionary d WHERE d.dict_entry = 'Grisatre' LIMIT 1),
+                now(),50,'Y');
+               -- Macroscopie - Col - Autre 
+            INSERT INTO clinlims.test_result (id, test_id, tst_rslt_type, value, lastupdated, sort_order, is_active)
+            values (nextval('clinlims.test_result_seq'),
+                (SELECT id FROM clinlims.test WHERE name = 'Macroscopie - Col - Autre' LIMIT 1),
+                'D',(SELECT d.id FROM clinlims.dictionary d WHERE d.dict_entry = 'Fetide' LIMIT 1),
+                now(),10,'Y'),
+                (nextval('clinlims.test_result_seq'),
+                (SELECT id FROM clinlims.test WHERE name = 'Macroscopie - Col - Autre' LIMIT 1),
+                'D',(SELECT d.id FROM clinlims.dictionary d WHERE d.dict_entry = 'Inodore' LIMIT 1),
+                now(),20,'Y');
+         -- Macroscopie - Muqueuse vaginale - Leucorrhées 
+            INSERT INTO clinlims.test_result (id, test_id, tst_rslt_type, value, lastupdated, sort_order, is_active)
+            values (nextval('clinlims.test_result_seq'),
+                (SELECT id FROM clinlims.test WHERE name = 'Macroscopie - Muqueuse vaginale - Leucorrhées' LIMIT 1),
+                'D',(SELECT d.id FROM clinlims.dictionary d WHERE d.dict_entry = 'Absence' LIMIT 1),
+                now(),10,'Y'),
+                (nextval('clinlims.test_result_seq'),
+                (SELECT id FROM clinlims.test WHERE name = 'Macroscopie - Muqueuse vaginale - Leucorrhées' LIMIT 1),
+                'D',(SELECT d.id FROM clinlims.dictionary d WHERE d.dict_entry = 'Presence' LIMIT 1),
+                now(),20,'Y');
+        -- Macroscopie - Muqueuse vaginale - Abondance 
+            INSERT INTO clinlims.test_result (id, test_id, tst_rslt_type, value, lastupdated, sort_order, is_active)
+            values (nextval('clinlims.test_result_seq'),
+                (SELECT id FROM clinlims.test WHERE name = 'Macroscopie - Muqueuse vaginale - Abondance' LIMIT 1),
+                'D',(SELECT d.id FROM clinlims.dictionary d WHERE d.dict_entry = 'Minime' LIMIT 1),
+                now(),10,'Y'),
+                (nextval('clinlims.test_result_seq'),
+                (SELECT id FROM clinlims.test WHERE name = 'Macroscopie - Muqueuse vaginale - Abondance' LIMIT 1),
+                'D',(SELECT d.id FROM clinlims.dictionary d WHERE d.dict_entry = 'Moyen' LIMIT 1),
+                now(),20,'Y'),
+                (nextval('clinlims.test_result_seq'),
+                (SELECT id FROM clinlims.test WHERE name = 'Macroscopie - Muqueuse vaginale - Abondance' LIMIT 1),
+                'D',(SELECT d.id FROM clinlims.dictionary d WHERE d.dict_entry = 'Abondante' LIMIT 1),
+                now(),30,'Y');
+                -- Macroscopie - Muqueuse vaginale - Aspect
+            INSERT INTO clinlims.test_result (id, test_id, tst_rslt_type, value, lastupdated, sort_order, is_active)
+            values (nextval('clinlims.test_result_seq'),
+                (SELECT id FROM clinlims.test WHERE name = 'Macroscopie - Muqueuse vaginale - Aspect' LIMIT 1),
+                'D',(SELECT d.id FROM clinlims.dictionary d WHERE d.dict_entry = 'Cailleboteuses' LIMIT 1),
+                now(),10,'Y'),
+                (nextval('clinlims.test_result_seq'),
+                (SELECT id FROM clinlims.test WHERE name = 'Macroscopie - Muqueuse vaginale - Aspect' LIMIT 1),
+                'D',(SELECT d.id FROM clinlims.dictionary d WHERE d.dict_entry = 'Fluide' LIMIT 1),
+                now(),20,'Y'),
+                (nextval('clinlims.test_result_seq'),
+                (SELECT id FROM clinlims.test WHERE name = 'Macroscopie - Muqueuse vaginale - Aspect' LIMIT 1),
+                'D',(SELECT d.id FROM clinlims.dictionary d WHERE d.dict_entry = 'Moussantes' LIMIT 1),
+                now(),30,'Y');
+                -- Macroscopie - Muqueuse vaginale - Couleur
+            INSERT INTO clinlims.test_result (id, test_id, tst_rslt_type, value, lastupdated, sort_order, is_active)
+            values (nextval('clinlims.test_result_seq'),
+                (SELECT id FROM clinlims.test WHERE name = 'Macroscopie - Muqueuse vaginale - Couleur' LIMIT 1),
+                'D',(SELECT d.id FROM clinlims.dictionary d WHERE d.dict_entry = 'Rougeatre' LIMIT 1),
+                now(),10,'Y'),
+                (nextval('clinlims.test_result_seq'),
+                (SELECT id FROM clinlims.test WHERE name = 'Macroscopie - Muqueuse vaginale - Couleur' LIMIT 1),
+                'D',(SELECT d.id FROM clinlims.dictionary d WHERE d.dict_entry = 'Blanchatre' LIMIT 1),
+                now(),20,'Y'),
+                (nextval('clinlims.test_result_seq'),
+                (SELECT id FROM clinlims.test WHERE name = 'Macroscopie - Muqueuse vaginale - Couleur' LIMIT 1),
+                'D',(SELECT d.id FROM clinlims.dictionary d WHERE d.dict_entry = 'Verdatre' LIMIT 1),
+                now(),30,'Y'),
+                (nextval('clinlims.test_result_seq'),
+                (SELECT id FROM clinlims.test WHERE name = 'Macroscopie - Muqueuse vaginale - Couleur' LIMIT 1),
+                'D',(SELECT d.id FROM clinlims.dictionary d WHERE d.dict_entry = 'Jaunatre' LIMIT 1),
+                now(),40,'Y'),
+                (nextval('clinlims.test_result_seq'),
+                (SELECT id FROM clinlims.test WHERE name = 'Macroscopie - Muqueuse vaginale - Couleur' LIMIT 1),
+                'D',(SELECT d.id FROM clinlims.dictionary d WHERE d.dict_entry = 'Grisatre' LIMIT 1),
+                now(),50,'Y');
+               -- Macroscopie - Muqueuse vaginale - Autre
+            INSERT INTO clinlims.test_result (id, test_id, tst_rslt_type, value, lastupdated, sort_order, is_active)
+            values (nextval('clinlims.test_result_seq'),
+                (SELECT id FROM clinlims.test WHERE name = 'Macroscopie - Muqueuse vaginale - Autre' LIMIT 1),
+                'D',(SELECT d.id FROM clinlims.dictionary d WHERE d.dict_entry = 'Fetide' LIMIT 1),
+                now(),10,'Y'),
+                (nextval('clinlims.test_result_seq'),
+                (SELECT id FROM clinlims.test WHERE name = 'Macroscopie - Muqueuse vaginale - Autre' LIMIT 1),
+                'D',(SELECT d.id FROM clinlims.dictionary d WHERE d.dict_entry = 'Inodore' LIMIT 1),
+                now(),20,'Y');
+         -- Macroscopie - Vulve - Leucorrhées
+            INSERT INTO clinlims.test_result (id, test_id, tst_rslt_type, value, lastupdated, sort_order, is_active)
+            values (nextval('clinlims.test_result_seq'),
+                (SELECT id FROM clinlims.test WHERE name = 'Macroscopie - Vulve - Leucorrhées' LIMIT 1),
+                'D',(SELECT d.id FROM clinlims.dictionary d WHERE d.dict_entry = 'Absence' LIMIT 1),
+                now(),10,'Y'),
+                (nextval('clinlims.test_result_seq'),
+                (SELECT id FROM clinlims.test WHERE name = 'Macroscopie - Vulve - Leucorrhées' LIMIT 1),
+                'D',(SELECT d.id FROM clinlims.dictionary d WHERE d.dict_entry = 'Presence' LIMIT 1),
+                now(),20,'Y');
+        -- Macroscopie - Vulve - Abondance
+            INSERT INTO clinlims.test_result (id, test_id, tst_rslt_type, value, lastupdated, sort_order, is_active)
+            values (nextval('clinlims.test_result_seq'),
+                (SELECT id FROM clinlims.test WHERE name = 'Macroscopie - Vulve - Abondance' LIMIT 1),
+                'D',(SELECT d.id FROM clinlims.dictionary d WHERE d.dict_entry = 'Minime' LIMIT 1),
+                now(),10,'Y'),
+                (nextval('clinlims.test_result_seq'),
+                (SELECT id FROM clinlims.test WHERE name = 'Macroscopie - Vulve - Abondance' LIMIT 1),
+                'D',(SELECT d.id FROM clinlims.dictionary d WHERE d.dict_entry = 'Moyen' LIMIT 1),
+                now(),20,'Y'),
+                (nextval('clinlims.test_result_seq'),
+                (SELECT id FROM clinlims.test WHERE name = 'Macroscopie - Vulve - Abondance' LIMIT 1),
+                'D',(SELECT d.id FROM clinlims.dictionary d WHERE d.dict_entry = 'Abondante' LIMIT 1),
+                now(),30,'Y');
+                -- Macroscopie - Vulve - Aspect 
+            INSERT INTO clinlims.test_result (id, test_id, tst_rslt_type, value, lastupdated, sort_order, is_active)
+            values (nextval('clinlims.test_result_seq'),
+                (SELECT id FROM clinlims.test WHERE name = 'Macroscopie - Vulve - Aspect' LIMIT 1),
+                'D',(SELECT d.id FROM clinlims.dictionary d WHERE d.dict_entry = 'Cailleboteuses' LIMIT 1),
+                now(),10,'Y'),
+                (nextval('clinlims.test_result_seq'),
+                (SELECT id FROM clinlims.test WHERE name = 'Macroscopie - Vulve - Aspect' LIMIT 1),
+                'D',(SELECT d.id FROM clinlims.dictionary d WHERE d.dict_entry = 'Fluide' LIMIT 1),
+                now(),20,'Y'),
+                (nextval('clinlims.test_result_seq'),
+                (SELECT id FROM clinlims.test WHERE name = 'Macroscopie - Vulve - Aspect' LIMIT 1),
+                'D',(SELECT d.id FROM clinlims.dictionary d WHERE d.dict_entry = 'Moussantes' LIMIT 1),
+                now(),30,'Y');
+                -- Macroscopie - Vulve - Couleur 
+            INSERT INTO clinlims.test_result (id, test_id, tst_rslt_type, value, lastupdated, sort_order, is_active)
+            values (nextval('clinlims.test_result_seq'),
+                (SELECT id FROM clinlims.test WHERE name = 'Macroscopie - Vulve - Couleur' LIMIT 1),
+                'D',(SELECT d.id FROM clinlims.dictionary d WHERE d.dict_entry = 'Rougeatre' LIMIT 1),
+                now(),10,'Y'),
+                (nextval('clinlims.test_result_seq'),
+                (SELECT id FROM clinlims.test WHERE name = 'Macroscopie - Vulve - Couleur' LIMIT 1),
+                'D',(SELECT d.id FROM clinlims.dictionary d WHERE d.dict_entry = 'Blanchatre' LIMIT 1),
+                now(),20,'Y'),
+                (nextval('clinlims.test_result_seq'),
+                (SELECT id FROM clinlims.test WHERE name = 'Macroscopie - Vulve - Couleur' LIMIT 1),
+                'D',(SELECT d.id FROM clinlims.dictionary d WHERE d.dict_entry = 'Verdatre' LIMIT 1),
+                now(),30,'Y'),
+                (nextval('clinlims.test_result_seq'),
+                (SELECT id FROM clinlims.test WHERE name = 'Macroscopie - Vulve - Couleur' LIMIT 1),
+                'D',(SELECT d.id FROM clinlims.dictionary d WHERE d.dict_entry = 'Jaunatre' LIMIT 1),
+                now(),40,'Y'),
+                (nextval('clinlims.test_result_seq'),
+                (SELECT id FROM clinlims.test WHERE name = 'Macroscopie - Vulve - Couleur' LIMIT 1),
+                'D',(SELECT d.id FROM clinlims.dictionary d WHERE d.dict_entry = 'Grisatre' LIMIT 1),
+                now(),50,'Y');
+               -- Macroscopie - Vulve - Autre
+            INSERT INTO clinlims.test_result (id, test_id, tst_rslt_type, value, lastupdated, sort_order, is_active)
+            values (nextval('clinlims.test_result_seq'),
+                (SELECT id FROM clinlims.test WHERE name = 'Macroscopie - Vulve - Autre' LIMIT 1),
+                'D',(SELECT d.id FROM clinlims.dictionary d WHERE d.dict_entry = 'Fetide' LIMIT 1),
+                now(),10,'Y'),
+                (nextval('clinlims.test_result_seq'),
+                (SELECT id FROM clinlims.test WHERE name = 'Macroscopie - Vulve - Autre' LIMIT 1),
+                'D',(SELECT d.id FROM clinlims.dictionary d WHERE d.dict_entry = 'Inodore' LIMIT 1),
+                now(),20,'Y');
+                -- Culture - Sécrétions vaginales 
+                        -- Culture - Sécrétions vaginales 
+                INSERT INTO clinlims.test_result (id, test_id, tst_rslt_type, value, lastupdated, sort_order, is_active)
+                VALUES
+                (nextval('clinlims.test_result_seq'),
+                (SELECT id FROM clinlims.test WHERE name = 'Culture - Sécrétions vaginales' LIMIT 1),
+                'D',(SELECT d.id FROM clinlims.dictionary d WHERE d.dict_entry = 'Négative' LIMIT 1),
+                now(),10,'Y'),
+                (nextval('clinlims.test_result_seq'),
+                (SELECT id FROM clinlims.test WHERE name = 'Culture - Sécrétions vaginales' LIMIT 1),
+                'D',(SELECT d.id FROM clinlims.dictionary d WHERE d.dict_entry = 'Positive' LIMIT 1),
+                now(),20,'Y'),
+                (nextval('clinlims.test_result_seq'),
+                (SELECT id FROM clinlims.test WHERE name = 'Culture - Sécrétions vaginales' LIMIT 1),
+                'D',(SELECT d.id FROM clinlims.dictionary d WHERE d.dict_entry = 'Contaminée' LIMIT 1),
+                now(),30,'Y');
+
+                -- Culture - Col
+                INSERT INTO clinlims.test_result (id, test_id, tst_rslt_type, value, lastupdated, sort_order, is_active)
+                VALUES
+                (nextval('clinlims.test_result_seq'),
+                (SELECT id FROM clinlims.test WHERE name = 'Culture - Col' LIMIT 1),
+                'D',(SELECT d.id FROM clinlims.dictionary d WHERE d.dict_entry = 'Négative' LIMIT 1),
+                now(),10,'Y'),
+                (nextval('clinlims.test_result_seq'),
+                (SELECT id FROM clinlims.test WHERE name = 'Culture - Col' LIMIT 1),
+                'D',(SELECT d.id FROM clinlims.dictionary d WHERE d.dict_entry = 'Positive' LIMIT 1),
+                now(),20,'Y'),
+                (nextval('clinlims.test_result_seq'),
+                (SELECT id FROM clinlims.test WHERE name = 'Culture - Col' LIMIT 1),
+                'D',(SELECT d.id FROM clinlims.dictionary d WHERE d.dict_entry = 'Neisseria gonorrhoeae Positive' LIMIT 1),
+                now(),30,'Y'),
+                (nextval('clinlims.test_result_seq'),
+                (SELECT id FROM clinlims.test WHERE name = 'Culture - Col' LIMIT 1),
+                'D',(SELECT d.id FROM clinlims.dictionary d WHERE d.dict_entry = 'Neisseria gonorrhoeae Negative' LIMIT 1),
+                now(),40,'Y');
+                 ]]>
+        </sql>
+        
+    </changeSet>
+
+    <changeSet id="11-map-vaginal-tests-to-sampletype" author="pkomena">
+        <comment>Create sampletype_test mappings for Sécrétions vaginales</comment>
+        <sql>
+        <![CDATA[
+            INSERT INTO clinlims.sampletype_test (id, sample_type_id, test_id)
+            SELECT
+                nextval('sample_type_test_seq'),
+                (SELECT id FROM clinlims.type_of_sample WHERE description = 'Sécrétions vaginales' LIMIT 1),
+                t.id
+            FROM clinlims.test t
+            WHERE t.name IN (
+                'Macroscopie - Col - Leucorrhées',
+                'Macroscopie - Col - Abondance',
+                'Macroscopie - Col - Aspect',
+                'Macroscopie - Col - Couleur',
+                'Macroscopie - Col - Autre',
+                'Macroscopie - Muqueuse vaginale - Leucorrhées',
+                'Macroscopie - Muqueuse vaginale - Abondance',
+                'Macroscopie - Muqueuse vaginale - Aspect',
+                'Macroscopie - Muqueuse vaginale - Couleur',
+                'Macroscopie - Muqueuse vaginale - Autre',
+                'Macroscopie - Vulve - Leucorrhées',
+                'Macroscopie - Vulve - Abondance',
+                'Macroscopie - Vulve - Aspect',
+                'Macroscopie - Vulve - Couleur',
+                'Macroscopie - Vulve - Autre',
+                'Culture - Sécrétions vaginales',
+                'Culture - Col'
+            )
+            ON CONFLICT DO NOTHING;
+             ]]>
+        </sql>
+    </changeSet>
+
+    <changeSet id="12-create-flora-count-tests" author="pkomena">
+        <comment>Create all tests for flora count with conditional logic</comment>
+        <sql>
+        <![CDATA[
+            INSERT INTO clinlims.test(
+                id, method_id, uom_id, description, loinc, reporting_description,
+                sticker_req_flag, is_active, active_begin, active_end, is_reportable,
+                time_holding, time_wait, time_ta_average, time_ta_warning, time_ta_max,
+                label_qty, lastupdated, label_id, test_trailer_id, test_section_id,
+                scriptlet_id, test_format_id, local_code, sort_order, name, orderable,
+                guid, name_localization_id, reporting_name_localization_id,
+                default_test_result_id, notify_results,is_flora_count_test
+            )
+            SELECT
+                nextval('test_seq'), null, null,
+                'Microscopie - Frottis Coloration Gram - Bactéries - Nombre de flore', '', null, null, 'Y', null, null, 'Y',
+                null, null, null, null, null, null, now(), null,
+                (SELECT id FROM clinlims.test_trailer WHERE name = 'Général' LIMIT 1),
+                (SELECT id FROM clinlims.test_section WHERE name = 'Routine Bacteriology' LIMIT 1),
+                null,
+                null,
+                'Microscopie - Frottis Coloration Gram - Bactéries - Nombre de flore', 5010,
+                'Microscopie - Frottis Coloration Gram - Bactéries - Nombre de flore', 't',
+                'd5e46b48-106f-437b-b8a1-4788307f5fa0',
+                (SELECT id FROM clinlims.localization WHERE description = 'test name' AND french = 'Microscopie - Frottis Coloration Gram - Bactéries - Nombre de flore' LIMIT 1),
+                (SELECT id FROM clinlims.localization WHERE description = 'test report name' AND french = 'Microscopie - Frottis Coloration Gram - Bactéries - Nombre de flore' LIMIT 1),
+                null, 'f','t'
+            WHERE NOT EXISTS (
+                SELECT 1 FROM clinlims.test WHERE name = 'Microscopie - Frottis Coloration Gram - Bactéries - Nombre de flore'
+            );
+
+        -- Child Tests
+            INSERT INTO clinlims.test(
+                id, method_id, uom_id, description, loinc, reporting_description,
+                sticker_req_flag, is_active, active_begin, active_end, is_reportable,
+                time_holding, time_wait, time_ta_average, time_ta_warning, time_ta_max,
+                label_qty, lastupdated, label_id, test_trailer_id, test_section_id,
+                scriptlet_id, test_format_id, local_code, sort_order, name, orderable,
+                guid, name_localization_id, reporting_name_localization_id,
+                default_test_result_id, notify_results,
+                parent_test_id, parent_trigger_value
+            )
+            SELECT
+                nextval('test_seq'), null, null,
+                'Microscopie - Frottis Coloration Gram - Bactéries - Type de Gram', '', null, null, 'Y', null, null, 'Y',
+                null, null, null, null, null, null, now(), null,
+                (SELECT id FROM clinlims.test_trailer WHERE name = 'Général' LIMIT 1),
+                (SELECT id FROM clinlims.test_section WHERE name = 'Routine Bacteriology' LIMIT 1),
+                null,
+                null,
+                'Microscopie - Frottis Coloration Gram - Bactéries - Type de Gram', 5011,
+                'Microscopie - Frottis Coloration Gram - Bactéries - Type de Gram', 'f',
+                '2e2141bc-23cc-4e30-873b-0dcc1b7fd7f5',
+                (SELECT id FROM clinlims.localization WHERE description = 'test name' AND french = 'Microscopie - Frottis Coloration Gram - Bactéries - Type de Gram' LIMIT 1),
+                (SELECT id FROM clinlims.localization WHERE description = 'test report name' AND french = 'Microscopie - Frottis Coloration Gram - Bactéries - Type de Gram' LIMIT 1),
+                null, 'f',
+                (SELECT id FROM clinlims.test WHERE name = 'Microscopie - Frottis Coloration Gram - Bactéries - Nombre de flore' LIMIT 1),
+                (SELECT d.id FROM clinlims.dictionary d WHERE d.dict_entry = 'Presence' LIMIT 1)
+            WHERE NOT EXISTS (
+                SELECT 1 FROM clinlims.test WHERE name = 'Microscopie - Frottis Coloration Gram - Bactéries - Type de Gram'
+            );
+
+            INSERT INTO clinlims.test(
+                id, method_id, uom_id, description, loinc, reporting_description,
+                sticker_req_flag, is_active, active_begin, active_end, is_reportable,
+                time_holding, time_wait, time_ta_average, time_ta_warning, time_ta_max,
+                label_qty, lastupdated, label_id, test_trailer_id, test_section_id,
+                scriptlet_id, test_format_id, local_code, sort_order, name, orderable,
+                guid, name_localization_id, reporting_name_localization_id,
+                default_test_result_id, notify_results,
+                parent_test_id, parent_trigger_value
+            )
+            SELECT
+                nextval('test_seq'), null, null,
+                'Microscopie - Frottis Coloration Gram - Bactéries - Mode de regroupement', '', null, null, 'Y', null, null, 'Y',
+                null, null, null, null, null, null, now(), null,
+                (SELECT id FROM clinlims.test_trailer WHERE name = 'Général' LIMIT 1),
+                (SELECT id FROM clinlims.test_section WHERE name = 'Routine Bacteriology' LIMIT 1),
+                null,
+                null,
+                'Microscopie - Frottis Coloration Gram - Bactéries - Mode de regroupement', 5011,
+                'Microscopie - Frottis Coloration Gram - Bactéries - Mode de regroupement', 'f',
+                'bf41e22b-3742-40c6-97b4-380f7dfc4b1e',
+                (SELECT id FROM clinlims.localization WHERE description = 'test name' AND french = 'Microscopie - Frottis Coloration Gram - Bactéries - Mode de regroupement' LIMIT 1),
+                (SELECT id FROM clinlims.localization WHERE description = 'test report name' AND french = 'Microscopie - Frottis Coloration Gram - Bactéries - Mode de regroupement' LIMIT 1),
+                null, 'f',
+                (SELECT id FROM clinlims.test WHERE name = 'Microscopie - Frottis Coloration Gram - Bactéries - Nombre de flore' LIMIT 1),
+                (SELECT d.id FROM clinlims.dictionary d WHERE d.dict_entry = 'Presence' LIMIT 1)
+            WHERE NOT EXISTS (
+                SELECT 1 FROM clinlims.test WHERE name = 'Microscopie - Frottis Coloration Gram - Bactéries - Mode de regroupement'
+            );
+
+            INSERT INTO clinlims.test(
+                id, method_id, uom_id, description, loinc, reporting_description,
+                sticker_req_flag, is_active, active_begin, active_end, is_reportable,
+                time_holding, time_wait, time_ta_average, time_ta_warning, time_ta_max,
+                label_qty, lastupdated, label_id, test_trailer_id, test_section_id,
+                scriptlet_id, test_format_id, local_code, sort_order, name, orderable,
+                guid, name_localization_id, reporting_name_localization_id,
+                default_test_result_id, notify_results,
+                parent_test_id, parent_trigger_value
+            )
+            SELECT
+                nextval('test_seq'), null, null,
+                'Microscopie - Frottis Coloration Gram - Bactéries - Autre caractère', '', null, null, 'Y', null, null, 'Y',
+                null, null, null, null, null, null, now(), null,
+                (SELECT id FROM clinlims.test_trailer WHERE name = 'Général' LIMIT 1),
+                (SELECT id FROM clinlims.test_section WHERE name = 'Routine Bacteriology' LIMIT 1),
+                null,
+                null,
+                'Microscopie - Frottis Coloration Gram - Bactéries - Autre caractère', 5011,
+                'Microscopie - Frottis Coloration Gram - Bactéries - Autre caractère', 'f',
+                'f9ed6fe9-4573-4e67-a453-18f319a5f475',
+                (SELECT id FROM clinlims.localization WHERE description = 'test name' AND french = 'Microscopie - Frottis Coloration Gram - Bactéries - Autre caractère' LIMIT 1),
+                (SELECT id FROM clinlims.localization WHERE description = 'test report name' AND french = 'Microscopie - Frottis Coloration Gram - Bactéries - Autre caractère' LIMIT 1),
+                null, 'f',
+                (SELECT id FROM clinlims.test WHERE name = 'Microscopie - Frottis Coloration Gram - Bactéries - Nombre de flore' LIMIT 1),
+                (SELECT d.id FROM clinlims.dictionary d WHERE d.dict_entry = 'Presence' LIMIT 1)
+            WHERE NOT EXISTS (
+                SELECT 1 FROM clinlims.test WHERE name = 'Microscopie - Frottis Coloration Gram - Bactéries - Autre caractère'
+            );
+             ]]>
+        </sql>
+    </changeSet>
+
+    <changeSet id="13-create-uretral-secretion-tests" author="pkomena">
+        <comment>Create tests for uretral secretion with conditional logic</comment>
+        <sql>
+        <![CDATA[
+            INSERT INTO clinlims.test(
+                id, method_id, uom_id, description, loinc, reporting_description,
+                sticker_req_flag, is_active, active_begin, active_end, is_reportable,
+                time_holding, time_wait, time_ta_average, time_ta_warning, time_ta_max,
+                label_qty, lastupdated, label_id, test_trailer_id, test_section_id,
+                scriptlet_id, test_format_id, local_code, sort_order, name, orderable,
+                guid, name_localization_id, reporting_name_localization_id,
+                default_test_result_id, notify_results
+            )
+            SELECT
+                nextval('test_seq'), null, null,
+                'Macroscopie - Ecoulement', '', null, null, 'Y', null, null, 'Y',
+                null, null, null, null, null, null, now(), null,
+                (SELECT id FROM clinlims.test_trailer WHERE name = 'Général' LIMIT 1),
+                (SELECT id FROM clinlims.test_section WHERE name = 'Routine Bacteriology' LIMIT 1),
+                null,
+                null,
+                'Macroscopie - Ecoulement', 5010,
+                'Macroscopie - Ecoulement', 't',
+                '2620e5fc-56cf-4a2e-aa23-2db964e8db17',
+                (SELECT id FROM clinlims.localization WHERE description = 'test name' AND french = 'Macroscopie - Ecoulement' LIMIT 1),
+                (SELECT id FROM clinlims.localization WHERE description = 'test report name' AND french = 'Macroscopie - Ecoulement' LIMIT 1),
+                null, 'f'
+            WHERE NOT EXISTS (
+                SELECT 1 FROM clinlims.test WHERE name = 'Macroscopie - Ecoulement'
+            );
+        -- Child Tests
+            INSERT INTO clinlims.test(
+                id, method_id, uom_id, description, loinc, reporting_description,
+                sticker_req_flag, is_active, active_begin, active_end, is_reportable,
+                time_holding, time_wait, time_ta_average, time_ta_warning, time_ta_max,
+                label_qty, lastupdated, label_id, test_trailer_id, test_section_id,
+                scriptlet_id, test_format_id, local_code, sort_order, name, orderable,
+                guid, name_localization_id, reporting_name_localization_id,
+                default_test_result_id, notify_results,
+                parent_test_id, parent_trigger_value
+            )
+            SELECT
+                nextval('test_seq'), null, null,
+                'Macroscopie - Gland - Abondance', '', null, null, 'Y', null, null, 'Y',
+                null, null, null, null, null, null, now(), null,
+                (SELECT id FROM clinlims.test_trailer WHERE name = 'Général' LIMIT 1),
+                (SELECT id FROM clinlims.test_section WHERE name = 'Routine Bacteriology' LIMIT 1),
+                null,
+                null,
+                'Macroscopie - Gland - Abondance', 5011,
+                'Macroscopie - Gland - Abondance', 'f',
+                '5704ff8c-6978-4413-b5d5-cb68ee34e25c',
+                (SELECT id FROM clinlims.localization WHERE description = 'test name' AND french = 'Macroscopie - Gland - Abondance' LIMIT 1),
+                (SELECT id FROM clinlims.localization WHERE description = 'test report name' AND french = 'Macroscopie - Gland - Abondance' LIMIT 1),
+                null, 'f',
+                (SELECT id FROM clinlims.test WHERE name = 'Macroscopie - Ecoulement' LIMIT 1),
+                (SELECT d.id FROM clinlims.dictionary d WHERE d.dict_entry = 'Presence' LIMIT 1)
+            WHERE NOT EXISTS (
+                SELECT 1 FROM clinlims.test WHERE name = 'Macroscopie - Gland - Abondance'
+            );
+
+            INSERT INTO clinlims.test(
+                id, method_id, uom_id, description, loinc, reporting_description,
+                sticker_req_flag, is_active, active_begin, active_end, is_reportable,
+                time_holding, time_wait, time_ta_average, time_ta_warning, time_ta_max,
+                label_qty, lastupdated, label_id, test_trailer_id, test_section_id,
+                scriptlet_id, test_format_id, local_code, sort_order, name, orderable,
+                guid, name_localization_id, reporting_name_localization_id,
+                default_test_result_id, notify_results,
+                parent_test_id, parent_trigger_value
+            )
+            SELECT
+                nextval('test_seq'), null, null,
+                'Macroscopie - Gland - Aspect', '', null, null, 'Y', null, null, 'Y',
+                null, null, null, null, null, null, now(), null,
+                (SELECT id FROM clinlims.test_trailer WHERE name = 'Général' LIMIT 1),
+                (SELECT id FROM clinlims.test_section WHERE name = 'Routine Bacteriology' LIMIT 1),
+                null,
+                null,
+                'Macroscopie - Gland - Aspect', 5011,
+                'Macroscopie - Gland - Aspect', 'f',
+                '9b94765c-d156-4ae3-8a32-ca869b805db7',
+                (SELECT id FROM clinlims.localization WHERE description = 'test name' AND french = 'Macroscopie - Gland - Aspect' LIMIT 1),
+                (SELECT id FROM clinlims.localization WHERE description = 'test report name' AND french = 'Macroscopie - Gland - Aspect' LIMIT 1),
+                null, 'f',
+                (SELECT id FROM clinlims.test WHERE name = 'Macroscopie - Ecoulement' LIMIT 1),
+                (SELECT d.id FROM clinlims.dictionary d WHERE d.dict_entry = 'Presence' LIMIT 1)
+            WHERE NOT EXISTS (
+                SELECT 1 FROM clinlims.test WHERE name = 'Macroscopie - Gland - Aspect'
+            );
+
+            INSERT INTO clinlims.test(
+                id, method_id, uom_id, description, loinc, reporting_description,
+                sticker_req_flag, is_active, active_begin, active_end, is_reportable,
+                time_holding, time_wait, time_ta_average, time_ta_warning, time_ta_max,
+                label_qty, lastupdated, label_id, test_trailer_id, test_section_id,
+                scriptlet_id, test_format_id, local_code, sort_order, name, orderable,
+                guid, name_localization_id, reporting_name_localization_id,
+                default_test_result_id, notify_results,
+                parent_test_id, parent_trigger_value
+            )
+            SELECT
+                nextval('test_seq'), null, null,
+                'Macroscopie - Gland - Couleur', '', null, null, 'Y', null, null, 'Y',
+                null, null, null, null, null, null, now(), null,
+                (SELECT id FROM clinlims.test_trailer WHERE name = 'Général' LIMIT 1),
+                (SELECT id FROM clinlims.test_section WHERE name = 'Routine Bacteriology' LIMIT 1),
+                null,
+                null,
+                'Macroscopie - Gland - Couleur', 5011,
+                'Macroscopie - Gland - Couleur', 'f',
+                '5b2da685-2423-4d68-b25b-8599166c0f31',
+                (SELECT id FROM clinlims.localization WHERE description = 'test name' AND french = 'Macroscopie - Gland - Couleur' LIMIT 1),
+                (SELECT id FROM clinlims.localization WHERE description = 'test report name' AND french = 'Macroscopie - Gland - Couleur' LIMIT 1),
+                null, 'f',
+                (SELECT id FROM clinlims.test WHERE name = 'Macroscopie - Ecoulement' LIMIT 1),
+                (SELECT d.id FROM clinlims.dictionary d WHERE d.dict_entry = 'Presence' LIMIT 1)
+            WHERE NOT EXISTS (
+                SELECT 1 FROM clinlims.test WHERE name = 'Macroscopie - Gland - Couleur'
+            );
+
+            INSERT INTO clinlims.test(
+                id, method_id, uom_id, description, loinc, reporting_description,
+                sticker_req_flag, is_active, active_begin, active_end, is_reportable,
+                time_holding, time_wait, time_ta_average, time_ta_warning, time_ta_max,
+                label_qty, lastupdated, label_id, test_trailer_id, test_section_id,
+                scriptlet_id, test_format_id, local_code, sort_order, name, orderable,
+                guid, name_localization_id, reporting_name_localization_id,
+                default_test_result_id, notify_results,
+                parent_test_id, parent_trigger_value
+            )
+            SELECT
+                nextval('test_seq'), null, null,
+                'Macroscopie - Gland - Autre', '', null, null, 'Y', null, null, 'Y',
+                null, null, null, null, null, null, now(), null,
+                (SELECT id FROM clinlims.test_trailer WHERE name = 'Général' LIMIT 1),
+                (SELECT id FROM clinlims.test_section WHERE name = 'Routine Bacteriology' LIMIT 1),
+                null,
+                null,
+                'Macroscopie - Gland - Autre', 5011,
+                'Macroscopie - Gland - Autre', 'f',
+                'd484c792-dfc4-41de-9aeb-92e34bfd6baf',
+                (SELECT id FROM clinlims.localization WHERE description = 'test name' AND french = 'Macroscopie - Gland - Autre' LIMIT 1),
+                (SELECT id FROM clinlims.localization WHERE description = 'test report name' AND french = 'Macroscopie - Gland - Autre' LIMIT 1),
+                null, 'f',
+                (SELECT id FROM clinlims.test WHERE name = 'Macroscopie - Ecoulement' LIMIT 1),
+                (SELECT d.id FROM clinlims.dictionary d WHERE d.dict_entry = 'Presence' LIMIT 1)
+            WHERE NOT EXISTS (
+                SELECT 1 FROM clinlims.test WHERE name = 'Macroscopie - Gland - Autre'
+            );
+            -- Culture 
+            INSERT INTO clinlims.test(
+                id, method_id, uom_id, description, loinc, reporting_description,
+                sticker_req_flag, is_active, active_begin, active_end, is_reportable,
+                time_holding, time_wait, time_ta_average, time_ta_warning, time_ta_max,
+                label_qty, lastupdated, label_id, test_trailer_id, test_section_id,
+                scriptlet_id, test_format_id, local_code, sort_order, name, orderable,
+                guid, name_localization_id, reporting_name_localization_id,
+                default_test_result_id, notify_results,
+                is_culture_test, culture_type
+            )
+            SELECT
+                nextval('test_seq'), null, null,
+                'Culture - Sécrétions urétrales', '', null, null, 'Y', null, null, 'Y',
+                null, null, null, null, null, null, now(), null,
+                (SELECT id FROM clinlims.test_trailer WHERE name = 'Général' LIMIT 1),
+                (SELECT id FROM clinlims.test_section WHERE name = 'Routine Bacteriology' LIMIT 1),
+                null,
+                null,
+                'Culture - Sécrétions urétrales', 5041,
+                'Culture - Sécrétions urétrales', 't',
+                '0ffa7047-836e-4776-8661-f3f37b00ea8e',
+                (SELECT id FROM clinlims.localization WHERE description = 'test name' AND french = 'Culture - Sécrétions urétrales' LIMIT 1),
+                (SELECT id FROM clinlims.localization WHERE description = 'test report name' AND french = 'Culture - Sécrétions urétrales' LIMIT 1),
+                null, 'f',
+                true, 'NEISSERIA_GONORRHOEAE'
+            WHERE NOT EXISTS (
+                SELECT 1 FROM clinlims.test WHERE name = 'Culture - Sécrétions urétrales'
+            );
+             ]]>
+        </sql>
+    </changeSet>
+
+     <changeSet id="14-add-others-bacterio-test" author="pkomena">
+        <comment>Create tests for uretral secretion with conditional logic</comment>
+        <sql>
+        <![CDATA[
+            INSERT INTO clinlims.test(
+                id, method_id, uom_id, description, loinc, reporting_description,
+                sticker_req_flag, is_active, active_begin, active_end, is_reportable,
+                time_holding, time_wait, time_ta_average, time_ta_warning, time_ta_max,
+                label_qty, lastupdated, label_id, test_trailer_id, test_section_id,
+                scriptlet_id, test_format_id, local_code, sort_order, name, orderable,
+                guid, name_localization_id, reporting_name_localization_id,
+                default_test_result_id, notify_results
+            )
+            SELECT
+                nextval('test_seq'), null,
+                (select id FROM clinlims.unit_of_measure WHERE name = '/mm3' LIMIT 1),
+                'Microscopie - Etat frais Quantitatif - Hématies', '', null, null, 'Y', null, null, 'Y',
+                null, null, null, null, null, null, now(), null,
+                (SELECT id FROM clinlims.test_trailer WHERE name = 'Général' LIMIT 1),
+                (SELECT id FROM clinlims.test_section WHERE name = 'Routine Bacteriology' LIMIT 1),
+                null,
+                null,
+                'Microscopie - Etat frais Quantitatif - Hématies', 5010,
+                'Microscopie - Etat frais Quantitatif - Hématies', 't',
+                '8e983c62-d55b-4af0-8dda-781c62ea7fe1',
+                (SELECT id FROM clinlims.localization WHERE description = 'test name' AND french = 'Microscopie - Etat frais Quantitatif - Hématies' LIMIT 1),
+                (SELECT id FROM clinlims.localization WHERE description = 'test report name' AND french = 'Microscopie - Etat frais Quantitatif - Hématies' LIMIT 1),
+                null, 'f'
+            WHERE NOT EXISTS (
+                SELECT 1 FROM clinlims.test WHERE name = 'Microscopie - Etat frais Quantitatif - Hématies'
+            );
+            
+            INSERT INTO clinlims.test(
+                id, method_id, uom_id, description, loinc, reporting_description,
+                sticker_req_flag, is_active, active_begin, active_end, is_reportable,
+                time_holding, time_wait, time_ta_average, time_ta_warning, time_ta_max,
+                label_qty, lastupdated, label_id, test_trailer_id, test_section_id,
+                scriptlet_id, test_format_id, local_code, sort_order, name, orderable,
+                guid, name_localization_id, reporting_name_localization_id,
+                default_test_result_id, notify_results
+            )
+            SELECT
+                nextval('test_seq'), null, 
+                (select id FROM clinlims.unit_of_measure WHERE name = '/mm3' LIMIT 1),
+                'Microscopie - Etat frais Quantitatif - Leucocytes', '', null, null, 'Y', null, null, 'Y',
+                null, null, null, null, null, null, now(), null,
+                (SELECT id FROM clinlims.test_trailer WHERE name = 'Général' LIMIT 1),
+                (SELECT id FROM clinlims.test_section WHERE name = 'Routine Bacteriology' LIMIT 1),
+                null,
+                null,
+                'Microscopie - Etat frais Quantitatif - Leucocytes', 5020,
+                'Microscopie - Etat frais Quantitatif - Leucocytes', 't',
+                'e95c3197-5524-4f6c-ab59-48d619989d9f',
+                (SELECT id FROM clinlims.localization WHERE description = 'test name' AND french = 'Microscopie - Etat frais Quantitatif - Leucocytes' LIMIT 1),
+                (SELECT id FROM clinlims.localization WHERE description = 'test report name' AND french = 'Microscopie - Etat frais Quantitatif - Leucocytes' LIMIT 1),
+                null, 'f'
+            WHERE NOT EXISTS (
+                SELECT 1 FROM clinlims.test WHERE name = 'Microscopie - Etat frais Quantitatif - Leucocytes'
+            );
+
+            INSERT INTO clinlims.test(
+                id, method_id, uom_id, description, loinc, reporting_description,
+                sticker_req_flag, is_active, active_begin, active_end, is_reportable,
+                time_holding, time_wait, time_ta_average, time_ta_warning, time_ta_max,
+                label_qty, lastupdated, label_id, test_trailer_id, test_section_id,
+                scriptlet_id, test_format_id, local_code, sort_order, name, orderable,
+                guid, name_localization_id, reporting_name_localization_id,
+                default_test_result_id, notify_results
+            )
+            SELECT
+                nextval('test_seq'), null, 
+                (select id FROM clinlims.unit_of_measure WHERE name = '%' LIMIT 1),
+                'Microscopie - Frottis Coloration Giemsa - Polynucléaires', '', null, null, 'Y', null, null, 'Y',
+                null, null, null, null, null, null, now(), null,
+                (SELECT id FROM clinlims.test_trailer WHERE name = 'Général' LIMIT 1),
+                (SELECT id FROM clinlims.test_section WHERE name = 'Routine Bacteriology' LIMIT 1),
+                null,
+                null,
+                'Microscopie - Frottis Coloration Giemsa - Polynucléaires', 5030,
+                'Microscopie - Frottis Coloration Giemsa - Polynucléaires', 't',
+                'ab78781f-de65-4df3-bf6c-ee9fb90dc3fe',
+                (SELECT id FROM clinlims.localization WHERE description = 'test name' AND french = 'Microscopie - Frottis Coloration Giemsa - Polynucléaires' LIMIT 1),
+                (SELECT id FROM clinlims.localization WHERE description = 'test report name' AND french = 'Microscopie - Frottis Coloration Giemsa - Polynucléaires' LIMIT 1),
+                null, 'f'
+            WHERE NOT EXISTS (
+                SELECT 1 FROM clinlims.test WHERE name = 'Microscopie - Frottis Coloration Giemsa - Polynucléaires'
+            );
+
+            INSERT INTO clinlims.test(
+                id, method_id, uom_id, description, loinc, reporting_description,
+                sticker_req_flag, is_active, active_begin, active_end, is_reportable,
+                time_holding, time_wait, time_ta_average, time_ta_warning, time_ta_max,
+                label_qty, lastupdated, label_id, test_trailer_id, test_section_id,
+                scriptlet_id, test_format_id, local_code, sort_order, name, orderable,
+                guid, name_localization_id, reporting_name_localization_id,
+                default_test_result_id, notify_results
+            )
+            SELECT
+                nextval('test_seq'), null, 
+                (select id FROM clinlims.unit_of_measure WHERE name = '%' LIMIT 1),
+                'Microscopie - Frottis Coloration Giemsa - Lymphocytes', '', null, null, 'Y', null, null, 'Y',
+                null, null, null, null, null, null, now(), null,
+                (SELECT id FROM clinlims.test_trailer WHERE name = 'Général' LIMIT 1),
+                (SELECT id FROM clinlims.test_section WHERE name = 'Routine Bacteriology' LIMIT 1),
+                null,
+                null,
+                'Microscopie - Frottis Coloration Giemsa - Lymphocytes', 5040,
+                'Microscopie - Frottis Coloration Giemsa - Lymphocytes', 't',
+                '4c8a8f15-c012-4e02-a363-f08e43d70d11',
+                (SELECT id FROM clinlims.localization WHERE description = 'test name' AND french = 'Microscopie - Frottis Coloration Giemsa - Lymphocytes' LIMIT 1),
+                (SELECT id FROM clinlims.localization WHERE description = 'test report name' AND french = 'Microscopie - Frottis Coloration Giemsa - Lymphocytes' LIMIT 1),
+                null, 'f'
+            WHERE NOT EXISTS (
+                SELECT 1 FROM clinlims.test WHERE name = 'Microscopie - Frottis Coloration Giemsa - Lymphocytes'
+            );
+            -- Culture 
+            INSERT INTO clinlims.test(
+                id, method_id, uom_id, description, loinc, reporting_description,
+                sticker_req_flag, is_active, active_begin, active_end, is_reportable,
+                time_holding, time_wait, time_ta_average, time_ta_warning, time_ta_max,
+                label_qty, lastupdated, label_id, test_trailer_id, test_section_id,
+                scriptlet_id, test_format_id, local_code, sort_order, name, orderable,
+                guid, name_localization_id, reporting_name_localization_id,
+                default_test_result_id, notify_results,
+                is_culture_test, culture_type
+            )
+            SELECT
+                nextval('test_seq'), null, null,
+                'Culture', '', null, null, 'Y', null, null, 'Y',
+                null, null, null, null, null, null, now(), null,
+                (SELECT id FROM clinlims.test_trailer WHERE name = 'Général' LIMIT 1),
+                (SELECT id FROM clinlims.test_section WHERE name = 'Routine Bacteriology' LIMIT 1),
+                null,
+                null,
+                'Culture', 5050,
+                'Culture', 't',
+                '2c9dbe24-c24e-48a6-8ab7-edc684be1dbd',
+                (SELECT id FROM clinlims.localization WHERE description = 'test name' AND french = 'Culture' LIMIT 1),
+                (SELECT id FROM clinlims.localization WHERE description = 'test report name' AND french = 'Culture' LIMIT 1),
+                null, 'f',
+                true, 'NORMAL'
+            WHERE NOT EXISTS (
+                SELECT 1 FROM clinlims.test WHERE name = 'Culture'
+            );
+             ]]>
+        </sql>
+    </changeSet>
+
+    <changeSet id="15-map-uretral-tests-to-sampletype" author="pkomena">
+        <comment>Create sampletype_test mappings for Sécrétions urétrales</comment>
+        <sql>
+        <![CDATA[
+            INSERT INTO clinlims.sampletype_test (id, sample_type_id, test_id)
+            SELECT
+                nextval('sample_type_test_seq'),
+                (SELECT id FROM clinlims.type_of_sample WHERE description = 'Sécrétions urétrales' LIMIT 1),
+                t.id
+            FROM clinlims.test t
+            WHERE t.name IN (
+                'Macroscopie - Ecoulement',
+                'Macroscopie - Gland - Abondance',
+                'Macroscopie - Gland - Aspect',
+                'Macroscopie - Gland - Couleur',
+                'Macroscopie - Gland - Autre',
+                'Culture - Sécrétions urétrales'
+            )
+            ON CONFLICT DO NOTHING;
+             ]]>
+        </sql>
+    </changeSet>
+
+    <changeSet id="16-map-others-bacterio-tests-to-sampletypes" author="pkomena">
+        <comment>Create sampletype_test mappings for other bacteriology sample types</comment>
+    <sql><![CDATA[
+        WITH sample_types AS (
+            SELECT id, description
+            FROM clinlims.type_of_sample
+            WHERE trim(description) IN (
+                'Urines',
+                'Liquide ponction',
+                'Sperme',
+                'Sang(hémoculture)',
+                'Crachat/Expectoration',
+                'Matériels(Prothèse,Sonde,Stérilet)',
+                'LCR',
+                'Pus',
+                'Selles'
+            )
+        ),
+        tests AS (
+            SELECT id, name
+            FROM clinlims.test
+            WHERE name IN (
+                'Microscopie - Frottis Coloration Gram - Bactéries - Nombre de flore',
+                'Microscopie - Frottis Coloration Gram - Bactéries - Type de Gram',
+                'Microscopie - Frottis Coloration Gram - Bactéries - Mode de regroupement',
+                'Microscopie - Frottis Coloration Gram - Bactéries - Autre caractère',
+                'Macroscopie - Ecoulement',
+                'Macroscopie - Gland - Abondance',
+                'Macroscopie - Gland - Aspect',
+                'Macroscopie - Gland - Couleur',
+                'Macroscopie - Gland - Autre',
+                'Culture - Sécrétions urétrales',
+                'Microscopie - Etat frais Quantitatif - Hématies',
+                'Microscopie - Etat frais Quantitatif - Leucocytes',
+                'Microscopie - Frottis Coloration Giemsa - Polynucléaires',
+                'Microscopie - Frottis Coloration Giemsa - Lymphocytes',
+                'Culture'
+            )
+        ),
+        pairs AS (
+            SELECT
+                st.id  AS sample_type_id,
+                t.id   AS test_id
+            FROM sample_types st
+            CROSS JOIN tests t
+            WHERE
+                -- Tous les tests pour tous les types sauf Selles
+                (st.description <> 'Selles')
+                OR
+                -- Selles uniquement pour le test "Culture"
+                (st.description = 'Selles' AND t.name = 'Culture')
+        )
+        INSERT INTO clinlims.sampletype_test (id, sample_type_id, test_id)
+        SELECT
+            nextval('sample_type_test_seq'),
+            p.sample_type_id,
+            p.test_id
+        FROM pairs p
+        ON CONFLICT DO NOTHING;
+    ]]></sql>
+</changeSet>
+
+<changeSet id="17-map-others-bacterio-tests-result-modalities" author="pkomena">
+    <sql><![CDATA[
+        WITH mappings AS (
+            -- test_name, dict_entry, sort_order
+            SELECT * FROM (VALUES
+                -- Microscopie Gram - Nombre de flore
+                ('Microscopie - Frottis Coloration Gram - Bactéries - Nombre de flore', '0', 10),
+                ('Microscopie - Frottis Coloration Gram - Bactéries - Nombre de flore', '1', 20),
+                ('Microscopie - Frottis Coloration Gram - Bactéries - Nombre de flore', '2', 30),
+                ('Microscopie - Frottis Coloration Gram - Bactéries - Nombre de flore', '>=3', 40),
+
+                -- Microscopie Gram - Type de Gram
+                ('Microscopie - Frottis Coloration Gram - Bactéries - Type de Gram', 'Bacilles Gram négatif', 10),
+                ('Microscopie - Frottis Coloration Gram - Bactéries - Type de Gram', 'Bacilles Gram positif', 20),
+                ('Microscopie - Frottis Coloration Gram - Bactéries - Type de Gram', 'Cocci Gram négatif', 30),
+                ('Microscopie - Frottis Coloration Gram - Bactéries - Type de Gram', 'Cocci Gram positif', 40),
+                ('Microscopie - Frottis Coloration Gram - Bactéries - Type de Gram', 'Coccobacilles Gram négatif', 50),
+                ('Microscopie - Frottis Coloration Gram - Bactéries - Type de Gram', 'Coccobacilles Gram positif', 60),
+
+                -- Microscopie Gram - Mode de regroupement
+                ('Microscopie - Frottis Coloration Gram - Bactéries - Mode de regroupement', 'Isolées', 10),
+                ('Microscopie - Frottis Coloration Gram - Bactéries - Mode de regroupement', 'Amas', 20),
+                ('Microscopie - Frottis Coloration Gram - Bactéries - Mode de regroupement', 'Courte chainette', 30),
+                ('Microscopie - Frottis Coloration Gram - Bactéries - Mode de regroupement', 'Longue chainette', 40),
+                ('Microscopie - Frottis Coloration Gram - Bactéries - Mode de regroupement', 'Grappe', 50),
+                ('Microscopie - Frottis Coloration Gram - Bactéries - Mode de regroupement', 'Tétrade', 60),
+                ('Microscopie - Frottis Coloration Gram - Bactéries - Mode de regroupement', 'Diplo', 70),
+
+                -- Microscopie Gram - Autre caractère
+                ('Microscopie - Frottis Coloration Gram - Bactéries - Autre caractère', 'Capsulé', 10),
+                ('Microscopie - Frottis Coloration Gram - Bactéries - Autre caractère', 'Non Capsulé', 20),
+
+                -- Macroscopie - Ecoulement
+                ('Macroscopie - Ecoulement', 'Presence', 10),
+                ('Macroscopie - Ecoulement', 'Absence', 20),
+
+                -- Macroscopie - Gland - Abondance
+                ('Macroscopie - Gland - Abondance', 'Minime', 10),
+                ('Macroscopie - Gland - Abondance', 'Moyen', 20),
+                ('Macroscopie - Gland - Abondance', 'Abondante', 30),
+
+                -- Macroscopie - Gland - Aspect
+                ('Macroscopie - Gland - Aspect', 'Purulent', 10),
+                ('Macroscopie - Gland - Aspect', 'Translucide', 20),
+
+                -- Macroscopie - Gland - Couleur
+                ('Macroscopie - Gland - Couleur', 'Rougeatre', 10),
+                ('Macroscopie - Gland - Couleur', 'Blanchatre', 20),
+                ('Macroscopie - Gland - Couleur', 'Verdatre', 30),
+                ('Macroscopie - Gland - Couleur', 'Jaunatre', 40),
+                ('Macroscopie - Gland - Couleur', 'Grisatre', 50),
+
+                -- Macroscopie - Gland - Autre
+                ('Macroscopie - Gland - Autre', 'Fetide', 10),
+                ('Macroscopie - Gland - Autre', 'Inodore', 20),
+
+                -- Culture - Sécrétions urétrales
+                ('Culture - Sécrétions urétrales', 'Négative', 10),
+                ('Culture - Sécrétions urétrales', 'Positive', 20),
+                ('Culture - Sécrétions urétrales', 'Neisseria gonorrhoeae Positive', 30),
+                ('Culture - Sécrétions urétrales', 'Neisseria gonorrhoeae Negative', 40),
+
+                -- Culture
+                ('Culture', 'Négative', 10),
+                ('Culture', 'Positive', 20),
+                ('Culture', 'Contaminée', 30)
+            ) AS v(test_name, dict_entry, sort_order)
+        )
+        INSERT INTO clinlims.test_result
+            (id, test_id, tst_rslt_type, value, lastupdated, sort_order, is_active)
+        SELECT
+            nextval('clinlims.test_result_seq'),
+            t.id,
+            'D',
+            d.id,
+            now(),
+            m.sort_order,
+            true
+        FROM mappings m
+        JOIN clinlims.test t
+            ON lower(trim(t.name)) = lower(trim(m.test_name))
+        JOIN clinlims.dictionary d
+            ON trim(d.dict_entry) = trim(m.dict_entry)
+        ON CONFLICT DO NOTHING;
+    ]]></sql>
+
+    <sql><![CDATA[
+        WITH mappings AS (
+            -- test_name, dict_entry, sort_order
+            SELECT * FROM (VALUES
+            ('Microscopie - Etat frais Quantitatif - Hématies',10),
+            ('Microscopie - Etat frais Quantitatif - Leucocytes',20),
+            ('Microscopie - Frottis Coloration Giemsa - Polynucléaires',30),
+            ('Microscopie - Frottis Coloration Giemsa - Lymphocytes',40)
+            ) AS v(test_name, sort_order)
+        )
+        INSERT INTO clinlims.test_result
+            (id, test_id, tst_rslt_type, value, lastupdated, sort_order, is_active)
+        SELECT
+            nextval('clinlims.test_result_seq'),
+            t.id,
+            'N',
+            null,
+            now(),
+            m.sort_order,
+            true
+        FROM mappings m
+        JOIN clinlims.test t
+            ON lower(trim(t.name)) = lower(trim(m.test_name))
+        ON CONFLICT DO NOTHING;
+    ]]></sql>
+</changeSet>
+
+
+<changeSet author="CIV developer Group" id="18-map-others-bacterio-result-limits-with-range">
+        <sql><![CDATA[
+INSERT INTO clinlims.result_limits(id, test_id,	test_result_type_id,min_age, max_age, gender, low_normal,
+            high_normal, low_valid,	high_valid, lastupdated, normal_dictionary_id,	always_validate)
+            VALUES
+            (nextval('result_limits_seq'),(select id from test where description = 'Microscopie - Etat frais Quantitatif - Hématies'),
+            4,0,'Infinity',null,'0','100','0','100',now(),null,'f'),
+            (nextval('result_limits_seq'),(select id from test where description = 'Microscopie - Etat frais Quantitatif - Leucocytes'),
+            4,0,'Infinity',null,'0','100','0','100',now(),null,'f'),
+            (nextval('result_limits_seq'),(select id from test where description = 'Microscopie - Frottis Coloration Giemsa - Polynucléaires'),
+            4,0,'Infinity',null,'0','100','0','100',now(),null,'f'),
+            (nextval('result_limits_seq'),(select id from test where description = 'Microscopie - Frottis Coloration Giemsa - Lymphocytes'),
+            4,0,'Infinity',null,'0','100','0','100',now(),null,'f');
+]]></sql>
+    </changeSet>
+
+    <changeSet id="19-map-others-bacterio-result-limits" author="pkomena">
+    <sql><![CDATA[
+        INSERT INTO clinlims.result_limits(
+            id,
+            test_id,
+            test_result_type_id,
+            min_age,
+            max_age,
+            gender,
+            low_normal,
+            high_normal,
+            low_valid,
+            high_valid,
+            lastupdated,
+            normal_dictionary_id,
+            always_validate
+        )
+        SELECT
+            nextval('result_limits_seq'),
+            t.id,
+            2,
+            0,
+            'Infinity',
+            NULL,
+            'Infinity',
+            'Infinity',
+            'Infinity',
+            'Infinity',
+            now(),
+            NULL,
+            'f'
+        FROM clinlims.test t
+        WHERE t.name IN (
+            'Macroscopie - Col - Leucorrhées',
+            'Macroscopie - Col - Abondance',
+            'Macroscopie - Col - Aspect',
+            'Macroscopie - Col - Couleur',
+            'Macroscopie - Col - Autre',
+            'Macroscopie - Muqueuse vaginale - Leucorrhées',
+            'Macroscopie - Muqueuse vaginale - Abondance',
+            'Macroscopie - Muqueuse vaginale - Aspect',
+            'Macroscopie - Muqueuse vaginale - Couleur',
+            'Macroscopie - Muqueuse vaginale - Autre',
+            'Macroscopie - Vulve - Leucorrhées',
+            'Macroscopie - Vulve - Abondance',
+            'Macroscopie - Vulve - Aspect',
+            'Macroscopie - Vulve - Couleur',
+            'Macroscopie - Vulve - Autre',
+            'Culture - Sécrétions Vaginales',
+            'Culture - Col',
+            'Microscopie - Frottis Coloration Gram - Bactéries - Nombre de flore',
+            'Microscopie - Frottis Coloration Gram - Bactéries - Type de Gram',
+            'Microscopie - Frottis Coloration Gram - Bactéries - Mode de regroupement',
+            'Microscopie - Frottis Coloration Gram - Bactéries - Autre caractère',
+            'Macroscopie - Ecoulement',
+            'Macroscopie - Gland - Abondance',
+            'Macroscopie - Gland - Aspect',
+            'Macroscopie - Gland - Couleur',
+            'Macroscopie - Gland - Autre',
+            'Culture - Sécrétions urétrales',
+            'Culture'
+        )
+        ON CONFLICT DO NOTHING;
+    ]]></sql>
+</changeSet>
+
+</databaseChangeLog>

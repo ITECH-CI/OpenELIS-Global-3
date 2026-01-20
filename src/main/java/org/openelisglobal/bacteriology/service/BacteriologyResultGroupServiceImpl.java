@@ -42,6 +42,7 @@ public class BacteriologyResultGroupServiceImpl extends BaseObjectServiceImpl<Ba
                         + ". Must be one of: " + VALID_GROUP_TYPES);
             }
 
+            
             if (resultGroup.getId() == null) {
                 Integer id = insert(resultGroup);
                 resultGroup.setId(id);

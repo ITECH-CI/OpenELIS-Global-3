@@ -28,10 +28,10 @@
             <column name="organism_name_text" length="255" />
         </property>
         <property name="gramType" type="string">
-            <column name="gram_type" length="10" />
+            <column name="gram_type" length="100" />
         </property>
         <property name="groupingMode" type="string">
-            <column name="grouping_mode" length="50" />
+            <column name="grouping_mode" length="100" />
         </property>
         <property name="capsulePresence" type="java.lang.Boolean">
             <column name="capsule_presence" />

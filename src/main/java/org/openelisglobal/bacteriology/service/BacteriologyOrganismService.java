@@ -60,19 +60,4 @@ public interface BacteriologyOrganismService extends BaseObjectService<Bacteriol
      */
     List<Dictionary> getAllOrganismNamesSorted();
 
-    /**
-     * Validate organism type (BACTERIA or YEAST)
-     *
-     * @param organismType The type to validate
-     * @return true if valid
-     */
-    boolean isValidOrganismType(String organismType);
-
-    /**
-     * Validate gram type (POSITIVE or NEGATIVE)
-     *
-     * @param gramType The gram type to validate
-     * @return true if valid
-     */
-    boolean isValidGramType(String gramType);
 }

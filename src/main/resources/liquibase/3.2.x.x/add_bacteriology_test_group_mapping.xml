@@ -5,7 +5,7 @@
     xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
 
     <!-- Create table to map tests to bacteriology groups -->
-    <changeSet id="1" author="system" context="ci">
+    <changeSet id="1" author="pkomena" >
         <preConditions onFail="MARK_RAN">
             <not>
                 <tableExists tableName="bacteriology_test_group_mapping" schemaName="clinlims"/>
@@ -29,7 +29,7 @@
     </changeSet>
 
     <!-- Create sequence for bacteriology_test_group_mapping -->
-    <changeSet id="2" author="system" context="ci">
+    <changeSet id="2" author="pkomena" >
         <preConditions onFail="MARK_RAN">
             <not>
                 <sequenceExists sequenceName="bacteriology_test_group_mapping_seq" schemaName="clinlims"/>
@@ -42,7 +42,7 @@
     </changeSet>
 
     <!-- Add foreign key constraint -->
-    <changeSet id="3" author="system" context="ci">
+    <changeSet id="3" author="pkomena" >
         <addForeignKeyConstraint
             baseTableName="bacteriology_test_group_mapping"
             baseTableSchemaName="clinlims"
@@ -54,7 +54,7 @@
     </changeSet>
 
     <!-- Add unique constraint to prevent duplicate mappings -->
-    <changeSet id="4" author="system" context="ci">
+    <changeSet id="4" author="pkomena" >
         <addUniqueConstraint
             tableName="bacteriology_test_group_mapping"
             schemaName="clinlims"
@@ -63,7 +63,7 @@
     </changeSet>
 
     <!-- Insert example mappings for common bacteriology tests -->
-    <changeSet id="5" author="system" context="ci">
+    <changeSet id="5" author="pkomena" >
         <comment>Map common bacteriology tests to their groups</comment>
         <sql>
             -- Map tests to MACROSCOPY group

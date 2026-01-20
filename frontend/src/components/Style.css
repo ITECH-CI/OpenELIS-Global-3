@@ -399,6 +399,21 @@ button {
   padding-left: 3%;
 }
 
+.antibiogram-table .cds--data-table-container {
+  overflow: visible;
+}
+
+.antibiogram-table .cds--data-table-content,
+.antibiogram-table .cds--table-container,
+.antibiogram-table .cds--table-row,
+.antibiogram-table .cds--table-cell {
+  overflow: visible;
+}
+
+.antibiogram-table .cds--list-box__menu {
+  z-index: 9000;
+}
+
 .first-row {
   max-width: 500px;
 }

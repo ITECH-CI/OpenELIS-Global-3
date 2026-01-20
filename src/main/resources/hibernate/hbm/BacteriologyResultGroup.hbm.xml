@@ -36,8 +36,5 @@
         <property name="lastupdated" type="timestamp">
             <column name="lastupdated" length="29" />
         </property>
-        <property name="sysUserId" type="java.lang.Integer">
-            <column name="sys_user_id" precision="10" scale="0" />
-        </property>
     </class>
 </hibernate-mapping>
