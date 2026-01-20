@@ -34,6 +34,8 @@ import org.openelisglobal.common.util.LabelValuePair;
 import org.openelisglobal.dictionary.service.DictionaryService;
 import org.openelisglobal.dictionary.valueholder.Dictionary;
 import org.openelisglobal.localization.service.LocalizationService;
+import org.openelisglobal.method.service.MethodService;
+import org.openelisglobal.method.valueholder.Method;
 import org.openelisglobal.organization.service.OrganizationService;
 import org.openelisglobal.organization.valueholder.Organization;
 import org.openelisglobal.person.service.PersonService;
@@ -118,6 +120,9 @@ public class DisplayListController extends BaseRestController {
 
     @Autowired
     DictionaryService dictionaryService;
+
+    @Autowired
+    MethodService methodService;
 
     @Autowired(required = false)
     private ClientRegistrationRepository clientRegistrationRepository;
@@ -464,6 +469,19 @@ public class DisplayListController extends BaseRestController {
         }
         Collections.sort(testList, new ValueComparator());
         return testList;
+    }
+
+    @GetMapping(value = "method-list", produces = MediaType.APPLICATION_JSON_VALUE)
+    @ResponseBody
+    private List<IdValuePair> getActiveMethodsList() {
+        List<Method> methods = methodService.getAllActiveMethods();
+        List<IdValuePair> methodList = new ArrayList<>();
+
+        for (Method method : methods) {
+            methodList.add(new IdValuePair(method.getId(), method.getMethodName()));
+        }
+
+        return methodList;
     }
 
     @GetMapping(value = "priorities", produces = MediaType.APPLICATION_JSON_VALUE)

@@ -1,9 +1,6 @@
 package org.openelisglobal.nonconformity.form;
 
-import java.sql.Date;
-
 import org.openelisglobal.common.form.BaseForm;
-import org.openelisglobal.common.validator.ValidationHelper;
 
 public class NonConformityForm extends BaseForm {
 

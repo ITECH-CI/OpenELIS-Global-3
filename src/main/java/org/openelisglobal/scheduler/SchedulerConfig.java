@@ -120,7 +120,6 @@ public class SchedulerConfig implements SchedulingConfigurer {
         }
 
         String jobName = cronScheduler.getJobName();
-        LogEvent.logInfo(this.getClass().getSimpleName(), "addOrRunSchedule", "Adding cron job: " + jobName);
 
         Class<? extends Job> targetJob = scheduleJobMap.get(jobName);
 

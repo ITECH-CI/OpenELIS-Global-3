@@ -1,9 +1,9 @@
 package org.openelisglobal.common.rest.provider;
 
-import jakarta.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import org.openelisglobal.common.log.LogEvent;
 import org.openelisglobal.common.util.IdValuePair;
 import org.openelisglobal.common.util.validator.GenericValidator;
 import org.openelisglobal.organization.service.OrganizationService;
@@ -24,20 +24,42 @@ public class HealthDistrictsForRegionRestController {
 
     @GetMapping(value = "health-districts-for-region", produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
-    public List<IdValuePair> getHealthDistrictsForRegion(HttpServletRequest request, @RequestParam String regionId) {
+    public List<IdValuePair> getHealthDistrictsForRegion(@RequestParam String regionId) {
         if (GenericValidator.isBlankOrNull(regionId)) {
             return Collections.<IdValuePair>emptyList();
         }
-        List<Organization> districts = organizationService.getOrganizationsByParentId(regionId);
 
-        List<IdValuePair> districtIdValues = new ArrayList<>();
-        if (!districts.isEmpty()) {
-            districts.forEach(org -> {
-                IdValuePair district = new IdValuePair(org.getId(), org.getOrganizationName());
-                districtIdValues.add(district);
-            });
-            return districtIdValues;
-        } else {
+        try {
+            List<Organization> districts = null;
+
+            // Check if regionId is numeric before trying to use it as a parent ID
+            if (regionId.matches("^\\d+$")) {
+                // It's a numeric ID, use it directly
+                districts = organizationService.getOrganizationsByParentId(regionId);
+            } else {
+                // It's a name, find the region by name first
+                Organization searchOrg = new Organization();
+                searchOrg.setOrganizationName(regionId);
+                Organization region = organizationService.getOrganizationByName(searchOrg, true);
+                if (region != null && region.getId() != null) {
+                    districts = organizationService.getOrganizationsByParentId(region.getId());
+                }
+            }
+
+            List<IdValuePair> districtIdValues = new ArrayList<>();
+            if (districts != null && !districts.isEmpty()) {
+                districts.forEach(org -> {
+                    IdValuePair district = new IdValuePair(org.getId(), org.getOrganizationName());
+                    districtIdValues.add(district);
+                });
+                return districtIdValues;
+            } else {
+                return Collections.<IdValuePair>emptyList();
+            }
+        } catch (Exception e) {
+            LogEvent.logError(this.getClass().getName(), "getHealthDistrictsForRegion",
+                    "Error retrieving health districts for region: " + regionId);
+            LogEvent.logError(e);
             return Collections.<IdValuePair>emptyList();
         }
     }

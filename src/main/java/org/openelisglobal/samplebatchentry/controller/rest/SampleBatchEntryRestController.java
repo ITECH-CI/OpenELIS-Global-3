@@ -216,7 +216,6 @@ public class SampleBatchEntryRestController extends BaseController {
                 LogEvent.logDebug(e);
                 result.reject("errors.UpdateException", "errors.UpdateException");
             }
-            LogEvent.logInfo(this.getClass().getSimpleName(), "showSamplePatientEntrySave", result.toString());
             saveErrors(result);
             request.setAttribute(ALLOW_EDITS_KEY, "false");
         }

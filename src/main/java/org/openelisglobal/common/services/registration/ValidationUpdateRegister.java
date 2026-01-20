@@ -29,6 +29,13 @@ public class ValidationUpdateRegister {
             updaters.add(new ResultReportingUpdate());
         }
 
+        // SI Unit Conversion is NOT included in validation updaters because:
+        // 1. SI values are already calculated during result entry
+        // 2. Results cannot be modified in the validation interface
+        // 3. Re-calculating SI values during validation triggers false "modified
+        // result" detections
+        // SI conversion only happens in ResultUpdateRegister (during result entry)
+
         /*****
          * BIG WARNING FLASHING LIGHT ********* If another listener is added then the
          * method addResultSets() needs to be modified in ResultValidationSaveAction

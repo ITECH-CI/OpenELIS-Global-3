@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+    <!-- Microbio observation history type -->
+    <changeSet author="CIV developer Group" id="2024082800">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0"><![CDATA[
+SELECT count(*) FROM clinlims.observation_history_type WHERE type_name = 'BacterioTypeExamens'
+]]></sqlCheck>
+        </preConditions>
+        <sql><![CDATA[
+INSERT INTO clinlims.observation_history_type(id, type_name, description,lastupdated) VALUES
+            (nextval('observation_history_type_seq'),'TbSpecimenState','Conformity',now()),
+            (nextval('observation_history_type_seq'),'BacterioTypeExamens','Bacterio Type Exam ',now());
+]]></sql>
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="2024082801">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0"><![CDATA[ SELECT count(*) FROM clinlims.observation_history_type WHERE type_name = 'PrescriptionType']]>
+            </sqlCheck>
+        </preConditions>
+        <sql>
+            INSERT INTO clinlims.observation_history_type(id, type_name,
+            description,lastupdated) VALUES
+            (nextval('observation_history_type_seq'),'PrescriptionType','Prescription
+            Order',now()),
+            (nextval('observation_history_type_seq'),'Urgence','Urgence ',now());
+        </sql>
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="2025012000">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0"><![CDATA[
+SELECT count(*) FROM clinlims.observation_history_type WHERE type_name = 'Germ Identification'
+]]></sqlCheck>
+        </preConditions>
+        <sql><![CDATA[
+INSERT INTO clinlims.observation_history_type(id, type_name, description,lastupdated) VALUES
+            (nextval('observation_history_type_seq'),'Germ Identification','Germ Identification',now()),
+            (nextval('observation_history_type_seq'),'Bacteria','Bacteria',now()),
+            (nextval('observation_history_type_seq'),'Culture','Culture',now());
+]]></sql>
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="2025013001">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0"><![CDATA[
+            SELECT count(*) FROM clinlims.observation_history_type WHERE type_name = 'Statut' ]]>
+            </sqlCheck>
+        </preConditions>
+        <sql><![CDATA[
+            INSERT INTO clinlims.observation_history_type(id, type_name, description,lastupdated) VALUES
+            (nextval('observation_history_type_seq'),'Statut','Statut',now()); ]]>
+
+        </sql>
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="202501032609">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0"><![CDATA[
+            SELECT count(*) FROM
+                clinlims.observation_history_type WHERE type_name = 'ColTests']]>
+            </sqlCheck>
+        </preConditions>
+        <sql><![CDATA[
+            INSERT INTO clinlims.observation_history_type(id, type_name,
+            description,lastupdated) VALUES
+            (nextval('observation_history_type_seq'),'ColTests','ColTests',now());
+            ]]>
+        </sql>
+    </changeSet>
+
+
+    <changeSet author="CIV developer Group" id="2025031410">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0"><![CDATA[ SELECT count(*) FROM clinlims.observation_history_type WHERE type_name = 'CultureCol']]>
+            </sqlCheck>
+        </preConditions>
+        <sql><![CDATA[
+            INSERT INTO clinlims.observation_history_type(id, type_name, description,lastupdated) VALUES
+            (nextval('observation_history_type_seq'),'CultureCol','CultureCol',now());]]>
+        </sql>
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="2025040010">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0"><![CDATA[
+SELECT count(*) FROM clinlims.observation_history_type WHERE type_name = 'Bacterial Count'
+]]></sqlCheck>
+        </preConditions>
+        <sql><![CDATA[
+INSERT INTO clinlims.observation_history_type(id, type_name, description,lastupdated) VALUES
+            (nextval('observation_history_type_seq'),'Bacterial Count','Bacterial Count',now());
+]]></sql>
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="2025060129">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0"><![CDATA[
+            SELECT count(*) FROM clinlims.observation_history_type WHERE type_name = 'colLeucore']]>
+            </sqlCheck>
+        </preConditions>
+        <sql>
+        <![CDATA[
+            INSERT INTO clinlims.observation_history_type(id, type_name, description,lastupdated) VALUES
+            (nextval('observation_history_type_seq'),'colLeucore','colLeucore',now());]]>
+        </sql>
+    </changeSet>
+
+
+
+
+    <changeSet author="CIV developer Group" id="2025060132">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">
+            <![CDATA[
+            SELECT count(*) FROM clinlims.observation_history_type WHERE type_name = 'vaginalAbondance']]>
+            </sqlCheck>
+        </preConditions>
+        <sql>
+        <![CDATA[
+            INSERT INTO clinlims.observation_history_type(id, type_name, description,lastupdated) VALUES
+            (nextval('observation_history_type_seq'),'vaginalAbondance','vaginalAbondance',now());]]>
+        </sql>
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="2025060135">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0"> <![CDATA[
+            SELECT count(*) FROM clinlims.observation_history_type WHERE type_name = 'vaginalAspect']]>
+            </sqlCheck>
+        </preConditions>
+        <sql>
+        <![CDATA[
+            INSERT INTO clinlims.observation_history_type(id, type_name, description,lastupdated) VALUES
+            (nextval('observation_history_type_seq'),'vaginalAspect','vaginalAspect',now());]]>
+        </sql>
+    </changeSet>
+
+
+    <changeSet author="CIV developer Group" id="2025060139">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">
+            <![CDATA[
+            SELECT count(*) FROM clinlims.observation_history_type WHERE type_name = 'vaginalCouleur']]>
+            </sqlCheck>
+        </preConditions>
+        <sql>
+        <![CDATA[
+            INSERT INTO clinlims.observation_history_type(id, type_name, description,lastupdated) VALUES
+            (nextval('observation_history_type_seq'),'vaginalCouleur','vaginalCouleur',now());]]>
+        </sql>
+    </changeSet>
+
+    <changeSet author="CIV developer Group" id="2025060140">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">
+            <![CDATA[
+            SELECT count(*) FROM clinlims.observation_history_type WHERE type_name = 'vaginalAutre']]>
+            </sqlCheck>
+        </preConditions>
+        <sql>
+        <![CDATA[
+            INSERT INTO clinlims.observation_history_type(id, type_name, description,lastupdated) VALUES
+            (nextval('observation_history_type_seq'),'vaginalAutre','vaginalAutre',now());]]>
+        </sql>
+    </changeSet>
+
+
+    <changeSet author="CIV developer Group" id="2025060201">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0"><![CDATA[ SELECT count(*) FROM clinlims.observation_history_type WHERE type_name = 'uretreAspect']]>
+            </sqlCheck>
+        </preConditions>
+        <sql>
+        <![CDATA[
+            INSERT INTO clinlims.observation_history_type(id, type_name, description,lastupdated) VALUES
+            (nextval('observation_history_type_seq'),'uretreAspect','vaginalAutre',now());]]>
+        </sql>
+    </changeSet>
+
+</databaseChangeLog>

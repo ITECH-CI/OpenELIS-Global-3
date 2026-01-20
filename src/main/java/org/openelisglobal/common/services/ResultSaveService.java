@@ -268,12 +268,36 @@ public class ResultSaveService {
 
     private void setStandardResultValues(String value, Result result) {
         if (!(GenericValidator.isBlankOrNull(value) || GenericValidator.isBlankOrNull(result.getValue()))
-                && !StringUtil.blankIfNull(value).equals(result.getValue())) {
+                && !areValuesEquivalent(value, result.getValue())) {
+            LogEvent.logInfo(this.getClass().getSimpleName(), "setStandardResultValues", "Result value changed - Old: ["
+                    + result.getValue() + "] New: [" + value + "] ResultId: " + result.getId());
             updatedResult = true;
         }
         result.setValue(value);
         result.setSysUserId(currentUserId);
         result.setSortOrder("0");
+    }
+
+    /**
+     * Compare two result values, treating numeric values that are mathematically
+     * equal as equivalent (e.g., "25" and "25.0" are considered equal). This
+     * prevents false "result modified" detections during validation.
+     */
+    private boolean areValuesEquivalent(String value1, String value2) {
+        // First try exact string match
+        if (StringUtil.blankIfNull(value1).equals(value2)) {
+            return true;
+        }
+
+        // Try numeric comparison for numeric values
+        try {
+            double num1 = Double.parseDouble(value1);
+            double num2 = Double.parseDouble(value2);
+            return num1 == num2;
+        } catch (NumberFormatException e) {
+            // Not numeric, fall back to string comparison
+            return false;
+        }
     }
 
     private String getResultSortOrder(String resultValue) {

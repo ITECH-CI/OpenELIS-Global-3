@@ -55,9 +55,6 @@ public class ModuleAuthenticationInterceptor implements HandlerInterceptor {
         path = request.getRequestURI().substring(request.getContextPath().length());
         Errors errors = new BaseErrors();
         if (!hasPermission(errors, request)) {
-            LogEvent.logInfo("ModuleAuthenticationInterceptor", "preHandle()",
-                    "======> NOT ALLOWED ACCESS TO THIS MODULE");
-            LogEvent.logInfo(this.getClass().getSimpleName(), "preHandle", "has no permission"); //
             if (isRestFullPath()) {
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                 response.setContentType("application/json");

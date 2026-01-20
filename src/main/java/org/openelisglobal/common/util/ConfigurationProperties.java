@@ -230,7 +230,11 @@ public abstract class ConfigurationProperties {
         CONTACT_TRACING("contactTracingEnabled", "text"), //
         REQUIRE_LAB_UNIT_AT_LOGIN("requireLabUnitAtLogin", "text"), //
         ENABLE_CLIENT_REGISTRY("enableClientRegistry", "text"), // if true, then client registry search option is
-        ENABLE_OPENELIS_TO_ODOO_CONNECTION("enableOdooConnection", "text"), BAR_CODE_TYPE("BarCodeType", "text");
+        ENABLE_OPENELIS_TO_ODOO_CONNECTION("enableOdooConnection", "text"), BAR_CODE_TYPE("BarCodeType", "text"),
+        SI_UNIT_CONVERSION("siUnitConversion", "text"), // If true, automatic SI unit conversion is enabled
+        SI_UNIT_CONVERSION_IN_REPORTS("siUnitConversionInReports", "text"), // If true, SI values are displayed in
+                                                                            // reports
+        SI_UNIT_CONVERSION_IN_UI("siUnitConversionInUI", "text"); // If true, SI values are displayed in the UI
 
         // visible on
         // the ui
