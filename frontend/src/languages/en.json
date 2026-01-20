@@ -401,6 +401,8 @@
   "patient.label.primaryphone": "Primary phone:{PHONE_FORMAT}",
   "patient.gender": "Gender",
   "patient.female.pregnant":"Pregnant",
+  "patient.female.maidenName":"Maiden name",
+  "patient.female.maidenName.placeholder":"Enter maiden name",
   "patient.label.clinicalinformations": "Clincal Informations",
   "label.button.externalsearch": "External Search",
   "label.button.select.status": "Select Status",

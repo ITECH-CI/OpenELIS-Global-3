@@ -110,6 +110,7 @@ public class PatientSearchPopulateRestController {
         patientInfo.setSubjectNumber(identityMap.getIdentityValue(identityList, "SUBJECT"));
         patientInfo.setLastName(getLastNameForResponse(person));
         patientInfo.setFirstName(person.getFirstName());
+        patientInfo.setMaidenName(person.getMaidenName());
         patientInfo.setMothersName(identityMap.getIdentityValue(identityList, "MOTHER"));
         patientInfo.setAka(identityMap.getIdentityValue(identityList, "AKA"));
         patientInfo.setStreetAddress(person.getStreetAddress());

@@ -15,6 +15,7 @@
     <include relativeToChangelogFile="true"
     file="add_non_conformity_table.xml" />
     <include relativeToChangelogFile="true" file="add_site_id_config.xml" />
+    <include relativeToChangelogFile="true" file="add_maiden_name_column.xml" />
 
 
 </databaseChangeLog>

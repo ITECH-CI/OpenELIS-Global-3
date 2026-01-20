@@ -525,6 +525,8 @@
   "patient.address.town": "Ville",
   "patient.address.street": "Adresse",
   "patient.female.pregnant":"Enceinte",
+  "patient.female.maidenName":"Nom de jeune fille",
+  "patient.female.maidenName.placeholder":"Entrez le nom de jeune fille",
   "patient.address.camp": "Camp/Commune",
   "patient.address.healthregion": "Région",
   "patient.address.healthdistrict": "District",
