@@ -5,6 +5,7 @@ const CreatePatientFormValues = {
   otherIdentifier: "",
   lastName: "",
   firstName: "",
+  maidenName: "",
   streetAddress: "",
   city: "",
   primaryPhone: "",

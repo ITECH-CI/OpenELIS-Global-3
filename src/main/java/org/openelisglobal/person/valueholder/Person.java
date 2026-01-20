@@ -71,6 +71,9 @@ public class Person extends BaseObject<String> {
     @Email
     private String email;
 
+    @ValidName(nameType = NameType.LAST_NAME)
+    private String maidenName;
+
     @JsonIgnore
     @AssociationInverseSide(inversePath = @ObjectPath(@PropertyValue(propertyName = "person")))
     private Set<Patient> patients = new HashSet<>(0);
@@ -220,5 +223,13 @@ public class Person extends BaseObject<String> {
 
     public void setPrimaryPhone(String primaryPhone) {
         this.primaryPhone = primaryPhone;
+    }
+
+    public String getMaidenName() {
+        return maidenName;
+    }
+
+    public void setMaidenName(String maidenName) {
+        this.maidenName = maidenName;
     }
 }

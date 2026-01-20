@@ -166,6 +166,10 @@ public class PatientManagementInfo implements Serializable {
             SamplePatientEntryBatch.class })
     private String pregnant;
 
+    @ValidName(nameType = NameType.LAST_NAME, groups = { SamplePatientEntryForm.SamplePatientEntry.class,
+            SamplePatientEntryBatch.class })
+    private String maidenName;
+
     @Pattern(regexp = ValidationHelper.PHONE_REGEX, groups = { SamplePatientEntryForm.SamplePatientEntry.class,
             SamplePatientEntryBatch.class })
     private String primaryPhone;
@@ -187,6 +191,14 @@ public class PatientManagementInfo implements Serializable {
 
     public void setPregnant(String pregnant) {
         this.pregnant = pregnant;
+    }
+
+    public String getMaidenName() {
+        return maidenName;
+    }
+
+    public void setMaidenName(String maidenName) {
+        this.maidenName = maidenName;
     }
 
     public List<String> getClinicalInformations() {

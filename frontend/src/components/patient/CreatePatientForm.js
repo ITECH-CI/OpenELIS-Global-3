@@ -730,6 +730,43 @@ function CreatePatientForm(props) {
                 {" "}
                 <br></br>
               </Column>
+              <Column lg={16} md={8} sm={4}>
+                <Field name="gender">
+                  {({ field }) => (
+                    <RadioButtonGroup
+                      valueSelected={values.gender}
+                      legendText={
+                        <>
+                          {intl.formatMessage({ id: "patient.gender" })}{" "}
+                          <span className="requiredlabel">*</span>
+                        </>
+                      }
+                      name={field.name}
+                      invalid={errors.gender && touched.gender}
+                      invalidText={errors.gender}
+                      id="create_patient_gender"
+                    >
+                      <RadioButton
+                        id="radio-1"
+                        labelText={intl.formatMessage({ id: "patient.male" })}
+                        value="M"
+                      />
+                      <RadioButton
+                        id="radio-2"
+                        labelText={intl.formatMessage({ id: "patient.female" })}
+                        value="F"
+                      />
+                    </RadioButtonGroup>
+                  )}
+                </Field>
+                <div className="error">
+                  <ErrorMessage name="gender"></ErrorMessage>
+                </div>
+              </Column>
+              <Column lg={16} md={8} sm={4}>
+                {" "}
+                <br></br>
+              </Column>
               <Column lg={8} md={4} sm={4}>
                 <Field name="lastName">
                   {({ field }) => (
@@ -775,6 +812,40 @@ function CreatePatientForm(props) {
                 <br></br>
               </Column>
               <Column lg={8} md={4} sm={4}>
+                {values.gender === "F" && (
+                  <Field name="maidenName">
+                    {({ field }) => (
+                      <TextInput
+                        value={values.maidenName || ""}
+                        name={field.name}
+                        labelText={intl.formatMessage({
+                          id: "patient.female.maidenName",
+                        })}
+                        id={field.name}
+                        placeholder={intl.formatMessage({
+                          id: "patient.female.maidenName.placeholder",
+                        })}
+                        onChange={(e) => handleLastNameChange(e)}
+                      />
+                    )}
+                  </Field>
+                )}
+              </Column>
+              <Column lg={8} md={4} sm={4}>
+                {values.gender === "F" && (
+                    <Select
+                      className="pregnant"
+                      id={"pregnant"}
+                      name="pregnant"
+                      labelText={intl.formatMessage({ id: "patient.female.pregnant" })}
+                      required
+                    >
+                    <SelectItem text="Non" value="N" />
+                    <SelectItem text="Oui" value="O" />
+                    </Select>
+                )}
+              </Column>
+              <Column lg={8} md={4} sm={4}>
                 <Field name="primaryPhone">
                   {({ field }) => (
                     <TextInput
@@ -803,55 +874,6 @@ function CreatePatientForm(props) {
                     />
                   )}
                 </Field>
-              </Column>
-              <Column lg={5} md={5} sm={5}>
-                <Field name="gender">
-                  {({ field }) => (
-                    <RadioButtonGroup
-                      valueSelected={values.gender}
-                      legendText={
-                        <>
-                          {intl.formatMessage({ id: "patient.gender" })}{" "}
-                          <span className="requiredlabel">*</span>
-                        </>
-                      }
-                      name={field.name}
-                      invalid={errors.gender && touched.gender}
-                      invalidText={errors.gender}
-                      id="create_patient_gender"
-                    >
-                      <RadioButton
-                        id="radio-1"
-                        labelText={intl.formatMessage({ id: "patient.male" })}
-                        value="M"
-                      />
-                      <RadioButton
-                        id="radio-2"
-                        labelText={intl.formatMessage({ id: "patient.female" })}
-                        value="F"
-                      />
-                    </RadioButtonGroup>
-                  )}
-                </Field>
-                <div className="error">
-                  <ErrorMessage name="gender"></ErrorMessage>
-                </div>
-              </Column>
-              <Column lg={3} md={3} sm={3}>
-                {values.gender === "F" && (
-                  <Select
-                    className="pregnant"
-                    id={"pregnant"}
-                    name="pregnant"
-                    labelText={intl.formatMessage({
-                      id: "patient.female.pregnant",
-                    })}
-                    required
-                  >
-                    <SelectItem text="Non" value="N" />
-                    <SelectItem text="Oui" value="O" />
-                  </Select>
-                )}
               </Column>
               <Column lg={16} md={8} sm={4}>
                 {" "}

@@ -30,6 +30,7 @@ public class PatientInfoBean implements Serializable {
     private String guid;
     private String lastName;
     private String firstName;
+    private String maidenName;
     private String aka;
     private String mothersName;
     private String mothersInitial;
@@ -139,6 +140,14 @@ public class PatientInfoBean implements Serializable {
 
     public void setFirstName(String firstName) {
         this.firstName = firstName;
+    }
+
+    public String getMaidenName() {
+        return maidenName;
+    }
+
+    public void setMaidenName(String maidenName) {
+        this.maidenName = maidenName;
     }
 
     public String getAka() {
