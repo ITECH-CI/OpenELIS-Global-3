@@ -37,3 +37,14 @@ volume/database/data*/*
 volume/logs/*
 volume/ocl/*
 volume/odoo/*
+
+# Documentation and scripts at root (work in progress)
+BACTERIOLOGY_*.md
+IMPORTANT_MIGRATION_NOTES.md
+LOGGING_INCOMPLETE_TESTS.md
+check_*.sql
+cleanup_*.sql
+fix_*.sql
+scripts/
+docs/BACTERIOLOGY_*.md
+docs/VERIFY_BACTERIOLOGY_TABLES.sql
