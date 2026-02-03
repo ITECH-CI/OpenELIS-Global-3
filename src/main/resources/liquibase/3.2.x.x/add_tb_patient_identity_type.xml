@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+    <!-- TB patient identity type -->
+    <changeSet author="CI-OpenELIS" id="1" context="ci_TB">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">
+                SELECT count(*) FROM clinlims.patient_identity_type
+                WHERE identity_type = 'TB_PATIENT_CODE'
+            </sqlCheck>
+        </preConditions>
+        <comment>Add TB patient identity types</comment>
+        <sql>
+            INSERT INTO clinlims.patient_identity_type(id, identity_type, description, lastupdated) VALUES
+            (nextval('patient_identity_type_seq'), 'TB_PATIENT_CODE', 'Code for TB Patient (XXXXX/XX format)', now()),
+            (nextval('patient_identity_type_seq'), 'TB_PATIENT_CODE_RR', 'Code for TB Resistant Patient (AAAA/XX/XXX format)', now());
+        </sql>
+    </changeSet>
+
+    <changeSet author="CI-OpenELIS" id="2">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">
+                SELECT COUNT(*) FROM clinlims.localization
+                WHERE description = 'patient.subject.tbnumber'
+            </sqlCheck>
+        </preConditions>
+        <comment>Add localization for TB patient number field</comment>
+        <insert tableName="localization" schemaName="clinlims">
+            <column name="id" valueComputed="nextval('localization_seq')"/>
+            <column name="description" value="patient.subject.tbnumber"/>
+            <column name="english" value="Lab TB Number (XXXXX/XX)"/>
+            <column name="french" value="N° Lab TB (XXXXX/XX)"/>
+            <column name="lastupdated" valueDate="now()"/>
+        </insert>
+    </changeSet>
+
+    <changeSet author="CI-OpenELIS" id="3">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">
+                SELECT COUNT(*) FROM clinlims.localization
+                WHERE description = 'patient.subject.tbnumber_rr'
+            </sqlCheck>
+        </preConditions>
+        <comment>Add localization for TB-RR patient code field</comment>
+        <insert tableName="localization" schemaName="clinlims">
+            <column name="id" valueComputed="nextval('localization_seq')"/>
+            <column name="description" value="patient.subject.tbnumber_rr"/>
+            <column name="english" value="TB-RR Patient Code (YYYY/XX/XXX)"/>
+            <column name="french" value="Code Patient TB-RR (AAAA/XX/XXX)"/>
+            <column name="lastupdated" valueDate="now()"/>
+        </insert>
+    </changeSet>
+
+</databaseChangeLog>

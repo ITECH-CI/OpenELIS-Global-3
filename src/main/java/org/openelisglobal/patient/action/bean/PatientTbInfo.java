@@ -48,6 +48,9 @@ public class PatientTbInfo {
     @Pattern(regexp = ValidationHelper.PATIENT_ID_REGEX)
     private String tbSubjectNumber;
 
+    @Pattern(regexp = ValidationHelper.PATIENT_ID_REGEX)
+    private String tbSubjectNumberRes;
+
     private String selectedTbMethod;
 
     private String selectedMethodToRemove;
@@ -180,6 +183,14 @@ public class PatientTbInfo {
 
     public void setTbSubjectNumber(String tbSubjectNumber) {
         this.tbSubjectNumber = tbSubjectNumber;
+    }
+
+    public String getTbSubjectNumberRes() {
+        return tbSubjectNumberRes;
+    }
+
+    public void setTbSubjectNumberRes(String tbSubjectNumberRes) {
+        this.tbSubjectNumberRes = tbSubjectNumberRes;
     }
 
     public String getSelectedTbMethod() {

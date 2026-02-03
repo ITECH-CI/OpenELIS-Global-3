@@ -37,7 +37,7 @@ const AddOrder = (props) => {
     isModifyOrder,
     changed,
     setChanged,
-    isBacterio
+    isBacterio,
   } = props;
   const [otherSamplingVisible, setOtherSamplingVisible] = useState(false);
   const [providers, setProviders] = useState([]);
@@ -64,8 +64,9 @@ const AddOrder = (props) => {
     };
   }, []);
 
-  const handleChangeUpper = (e) => {
-    const upperValue = e.target.value.toUpperCase();
+  const handleChangeUpper = (value) => {
+    // CustomTextInput passes the value directly, not the event
+    const upperValue = typeof value === 'string' ? value.toUpperCase() : value;
     setValue(upperValue);
   };
   const handleDatePickerChange = (datePicker, date) => {
@@ -470,8 +471,10 @@ const AddOrder = (props) => {
       setSamplingPerformed(response.sampleOrderItems.testLocationCodeList);
       setProviders(response.sampleOrderItems.providersList);
 
-      if (response.sampleOrderItems.referringSiteId &&
-          !orderFormValues.sampleOrderItems.referringSiteId) {
+      if (
+        response.sampleOrderItems.referringSiteId &&
+        !orderFormValues.sampleOrderItems.referringSiteId
+      ) {
         setOrderFormValues({
           ...orderFormValues,
           sampleOrderItems: {
@@ -585,18 +588,24 @@ const AddOrder = (props) => {
               {" "}
               &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;{" "}
             </Column>
-              {isBacterio && (
-           <Column lg={8} md={4} sm={4}>
-              <Select
-                className="orderType"
-                id={"orderType"}
-                name="orderType"
-                labelText={intl.formatMessage({ id: "sample.order.type" })}
-                required
-              >
-              <SelectItem value="IN" text={intl.formatMessage({ id: "sample.order.type.in" })}/>
-              <SelectItem value="OUT" text={intl.formatMessage({ id: "sample.order.type.out" })} />
-              </Select>
+            {isBacterio && (
+              <Column lg={8} md={4} sm={4}>
+                <Select
+                  className="orderType"
+                  id={"orderType"}
+                  name="orderType"
+                  labelText={intl.formatMessage({ id: "sample.order.type" })}
+                  required
+                >
+                  <SelectItem
+                    value="IN"
+                    text={intl.formatMessage({ id: "sample.order.type.in" })}
+                  />
+                  <SelectItem
+                    value="OUT"
+                    text={intl.formatMessage({ id: "sample.order.type.out" })}
+                  />
+                </Select>
               </Column>
             )}
             <Column lg={16} md={8} sm={3}>

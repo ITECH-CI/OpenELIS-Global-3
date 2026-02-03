@@ -124,6 +124,9 @@ public class SampleTbEntryForm extends BaseForm {
     @SafeHtml(level = SafeHtml.SafeListLevel.NONE)
     private String referringSiteCode;
 
+    @Pattern(regexp = ValidationHelper.ID_REGEX)
+    private String referringSiteId;
+
     @SafeHtml()
     private String referringSiteName;
 
@@ -150,6 +153,16 @@ public class SampleTbEntryForm extends BaseForm {
 
     @Pattern(regexp = ValidationHelper.PATIENT_ID_REGEX)
     private String tbSubjectNumber;
+
+    private String tbSubjectNumberRes;
+
+    public String getTbSubjectNumberRes() {
+		return tbSubjectNumberRes;
+	}
+
+	public void setTbSubjectNumberRes(String tbSubjectNumberRes) {
+		this.tbSubjectNumberRes = tbSubjectNumberRes;
+	}
 
     @NotNull()
     private Boolean modified = false;
@@ -271,6 +284,14 @@ public class SampleTbEntryForm extends BaseForm {
 
     public void setReferringSiteCode(String referringSiteCode) {
         this.referringSiteCode = referringSiteCode;
+    }
+
+    public String getReferringSiteId() {
+        return referringSiteId;
+    }
+
+    public void setReferringSiteId(String referringSiteId) {
+        this.referringSiteId = referringSiteId;
     }
 
     public String getReferringSiteName() {
@@ -607,5 +628,24 @@ public class SampleTbEntryForm extends BaseForm {
 
     public void setLabnoForSearch(String labnoForSearch) {
         this.labnoForSearch = labnoForSearch;
+    }
+
+    private List<TbSampleTest> tbSampleTests;
+    private List<TbSampleTest> newTbSampleTests;
+
+    public List<TbSampleTest> getTbSampleTests() {
+        return tbSampleTests;
+    }
+
+    public void setTbSampleTests(List<TbSampleTest> tbSampleTests) {
+        this.tbSampleTests = tbSampleTests;
+    }
+
+    public List<TbSampleTest> getNewTbSampleTests() {
+        return newTbSampleTests;
+    }
+
+    public void setNewTbSampleTests(List<TbSampleTest> newTbSampleTests) {
+        this.newTbSampleTests = newTbSampleTests;
     }
 }

@@ -99,7 +99,6 @@ const SampleType = (props) => {
   const [tbDiagnosticMethods, setTbDiagnosticMethods] = useState([]);
   const [tbSampleAspect, setTbSampleAspect] = useState([]);
   const [followupReason, setFollowupReason] = useState("");
-  const [followupLines, setFollowupLines] = useState([]);
 
   const defaultSelect = { id: "", value: "Choose Rejection Reason" };
   const mapDictionaryToOptions = (list) =>
@@ -119,6 +118,7 @@ const SampleType = (props) => {
           tbAspect: "",
           tbSpecimenNature: "",
           tbSubjectNumber: "",
+          tbSubjectNumberRes: "",
           selectedTbMethod: "",
         },
   );
@@ -127,10 +127,11 @@ const SampleType = (props) => {
 
   const [tbFollowUpLine1, setTbFollowUpLine1] = useState("");
   const [tbFollowUpLine2, setTbFollowUpLine2] = useState("");
-
-  var MicroscopieTB = "1368";
-  var followupLine1 = "1405";
-  var followupLine2 = "1406";
+  const [tbFollowupPeriodsLine1, setTbFollowupPeriodsLine1] = useState([]);
+  const [tbFollowupPeriodsLine2, setTbFollowupPeriodsLine2] = useState([]);
+  const [microscopieTBId, setMicroscopieTBId] = useState("");
+  const [followupLine1Id, setFollowupLine1Id] = useState("");
+  const [followupLine2Id, setFollowupLine2Id] = useState("");
 
   // const item = data.find(item => item.value === "Diagnostic");
 
@@ -263,20 +264,6 @@ const SampleType = (props) => {
       ...prev,
       [field]: value,
     }));
-  };
-
-  const handleSubjectNumberChange = (e) => {
-    let value = e.target.value.replace(/[^A-Z0-9]/gi, "").toUpperCase();
-
-    if (value.length > 7) {
-      value = value.slice(0, 7);
-    }
-
-    if (value.length > 2) {
-      value = value.slice(0, 2) + "-" + value.slice(2);
-    }
-
-    handleChange("tbSubjectNumber", value);
   };
 
   const triggerPanelCheckBoxChange = (isChecked, testIds) => {
@@ -431,11 +418,6 @@ const SampleType = (props) => {
     }
   };
 
-  const displayTbFollowupLinesOptions = (res) => {
-    if (res) {
-      setFollowupLines(res);
-    }
-  };
 
   const displayTbOrderResonOptions = (res) => {
     if (res) {
@@ -520,18 +502,9 @@ const SampleType = (props) => {
 
   function handleFollowupreason(e) {
     const value = e.target.value;
-    const selectedOption = e.target.options[e.target.selectedIndex];
-    const label =
-      selectedOption.text === "Examen de suivi 1ère ligne (TB Sensible)"
-        ? followupLine1
-        : followupLine2;
     setFollowupReason(value);
-    if (value) {
-      getFromOpenElisServer(
-        `/rest/Dictionary-by-ByCategory?category=${encodeURIComponent(label)}`,
-        displayTbFollowupLinesOptions,
-      );
-    }
+    // Periods are preloaded, just update the tbData
+    handleChange("tbFollowupReason", value);
   }
 
   useEffect(() => {
@@ -548,24 +521,8 @@ const SampleType = (props) => {
     }
   }, [tbData.tbDiagnosticReason, tbReasonDiagnostic]);
 
-  // Load followup lines when tbFollowupReason changes
-  useEffect(() => {
-    if (tbData.tbFollowupReason && reasons.length > 0) {
-      const selectedReason = reasons.find(
-        (item) => item.id === tbData.tbFollowupReason,
-      );
-      if (selectedReason) {
-        const label =
-          selectedReason.value === "Examen de suivi 1ère ligne (TB Sensible)"
-            ? followupLine1
-            : followupLine2;
-        getFromOpenElisServer(
-          `/rest/Dictionary-by-ByCategory?category=${encodeURIComponent(label)}`,
-          displayTbFollowupLinesOptions,
-        );
-      }
-    }
-  }, [tbData.tbFollowupReason, reasons]);
+  // Followup periods are preloaded at component mount, no need to load them dynamically
+  // The UI will display the appropriate list based on tbFollowupReason value
 
   function fetTbReasons(res) {
     if (res) {
@@ -610,7 +567,7 @@ const SampleType = (props) => {
           `/MicrobiologyTb/panel_test?method=${tbData.selectedTbMethod}`,
           fetchSampleTypeTests,
         );
-        if (tbData.selectedTbMethod === MicroscopieTB) {
+        if (tbData.selectedTbMethod === microscopieTBId) {
           getFromOpenElisServer(
             `/rest/Dictionary-by-ByCategory?category=TB Sample Aspects`,
             fetchTbSampleAspects,
@@ -661,7 +618,7 @@ const SampleType = (props) => {
           `/MicrobiologyTb/panel_test?method=${selectedTbSampleMethod.id}`,
           fetchSampleTypeTests,
         );
-        if (selectedTbSampleMethod.id === MicroscopieTB) {
+        if (selectedTbSampleMethod.id === microscopieTBId) {
           getFromOpenElisServer(
             `/rest/Dictionary-by-ByCategory?category=TB Sample Aspects`,
             fetchTbSampleAspects,
@@ -785,6 +742,30 @@ const SampleType = (props) => {
     getFromOpenElisServer(
       "/rest/Dictionary-by-ByCategory?category=TB Order Reasons",
       displayTbOrderResonOptions,
+    );
+    // Load TB dictionary mapping for dynamic IDs
+    getFromOpenElisServer("/rest/tb-dictionary-mapping", (mapping) => {
+      if (mapping) {
+        if (mapping.Microsc) setMicroscopieTBId(mapping.Microsc);
+        if (mapping["TB Line1"]) setFollowupLine1Id(mapping["TB Line1"]);
+        if (mapping["TB Line2"]) setFollowupLine2Id(mapping["TB Line2"]);
+      }
+    });
+    // Preload TB followup periods for both lines
+    getFromOpenElisServer("/rest/tb-followup-periods-line1", (res) => {
+      if (res) {
+        setTbFollowupPeriodsLine1(res);
+      }
+    });
+    getFromOpenElisServer("/rest/tb-followup-periods-line2", (res) => {
+      if (res) {
+        setTbFollowupPeriodsLine2(res);
+      }
+    });
+    // Preload TB sample aspects
+    getFromOpenElisServer(
+      "/rest/Dictionary-by-ByCategory?category=TB Sample Aspects",
+      fetchTbSampleAspects,
     );
     repopulateUI();
     getFromOpenElisServer("/rest/user-sample-types", fetchSamplesTypes);
@@ -915,20 +896,67 @@ const SampleType = (props) => {
                 })}
               </Select>
             </Column>
+            <Column lg={8} md={4} sm={4}>
+              <TextInput
+                value={tbData.tbSubjectNumber}
+                onChange={(e) => {
+                  let value = e.target.value.toUpperCase();
+                  // Format: XXXXX/XX
+                  value = value.replace(/[^0-9]/g, "");
+                  if (value.length > 5) {
+                    value = value.slice(0, 5) + "/" + value.slice(5);
+                  }
+                  if (value.length > 8) {
+                    value = value.slice(0, 8);
+                  }
+                  // Clear the other field if this one has a value
+                  setTbData((prev) => ({
+                    ...prev,
+                    tbSubjectNumber: value,
+                    tbSubjectNumberRes: value.length > 0 ? "" : prev.tbSubjectNumberRes,
+                  }));
+                }}
+                labelText={intl.formatMessage({
+                  id: "patient.subject.tbnumber",
+                })}
+                id={"tbSubjectNumber_" + index}
+                placeholder="XXXXX/XX"
+                maxLength={8}
+              />
+            </Column>
+            <Column lg={8} md={4} sm={4}>
+              <TextInput
+                value={tbData.tbSubjectNumberRes}
+                onChange={(e) => {
+                  let value = e.target.value.toUpperCase();
+                  // Format: AAAA/XX/XXX
+                  value = value.replace(/[^0-9]/g, "");
+                  if (value.length > 4) {
+                    value = value.slice(0, 4) + "/" + value.slice(4);
+                  }
+                  if (value.length > 7) {
+                    value = value.slice(0, 7) + "/" + value.slice(7);
+                  }
+                  if (value.length > 11) {
+                    value = value.slice(0, 11);
+                  }
+                  // Clear the other field if this one has a value
+                  setTbData((prev) => ({
+                    ...prev,
+                    tbSubjectNumberRes: value,
+                    tbSubjectNumber: value.length > 0 ? "" : prev.tbSubjectNumber,
+                  }));
+                }}
+                labelText={intl.formatMessage({
+                  id: "patient.subject.tbnumber_rr",
+                })}
+                id={"tbSubjectNumberRes_" + index}
+                placeholder="AAAA/XX/XXX"
+                maxLength={11}
+              />
+            </Column>
             {tbData.tbDiagnosticReason === tbReasonFollowUp && (
               <>
-                <Column lg={8} md={4} sm={4}>
-                  <TextInput
-                    value={tbData.tbSubjectNumber}
-                    onChange={handleSubjectNumberChange}
-                    labelText={intl.formatMessage({
-                      id: "sample.tb.followup.code",
-                    })}
-                    id={"followUpCode_" + index}
-                    placeholder="XX-XXXXX"
-                    maxLength={8}
-                  />
-                </Column>
                 <Column lg={8} md={4} sm={4}>
                   <Select
                     id={"followReason_" + index}
@@ -965,7 +993,7 @@ const SampleType = (props) => {
                       }
                     >
                       <SelectItem value="" text="" />
-                      {followupLines.map((option) => {
+                      {tbFollowupPeriodsLine1.map((option) => {
                         return (
                           <SelectItem
                             key={option.id}
@@ -990,7 +1018,7 @@ const SampleType = (props) => {
                         }
                       >
                         <SelectItem value="" text="" />
-                        {followupLines.map((option) => {
+                        {tbFollowupPeriodsLine2.map((option) => {
                           return (
                             <SelectItem
                               key={option.id}
@@ -1000,32 +1028,6 @@ const SampleType = (props) => {
                           );
                         })}
                       </Select>
-                      {selectedTbSampleMethod.id === MicroscopieTB && (
-                        <Column lg={8} md={4} sm={4}>
-                          <Select
-                            id={"tbAspect_" + index}
-                            value={tbData.tbAspect}
-                            onChange={(e) =>
-                              handleChange("tbAspect", e.target.value)
-                            }
-                            required
-                            labelText={
-                              <FormattedMessage id="sample.tb.aspect" />
-                            }
-                          >
-                            <SelectItem value="" text="" />
-                            {tbSampleAspect.map((option) => {
-                              return (
-                                <SelectItem
-                                  key={option.id}
-                                  value={option.id}
-                                  text={option.value}
-                                />
-                              );
-                            })}
-                          </Select>
-                        </Column>
-                      )}
                     </div>
                   )}
                 </Column>
@@ -1080,6 +1082,28 @@ const SampleType = (props) => {
                 })}
               </Select>
             </Column>
+            {isTb && tbData.selectedTbMethod === microscopieTBId && (
+              <Column lg={8} md={4} sm={4}>
+                <Select
+                  id={"tbAspect_" + index}
+                  value={tbData.tbAspect}
+                  onChange={(e) => handleChange("tbAspect", e.target.value)}
+                  required
+                  labelText={<FormattedMessage id="sample.tb.aspect" />}
+                >
+                  <SelectItem value="" text="" />
+                  {tbSampleAspect.map((option) => {
+                    return (
+                      <SelectItem
+                        key={option.id}
+                        value={option.id}
+                        text={option.value}
+                      />
+                    );
+                  })}
+                </Select>
+              </Column>
+            )}
           </div>
         )}
         <div className="testPanels">

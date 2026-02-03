@@ -1,56 +1,60 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <databaseChangeLog
-	xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
 
-	<include relativeToChangelogFile="true" file="notebook.xml" />
-	<include relativeToChangelogFile="true"
-		file="routine_bacteriology.xml" />
-	<include relativeToChangelogFile="true" file="update_menu.xml" />
-	<include relativeToChangelogFile="true"
-		file="update_program.xml" />
-	<include relativeToChangelogFile="true"
-		file="update_test_section.xml" />
-	<include relativeToChangelogFile="true"
-		file="add_free_payment_option.xml" />
-	<include relativeToChangelogFile="true"
-		file="add_paid_notpaid_payment_option.xml" />
-	<include relativeToChangelogFile="true"
-		file="add_non_conformity_table.xml" />
-	<include relativeToChangelogFile="true"
-		file="add_site_id_config.xml" />
-	<include relativeToChangelogFile="true"
-		file="add_maiden_name_column.xml" />
-	<include relativeToChangelogFile="true"
-		file="add_microbio_classic_dictionary_infos.xml" />
-	<include relativeToChangelogFile="true"
-		file="add_microbio_classic_observation_type.xml" />
-	<include relativeToChangelogFile="true"
-		file="add_microbio_classic_samples.xml" />
-	<include relativeToChangelogFile="true"
-		file="add_microbio_classic_tests.xml" />
-	<include relativeToChangelogFile="true"
-		file="add_microbioresult_test.xml" />
+    <include relativeToChangelogFile="true" file="notebook.xml" />
+    <include relativeToChangelogFile="true"
+        file="routine_bacteriology.xml" />
+    <include relativeToChangelogFile="true" file="update_menu.xml" />
+    <include relativeToChangelogFile="true"
+        file="update_program.xml" />
+    <include relativeToChangelogFile="true"
+        file="update_test_section.xml" />
+    <include relativeToChangelogFile="true"
+        file="add_free_payment_option.xml" />
+    <include relativeToChangelogFile="true"
+        file="add_paid_notpaid_payment_option.xml" />
+    <include relativeToChangelogFile="true"
+        file="add_non_conformity_table.xml" />
+    <include relativeToChangelogFile="true"
+        file="add_site_id_config.xml" />
+    <include relativeToChangelogFile="true"
+        file="add_maiden_name_column.xml" />
+    <include relativeToChangelogFile="true"
+        file="add_microbio_classic_dictionary_infos.xml" />
+    <include relativeToChangelogFile="true"
+        file="add_microbio_classic_observation_type.xml" />
+    <include relativeToChangelogFile="true"
+        file="add_microbio_classic_samples.xml" />
+    <include relativeToChangelogFile="true"
+        file="add_microbio_classic_tests.xml" />
+    <include relativeToChangelogFile="true"
+        file="add_microbioresult_test.xml" />
 
-	<include relativeToChangelogFile="true"
-		file="add_bacterio_sampletype_panel.xml" />
-	<include relativeToChangelogFile="true"
-		file="test_unit_conversion_to_si.xml" />
-	<include relativeToChangelogFile="true"
-		file="add_sample_interpretation_config.xml" />
-	<include relativeToChangelogFile="true"
-		file="add_method_to_analyzer_test_map.xml" />
-	<include relativeToChangelogFile="true"
-		file="create_bacteriology_tables.xml" />
-	<include relativeToChangelogFile="true"
-		file="add_bacteriology_dictionary_values.xml" />
-	<include relativeToChangelogFile="true"
-		file="add_bacteriology_test_group_mapping.xml" />
-	<include relativeToChangelogFile="true"
-		file="add_bacteriology_conditional_structure.xml" />
-	<include relativeToChangelogFile="true"
-		file="add_bacteriology_tests_others.xml" />
+    <include relativeToChangelogFile="true"
+        file="add_bacterio_sampletype_panel.xml" />
+    <include relativeToChangelogFile="true"
+        file="test_unit_conversion_to_si.xml" />
+    <include relativeToChangelogFile="true"
+        file="add_sample_interpretation_config.xml" />
+    <include relativeToChangelogFile="true"
+        file="add_method_to_analyzer_test_map.xml" />
+    <include relativeToChangelogFile="true"
+        file="create_bacteriology_tables.xml" />
+    <include relativeToChangelogFile="true"
+        file="add_bacteriology_dictionary_values.xml" />
+    <include relativeToChangelogFile="true"
+        file="add_bacteriology_test_group_mapping.xml" />
+    <include relativeToChangelogFile="true"
+        file="add_bacteriology_conditional_structure.xml" />
+    <include relativeToChangelogFile="true"
+        file="add_bacteriology_tests_others.xml" />
+    <include relativeToChangelogFile="true"
+        file="add_testid_to_bacteriology_result_group.xml" />
+    <include relativeToChangelogFile="true"
+        file="add_tb_patient_identity_type.xml" />
 
 
 </databaseChangeLog>
