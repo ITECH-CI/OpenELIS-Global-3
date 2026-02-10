@@ -2,6 +2,7 @@ package org.openelisglobal.test.service;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.HttpServletRequest;
+import java.sql.Date;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -773,5 +774,33 @@ public class TestServiceImpl extends AuditableBaseObjectServiceImpl<Test, String
     public List<Test> getTriggeringAntimicrobialResistanceTests() {
         return getAllMatching("antimicrobialResistance", Boolean.TRUE).stream()
                 .filter(e -> TestReflexUtil.isTriggeringReflexTestId(e.getId())).collect(Collectors.toList());
+    }
+
+    @Override
+    public List<Map<String, Object>> getTbGXTestCountByResult(Date startDate, Date endDate)
+            throws LIMSRuntimeException {
+        return getBaseObjectDAO().getTbGXTestCountByResult(startDate, endDate);
+    }
+
+    @Override
+    public List<Map<String, Object>> getTbGXTestCountByCategory(Date startDate, Date endDate)
+            throws LIMSRuntimeException {
+        return getBaseObjectDAO().getTbGXTestCountByCategory(startDate, endDate);
+    }
+
+    @Override
+    public List<Map<String, Object>> getTbMicroscopyTestCountByResult(Date startDate, Date endDate)
+            throws LIMSRuntimeException {
+        return getBaseObjectDAO().getTbMicroscopyTestCountByResult(startDate, endDate);
+    }
+
+    @Override
+    public Integer getReceivedTbPresumedMicroscopyTestCount(Date startDate, Date endDate) throws LIMSRuntimeException {
+        return getBaseObjectDAO().getReceivedTbPresumedMicroscopyTestCount(startDate, endDate);
+    }
+
+    @Override
+    public Integer getPositiveTbMicroscopyTestCount(Date startDate, Date endDate) throws LIMSRuntimeException {
+        return getBaseObjectDAO().getPositiveTbMicroscopyTestCount(startDate, endDate);
     }
 }

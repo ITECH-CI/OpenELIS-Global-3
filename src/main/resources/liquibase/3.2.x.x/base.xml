@@ -55,6 +55,8 @@
         file="add_testid_to_bacteriology_result_group.xml" />
     <include relativeToChangelogFile="true"
         file="add_tb_patient_identity_type.xml" />
+    <include relativeToChangelogFile="true"
+        file="update_bacteriology_menu.xml" />
 
 
 </databaseChangeLog>

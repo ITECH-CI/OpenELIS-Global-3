@@ -1,9 +1,9 @@
-import React, { useEffect, useRef, useState } from "react";
 import { Button, Link, Row, Stack } from "@carbon/react";
 import { Add } from "@carbon/react/icons";
+import { useEffect, useRef, useState } from "react";
+import { FormattedMessage } from "react-intl";
 import { getFromOpenElisServer } from "../utils/Utils";
 import SampleType from "./SampleType";
-import { FormattedMessage } from "react-intl";
 const AddSample = (props) => {
   const { samples, setSamples, error, isTb, isBacterio = false } = props;
   const componentMounted = useRef(false);
@@ -147,15 +147,17 @@ const AddSample = (props) => {
               </div>
             );
           })}
-          <Row>
-            <div className="inlineDiv">
-              <Button onClick={handleAddNewSample}>
-                {<FormattedMessage id="sample.add.action" />}
-                &nbsp; &nbsp;
-                <Add size={16} />
-              </Button>
-            </div>
-          </Row>
+          {!isBacterio && (
+            <Row>
+              <div className="inlineDiv">
+                <Button onClick={handleAddNewSample}>
+                  {<FormattedMessage id="sample.add.action" />}
+                  &nbsp; &nbsp;
+                  <Add size={16} />
+                </Button>
+              </div>
+            </Row>
+          )}
         </div>
       </Stack>
     </>

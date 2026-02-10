@@ -1,0 +1,303 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="RetroCIHeader" pageWidth="550" pageHeight="210" orientation="Landscape" whenNoDataType="AllSectionsNoDetail" columnWidth="550" leftMargin="0" rightMargin="0" topMargin="0" bottomMargin="0" uuid="c040ed1f-a573-45ab-bc71-8c6f5d4c135a">
+	<property name="ireport.scriptlethandling" value="0"/>
+	<property name="ireport.encoding" value="UTF-8"/>
+	<property name="ireport.zoom" value="3.0"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<import value="net.sf.jasperreports.engine.*"/>
+	<import value="java.util.*"/>
+	<import value="net.sf.jasperreports.engine.data.*"/>
+	<parameter name="SUBREPORT_DIR" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA["c:/tomcat 5.5/webapps/haitiOpenElis/WEB-INF/reports/"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="studyName" class="java.lang.String"/>
+	<parameter name="directorName" class="java.lang.String"/>
+	<parameter name="status" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="contact" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA[null]]></defaultValueExpression>
+	</parameter>
+	<parameter name="leftHeaderImage" class="java.io.InputStream" isForPrompting="false"/>
+	<parameter name="duplicateReport" class="java.lang.Boolean" isForPrompting="false">
+		<defaultValueExpression><![CDATA[Boolean.FALSE]]></defaultValueExpression>
+	</parameter>
+	<parameter name="rightHeaderImage" class="java.io.InputStream"/>
+	<parameter name="imagesPath" class="java.lang.String"/>
+	<parameter name="labName2" class="java.lang.String"/>
+	<parameter name="testReportDataSource" class="net.sf.jasperreports.engine.JRDataSource"/>
+	<parameter name="presumedCase" class="java.lang.Integer">
+		<defaultValueExpression><![CDATA[0]]></defaultValueExpression>
+	</parameter>
+	<parameter name="positiveCase" class="java.lang.Integer">
+		<defaultValueExpression><![CDATA[0]]></defaultValueExpression>
+	</parameter>
+	<queryString>
+		<![CDATA[]]>
+	</queryString>
+	<field name="reportItem" class="java.lang.String"/>
+	<field name="positivePlusResult" class="java.lang.Integer"/>
+	<field name="positiveRBResult" class="java.lang.Integer"/>
+	<field name="negativeResult" class="java.lang.Integer"/>
+	<field name="totalResult" class="java.lang.Integer"/>
+	<variable name="sumPositivePlus" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[$F{positivePlusResult}]]></variableExpression>
+		<initialValueExpression><![CDATA[0]]></initialValueExpression>
+	</variable>
+	<variable name="sumPositiveRB" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[$F{positiveRBResult}]]></variableExpression>
+		<initialValueExpression><![CDATA[0]]></initialValueExpression>
+	</variable>
+	<variable name="sumNegative" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[$F{negativeResult}]]></variableExpression>
+		<initialValueExpression><![CDATA[0]]></initialValueExpression>
+	</variable>
+	<variable name="sumTotal" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[$F{totalResult}]]></variableExpression>
+		<initialValueExpression><![CDATA[0]]></initialValueExpression>
+	</variable>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<columnHeader>
+		<band height="37">
+			<rectangle>
+				<reportElement x="1" y="2" width="188" height="35" uuid="6c365a59-e3f7-4a45-81a0-e85ff9ae896f"/>
+			</rectangle>
+			<rectangle>
+				<reportElement mode="Opaque" x="189" y="2" width="90" height="35" backcolor="#FFFFFF" uuid="c7c182b8-5051-43b1-ad0c-ee77946aa625"/>
+			</rectangle>
+			<rectangle>
+				<reportElement mode="Opaque" x="279" y="2" width="90" height="35" backcolor="#FFFFFF" uuid="138ddb1a-ed95-462a-8b09-df82c0c9c835"/>
+			</rectangle>
+			<rectangle>
+				<reportElement mode="Opaque" x="369" y="2" width="90" height="35" backcolor="#FFFFFF" uuid="135983ce-b18d-418b-a335-c6e79d0f61a1"/>
+			</rectangle>
+			<rectangle>
+				<reportElement x="459" y="2" width="90" height="35" uuid="66bf191c-969b-49b9-86ac-ad9a043450f5"/>
+			</rectangle>
+			<staticText>
+				<reportElement x="189" y="2" width="90" height="35" uuid="e211491c-8b1f-49b3-8516-d5695a751cbc"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font isBold="true"/>
+				</textElement>
+				<text><![CDATA[POSITIFS
+(1+/2+/3+)]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="279" y="2" width="90" height="35" uuid="b51333e1-7d7d-4c58-bd61-f5e212e1485b"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font isBold="true"/>
+				</textElement>
+				<text><![CDATA[POSITIF
+RARES BAAR]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="369" y="2" width="90" height="35" uuid="7bdf7d2a-8412-464b-aeb7-3179c20686f5"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font isBold="true"/>
+				</textElement>
+				<text><![CDATA[NEGATIFS]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="459" y="2" width="90" height="35" uuid="641634dd-0416-49b3-9e2e-e29e71852217"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font isBold="true"/>
+				</textElement>
+				<text><![CDATA[TOTAL]]></text>
+			</staticText>
+		</band>
+	</columnHeader>
+	<detail>
+		<band height="33" splitType="Prevent">
+			<textField>
+				<reportElement x="1" y="0" width="188" height="32" uuid="fbde735e-a067-439e-bd17-31eda541fd91"/>
+				<box>
+					<pen lineWidth="1.0"/>
+					<topPen lineWidth="1.0"/>
+					<leftPen lineWidth="1.0"/>
+					<bottomPen lineWidth="1.0"/>
+					<rightPen lineWidth="1.0"/>
+				</box>
+				<textElement verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[" "+$F{reportItem}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="189" y="0" width="90" height="32" uuid="be0401bf-b87e-41be-8299-9b8c7c9cdf7a"/>
+				<box>
+					<pen lineWidth="1.0"/>
+					<topPen lineWidth="1.0"/>
+					<leftPen lineWidth="1.0"/>
+					<bottomPen lineWidth="1.0"/>
+					<rightPen lineWidth="1.0"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{positivePlusResult}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="279" y="0" width="90" height="32" uuid="0acf2e28-127e-461c-82af-a8551752c645"/>
+				<box>
+					<pen lineWidth="1.0"/>
+					<topPen lineWidth="1.0"/>
+					<leftPen lineWidth="1.0"/>
+					<bottomPen lineWidth="1.0"/>
+					<rightPen lineWidth="1.0"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{positiveRBResult}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="369" y="0" width="90" height="32" uuid="44e61639-c1cd-4aea-ab0e-3d878a718e37"/>
+				<box>
+					<pen lineWidth="1.0"/>
+					<topPen lineWidth="1.0"/>
+					<leftPen lineWidth="1.0"/>
+					<bottomPen lineWidth="1.0"/>
+					<rightPen lineWidth="1.0"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{negativeResult}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="459" y="0" width="90" height="32" uuid="80699c60-a7d6-4362-a74d-7c68dda945f9"/>
+				<box>
+					<pen lineWidth="1.0"/>
+					<topPen lineWidth="1.0"/>
+					<leftPen lineWidth="1.0"/>
+					<bottomPen lineWidth="1.0"/>
+					<rightPen lineWidth="1.0"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{totalResult}]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+	<columnFooter>
+		<band height="129">
+			<textField>
+				<reportElement x="189" y="-1" width="90" height="32" uuid="b406fae1-ce42-4d60-82d0-886d8a63d18c"/>
+				<box>
+					<pen lineWidth="1.0"/>
+					<topPen lineWidth="1.0"/>
+					<leftPen lineWidth="1.0"/>
+					<bottomPen lineWidth="1.0"/>
+					<rightPen lineWidth="1.0"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$V{sumPositivePlus}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="369" y="-1" width="90" height="32" uuid="0bb4a832-6157-45a9-bd14-8ac765fbf9f3"/>
+				<box>
+					<pen lineWidth="1.0"/>
+					<topPen lineWidth="1.0"/>
+					<leftPen lineWidth="1.0"/>
+					<bottomPen lineWidth="1.0"/>
+					<rightPen lineWidth="1.0"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$V{sumNegative}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="279" y="-1" width="90" height="32" uuid="93481877-3ce4-4894-af66-09c1433a2bd4"/>
+				<box>
+					<pen lineWidth="1.0"/>
+					<topPen lineWidth="1.0"/>
+					<leftPen lineWidth="1.0"/>
+					<bottomPen lineWidth="1.0"/>
+					<rightPen lineWidth="1.0"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$V{sumPositiveRB}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="459" y="-1" width="90" height="32" uuid="9dec50ea-7a55-43a5-ab4a-4b572ee1c35d"/>
+				<box>
+					<pen lineWidth="1.0"/>
+					<topPen lineWidth="1.0"/>
+					<leftPen lineWidth="1.0"/>
+					<bottomPen lineWidth="1.0"/>
+					<rightPen lineWidth="1.0"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$V{sumTotal}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="1" y="-1" width="188" height="32" uuid="4a58b401-3db0-4cb6-bf6d-e253bb5c5268"/>
+				<box>
+					<pen lineWidth="1.0"/>
+					<topPen lineWidth="1.0"/>
+					<leftPen lineWidth="1.0"/>
+					<bottomPen lineWidth="1.0"/>
+					<rightPen lineWidth="1.0"/>
+				</box>
+				<textElement verticalAlignment="Middle" markup="none"/>
+				<text><![CDATA[    TOTAL]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="1" y="31" width="278" height="36" uuid="ef1d51d3-7ac7-47f8-9033-def32e860288"/>
+				<box>
+					<pen lineWidth="1.0"/>
+					<topPen lineWidth="1.0"/>
+					<leftPen lineWidth="1.0"/>
+					<bottomPen lineWidth="1.0"/>
+					<rightPen lineWidth="1.0"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font isBold="true"/>
+				</textElement>
+				<text><![CDATA[NOMBRE DE CAS PRESUMES
+ RECUS AU LABO  POUR MICROSCOPIE*]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="279" y="31" width="270" height="36" uuid="022ed834-d561-41eb-81fd-984a8ed265f0"/>
+				<box>
+					<pen lineWidth="1.0"/>
+					<topPen lineWidth="1.0"/>
+					<leftPen lineWidth="1.0"/>
+					<bottomPen lineWidth="1.0"/>
+					<rightPen lineWidth="1.0"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font isBold="true"/>
+				</textElement>
+				<text><![CDATA[NOMBRE DE CAS DE TUBERCULOSE
+ A MICROSCOPIE POSITIVE]]></text>
+			</staticText>
+			<textField>
+				<reportElement x="1" y="67" width="278" height="31" uuid="a7a0e793-6994-4370-9d2a-ba22a028b06d"/>
+				<box>
+					<pen lineWidth="1.0"/>
+					<topPen lineWidth="1.0"/>
+					<leftPen lineWidth="1.0"/>
+					<bottomPen lineWidth="1.0"/>
+					<rightPen lineWidth="1.0"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{presumedCase}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="279" y="67" width="270" height="31" uuid="ecd03b8d-cad5-46ee-af68-68855143453f"/>
+				<box>
+					<pen lineWidth="1.0"/>
+					<topPen lineWidth="1.0"/>
+					<leftPen lineWidth="1.0"/>
+					<bottomPen lineWidth="1.0"/>
+					<rightPen lineWidth="1.0"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{positiveCase}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="1" y="102" width="548" height="16" uuid="2e05e08c-f505-47ef-a3bf-0924e96b5ff3"/>
+				<textElement verticalAlignment="Bottom">
+					<font size="9" isItalic="false"/>
+				</textElement>
+				<text><![CDATA[      * Ne prend pas en compte les cas présumés qui ont bénéficié d'un test GeneXpert]]></text>
+			</staticText>
+		</band>
+	</columnFooter>
+</jasperReport>

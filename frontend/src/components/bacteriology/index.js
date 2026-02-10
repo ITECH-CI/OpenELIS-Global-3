@@ -5,7 +5,10 @@
 
 export { default as BacteriologyResultEntry } from "./BacteriologyResultEntry";
 export { default as BacteriologyResultsContainer } from "./BacteriologyResultsContainer";
-export { default as useBacteriologyDetection, isBacteriologyTestSection } from "./hooks/useBacteriologyDetection";
+export {
+  default as useBacteriologyDetection,
+  isBacteriologyTestSection,
+} from "./hooks/useBacteriologyDetection";
 export * from "./BacteriologyConstants";
 
 // Re-export sub-components for flexibility

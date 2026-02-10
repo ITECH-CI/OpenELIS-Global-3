@@ -49,12 +49,35 @@ export const postToOpenElisServer = (
       body: payLoad,
     },
   )
-    .then((response) => response.status)
-    .then((status) => {
-      callback(status, extraParams);
+    .then(async (response) => {
+      const status = response.status;
+      let body = null;
+
+      // Try to parse response body as JSON if available
+      const contentType = response.headers.get("content-type");
+      if (contentType && contentType.indexOf("application/json") !== -1) {
+        try {
+          body = await response.json();
+        } catch (e) {
+          console.error("Failed to parse JSON response:", e);
+        }
+      } else {
+        // Try to get text response for non-JSON responses
+        try {
+          body = await response.text();
+        } catch (e) {
+          console.error("Failed to get text response:", e);
+        }
+      }
+
+      return { status, body };
+    })
+    .then(({ status, body }) => {
+      callback(status, body, extraParams);
     })
     .catch((error) => {
       console.error(error);
+      callback(null, error.message, extraParams);
     });
 };
 

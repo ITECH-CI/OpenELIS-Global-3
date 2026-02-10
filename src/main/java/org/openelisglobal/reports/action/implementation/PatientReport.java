@@ -761,13 +761,34 @@ public abstract class PatientReport extends Report {
             candidateAnalyses.sort((a1, a2) -> {
                 Date d1 = a1.getCompletedDate();
                 Date d2 = a2.getCompletedDate();
+
+                // Gestion des nulls pour CompletedDate
                 if (d1 == null && d2 == null)
                     return 0;
                 if (d1 == null)
                     return 1;
                 if (d2 == null)
                     return -1;
-                return d2.compareTo(d1); // Descending order
+
+                // Comparaison principale
+                int comparison = d2.compareTo(d1);
+
+                // Si même date, on utilise Lastupdated
+                if (comparison == 0) {
+                    Date t1 = new Date(a1.getLastupdated().getTime());
+                    Date t2 = new Date(a2.getLastupdated().getTime());
+
+                    if (t1 == null && t2 == null)
+                        return 0;
+                    if (t1 == null)
+                        return 1;
+                    if (t2 == null)
+                        return -1;
+
+                    comparison = t2.compareTo(t1);
+                }
+
+                return comparison;
             });
 
             // Get the most recent prior result (first in sorted list)

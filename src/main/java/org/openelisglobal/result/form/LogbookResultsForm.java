@@ -92,6 +92,7 @@ public class LogbookResultsForm extends BaseForm implements ResultsPagingForm {
 
     private Boolean searchByRange = false;
     private boolean searchFinished;
+    private Boolean showAllResults = false; // true for patient/accession search, false for other searches
 
     public LogbookResultsForm() {
         setFormName("LogbookResultsForm");
@@ -277,6 +278,14 @@ public class LogbookResultsForm extends BaseForm implements ResultsPagingForm {
 
     public void setSearchFinished(boolean searchFinished) {
         this.searchFinished = searchFinished;
+    }
+
+    public Boolean getShowAllResults() {
+        return showAllResults;
+    }
+
+    public void setShowAllResults(Boolean showAllResults) {
+        this.showAllResults = showAllResults;
     }
 
     public List<IdValuePair> getMethods() {

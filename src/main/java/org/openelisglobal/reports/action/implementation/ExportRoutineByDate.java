@@ -1,15 +1,18 @@
 /**
- * The contents of this file are subject to the Mozilla Public License Version 1.1 (the "License");
- * you may not use this file except in compliance with the License. You may obtain a copy of the
- * License at http://www.mozilla.org/MPL/
+ * The contents of this file are subject to the Mozilla Public License
+ * Version 1.1 (the "License"); you may not use this file except in
+ * compliance with the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
  *
- * <p>Software distributed under the License is distributed on an "AS IS" basis, WITHOUT WARRANTY OF
- * ANY KIND, either express or implied. See the License for the specific language governing rights
- * and limitations under the License.
+ * Software distributed under the License is distributed on an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+ * License for the specific language governing rights and limitations under
+ * the License.
  *
- * <p>The Original Code is OpenELIS code.
+ * The Original Code is OpenELIS code.
  *
- * <p>Copyright (C) CIRG, University of Washington, Seattle WA. All Rights Reserved.
+ * Copyright (C) CIRG, University of Washington, Seattle WA.  All Rights Reserved.
+ *
  */
 package org.openelisglobal.reports.action.implementation;
 
@@ -72,10 +75,6 @@ public class ExportRoutineByDate extends CSVRoutineSampleExportReport
 
         lowDateStr = form.getLowerDateRange();
         highDateStr = form.getUpperDateRange();
-        if (form.getSelectList() != null && form.getSelectList().getSelection() != null) {
-            selectedLabUnit = form.getSelectList().getSelection();
-        }
-
         // projectStr = form.getProjectCode();
         dateRange = new DateRange(lowDateStr, highDateStr);
 
@@ -89,19 +88,21 @@ public class ExportRoutineByDate extends CSVRoutineSampleExportReport
         createReportItems();
     }
 
-    /** check everything */
-    // -----------------------------------
+    /**
+     * check everything
+     */
+//-----------------------------------
     private boolean validateSubmitParameters() {
         return dateRange.validateHighLowDate("report.error.message.date.received.missing");
     }
 
-    // -------------------------------
+//-------------------------------
 
     /**
      * @return true, if location is not blank or "0" is is found in the DB; false
      *         otherwise
      */
-    // --------------------------
+//--------------------------
     /*
      * private boolean validateProject() { if (isBlankOrNull(projectStr) ||
      * "0".equals(Integer.getInteger(projectStr))) {
@@ -111,14 +112,13 @@ public class ExportRoutineByDate extends CSVRoutineSampleExportReport
      * add1LineErrorMessage("report.error.message.project.missing"); return false; }
      * return true; }
      */
-    // -------------------------
-    /** creating the list for generation to the report */
+//-------------------------
+    /**
+     * creating the list for generation to the report
+     */
     private void createReportItems() {
         try {
             csvRoutineColumnBuilder = getColumnBuilder();
-            if (selectedLabUnit != null) {
-                csvRoutineColumnBuilder.setSelectedLabUnit(selectedLabUnit);
-            }
             csvRoutineColumnBuilder.buildDataSource();
         } catch (SQLException e) {
             Log.error("Error in " + this.getClass().getSimpleName() + ".createReportItems: ", e);
@@ -169,12 +169,13 @@ public class ExportRoutineByDate extends CSVRoutineSampleExportReport
             }
 
             consolidatedLine.deleteCharAt(consolidatedLine.lastIndexOf(","));
-            buffer.write(consolidatedLine.toString().getBytes("windows-1252"));
+            buffer.write(consolidatedLine.toString().getBytes("utf-8"));
         }
     }
 
     private RoutineColumnBuilder getColumnBuilder() {
         return new RoutineColumnBuilder(dateRange);
+
     }
 
     /**

@@ -9,6 +9,8 @@ import ReferredOut from "./ReferredOut";
 import ReportByDate from "../common/ReportByDate";
 import PageBreadCrumb from "../../common/PageBreadCrumb";
 import AuditTrailReport from "../auditTrailReport/AuditTrailReport";
+import TBActivityReport from "../common/TBActivityReport";
+import TBOrderExport from "../common/TBOrderExport";
 
 export const RoutineReports = (props) => {
   const { type, report } = props;
@@ -87,6 +89,14 @@ export const RoutineReports = (props) => {
       {type === "routine" && report === "auditTrail" && (
         <AuditTrailReport report={"auditTrail"} id={"reports.auditTrail"} />
       )}
+
+      {type === "indicator" && report === "TBOrderReport" && (
+        <TBActivityReport />
+      )}
+
+      {type === "patient" && report === "TBOrderReport" && <TBActivityReport />}
+
+      {type === "patient" && report === "TBOrderExport" && <TBOrderExport />}
     </>
   );
 };

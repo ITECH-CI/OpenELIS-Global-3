@@ -1,20 +1,20 @@
 /*
- * The contents of this file are subject to the Mozilla Public License
- * Version 1.1 (the "License"); you may not use this file except in
- * compliance with the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS"
- * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
- * License for the specific language governing rights and limitations under
- * the License.
- *
- * The Original Code is OpenELIS code.
- *
- * Copyright (C) The Minnesota Department of Health.  All Rights Reserved.
- *
- * Contributor(s): CIRG, University of Washington, Seattle WA.
- */
+* The contents of this file are subject to the Mozilla Public License
+* Version 1.1 (the "License"); you may not use this file except in
+* compliance with the License. You may obtain a copy of the License at
+* http://www.mozilla.org/MPL/
+*
+* Software distributed under the License is distributed on an "AS IS"
+* basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+* License for the specific language governing rights and limitations under
+* the License.
+*
+* The Original Code is OpenELIS code.
+*
+* Copyright (C) The Minnesota Department of Health.  All Rights Reserved.
+*
+* Contributor(s): CIRG, University of Washington, Seattle WA.
+*/
 package org.openelisglobal.reports.action.implementation.reportBeans;
 
 import java.sql.Date;
@@ -36,7 +36,14 @@ public abstract class ARVColumnBuilder extends CIColumnBuilder {
         super(dateRange, projectStr);
     }
 
-    /** This is the order we want them in the CSV file. */
+    public ARVColumnBuilder(DateRange dateRange, String projectStr, DateType dateType) {
+        super(dateRange, projectStr);
+        this.dateType = dateType;
+    }
+
+    /**
+     * This is the order we want them in the CSV file.
+     */
     @Override
     protected abstract void defineAllReportColumns();
 
@@ -46,7 +53,6 @@ public abstract class ARVColumnBuilder extends CIColumnBuilder {
      */
     @Override
     public void makeSQL() {
-
         // Switch date column according to selected DateType: PK
         String dateColumn = "s.entered_date ";
         switch (dateType) {
@@ -59,9 +65,9 @@ public abstract class ARVColumnBuilder extends CIColumnBuilder {
         case PRINT_DATE:
             dateColumn = "dt.report_generation_time ";
         default:
+            dateColumn = "s.entered_date ";
             break;
         }
-
         query = new StringBuilder();
         Date lowDate = dateRange.getLowDate();
         Date highDate = dateRange.getHighDate();

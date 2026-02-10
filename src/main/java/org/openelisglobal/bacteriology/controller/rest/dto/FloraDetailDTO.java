@@ -16,8 +16,8 @@ package org.openelisglobal.bacteriology.controller.rest.dto;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
- * DTO for individual flora detail information
- * Contains characteristics of a single bacterial flora
+ * DTO for individual flora detail information Contains characteristics of a
+ * single bacterial flora
  */
 public class FloraDetailDTO {
 
@@ -37,8 +37,7 @@ public class FloraDetailDTO {
         this.capsulated = false;
     }
 
-    public FloraDetailDTO(Integer floraNumber, Integer gramTypeDictId,
-                          Integer groupingModeDictId, Boolean capsulated) {
+    public FloraDetailDTO(Integer floraNumber, Integer gramTypeDictId, Integer groupingModeDictId, Boolean capsulated) {
         this.floraNumber = floraNumber;
         this.gramTypeDictId = gramTypeDictId;
         this.groupingModeDictId = groupingModeDictId;

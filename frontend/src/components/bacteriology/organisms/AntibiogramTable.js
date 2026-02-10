@@ -1,6 +1,9 @@
-import React, { useState, useEffect } from "react";
+import { Add, TrashCan } from "@carbon/icons-react";
 import {
-  DataTable,
+  Button,
+  ComboBox,
+  RadioButton,
+  RadioButtonGroup,
   Table,
   TableBody,
   TableCell,
@@ -8,16 +11,15 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-  RadioButtonGroup,
-  RadioButton,
   TextInput,
-  Button,
-  ComboBox,
 } from "@carbon/react";
-import { Add, TrashCan } from "@carbon/icons-react";
+import { useEffect, useState } from "react";
 import { FormattedMessage } from "react-intl";
 import { getFromOpenElisServer } from "../../utils/Utils";
-import { ANTIBIOTICS_CATEGORY, ANTIBIOGRAM_RESULTS } from "../BacteriologyConstants";
+import {
+  ANTIBIOGRAM_RESULTS,
+  ANTIBIOTICS_CATEGORY,
+} from "../BacteriologyConstants";
 
 const AntibiogramTable = ({
   accessionNumber,
@@ -25,22 +27,24 @@ const AntibiogramTable = ({
   antibiograms = [],
   onChange,
   disabled = false,
+  uniqueId = "", // Optional unique identifier for multiple antibiogram tables
 }) => {
   const [antibioticList, setAntibioticList] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Use accessionNumber as prefix for unique IDs
-  const idPrefix = accessionNumber ? accessionNumber.replace(/[^a-zA-Z0-9]/g, '_') : 'atb';
+  // Use accessionNumber + uniqueId as prefix for unique IDs
+  const idPrefix = accessionNumber
+    ? `${accessionNumber.replace(/[^a-zA-Z0-9]/g, "_")}${uniqueId ? `_${uniqueId}` : ""}`
+    : `atb${uniqueId ? `_${uniqueId}` : ""}`;
 
   useEffect(() => {
     // Load antibiotics from DisplayListService
     getFromOpenElisServer(
       `/rest/displayList/${encodeURIComponent(ANTIBIOTICS_CATEGORY)}`,
       (data) => {
-        console.log("Antibiotics Response:", data);
         setAntibioticList(data || []);
         setLoading(false);
-      }
+      },
     );
   }, []);
 
@@ -77,7 +81,7 @@ const AntibiogramTable = ({
     { key: "antibiotic", header: "Antibiotic" },
     { key: "result", header: "Résultat (S/I/R)" },
     { key: "diameter", header: "Diamètre (mm)" },
-    { key: "mic", header: "MIC" },
+    { key: "mic", header: "CMI" },
     { key: "comment", header: "Commentaire" },
     { key: "actions", header: "" },
   ];
@@ -120,7 +124,7 @@ const AntibiogramTable = ({
               antibiograms.map((antibiogram, index) => {
                 // Find selected antibiotic item
                 const selectedItem = antibioticItems.find(
-                  (item) => item.id === String(antibiogram.antibioticDictId)
+                  (item) => item.id === String(antibiogram.antibioticDictId),
                 );
 
                 return (
@@ -130,12 +134,13 @@ const AntibiogramTable = ({
                         id={`antibiotic_${idPrefix}_${organismNumber}_${index}`}
                         items={antibioticItems}
                         selectedItem={selectedItem || null}
-                        onChange={({ selectedItem }) => {
-                          if (selectedItem) {
+                        onChange={({ selectedItem: newSelectedItem }) => {
+                          if (newSelectedItem) {
+                            // Only store the ID, not the entire selectedItem object
                             handleFieldChange(
                               index,
                               "antibioticDictId",
-                              parseInt(selectedItem.id)
+                              parseInt(newSelectedItem.id),
                             );
                           } else {
                             handleFieldChange(index, "antibioticDictId", "");
@@ -148,95 +153,97 @@ const AntibiogramTable = ({
                         titleText=""
                         shouldFilterItem={({ item, inputValue }) => {
                           if (!inputValue) return true;
-                          return item.label.toLowerCase().includes(inputValue.toLowerCase());
+                          return item.label
+                            .toLowerCase()
+                            .includes(inputValue.toLowerCase());
                         }}
                       />
                     </TableCell>
-                  <TableCell>
-                    <RadioButtonGroup
-                      name={`result_${idPrefix}_${organismNumber}_${index}`}
-                      valueSelected={antibiogram.result || ""}
-                      onChange={(value) =>
-                        handleFieldChange(index, "result", value)
-                      }
-                      orientation="horizontal"
-                    >
-                      <RadioButton
-                        id={`s_${idPrefix}_${organismNumber}_${index}`}
-                        labelText="S"
-                        value={ANTIBIOGRAM_RESULTS.S}
+                    <TableCell>
+                      <RadioButtonGroup
+                        name={`result_${idPrefix}_${organismNumber}_${index}`}
+                        valueSelected={antibiogram.result || ""}
+                        onChange={(value) =>
+                          handleFieldChange(index, "result", value)
+                        }
+                        orientation="horizontal"
+                      >
+                        <RadioButton
+                          id={`s_${idPrefix}_${organismNumber}_${index}`}
+                          labelText="S"
+                          value={ANTIBIOGRAM_RESULTS.S}
+                          disabled={disabled}
+                        />
+                        <RadioButton
+                          id={`i_${idPrefix}_${organismNumber}_${index}`}
+                          labelText="I"
+                          value={ANTIBIOGRAM_RESULTS.I}
+                          disabled={disabled}
+                        />
+                        <RadioButton
+                          id={`r_${idPrefix}_${organismNumber}_${index}`}
+                          labelText="R"
+                          value={ANTIBIOGRAM_RESULTS.R}
+                          disabled={disabled}
+                        />
+                      </RadioButtonGroup>
+                    </TableCell>
+                    <TableCell>
+                      <TextInput
+                        id={`diameter_${idPrefix}_${organismNumber}_${index}`}
+                        labelText="Diamètre"
+                        type="number"
+                        value={antibiogram.diameterMm || ""}
+                        onChange={(e) =>
+                          handleFieldChange(index, "diameterMm", e.target.value)
+                        }
+                        disabled={disabled}
+                        size="sm"
+                        hideLabel
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <TextInput
+                        id={`mic_${idPrefix}_${organismNumber}_${index}`}
+                        labelText="CMI"
+                        value={antibiogram.micValue || ""}
+                        onChange={(e) =>
+                          handleFieldChange(index, "micValue", e.target.value)
+                        }
+                        disabled={disabled}
+                        size="sm"
+                        hideLabel
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <TextInput
+                        id={`comment_${idPrefix}_${organismNumber}_${index}`}
+                        labelText="Commentaire"
+                        value={antibiogram.interpretationComment || ""}
+                        onChange={(e) =>
+                          handleFieldChange(
+                            index,
+                            "interpretationComment",
+                            e.target.value,
+                          )
+                        }
+                        disabled={disabled}
+                        size="sm"
+                        hideLabel
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Button
+                        size="sm"
+                        kind="ghost"
+                        hasIconOnly
+                        renderIcon={TrashCan}
+                        iconDescription="Remove"
+                        onClick={() => handleRemoveAntibiotic(index)}
                         disabled={disabled}
                       />
-                      <RadioButton
-                        id={`i_${idPrefix}_${organismNumber}_${index}`}
-                        labelText="I"
-                        value={ANTIBIOGRAM_RESULTS.I}
-                        disabled={disabled}
-                      />
-                      <RadioButton
-                        id={`r_${idPrefix}_${organismNumber}_${index}`}
-                        labelText="R"
-                        value={ANTIBIOGRAM_RESULTS.R}
-                        disabled={disabled}
-                      />
-                    </RadioButtonGroup>
-                  </TableCell>
-                  <TableCell>
-                    <TextInput
-                      id={`diameter_${idPrefix}_${organismNumber}_${index}`}
-                      labelText="Diamètre"
-                      type="number"
-                      value={antibiogram.diameterMm || ""}
-                      onChange={(e) =>
-                        handleFieldChange(index, "diameterMm", e.target.value)
-                      }
-                      disabled={disabled}
-                      size="sm"
-                      hideLabel
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <TextInput
-                      id={`mic_${idPrefix}_${organismNumber}_${index}`}
-                      labelText="MIC"
-                      value={antibiogram.micValue || ""}
-                      onChange={(e) =>
-                        handleFieldChange(index, "micValue", e.target.value)
-                      }
-                      disabled={disabled}
-                      size="sm"
-                      hideLabel
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <TextInput
-                      id={`comment_${idPrefix}_${organismNumber}_${index}`}
-                      labelText="Commentaire"
-                      value={antibiogram.interpretationComment || ""}
-                      onChange={(e) =>
-                        handleFieldChange(
-                          index,
-                          "interpretationComment",
-                          e.target.value,
-                        )
-                      }
-                      disabled={disabled}
-                      size="sm"
-                      hideLabel
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <Button
-                      size="sm"
-                      kind="ghost"
-                      hasIconOnly
-                      renderIcon={TrashCan}
-                      iconDescription="Remove"
-                      onClick={() => handleRemoveAntibiotic(index)}
-                      disabled={disabled}
-                    />
-                  </TableCell>
-                </TableRow>
+                    </TableCell>
+                  </TableRow>
                 );
               })
             )}

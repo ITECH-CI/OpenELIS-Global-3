@@ -6,11 +6,12 @@ import org.openelisglobal.common.valueholder.BaseObject;
 public class BacteriologyResultGroup extends BaseObject<Integer> {
 
     private static final long serialVersionUID = 1L;
-	private Integer id;
+    private Integer id;
     private Integer analysisId;
     private String groupType; // MACROSCOPY, MICROSCOPY, CULTURE, ORGANISM, ANTIBIOGRAM
     private Integer groupNumber; // For ORGANISM (1, 2, 3) or ANTIBIOGRAM (1, 2, 3)
     private Integer parentGroupId;
+    private Integer testId; // Link to specific test (for CULTURE and ORGANISM groups)
     private Integer displayOrder;
     private Boolean isActive = true;
     private Timestamp createdDate;
@@ -56,6 +57,14 @@ public class BacteriologyResultGroup extends BaseObject<Integer> {
 
     public void setParentGroupId(Integer parentGroupId) {
         this.parentGroupId = parentGroupId;
+    }
+
+    public Integer getTestId() {
+        return testId;
+    }
+
+    public void setTestId(Integer testId) {
+        this.testId = testId;
     }
 
     public Integer getDisplayOrder() {

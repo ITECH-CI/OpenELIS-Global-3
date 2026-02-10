@@ -58,16 +58,7 @@ import org.openelisglobal.typeoftestresult.service.TypeOfTestResultServiceImpl;
  * @author pahill (pahill@uw.edu)
  * @since Mar 18, 2011
  */
-public abstract class CSVRoutineColumnBuilder {
-    protected String selectedLabUnit;
-
-    public String getSelectedLabUnit() {
-        return selectedLabUnit;
-    }
-
-    public void setSelectedLabUnit(String selectedLabUnit) {
-        this.selectedLabUnit = selectedLabUnit;
-    }
+abstract public class CSVRoutineColumnBuilder {
 
     // these are used so we are not passing around strings in the methods that are
     // appended to sql
@@ -88,7 +79,9 @@ public abstract class CSVRoutineColumnBuilder {
         }
     }
 
-    /** */
+    /**
+     *
+     */
     public CSVRoutineColumnBuilder(StatusService.AnalysisStatus validStatusFilter) {
         // we'll round up everything via hibernate first.
         ResourceTranslator.GenderTranslator.getInstance();
@@ -116,7 +109,9 @@ public abstract class CSVRoutineColumnBuilder {
      */
     protected List<ObservationHistoryType> allObHistoryTypes;
 
-    /** All possible tests, so we can have 1 result per test. */
+    /**
+     * All possible tests, so we can have 1 result per test.
+     */
     protected List<Test> allTests;
 
     /**
@@ -166,7 +161,9 @@ public abstract class CSVRoutineColumnBuilder {
         }
     }
 
-    /** map to provide appropriate tag to identify the project. */
+    /**
+     * map to provide appropriate tag to identify the project.
+     */
 
     // static Map<String /* project Id */, String /* project tag */> projectTagById
     // = new HashMap<String, String>();
@@ -202,10 +199,10 @@ public abstract class CSVRoutineColumnBuilder {
         DATE, // date (i.e. 01/01/2013)
         DATE_TIME, // date with time (i.e. 01/01/2013 12:12:00)
         NONE, GENDER, DROP_ZERO, TEST_RESULT, GEND_CD4, SAMPLE_STATUS, PROJECT, PROGRAM, // program defined in routine
-        // order.
+                                                                                         // order.
         LOG, // results is a real number, but display the log of it.
         AGE_YEARS, AGE_MONTHS, AGE_WEEKS, DEBUG, CUSTOM, // special handling which is encapsulated in an instance of
-        // ICSVColumnCustomStrategy
+                                                         // ICSVColumnCustomStrategy
         BLANK // Will always be an empty string. Used when column is wanted but data is not
     }
 
@@ -217,20 +214,16 @@ public abstract class CSVRoutineColumnBuilder {
         // MAKE SURE ALL GENERATED QUERIES STAY SQL INJECTION SAFE
         makeSQL();
         String sql = query.toString();
-        LogEvent.logDebug(this.getClass().getSimpleName(), "buildResultSet", sql);
         // LogEvent.logInfo(this.getClass().getName(), "method unkown", "===1===\n" +
         // sql.substring(0, 7000)); // the SQL is
         // chunked out only because Eclipse thinks printing really big strings to the
         // console must be wrong, so it truncates them
-        // LogEvent.logInfo(this.getClass().getSimpleName(), "method unkown",
-        // "===2===\n" +
+        // LogEvent.logInfo(this.getClass().getName(), "method unkown", "===2===\n" +
         // sql.substring(7000));
-        // Session session =
-        // HibernateUtil.getSession().getSessionFactory().openSession();
-        // PreparedStatement stmt = session.connection().prepareStatement(sql,
-        // ResultSet.TYPE_SCROLL_SENSITIVE,
-        // ResultSet.CONCUR_READ_ONLY);
-        // resultSet = stmt.executeQuery();
+//		Session session = HibernateUtil.getSession().getSessionFactory().openSession();
+//		PreparedStatement stmt = session.connection().prepareStatement(sql, ResultSet.TYPE_SCROLL_SENSITIVE,
+//				ResultSet.CONCUR_READ_ONLY);
+//		resultSet = stmt.executeQuery();
         Session session = SpringContext.getBean(SessionFactory.class).openSession();
         resultSet = session.doReturningWork(new ReturningWork<ResultSet>() {
 
@@ -240,6 +233,7 @@ public abstract class CSVRoutineColumnBuilder {
                 return connection.prepareStatement(sql, ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_READ_ONLY)
                         .executeQuery();
             }
+
         });
     }
 
@@ -295,7 +289,7 @@ public abstract class CSVRoutineColumnBuilder {
             // if you end up where it is because the result set doesn't return a
             // column of the right name
             // Check MAX_POSTGRES_COL_NAME if this fails on a long name
-            LogEvent.logInfo(this.getClass().getSimpleName(), "getValue",
+            LogEvent.logInfo(this.getClass().getName(), "method unkown",
                     "Internal Error: Unable to find db column \"" + column.dbName + "\" in data.");
             return "?" + column.csvName + "?";
         }
@@ -304,22 +298,18 @@ public abstract class CSVRoutineColumnBuilder {
         // translate should never return null, "" is better while it is doing
         // translation.
         if (result == null) {
-            LogEvent.logInfo(this.getClass().getSimpleName(), "getValue", "A null found " + column.dbName);
+            LogEvent.logInfo(this.getClass().getName(), "method unkown", "A null found " + column.dbName);
         }
         return result;
     }
 
     protected String prepareColumnName(String columnName) {
         // trim and escape the column name so it is more safe from sql injection
-        // Allow common special characters: apostrophe, degree symbol, various dashes,
-        // etc.
-        if (!columnName.matches("(?i)[a-zàâçéèêëîïôûùüÿñæœ0-9_ ()%/\\[\\]+\\-–°'′]+")) {
-            LogEvent.logWarn(this.getClass().getSimpleName(), "prepareColumnName",
+        if (!columnName.matches("(?i)[a-zàâçéèêëîïôûùüÿñæœ0-9_ ()%/\\[\\]+\\-]+")) {
+            LogEvent.logWarn(this.getClass().getName(), "prepareColumnName",
                     "potentially dangerous character detected in '" + columnName + "'");
         }
-        // Escape double quotes and wrap column name in double quotes for PostgreSQL
-        String escapedName = columnName.replace("\"", "\"\"");
-        return "\"" + trimToPostgresMaxColumnName(escapedName) + "\"";
+        return "\"" + trimToPostgresMaxColumnName(columnName = columnName.replace("\"", "\\\"")) + "\"";
     }
 
     private String trimToPostgresMaxColumnName(String name) {
@@ -349,6 +339,7 @@ public abstract class CSVRoutineColumnBuilder {
     /**
      * A utility routine for finding the project short tag (used in exporting etc.)
      * from a projectId.
+     *
      */
     /*
      * public static String translateProjectId(String projectId) { return (projectId
@@ -425,7 +416,7 @@ public abstract class CSVRoutineColumnBuilder {
                 }
 
             case DEBUG:
-                LogEvent.logInfo(this.getClass().getSimpleName(), "translate",
+                LogEvent.logInfo(this.getClass().getName(), "method unkown",
                         "Processing Column Value: " + csvName + " \"" + value + "\"");
             case BLANK:
                 return "";
@@ -522,7 +513,7 @@ public abstract class CSVRoutineColumnBuilder {
         }
     }
 
-    public abstract void makeSQL();
+    abstract public void makeSQL();
 
     protected void defineAllObservationHistoryTypes() {
         allObHistoryTypes = ohtService.getAllOrdered("typeName", false);
@@ -543,46 +534,25 @@ public abstract class CSVRoutineColumnBuilder {
         SQLConstant listName = SQLConstant.RESULT;
         query.append(", \n\n ( SELECT si.samp_id, si.id AS sampleItem_id, si.sort_order AS sampleItemNo, " + listName
                 + ".* " + " FROM sample_item AS si JOIN \n ");
-        String labUnitFilter = "";
-        if (selectedLabUnit != null && !selectedLabUnit.isEmpty()) {
-            labUnitFilter = " AND ts.id = " + selectedLabUnit;
-        }
-
-        // Build the list of test names as VALUES for crosstab - must match column
-        // definitions exactly
-        StringBuilder testNamesQuery = new StringBuilder();
-        testNamesQuery.append("SELECT test_name FROM (VALUES ");
-        boolean first = true;
-        for (Test col : allTests) {
-            if (!first) {
-                testNamesQuery.append(", ");
-            }
-            String testName = TestServiceImpl.getLocalizedTestNameWithType(col);
-            // Escape single quotes for SQL string literal
-            String escapedTestName = testName.replace("'", "''''");
-            testNamesQuery.append("(''").append(escapedTestName).append("'')");
-            first = false;
-        }
-        testNamesQuery.append(") AS t(test_name) ORDER BY 1");
 
         // Begin cross tab / pivot table
-        query.append(" crosstab( \n" + " 'SELECT si.id, t.description, replace(replace(replace(replace(r.value ,E''\\n"
-                + "'', '' ''), E''\\t'', '' ''), E''\\r" + "'', '' ''),'','',''.'') \n"
-                + " FROM clinlims.result AS r join clinlims.analysis AS a on a.id = r.analysis_id \n"
-                + "  join clinlims.sample_item AS si on si.id = a.sampitem_id \n"
-                + "  join clinlims.sample AS s on s.id = si.samp_id \n"
+        query.append(" crosstab( "
+                + "\n 'SELECT si.id, t.description, replace(replace(replace(replace(r.value ,E''\\n'', '' ''), E''\\t'', '' ''), E''\\r'', '' ''),'','',''.'') "
+                + "\n FROM clinlims.result AS r join clinlims.analysis AS a on a.id = r.analysis_id \n "
+                + " join clinlims.sample_item AS si on si.id = a.sampitem_id \n "
+                + " join clinlims.sample AS s on s.id = si.samp_id \n"
                 + " join clinlims.test_result AS tr on r.test_result_id = tr.id \n"
                 + " join clinlims.test AS t on tr.test_id = t.id \n"
-                + " join clinlims.test_section ts on t.test_section_id = ts.id \n"
-                + " left join sample_projects sp on si.samp_id = sp.samp_id \n" + "\n"
-                + " WHERE sp.id IS NULL AND s.entered_date >= date(''" + formatDateForDatabaseSql(lowDate)
+                + " left join sample_projects sp on si.samp_id = sp.samp_id \n"
+                + "\n WHERE sp.id IS NULL AND s.entered_date >= date(''" + formatDateForDatabaseSql(lowDate)
                 + "'')  AND s.entered_date <= date(''" + formatDateForDatabaseSql(highDate) + " '') " + "\n "
                 // sql injection safe as user cannot overwrite validStatusId in database
                 /// + ((validStatusId == null) ? "" : " AND a.status_id = " + validStatusId)
                 // + (( excludeAnalytes == null)?"":
                 // " AND r.analyte_id NOT IN ( " + excludeAnalytes) + ")"
                 // + " AND a.test_id = t.id "
-                + labUnitFilter + "\n ORDER BY 1, 2 " + "\n ', '" + testNamesQuery.toString() + ";' ) ");
+                + "\n ORDER BY 1, 2 "
+                + "\n ', 'SELECT t.description FROM test t where t.is_active = ''Y'' ORDER BY 1' ) ");
         // end of cross tab
 
         // Name the test pivot table columns . We'll name them all after the
@@ -600,8 +570,8 @@ public abstract class CSVRoutineColumnBuilder {
         // left join all sample Items from the right sample range to the results table.
         query.append("\n ON si.id = " + listName + ".si_id " // the inner use a few lines above
                 + "\n ORDER BY si.samp_id, si.id " + "\n) AS " + listName + "\n "); // outer re-use the list name to
-        // name this sparse matrix of
-        // results.
+                                                                                    // name this sparse matrix of
+                                                                                    // results.
     }
 
     /**
@@ -619,29 +589,28 @@ public abstract class CSVRoutineColumnBuilder {
 
     protected void appendObservationHistoryCrosstab(java.sql.Date lowDate, java.sql.Date highDate) {
         appendCrosstabPreamble(SQLConstant.DEMO);
-
-        // Build the list of observation history type names as UNION SELECT for crosstab
-        StringBuilder categoryQuery = new StringBuilder();
-        categoryQuery.append("SELECT type_name FROM (VALUES ");
-        boolean first = true;
-        for (ObservationHistoryType oht : allObHistoryTypes) {
-            if (!first) {
-                categoryQuery.append(", ");
-            }
-            // Escape single quotes in the type name for SQL string literal
-            String escapedTypeName = oht.getTypeName().replace("'", "''''");
-            categoryQuery.append("(''").append(escapedTypeName).append("'')");
-            first = false;
-        }
-        categoryQuery.append(") AS t(type_name) ORDER BY 1");
-
         query.append( // any Observation History items
                 "\n crosstab( " + "\n 'SELECT DISTINCT oh.sample_id as samp_id, oht.type_name, value "
                         + "\n FROM observation_history AS oh, sample AS s, observation_history_type AS oht "
                         + "\n WHERE s.entered_date >= date(''" + formatDateForDatabaseSql(lowDate) + "'') "
                         + "\n AND s.entered_date <= date(''" + formatDateForDatabaseSql(highDate) + "'')"
                         + "\n AND s.id = oh.sample_id AND oh.observation_history_type_id = oht.id order by 1;' "
-                        + "\n , " + "\n '" + categoryQuery.toString() + ";' " + "\n ) \n ");
+                        + "\n , "
+                        + "\n 'SELECT DISTINCT oht.type_name FROM observation_history_type AS oht ORDER BY 1;' " + // must
+                                                                                                                   // be
+                                                                                                                   // the
+                                                                                                                   // same
+                                                                                                                   // list
+                                                                                                                   // as
+                                                                                                                   // the
+                                                                                                                   // column
+                                                                                                                   // definition
+                                                                                                                   // for
+                                                                                                                   // the
+                                                                                                                   // demo
+                                                                                                                   // table
+                                                                                                                   // below.
+                        "\n ) \n ");
 
         // in the following list of observation history items, all valid values
         // are listed in alphabetical order (since that is how crosstab lists
@@ -657,19 +626,16 @@ public abstract class CSVRoutineColumnBuilder {
         // ... )
         query.append(" as demo ( " + " \"s_id\"                           numeric(10) ");
         for (ObservationHistoryType oht : allObHistoryTypes) {
-            // Use prepareColumnName to properly escape special characters
-            query.append("\n," + prepareColumnName(oht.getTypeName()) + " varchar(100) ");
+            // this is sql injection safe as users currently have no way of modifying fields
+            // in ObservationHistoryTypes
+            query.append("\n," + oht.getTypeName() + " varchar(100) ");
         }
         query.append(" ) \n");
         appendCrosstabPostfix(lowDate, highDate, SQLConstant.DEMO);
     }
 
     protected void appendCrosstabPreamble(SQLConstant listName) {
-        query.append(", \n\n ( SELECT s.id AS samp_id, " + " (SELECT ts.name FROM clinlims.test_section ts "
-                + "   JOIN clinlims.test t ON t.test_section_id = ts.id "
-                + "   JOIN clinlims.analysis a ON a.test_id = t.id "
-                + "   WHERE a.sampitem_id = si.id LIMIT 1) as lab_unit, " + listName + ".* " + " FROM sample AS s "
-                + " LEFT JOIN sample_item si ON s.id = si.samp_id " + " LEFT JOIN \n ");
+        query.append(", \n\n ( SELECT s.id AS samp_id, " + listName + ".* " + " FROM sample AS s LEFT JOIN \n ");
     }
 
     protected void appendCrosstabPostfix(java.sql.Date lowDate, java.sql.Date highDate, SQLConstant listName) {
@@ -688,7 +654,9 @@ public abstract class CSVRoutineColumnBuilder {
         return translate;
     }
 
-    /** Generate a column to the list of all columns. One for each possible test. */
+    /**
+     * Generate a column to the list of all columns. One for each possible test.
+     */
     protected void addAllResultsColumns() {
         for (Test test : allTests) {
             String testTag = TestServiceImpl.getLocalizedTestNameWithType(test);
@@ -744,6 +712,7 @@ public abstract class CSVRoutineColumnBuilder {
 
     /**
      * @throws SQLException
+     *
      */
     public void closeResultSet() throws SQLException {
         resultSet.close();

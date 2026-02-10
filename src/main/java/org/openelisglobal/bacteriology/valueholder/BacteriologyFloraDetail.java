@@ -27,12 +27,12 @@ import java.sql.Timestamp;
 import org.openelisglobal.common.valueholder.BaseObject;
 
 /**
- * BacteriologyFloraDetail - Represents detailed information about a single bacterial flora
+ * BacteriologyFloraDetail - Represents detailed information about a single
+ * bacterial flora
  *
- * This entity stores the characteristics of each identified flora including:
- * - Gram type (Gram positive/negative, cocci/bacilli, etc.)
- * - Grouping mode (isolated, clusters, chains, etc.)
- * - Capsulation status
+ * This entity stores the characteristics of each identified flora including: -
+ * Gram type (Gram positive/negative, cocci/bacilli, etc.) - Grouping mode
+ * (isolated, clusters, chains, etc.) - Capsulation status
  */
 @Entity
 @Table(name = "bacteriology_flora_detail", schema = "clinlims")

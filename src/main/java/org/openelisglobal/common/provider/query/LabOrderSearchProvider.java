@@ -302,7 +302,7 @@ public class LabOrderSearchProvider extends BaseQueryProvider {
 
         if (eOrderStatus == ExternalOrderStatus.Cancelled) {
             return CANCELED;
-        } else if (eOrderStatus == ExternalOrderStatus.Realized) {
+        } else if (eOrderStatus == ExternalOrderStatus.Completed) {
             return REALIZED;
         } else if (eOrders.isEmpty()) {
             return NOT_FOUND;

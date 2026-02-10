@@ -1,7 +1,6 @@
 import {
   Accordion,
   AccordionItem,
-  Checkbox,
   Column,
   Grid,
   RadioButton,
@@ -10,9 +9,7 @@ import {
 } from "@carbon/react";
 import { useEffect, useState } from "react";
 import { getFromOpenElisServer } from "../../utils/Utils";
-import {
-  ORGANISM_TYPES
-} from "../BacteriologyConstants";
+import { ORGANISM_TYPES } from "../BacteriologyConstants";
 import AntibiogramTable from "./AntibiogramTable";
 import SearchableSelect from "./SearchableSelect";
 
@@ -22,6 +19,7 @@ const OrganismIdentification = ({
   organism,
   onChange,
   disabled = false,
+  skipOrganismIdentification = false,
 }) => {
   const [organismNames, setOrganismNames] = useState([]);
   const [gramTypes, setGramTypes] = useState([]);
@@ -29,29 +27,32 @@ const OrganismIdentification = ({
   const [loading, setLoading] = useState(true);
 
   // Use accessionNumber as prefix for unique IDs
-  const idPrefix = accessionNumber ? accessionNumber.replace(/[^a-zA-Z0-9]/g, '_') : 'org';
+  const idPrefix = accessionNumber
+    ? accessionNumber.replace(/[^a-zA-Z0-9]/g, "_")
+    : "org";
 
   useEffect(() => {
     // Load organism names from dictionary category "Bacteria"
     getFromOpenElisServer("/rest/dictionary/category/Bacteria", (data) => {
-      console.log("Organism Names Response:", data);
       setOrganismNames(data);
     });
 
     // Load gram types from dictionary
-    getFromOpenElisServer("/rest/dictionary/category/Bacteriology Gram Type", (data) => {
-      console.log("Gram Types Response:", data);
-      console.log("First Gram Type:", data && data[0]);
-      setGramTypes(data || []);
-    });
+    getFromOpenElisServer(
+      "/rest/dictionary/category/Bacteriology Gram Type",
+      (data) => {
+        setGramTypes(data || []);
+      },
+    );
 
     // Load grouping modes from dictionary
-    getFromOpenElisServer("/rest/dictionary/category/Bacteriology Grouping Mode", (data) => {
-      console.log("Grouping Modes Response:", data);
-      console.log("First Grouping Mode:", data && data[0]);
-      setGroupingModes(data || []);
-      setLoading(false);
-    });
+    getFromOpenElisServer(
+      "/rest/dictionary/category/Bacteriology Grouping Mode",
+      (data) => {
+        setGroupingModes(data || []);
+        setLoading(false);
+      },
+    );
   }, []);
 
   const handleFieldChange = (field, value) => {
@@ -61,6 +62,27 @@ const OrganismIdentification = ({
   const isBacteria = organism.organismType === ORGANISM_TYPES.BACTERIA;
   const isYeast = organism.organismType === ORGANISM_TYPES.YEAST;
   const showAntibiogram = isBacteria;
+
+  // For Neisseria gonorrhoeae: skip identification and show antibiogram directly
+  if (skipOrganismIdentification) {
+    return (
+      <div style={{ marginTop: "1rem" }}>
+        <h4 style={{ marginBottom: "1rem" }}>
+          Antibiogramme pour Neisseria gonorrhoeae
+        </h4>
+        <AntibiogramTable
+          accessionNumber={accessionNumber}
+          organismNumber={organismNumber}
+          antibiograms={organism.antibiograms || []}
+          onChange={(antibiograms) =>
+            handleFieldChange("antibiograms", antibiograms)
+          }
+          disabled={disabled}
+          uniqueId={`org${organismNumber}_neiss`}
+        />
+      </div>
+    );
+  }
 
   return (
     <Accordion>
@@ -97,7 +119,10 @@ const OrganismIdentification = ({
               items={organismNames}
               selectedValue={organism.organismNameDictId}
               onChange={(value) =>
-                handleFieldChange("organismNameDictId", value ? parseInt(value) : null)
+                handleFieldChange(
+                  "organismNameDictId",
+                  value ? parseInt(value) : null,
+                )
               }
               returnType="id"
               disabled={disabled || loading}
@@ -143,17 +168,7 @@ const OrganismIdentification = ({
                 />
               </Column>
 
-              <Column lg={4} md={4} sm={4}>
-                <Checkbox
-                  id={`capsule_${idPrefix}_${organismNumber}`}
-                  labelText="Présence de capsule"
-                  checked={organism.capsulePresence || false}
-                  onChange={(checked) =>
-                    handleFieldChange("capsulePresence", checked)
-                  }
-                  disabled={disabled}
-                />
-              </Column>
+              {/* Capsule presence removed - not needed in result entry */}
 
               <Column lg={12} md={8} sm={4}>
                 <TextInput
@@ -165,7 +180,7 @@ const OrganismIdentification = ({
                   }
                   disabled={disabled}
                   placeholder="Autres observations..."
-                  multiline
+                  rows={4}
                 />
               </Column>
             </>
@@ -174,15 +189,18 @@ const OrganismIdentification = ({
           {/* Show info message for yeast */}
           {isYeast && (
             <Column lg={16} md={8} sm={4}>
-              <div style={{
-                marginTop: "1rem",
-                padding: "1rem",
-                backgroundColor: "#f4f4f4",
-                borderRadius: "4px",
-                borderLeft: "4px solid #0f62fe"
-              }}>
+              <div
+                style={{
+                  marginTop: "1rem",
+                  padding: "1rem",
+                  backgroundColor: "#f4f4f4",
+                  borderRadius: "4px",
+                  borderLeft: "4px solid #0f62fe",
+                }}
+              >
                 <p style={{ margin: 0, color: "#161616", fontStyle: "italic" }}>
-                  Pour les levures, l'antibiogramme n'est pas disponible. Seule l'identification est requise.
+                  Pour les levures, l'antibiogramme n'est pas disponible. Seule
+                  l'identification est requise.
                 </p>
               </div>
             </Column>
@@ -201,6 +219,7 @@ const OrganismIdentification = ({
                   handleFieldChange("antibiograms", antibiograms)
                 }
                 disabled={disabled}
+                uniqueId={`org${organismNumber}`}
               />
             </Column>
           )}

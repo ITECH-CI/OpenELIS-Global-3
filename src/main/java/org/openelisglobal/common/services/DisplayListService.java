@@ -101,9 +101,10 @@ public class DisplayListService implements LocaleChangeListener {
         CYTOLOGY_DIAGNOSIS_RESULT_NON_NEO_PLASTIC_CELLULAR, CYTOLOGY_DIAGNOSIS_RESULT_REACTIVE_CELLULAR,
         NOTEBOOK_EXPT_TYPE, ANALYZER_LIST, CYTOLOGY_DIAGNOSIS_RESULT_ORGANISMS, CYTOLOGY_DIAGNOSIS_RESULT_OTHER,
         TB_ORDER_REASONS, TB_DIAGNOSTIC_REASONS, TB_FOLLOWUP_REASONS, TB_ANALYSIS_METHODS, TB_SAMPLE_ASPECTS,
-        TB_FOLLOWUP_LINE1, TB_FOLLOWUP_LINE2, ARV_ORG_LIST, ACTIVE_ORG_LIST, IHC_BREAST_CANCER_REPORT_INTENSITY,
-        IHC_BREAST_CANCER_REPORT_CERBB2_PATTERN, IHC_BREAST_CANCER_REPORT_MOLE_SUBTYPE, PROGRAM_CODE_LIST,
-        CLINICAL_INFOS, INVASIVE_GESTURES, INDWELLING_DEVICES, BACTERIOLOGY_ANTIBIOTICS, THERAPEUTIC_ANTIBIOTICS;
+        TB_FOLLOWUP_LINE1, TB_FOLLOWUP_LINE2, ARV_ORG_LIST, TB_ACTIVITY_REPORT, ACTIVE_ORG_LIST,
+        IHC_BREAST_CANCER_REPORT_INTENSITY, IHC_BREAST_CANCER_REPORT_CERBB2_PATTERN,
+        IHC_BREAST_CANCER_REPORT_MOLE_SUBTYPE, PROGRAM_CODE_LIST, CLINICAL_INFOS, INVASIVE_GESTURES, INDWELLING_DEVICES,
+        BACTERIOLOGY_ANTIBIOTICS, THERAPEUTIC_ANTIBIOTICS;
     }
 
     private static Map<ListType, List<IdValuePair>> typeToListMap;
@@ -558,6 +559,7 @@ public class DisplayListService implements LocaleChangeListener {
         typeToListMap.put(ListType.BACTERIOLOGY_ANTIBIOTICS,
                 createDictionaryListForCategory("Bacteriology Antibiotics"));
         typeToListMap.put(ListType.THERAPEUTIC_ANTIBIOTICS, createDictionaryListForCategory("Therapeutic Antibiotics"));
+        typeToListMap.put(ListType.TB_ACTIVITY_REPORT, createTBActivityReportList());
     }
 
     public void refreshList(ListType listType) {
@@ -1129,6 +1131,15 @@ public class DisplayListService implements LocaleChangeListener {
                     .add(new IdValuePair("M" + i, MessageUtil.getMessage("dictionary.tb.order.followup") + " M" + i));
         }
         return tbFollowupLine2List;
+    }
+
+    private List<IdValuePair> createTBActivityReportList() {
+        List<IdValuePair> tbActivityReports = new ArrayList<>();
+        tbActivityReports
+                .add(new IdValuePair("MICROSCOPY_REPORT", MessageUtil.getMessage("tb.activity_report.microscopy")));
+        tbActivityReports.add(
+                new IdValuePair("GENEXPERT_MTB_REPORT", MessageUtil.getMessage("tb.activity_report.geneXpertMTB")));
+        return tbActivityReports;
     }
 
     private List<IdValuePair> createActionTypeList() {

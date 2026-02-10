@@ -9,7 +9,9 @@ public class BacteriologyAntibiogram extends BaseObject<Integer> {
     private Integer id;
     private Integer organismId;
     private Integer antibioticDictId;
+    private String antibioticNameText; // Resolved name from dictionary (transient, for display)
     private String result; // S (Sensible), I (Intermédiaire), R (Résistant)
+    private String interpretationText; // Resolved interpretation text (transient, for display)
     private BigDecimal diameterMm;
     private String micValue;
     private String interpretationComment;
@@ -42,12 +44,28 @@ public class BacteriologyAntibiogram extends BaseObject<Integer> {
         this.antibioticDictId = antibioticDictId;
     }
 
+    public String getAntibioticNameText() {
+        return antibioticNameText;
+    }
+
+    public void setAntibioticNameText(String antibioticNameText) {
+        this.antibioticNameText = antibioticNameText;
+    }
+
     public String getResult() {
         return result;
     }
 
     public void setResult(String result) {
         this.result = result;
+    }
+
+    public String getInterpretationText() {
+        return interpretationText;
+    }
+
+    public void setInterpretationText(String interpretationText) {
+        this.interpretationText = interpretationText;
     }
 
     public BigDecimal getDiameterMm() {

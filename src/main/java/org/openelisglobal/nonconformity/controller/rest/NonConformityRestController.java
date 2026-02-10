@@ -1,5 +1,6 @@
 package org.openelisglobal.nonconformity.controller.rest;
 
+import jakarta.servlet.http.HttpServletRequest;
 import java.sql.Date;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -7,7 +8,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
 import org.openelisglobal.common.log.LogEvent;
 import org.openelisglobal.nonconformity.form.NonConformityForm;
 import org.openelisglobal.nonconformity.service.NonConformityService;
@@ -21,8 +21,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
-import jakarta.servlet.http.HttpServletRequest;
 
 @RestController
 public class NonConformityRestController extends org.openelisglobal.common.rest.BaseRestController {
@@ -66,12 +64,9 @@ public class NonConformityRestController extends org.openelisglobal.common.rest.
     }
 
     @GetMapping(value = "/rest/nonconformities/search", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> searchNonConformities(
-            @RequestParam(required = false) String siteProvenance,
-            @RequestParam(required = false) String sampleType,
-            @RequestParam(required = false) String rejectionReason,
-            @RequestParam(required = false) String startDate,
-            @RequestParam(required = false) String endDate,
+    public ResponseEntity<?> searchNonConformities(@RequestParam(required = false) String siteProvenance,
+            @RequestParam(required = false) String sampleType, @RequestParam(required = false) String rejectionReason,
+            @RequestParam(required = false) String startDate, @RequestParam(required = false) String endDate,
             @RequestParam(required = false) String status) {
         try {
             Date sqlStartDate = null;
@@ -84,8 +79,8 @@ public class NonConformityRestController extends org.openelisglobal.common.rest.
                 sqlEndDate = parseDate(endDate);
             }
 
-            List<NonConformity> nonConformities = nonConformityService.searchNonConformities(
-                    siteProvenance, sampleType, rejectionReason, sqlStartDate, sqlEndDate, status);
+            List<NonConformity> nonConformities = nonConformityService.searchNonConformities(siteProvenance, sampleType,
+                    rejectionReason, sqlStartDate, sqlEndDate, status);
 
             List<Map<String, Object>> response = new ArrayList<>();
             for (NonConformity nc : nonConformities) {
@@ -101,8 +96,7 @@ public class NonConformityRestController extends org.openelisglobal.common.rest.
     }
 
     @PostMapping(value = "/rest/nonconformity", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> saveNonConformity(@RequestBody NonConformityForm form,
-                                               HttpServletRequest request) {
+    public ResponseEntity<?> saveNonConformity(@RequestBody NonConformityForm form, HttpServletRequest request) {
         try {
             System.out.println("ENTER Saving Non-Conformity with data:");
             NonConformity nc;
@@ -123,14 +117,14 @@ public class NonConformityRestController extends org.openelisglobal.common.rest.
                 }
 
                 // Use service method to get entity in a writable transaction
-                System.out.println("Finding Non-Conformity with ncNumber: " + form.getNcNumber() + ", ID: " + form.getId());
+                System.out.println(
+                        "Finding Non-Conformity with ncNumber: " + form.getNcNumber() + ", ID: " + form.getId());
                 nc = nonConformityService.getAndPrepareForUpdate(form.getNcNumber(), form.getId());
 
                 if (nc == null) {
                     System.err.println("Non-Conformity not found for update");
-                    return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                            .body("Non-conformity not found with " +
-                                  (form.getNcNumber() != null ? "ncNumber: " + form.getNcNumber() : "id: " + form.getId()));
+                    return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Non-conformity not found with "
+                            + (form.getNcNumber() != null ? "ncNumber: " + form.getNcNumber() : "id: " + form.getId()));
                 }
 
                 System.out.println("Updating Non-Conformity: " + nc.getNcNumber() + " (ID: " + nc.getId() + ")");
@@ -159,7 +153,7 @@ public class NonConformityRestController extends org.openelisglobal.common.rest.
                 nc.setCreatedDate(new Date(System.currentTimeMillis()));
                 nonConformityService.insert(nc);
             } else {
-              //  nc.setLastUpdated(new Date(System.currentTimeMillis()));
+                // nc.setLastUpdated(new Date(System.currentTimeMillis()));
                 nc.setLastUpdatedBy(currentUserId);
                 System.out.println("Updating Non-Conformity in DB: " + nc.getNcNumber() + " (ID: " + nc.getId() + ")");
                 System.out.println("Non-Conformity to update: " + nc.toString());
@@ -168,8 +162,8 @@ public class NonConformityRestController extends org.openelisglobal.common.rest.
 
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
-            response.put("message", isNew ? "Non-conformity created successfully"
-                                          : "Non-conformity updated successfully");
+            response.put("message",
+                    isNew ? "Non-conformity created successfully" : "Non-conformity updated successfully");
             response.put("ncNumber", nc.getNcNumber());
             response.put("id", nc.getId());
 
@@ -184,12 +178,9 @@ public class NonConformityRestController extends org.openelisglobal.common.rest.
     }
 
     @GetMapping(value = "/rest/nonconformities/export", produces = "text/csv;charset=UTF-8")
-    public ResponseEntity<String> exportNonConformities(
-            @RequestParam(required = false) String siteProvenance,
-            @RequestParam(required = false) String sampleType,
-            @RequestParam(required = false) String rejectionReason,
-            @RequestParam(required = false) String startDate,
-            @RequestParam(required = false) String endDate,
+    public ResponseEntity<String> exportNonConformities(@RequestParam(required = false) String siteProvenance,
+            @RequestParam(required = false) String sampleType, @RequestParam(required = false) String rejectionReason,
+            @RequestParam(required = false) String startDate, @RequestParam(required = false) String endDate,
             @RequestParam(required = false) String status) {
         try {
             Date sqlStartDate = null;
@@ -204,10 +195,10 @@ public class NonConformityRestController extends org.openelisglobal.common.rest.
 
             // Utiliser les filtres pour la recherche si fournis
             List<NonConformity> nonConformities;
-            if (siteProvenance != null || sampleType != null || rejectionReason != null ||
-                sqlStartDate != null || sqlEndDate != null || status != null) {
-                nonConformities = nonConformityService.searchNonConformities(
-                    siteProvenance, sampleType, rejectionReason, sqlStartDate, sqlEndDate, status);
+            if (siteProvenance != null || sampleType != null || rejectionReason != null || sqlStartDate != null
+                    || sqlEndDate != null || status != null) {
+                nonConformities = nonConformityService.searchNonConformities(siteProvenance, sampleType,
+                        rejectionReason, sqlStartDate, sqlEndDate, status);
             } else {
                 nonConformities = nonConformityService.getAllNonConformities();
             }
@@ -217,8 +208,8 @@ public class NonConformityRestController extends org.openelisglobal.common.rest.
             csv.append('\ufeff');
             // CSV Header
             csv.append("Numéro NC,Date de Signalement,Site de Provenance,Type d'Échantillon,")
-               .append("Raison du Rejet,Commentaire,Rapporteur,Numéro Laboratoire,")
-               .append("Action Corrective,Statut\n");
+                    .append("Raison du Rejet,Commentaire,Rapporteur,Numéro Laboratoire,")
+                    .append("Action Corrective,Statut\n");
 
             // CSV Data
             for (NonConformity nc : nonConformities) {
@@ -234,15 +225,13 @@ public class NonConformityRestController extends org.openelisglobal.common.rest.
                 csv.append(escapeCsv(nc.getStatus())).append("\n");
             }
 
-            String filename = "non_conformities_" + new SimpleDateFormat("yyyy-MM-dd").format(new java.util.Date()) + ".csv";
+            String filename = "non_conformities_" + new SimpleDateFormat("yyyy-MM-dd").format(new java.util.Date())
+                    + ".csv";
 
-            return ResponseEntity.ok()
-                    .header("Content-Type", "text/csv;charset=UTF-8")
+            return ResponseEntity.ok().header("Content-Type", "text/csv;charset=UTF-8")
                     .header("Content-Disposition", "attachment; filename=\"" + filename + "\"")
-                    .header("Cache-Control", "no-cache, no-store, must-revalidate")
-                    .header("Pragma", "no-cache")
-                    .header("Expires", "0")
-                    .body(csv.toString());
+                    .header("Cache-Control", "no-cache, no-store, must-revalidate").header("Pragma", "no-cache")
+                    .header("Expires", "0").body(csv.toString());
         } catch (Exception e) {
             LogEvent.logError(e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -264,16 +253,14 @@ public class NonConformityRestController extends org.openelisglobal.common.rest.
         map.put("correctiveAction", nc.getCorrectiveAction());
         map.put("status", nc.getStatus());
         map.put("createdDate", nc.getCreatedDate() != null ? nc.getCreatedDate().toString() : null);
-      //  map.put("lastUpdated", nc.getLastUpdated() != null ? nc.getLastUpdated().toString() : null);
+        // map.put("lastUpdated", nc.getLastUpdated() != null ?
+        // nc.getLastUpdated().toString() : null);
         return map;
     }
 
     private Date parseDate(String dateStr) throws ParseException {
-        SimpleDateFormat[] formats = {
-            new SimpleDateFormat("yyyy-MM-dd"),
-            new SimpleDateFormat("dd/MM/yyyy"),
-            new SimpleDateFormat("MM/dd/yyyy")
-        };
+        SimpleDateFormat[] formats = { new SimpleDateFormat("yyyy-MM-dd"), new SimpleDateFormat("dd/MM/yyyy"),
+                new SimpleDateFormat("MM/dd/yyyy") };
 
         for (SimpleDateFormat format : formats) {
             try {
@@ -297,4 +284,3 @@ public class NonConformityRestController extends org.openelisglobal.common.rest.
     }
 
 }
-

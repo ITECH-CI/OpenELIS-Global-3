@@ -1,5 +1,6 @@
 package org.openelisglobal.bacteriology.action.bean;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
@@ -9,6 +10,7 @@ import org.openelisglobal.validation.annotations.SafeHtml;
 /**
  * Bean for antibiogram result data
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class AntibiogramResultBean {
 
     private Integer id;

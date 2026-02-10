@@ -42,6 +42,41 @@ function SearchPatientForm(props) {
 
   const intl = useIntl();
 
+  /**
+   * Convert partial birth dates with 'xx' to valid dates
+   * Examples: xx/xx/1993 -> 01/01/1993, 15/xx/1993 -> 15/01/1993
+   * Note: The year is typically known in the birthdate, so we replace unknown day/month with 01
+   */
+  const convertPartialBirthDate = (birthdate) => {
+    if (!birthdate || typeof birthdate !== "string") {
+      return "";
+    }
+
+    // If date contains 'xx', convert it to a valid date
+    if (birthdate.includes("xx")) {
+      const parts = birthdate.split("/");
+
+      // Replace xx in day with 01
+      if (parts[0] === "xx") {
+        parts[0] = "01";
+      }
+
+      // Replace xx in month with 01
+      if (parts[1] === "xx") {
+        parts[1] = "01";
+      }
+
+      // Replace xx in year with current year (rare case)
+      if (parts[2] === "xx") {
+        parts[2] = new Date().getFullYear().toString();
+      }
+
+      return parts.join("/");
+    }
+
+    return birthdate;
+  };
+
   const [dob, setDob] = useState("");
   const [patientSearchResults, setPatientSearchResults] = useState([]);
   const [importStatus, setImportStatus] = useState({});
@@ -89,7 +124,8 @@ function SearchPatientForm(props) {
       city: patientSelected.address?.city || "",
       primaryPhone: patientSelected.contactPhone || "",
       gender: patientSelected.gender || "",
-      birthDateForDisplay: patientSelected.birthdate || "",
+      birthDateForDisplay:
+        convertPartialBirthDate(patientSelected.birthdate) || "",
       commune: patientSelected.commune || "",
       education: patientSelected.education || "",
       maritialStatus: patientSelected.maritalStatus || "",
@@ -112,13 +148,13 @@ function SearchPatientForm(props) {
     postToOpenElisServer(
       "/rest/PatientManagement",
       JSON.stringify(dataToSend),
-      (status) => {
-        handlePost(status, patientId);
+      (status, responseBody) => {
+        handlePost(status, responseBody, patientId);
       },
     );
   };
 
-  const handlePost = (status, patientId) => {
+  const handlePost = (status, responseBody, patientId) => {
     setNotificationVisible(true);
     if (status === 200) {
       addNotification({
@@ -131,9 +167,37 @@ function SearchPatientForm(props) {
         [patientId]: true,
       }));
     } else {
+      // Try to extract detailed error message from response
+      let errorMessage = intl.formatMessage({ id: "error.import.patient" });
+
+      if (responseBody) {
+        // If response is a JSON object with error details
+        if (typeof responseBody === "object") {
+          if (responseBody.error) {
+            errorMessage = responseBody.error;
+          } else if (responseBody.message) {
+            errorMessage = responseBody.message;
+          } else if (
+            responseBody.errors &&
+            Array.isArray(responseBody.errors)
+          ) {
+            // Multiple validation errors
+            errorMessage = responseBody.errors
+              .map((err) => err.message || err)
+              .join(", ");
+          }
+        } else if (
+          typeof responseBody === "string" &&
+          responseBody.trim() !== ""
+        ) {
+          // If response is a plain text error message
+          errorMessage = responseBody;
+        }
+      }
+
       addNotification({
         title: intl.formatMessage({ id: "notification.title" }),
-        message: intl.formatMessage({ id: "error.import.patient" }),
+        message: `${errorMessage}${status ? ` (HTTP ${status})` : ""}`,
         kind: NotificationKinds.error,
       });
     }

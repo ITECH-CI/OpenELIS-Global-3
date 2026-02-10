@@ -1,15 +1,18 @@
 /**
- * The contents of this file are subject to the Mozilla Public License Version 1.1 (the "License");
- * you may not use this file except in compliance with the License. You may obtain a copy of the
- * License at http://www.mozilla.org/MPL/
+ * The contents of this file are subject to the Mozilla Public License
+ * Version 1.1 (the "License"); you may not use this file except in
+ * compliance with the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
  *
- * <p>Software distributed under the License is distributed on an "AS IS" basis, WITHOUT WARRANTY OF
- * ANY KIND, either express or implied. See the License for the specific language governing rights
- * and limitations under the License.
+ * Software distributed under the License is distributed on an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+ * License for the specific language governing rights and limitations under
+ * the License.
  *
- * <p>The Original Code is OpenELIS code.
+ * The Original Code is OpenELIS code.
  *
- * <p>Copyright (C) ITECH, University of Washington, Seattle WA. All Rights Reserved.
+ * Copyright (C) ITECH, University of Washington, Seattle WA.  All Rights Reserved.
+ *
  */
 package org.openelisglobal.reports.action.implementation;
 
@@ -21,6 +24,7 @@ import java.util.List;
 import java.util.Set;
 import net.sf.jasperreports.engine.JRDataSource;
 import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
+import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.validator.GenericValidator;
 import org.openelisglobal.analysis.valueholder.Analysis;
 import org.openelisglobal.common.constants.Constants;
@@ -31,6 +35,9 @@ import org.openelisglobal.common.util.ConfigurationProperties.Property;
 import org.openelisglobal.internationalization.MessageUtil;
 import org.openelisglobal.localization.service.LocalizationService;
 import org.openelisglobal.organization.valueholder.Organization;
+import org.openelisglobal.patientidentity.service.PatientIdentityService;
+import org.openelisglobal.patientidentity.valueholder.PatientIdentity;
+import org.openelisglobal.patientidentitytype.util.PatientIdentityTypeMap;
 import org.openelisglobal.reports.action.implementation.reportBeans.ClinicalPatientData;
 import org.openelisglobal.result.service.ResultService;
 import org.openelisglobal.result.valueholder.Result;
@@ -59,6 +66,7 @@ public class TBPatientReport extends PatientReport implements IReportCreator, IR
                 Integer.parseInt(SpringContext.getBean(IStatusService.class).getStatusID(AnalysisStatus.Canceled)));
         analysisStatusIds.add(Integer
                 .parseInt(SpringContext.getBean(IStatusService.class).getStatusID(AnalysisStatus.TechnicalRejected)));
+
     }
 
     static final String configName = ConfigurationProperties.getInstance().getPropertyValue(Property.configurationName);
@@ -97,6 +105,14 @@ public class TBPatientReport extends PatientReport implements IReportCreator, IR
     @Override
     protected void createReportItems() {
         Set<SampleItem> sampleSet = new HashSet<>();
+        PatientIdentityService patientIdentityService = SpringContext.getBean(PatientIdentityService.class);
+        PatientIdentity patIdentity1 = patientIdentityService.getPatitentIdentityForPatientAndType(
+                currentPatient.getId(), PatientIdentityTypeMap.getInstance().getIDForType("TB_PATIENT_CODE"));
+        PatientIdentity patIdentity2 = patientIdentityService.getPatitentIdentityForPatientAndType(
+                currentPatient.getId(), PatientIdentityTypeMap.getInstance().getIDForType("TB_PATIENT_CODE_RR"));
+        String patientCode = ObjectUtils.isNotEmpty(patIdentity1) ? patIdentity1.getIdentityData()
+                : ObjectUtils.isNotEmpty(patIdentity2) ? patIdentity2.getIdentityData()
+                        : currentPatient.getExternalId();
 
         boolean isConfirmationSample = sampleService.isConfirmationSample(currentSample);
         List<Analysis> analysisList = analysisService
@@ -112,11 +128,13 @@ public class TBPatientReport extends PatientReport implements IReportCreator, IR
                 if (analysis.getTest() != null) {
                     currentAnalysis = analysis;
                     ClinicalPatientData resultsData = buildClinicalPatientData(hasParentResult);
-                    Organization referringOrg = null;
-                    var sampleOrganization = sampleOrganizationService.getDataBySample(currentSample);
-                    if (sampleOrganization != null) {
-                        referringOrg = sampleOrganization.getOrganization();
+                    if (ObjectUtils.isEmpty(resultsData.getSubjectNumber().trim())) {
+                        resultsData.setSubjectNumber(patientCode);
                     }
+
+                    var sampleOrganization = sampleOrganizationService.getDataBySample(currentSample);
+                    Organization referringOrg = sampleOrganization != null ? sampleOrganization.getOrganization()
+                            : null;
                     currentSiteInfo = referringOrg == null ? "" : referringOrg.getOrganizationName();
                     resultsData.setSiteInfo(currentSiteInfo);
                     if (isConfirmationSample) {
@@ -156,6 +174,7 @@ public class TBPatientReport extends PatientReport implements IReportCreator, IR
         } else {
             buildReport();
         }
+
     }
 
     private void buildReport() {
@@ -242,6 +261,7 @@ public class TBPatientReport extends PatientReport implements IReportCreator, IR
                 } else {
                     reportItem.setNote(MessageUtil.getMessage("result.corrected"));
                 }
+
             }
 
             reportItem

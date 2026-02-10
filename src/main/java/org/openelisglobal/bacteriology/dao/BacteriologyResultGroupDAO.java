@@ -30,7 +30,7 @@ public interface BacteriologyResultGroupDAO extends BaseDAO<BacteriologyResultGr
      * Delete all groups for an analysis (soft delete - set is_active = false)
      */
     void deactivateGroupsForAnalysis(Integer analysisId);
-    
+
     /**
      * @param object the data to insert
      * @return the id of the inserted object

@@ -57,11 +57,9 @@ public class BacteriologyAntibiogramDAOImpl extends BaseDAOImpl<BacteriologyAnti
     @Override
     public void deactivateAntibiogramsForAnalysis(Integer analysisId) {
         try {
-            String hql = "UPDATE BacteriologyAntibiogram ba SET ba.isActive = false " +
-                    "WHERE ba.organismId IN " +
-                    "(SELECT bo.id FROM BacteriologyOrganism bo " +
-                    "WHERE bo.resultGroupId IN " +
-                    "(SELECT brg.id FROM BacteriologyResultGroup brg WHERE brg.analysisId = :analysisId))";
+            String hql = "UPDATE BacteriologyAntibiogram ba SET ba.isActive = false " + "WHERE ba.organismId IN "
+                    + "(SELECT bo.id FROM BacteriologyOrganism bo " + "WHERE bo.resultGroupId IN "
+                    + "(SELECT brg.id FROM BacteriologyResultGroup brg WHERE brg.analysisId = :analysisId))";
             Query query = entityManager.unwrap(Session.class).createQuery(hql);
             query.setParameter("analysisId", analysisId);
             query.executeUpdate();

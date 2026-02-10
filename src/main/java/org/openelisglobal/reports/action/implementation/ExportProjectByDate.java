@@ -1,15 +1,18 @@
 /**
- * The contents of this file are subject to the Mozilla Public License Version 1.1 (the "License");
- * you may not use this file except in compliance with the License. You may obtain a copy of the
- * License at http://www.mozilla.org/MPL/
+ * The contents of this file are subject to the Mozilla Public License
+ * Version 1.1 (the "License"); you may not use this file except in
+ * compliance with the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
  *
- * <p>Software distributed under the License is distributed on an "AS IS" basis, WITHOUT WARRANTY OF
- * ANY KIND, either express or implied. See the License for the specific language governing rights
- * and limitations under the License.
+ * Software distributed under the License is distributed on an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+ * License for the specific language governing rights and limitations under
+ * the License.
  *
- * <p>The Original Code is OpenELIS code.
+ * The Original Code is OpenELIS code.
  *
- * <p>Copyright (C) CIRG, University of Washington, Seattle WA. All Rights Reserved.
+ * Copyright (C) CIRG, University of Washington, Seattle WA.  All Rights Reserved.
+ *
  */
 package org.openelisglobal.reports.action.implementation;
 
@@ -94,7 +97,9 @@ public class ExportProjectByDate extends CSVSampleExportReport implements IRepor
         createReportItems();
     }
 
-    /** check everything */
+    /**
+     * check everything
+     */
     private boolean validateSubmitParameters() {
         return dateRange.validateHighLowDate("report.error.message.date.received.missing") && validateProject();
     }
@@ -116,7 +121,9 @@ public class ExportProjectByDate extends CSVSampleExportReport implements IRepor
         return true;
     }
 
-    /** creating the list for generation to the report */
+    /**
+     * creating the list for generation to the report
+     */
     private void createReportItems() {
         try {
             csvColumnBuilder = getColumnBuilder(projectStr);
@@ -128,26 +135,30 @@ public class ExportProjectByDate extends CSVSampleExportReport implements IRepor
     }
 
     @Override
-    protected void writeResultsToBuffer(ByteArrayOutputStream buffer) throws IOException, SQLException, ParseException {
+    protected void writeResultsToBuffer(ByteArrayOutputStream buffer) {
 
-        String currentAccessionNumber = null;
-        String[] splitBase = null;
-        while (csvColumnBuilder.next()) {
-            String line = csvColumnBuilder.nextLine();
-            String[] splitLine = line.split(",");
+        try {
+            String currentAccessionNumber = null;
+            String[] splitBase = null;
+            while (csvColumnBuilder.next()) {
+                String line = csvColumnBuilder.nextLine();
+                String[] splitLine = line.split(",");
 
-            if (splitLine[0].equals(currentAccessionNumber)) {
-                merge(splitBase, splitLine);
-            } else {
-                if (currentAccessionNumber != null) {
-                    writeConsolidatedBaseToBuffer(buffer, splitBase);
+                if (splitLine[0].equals(currentAccessionNumber)) {
+                    merge(splitBase, splitLine);
+                } else {
+                    if (currentAccessionNumber != null) {
+                        writeConsolidatedBaseToBuffer(buffer, splitBase);
+                    }
+                    splitBase = splitLine;
+                    currentAccessionNumber = splitBase[0];
                 }
-                splitBase = splitLine;
-                currentAccessionNumber = splitBase[0];
             }
-        }
 
-        writeConsolidatedBaseToBuffer(buffer, splitBase);
+            writeConsolidatedBaseToBuffer(buffer, splitBase);
+        } catch (IOException | SQLException | ParseException e) {
+            Log.error("Error in " + this.getClass().getSimpleName() + " writeResultsToBuffer: ", e);
+        }
     }
 
     private void merge(String[] base, String[] line) {
@@ -169,7 +180,7 @@ public class ExportProjectByDate extends CSVSampleExportReport implements IRepor
             }
 
             consolidatedLine.deleteCharAt(consolidatedLine.lastIndexOf(","));
-            buffer.write(consolidatedLine.toString().getBytes("windows-1252"));
+            buffer.write(consolidatedLine.toString().getBytes("utf-8"));
         }
     }
 

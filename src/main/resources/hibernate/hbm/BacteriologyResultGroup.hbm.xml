@@ -4,8 +4,9 @@
     "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 
 <hibernate-mapping>
-    <class name="org.openelisglobal.bacteriology.valueholder.BacteriologyResultGroup"
-           table="bacteriology_result_group" schema="clinlims">
+    <class
+        name="org.openelisglobal.bacteriology.valueholder.BacteriologyResultGroup"
+        table="bacteriology_result_group" schema="clinlims">
         <id name="id" type="java.lang.Integer">
             <column name="id" precision="10" scale="0" />
             <generator class="sequence">
@@ -13,7 +14,8 @@
             </generator>
         </id>
         <property name="analysisId" type="java.lang.Integer">
-            <column name="analysis_id" precision="10" scale="0" not-null="true" />
+            <column name="analysis_id" precision="10" scale="0"
+                not-null="true" />
         </property>
         <property name="groupType" type="string">
             <column name="group_type" length="50" not-null="true" />
@@ -23,6 +25,9 @@
         </property>
         <property name="parentGroupId" type="java.lang.Integer">
             <column name="parent_group_id" precision="10" scale="0" />
+        </property>
+        <property name="testId" type="java.lang.Integer">
+            <column name="test_id" precision="10" scale="0" />
         </property>
         <property name="displayOrder" type="java.lang.Integer">
             <column name="display_order" precision="10" scale="0" />

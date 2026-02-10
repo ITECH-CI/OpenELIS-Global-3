@@ -40,6 +40,7 @@ import org.openelisglobal.common.log.LogEvent;
 import org.openelisglobal.common.services.IStatusService;
 import org.openelisglobal.common.services.StatusService;
 import org.openelisglobal.common.services.StatusService.AnalysisStatus;
+import org.openelisglobal.common.services.StatusService.ExternalOrderStatus;
 import org.openelisglobal.common.services.StatusService.OrderStatus;
 import org.openelisglobal.common.util.DateUtil;
 import org.openelisglobal.common.util.StringUtil;
@@ -61,7 +62,7 @@ import org.openelisglobal.typeoftestresult.service.TypeOfTestResultServiceImpl;
  * @author pahill (pahill@uw.edu)
  * @since Mar 18, 2011
  */
-public abstract class CSVColumnBuilder {
+abstract public class CSVColumnBuilder {
 
     // these are used so we are not passing around strings in the methods that are
     // appended to sql
@@ -88,7 +89,9 @@ public abstract class CSVColumnBuilder {
         }
     }
 
-    /** */
+    /**
+     *
+     */
     public CSVColumnBuilder(StatusService.AnalysisStatus validStatusFilter) {
         // we'll round up everything via hibernate first.
         ResourceTranslator.DictionaryTranslator.getInstance();
@@ -117,7 +120,9 @@ public abstract class CSVColumnBuilder {
      */
     protected List<ObservationHistoryType> allObHistoryTypes;
 
-    /** All possible tests, so we can have 1 result per test. */
+    /**
+     * All possible tests, so we can have 1 result per test.
+     */
     protected List<Test> allTests;
 
     /**
@@ -130,7 +135,7 @@ public abstract class CSVColumnBuilder {
     protected String validStatusId;
 
     protected static final SimpleDateFormat postgresDateFormat = new SimpleDateFormat("yyyy-MM-dd");
-    private static final SimpleDateFormat postgresDateTime = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
+    private static final SimpleDateFormat postgresDateTime = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
     protected ResultSet resultSet;
 
@@ -169,9 +174,11 @@ public abstract class CSVColumnBuilder {
         }
     }
 
-    /** map to provide appropriate tag to identify the project. */
-    static Map<String /* project Id */, String /* project tag */> projectTagById = new HashMap<>();
+    /**
+     * map to provide appropriate tag to identify the project.
+     */
 
+    static Map<String /* project Id */, String /* project tag */> projectTagById = new HashMap<>();
     static {
         defineAllProjectTags();
     }
@@ -217,10 +224,11 @@ public abstract class CSVColumnBuilder {
         DICT_RAW, // dictionary localized value, no attempts at trimming to show just code number.
         DATE, // date (i.e. 01/01/2013)
         DATE_TIME, // date with time (i.e. 01/01/2013 12:12:00)
-        NONE, GENDER, DROP_ZERO, TEST_RESULT, GEND_CD4, SAMPLE_STATUS, PROJECT, LOG, // results is a real number, but
+        NONE, GENDER, DROP_ZERO, TEST_RESULT, GEND_CD4, SAMPLE_STATUS, PROJECT, LOG, EORDER_STATUS, // results is a real
+                                                                                                    // number, but
         // display the log of it.
         AGE_YEARS, AGE_MONTHS, AGE_WEEKS, DEBUG, CUSTOM, // special handling which is encapsulated in an instance of
-        // ICSVColumnCustomStrategy
+                                                         // ICSVColumnCustomStrategy
         BLANK // Will always be an empty string. Used when column is wanted but data is not
     }
 
@@ -231,20 +239,16 @@ public abstract class CSVColumnBuilder {
     protected void buildResultSet() throws SQLException {
         makeSQL();
         String sql = query.toString();
-        // LogEvent.logInfo(this.getClass().getSimpleName(), "method unkown",
-        // "===1===\n" +
+        // LogEvent.logInfo(this.getClass().getName(), "method unkown", "===1===\n" +
         // sql.substring(0, 7000)); // the SQL is
         // chunked out only because Eclipse thinks printing really big strings to the
         // console must be wrong, so it truncates them
-        // LogEvent.logInfo(this.getClass().getSimpleName(), "method unkown",
-        // "===2===\n" +
+        // LogEvent.logInfo(this.getClass().getName(), "method unkown", "===2===\n" +
         // sql.substring(7000));
-        // Session session =
-        // HibernateUtil.getSession().getSessionFactory().openSession();
-        // PreparedStatement stmt = session.connection().prepareStatement(sql,
-        // ResultSet.TYPE_SCROLL_SENSITIVE,
-        // ResultSet.CONCUR_READ_ONLY);
-        // resultSet = stmt.executeQuery();
+//		Session session = HibernateUtil.getSession().getSessionFactory().openSession();
+//		PreparedStatement stmt = session.connection().prepareStatement(sql, ResultSet.TYPE_SCROLL_SENSITIVE,
+//				ResultSet.CONCUR_READ_ONLY);
+//		resultSet = stmt.executeQuery();
         Session session = SpringContext.getBean(SessionFactory.class).getCurrentSession();
         session.beginTransaction();
         resultSet = session.doReturningWork(new ReturningWork<ResultSet>() {
@@ -254,6 +258,7 @@ public abstract class CSVColumnBuilder {
                 return connection.prepareStatement(sql, ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_READ_ONLY)
                         .executeQuery();
             }
+
         });
     }
 
@@ -307,7 +312,7 @@ public abstract class CSVColumnBuilder {
             // if you end up where it is because the result set doesn't return a
             // column of the right name
             // Check MAX_POSTGRES_COL_NAME if this fails on a long name
-            LogEvent.logInfo(this.getClass().getSimpleName(), "getValue",
+            LogEvent.logInfo(this.getClass().getName(), "method unkown",
                     "Internal Error: Unable to find db column \"" + column.dbName + "\" in data.");
             return "?" + column.csvName + "?";
         }
@@ -316,22 +321,18 @@ public abstract class CSVColumnBuilder {
         // translate should never return null, "" is better while it is doing
         // translation.
         if (result == null) {
-            LogEvent.logInfo(this.getClass().getSimpleName(), "getValue", "A null found " + column.dbName);
+            LogEvent.logInfo(this.getClass().getName(), "method unkown", "A null found " + column.dbName);
         }
         return result;
     }
 
     protected String prepareColumnName(String columnName) {
         // trim and escape the column name so it is more safe from sql injection
-        // Allow common special characters: apostrophe, degree symbol, various dashes,
-        // etc.
-        if (!columnName.matches("(?i)[a-zàâçéèêëîïôûùüÿñæœ0-9_ ()%/\\[\\]+\\-–°'′]+")) {
-            LogEvent.logWarn(this.getClass().getSimpleName(), "prepareColumnName",
+        if (!columnName.matches("(?i)[a-zàâçéèêëîïôûùüÿñæœ0-9_ ()%/\\[\\]+\\-]+")) {
+            LogEvent.logWarn(this.getClass().getName(), "prepareColumnName",
                     "potentially dangerous character detected in '" + columnName + "'");
         }
-        // Escape double quotes and wrap column name in double quotes for PostgreSQL
-        String escapedName = columnName.replace("\"", "\"\"");
-        return "\"" + trimToPostgresMaxColumnName(escapedName) + "\"";
+        return "\"" + trimToPostgresMaxColumnName(columnName = columnName.replace("\"", "\\\"")) + "\"";
     }
 
     private String trimToPostgresMaxColumnName(String name) {
@@ -361,6 +362,7 @@ public abstract class CSVColumnBuilder {
     /**
      * A utility routine for finding the project short tag (used in exporting etc.)
      * from a projectId.
+     *
      */
     public static String translateProjectId(String projectId) {
         return (projectId == null) ? null : projectTagById.get(projectId);
@@ -421,22 +423,40 @@ public abstract class CSVColumnBuilder {
             case SAMPLE_STATUS:
                 OrderStatus orderStatus = SpringContext.getBean(IStatusService.class).getOrderStatusForID(value);
                 if (orderStatus == null) {
-                    return "?";
+                    return "Not defined";
                 }
                 switch (orderStatus) {
                 case Entered:
-                    return "E"; // entered, entree
+                    return "Entered"; // entered, entree
                 case Started:
-                    return "C"; // commenced, commence
+                    return "Started"; // commenced, commence
                 case Finished:
-                    return "F"; // Finished, Finale
+                    return "Finished"; // Finished, Finale
                 case NonConforming_depricated:
-                    return "N"; // Non-conforming, Non-conformes
+                    return "Non-conforming"; // Non-conforming, Non-conformes
+                }
+            case EORDER_STATUS:
+                ExternalOrderStatus eorderStatus = SpringContext.getBean(IStatusService.class)
+                        .getExternalOrderStatusForID(value);
+                if (eorderStatus == null) {
+                    return "Not defined";
+                }
+                switch (eorderStatus) {
+                case Entered:
+                    return "Entered"; // entered, entree
+                case InProgress:
+                    return "InProgress"; // commenced, commence
+                case Cancelled:
+                    return "Cancelled"; // Cancelled by lab staff
+                case NonConforming:
+                    return "Rejected"; // Non-conforming, Non-conformes
+                case Completed:
+                    return "Completed"; // Finished
                 }
             case ANALYSIS_STATUS:
                 AnalysisStatus analysisStatus = StatusService.getInstance().getAnalysisStatusForID(value);
                 if (analysisStatus == null)
-                    return "?";
+                    return "Not defined";
                 switch (analysisStatus) {
                 case SampleRejected:
                     return "Reject"; // rejété, entr�e
@@ -454,11 +474,12 @@ public abstract class CSVColumnBuilder {
                     return "Non Conforme"; // commenced, commenc�
                 case Finalized:
                     return "Validation_Biologique"; // Finished, Finale
+
                 }
             case PROJECT:
                 return translateProjectId(value);
             case DEBUG:
-                LogEvent.logInfo(this.getClass().getSimpleName(), "translate",
+                LogEvent.logInfo(this.getClass().getName(), "method unkown",
                         "Processing Column Value: " + csvName + " \"" + value + "\"");
             case BLANK:
                 return "";
@@ -554,7 +575,7 @@ public abstract class CSVColumnBuilder {
         }
     }
 
-    public abstract void makeSQL();
+    abstract public void makeSQL();
 
     protected void defineAllObservationHistoryTypes() {
         allObHistoryTypes = ohtService.getAllOrdered("typeName", false);
@@ -577,11 +598,11 @@ public abstract class CSVColumnBuilder {
                 + ".* " + " FROM sample_item AS si LEFT JOIN \n ");
 
         // Begin cross tab / pivot table
-        query.append(" crosstab( \n" + " 'SELECT si.id, t.description, r.value \n"
-                + " FROM clinlims.result AS r, clinlims.analysis AS a, clinlims.sample_item AS si,"
-                + " clinlims.sample AS s, clinlims.test AS t, clinlims.test_result AS tr \n" + " WHERE \n"
-                + " s.id = si.samp_id AND " + byDate + " >= date(''" + formatDateForDatabaseSql(lowDate) + "'')  AND "
-                + byDate + " <= date(''" + formatDateForDatabaseSql(highDate) + " '') " + "\n AND s.id = si.samp_id "
+        query.append(" crosstab( " + "\n 'SELECT si.id, t.description, r.value "
+                + "\n FROM clinlims.result AS r, clinlims.analysis AS a, clinlims.sample_item AS si, clinlims.sample AS s, clinlims.test AS t, clinlims.test_result AS tr "
+                + "\n WHERE " + "\n s.id = si.samp_id" + " AND " + byDate + " >= date(''"
+                + formatDateForDatabaseSql(lowDate) + "'')  AND " + byDate + " <= date(''"
+                + formatDateForDatabaseSql(highDate) + " '') " + "\n AND s.id = si.samp_id "
                 + "\n AND si.id = a.sampitem_id "
                 // sql injection safe as user cannot overwrite validStatusId in database
                 + ((validStatusId == null) ? "" : " AND a.status_id = " + validStatusId)
@@ -589,7 +610,8 @@ public abstract class CSVColumnBuilder {
                 // + (( excludeAnalytes == null)?"":
                 // " AND r.analyte_id NOT IN ( " + excludeAnalytes) + ")"
                 // + " AND a.test_id = t.id "
-                + "\n ORDER BY 1, 2 " + "\n ', 'SELECT description FROM test where is_active = ''Y'' ORDER BY 1' ) ");
+                + "\n ORDER BY 1, 2 "
+                + "\n ', 'SELECT description FROM test where description != ''CD4'' AND is_active = ''Y'' ORDER BY 1' ) ");
         // end of cross tab
 
         // Name the test pivot table columns . We'll name them all after the
@@ -608,8 +630,8 @@ public abstract class CSVColumnBuilder {
         // left join all sample Items from the right sample range to the results table.
         query.append("\n ON si.id = " + listName + ".si_id " // the inner use a few lines above
                 + "\n ORDER BY si.samp_id, si.id " + "\n) AS " + listName + "\n "); // outer re-use the list name to
-        // name this sparse matrix of
-        // results.
+                                                                                    // name this sparse matrix of
+                                                                                    // results.
     }
 
     /**
@@ -626,29 +648,28 @@ public abstract class CSVColumnBuilder {
     protected void appendObservationHistoryCrosstab(Date lowDate, Date highDate, String byDate) {
         SQLConstant listName = SQLConstant.DEMO;
         appendCrosstabPreamble(listName);
-
-        // Build the list of observation history type names as UNION SELECT for crosstab
-        StringBuilder categoryQuery = new StringBuilder();
-        categoryQuery.append("SELECT type_name FROM (VALUES ");
-        boolean first = true;
-        for (ObservationHistoryType oht : allObHistoryTypes) {
-            if (!first) {
-                categoryQuery.append(", ");
-            }
-            // Escape single quotes in the type name for SQL string literal
-            String escapedTypeName = oht.getTypeName().replace("'", "''''");
-            categoryQuery.append("(''").append(escapedTypeName).append("'')");
-            first = false;
-        }
-        categoryQuery.append(") AS t(type_name) ORDER BY 1");
-
         query.append( // any Observation History items
                 "\n crosstab( " + "\n 'SELECT DISTINCT oh.sample_id as samp_id, oht.type_name, value "
-                        + "\n FROM observation_history AS oh, sample AS s, observation_history_type AS oht "
-                        + "\n WHERE s.collection_date >= date(''" + formatDateForDatabaseSql(lowDate) + "'') "
-                        + "\n AND s.collection_date <= date(''" + formatDateForDatabaseSql(highDate) + "'')"
-                        + "\n AND s.id = oh.sample_id AND oh.observation_history_type_id = oht.id order by 1;' "
-                        + "\n , " + "\n '" + categoryQuery.toString() + ";' " + "\n ) \n ");
+                        + "\n FROM observation_history AS oh, sample AS s, sample_item AS si, analysis AS a, observation_history_type AS oht "
+                        + "\n WHERE " + byDate + " >= date(''" + formatDateForDatabaseSql(lowDate) + "'') " + "\n AND "
+                        + byDate + "  <= date(''" + formatDateForDatabaseSql(highDate) + "'')"
+                        + "\n AND s.id = oh.sample_id AND oh.observation_history_type_id = oht.id "
+                        + " AND s.id = si.samp_id AND si.id = a.sampitem_id order by 1;' " + "\n , "
+                        + "\n 'SELECT DISTINCT oht.type_name FROM observation_history_type AS oht ORDER BY 1;' " + // must
+                                                                                                                   // be
+                                                                                                                   // the
+                                                                                                                   // same
+                                                                                                                   // list
+                                                                                                                   // as
+                                                                                                                   // the
+                                                                                                                   // column
+                                                                                                                   // definition
+                                                                                                                   // for
+                                                                                                                   // the
+                                                                                                                   // demo
+                                                                                                                   // table
+                                                                                                                   // below.
+                        "\n ) \n ");
 
         // in the following list of observation history items, all valid values
         // are listed in alphabetical order (since that is how crosstab lists
@@ -664,8 +685,9 @@ public abstract class CSVColumnBuilder {
         // ... )
         query.append(" as demo ( " + " \"s_id\"                           numeric(10) ");
         for (ObservationHistoryType oht : allObHistoryTypes) {
-            // Use prepareColumnName to properly escape special characters
-            query.append("\n," + prepareColumnName(oht.getTypeName()) + " varchar(100) ");
+            // this is sql injection safe as users currently have no way of modifying fields
+            // in ObservationHistoryTypes
+            query.append("\n," + oht.getTypeName() + " varchar(100) ");
         }
         query.append(" ) \n");
         appendCrosstabPostfix(lowDate, highDate, listName);
@@ -691,7 +713,9 @@ public abstract class CSVColumnBuilder {
         return translate;
     }
 
-    /** Generate a column to the list of all columns. One for each possible test. */
+    /**
+     * Generate a column to the list of all columns. One for each possible test.
+     */
     protected void addAllResultsColumns() {
         for (Test test : allTests) {
             String testTag = TestServiceImpl.getLocalizedTestNameWithType(test);
@@ -747,6 +771,7 @@ public abstract class CSVColumnBuilder {
 
     /**
      * @throws SQLException
+     *
      */
     public void closeResultSet() throws SQLException {
         resultSet.close();

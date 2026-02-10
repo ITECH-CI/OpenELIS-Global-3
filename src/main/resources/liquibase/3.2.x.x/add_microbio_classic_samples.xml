@@ -134,6 +134,37 @@ SELECT count(*) FROM clinlims.localization WHERE french = 'Sécrétions urétral
             <column name="lastupdated" valueDate="now()" />
         </insert>
     </changeSet>
+
+    <changeSet author="CIV developer Group" id="2026013001">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0"><![CDATA[
+SELECT count(*) FROM clinlims.localization WHERE french = 'Selles'
+]]></sqlCheck>
+        </preConditions>
+        <insert tableName="localization" schemaName="clinlims">
+            <column name="id" valueSequenceNext="localization_seq" />
+            <column name="description" value="sampleType name" />
+            <column name="english" value="stools" />
+            <column name="french" value="Selles" />
+            <column name="lastupdated" valueDate="now()" />
+        </insert>
+    </changeSet>
+
+        <changeSet author="CIV developer Group" id="2026013002">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0"><![CDATA[
+SELECT count(*) FROM clinlims.localization WHERE french = 'LCR'
+]]></sqlCheck>
+        </preConditions>
+        <insert tableName="localization" schemaName="clinlims">
+            <column name="id" valueSequenceNext="localization_seq" />
+            <column name="description" value="sampleType name" />
+            <column name="english" value="CSF" />
+            <column name="french" value="LCR" />
+            <column name="lastupdated" valueDate="now()" />
+        </insert>
+    </changeSet>
+
     <!-- TB sample type -->
     <changeSet author="CIV developer Group" id="20241122107">
         <preConditions onFail="MARK_RAN">

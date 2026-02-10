@@ -18,8 +18,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * DTO for bacterial flora data
- * Contains the flora count and detailed information about each flora
+ * DTO for bacterial flora data Contains the flora count and detailed
+ * information about each flora
  */
 public class FloraDataDTO {
 

@@ -262,15 +262,30 @@ public class LogbookResultsRestController extends LogbookResultsBaseController {
             requestedPage = "1";
             resultsLoadUtility.addExcludedAnalysisStatus(AnalysisStatus.Canceled);
             resultsLoadUtility.addExcludedAnalysisStatus(AnalysisStatus.SampleRejected);
-            new StatusRules().setAllowableStatusForLoadingResults(resultsLoadUtility);
+
+            // Determine if this is a patient/accession search (show all results)
+            // or other search type (show only pending results)
+            boolean isPatientOrAccessionSearch = !GenericValidator.isBlankOrNull(labNumber)
+                    || !GenericValidator.isBlankOrNull(patientPK);
+
+            // Set flag in form to pass to frontend
+            form.setShowAllResults(isPatientOrAccessionSearch);
+
+            if (isPatientOrAccessionSearch) {
+                // For patient/accession searches: show ALL results including completed ones
+                new StatusRules().setAllowableStatusForLoadingAllResults(resultsLoadUtility);
+            } else {
+                // For other searches: show only pending results
+                new StatusRules().setAllowableStatusForLoadingResults(resultsLoadUtility);
+            }
 
             if (!GenericValidator.isBlankOrNull(form.getTestSectionId())) {
                 tests = resultsLoadUtility.getUnfinishedTestResultItemsInTestSection(form.getTestSectionId());
                 System.out.println("Tests size for test section " + form.getTestSectionId() + ": " + tests.size());
                 filteredTests = userService.filterResultsByLabUnitRoles(getSysUserId(request), tests,
                         Constants.ROLE_RESULTS);
-				System.out.println("Filtered Tests size for test section " + form.getTestSectionId() + ": "
-						+ filteredTests.size());
+                System.out.println("Filtered Tests size for test section " + form.getTestSectionId() + ": "
+                        + filteredTests.size());
                 int count = resultsLoadUtility.getTotalCountAnalysisByTestSectionAndStatus(form.getTestSectionId());
                 request.setAttribute("analysisCount", count);
                 request.setAttribute("pageSize", filteredTests.size());

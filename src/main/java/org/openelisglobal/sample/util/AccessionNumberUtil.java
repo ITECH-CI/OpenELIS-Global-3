@@ -214,7 +214,12 @@ public class AccessionNumberUtil {
 
     public static String getAccessionNumberFromSampleItemAccessionNumber(String accessionNumber) {
         int lastDash = accessionNumber.lastIndexOf('-');
-        return accessionNumber.substring(0, lastDash);
+        if (lastDash > 0) {
+            return accessionNumber.substring(0, lastDash);
+        } else {
+            // No dash found - return the full accession number
+            return accessionNumber;
+        }
     }
 
     public static boolean isProjectAccessionNumber(String accessionNumber) {

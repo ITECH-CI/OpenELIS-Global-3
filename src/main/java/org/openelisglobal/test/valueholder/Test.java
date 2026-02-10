@@ -537,6 +537,7 @@ public class Test extends EnumValueItemImpl {
 
     /**
      * Get the parent test ID for conditional tests
+     * 
      * @return parent test ID or null if this is not a child test
      */
     public String getParentTestId() {
@@ -549,6 +550,7 @@ public class Test extends EnumValueItemImpl {
 
     /**
      * Get the trigger value that causes this child test to be displayed
+     * 
      * @return trigger value or null if this is not a child test
      */
     public String getParentTriggerValue() {
@@ -561,6 +563,7 @@ public class Test extends EnumValueItemImpl {
 
     /**
      * Check if this is a specialized culture test
+     * 
      * @return true if this is a culture test, false otherwise (default: false)
      */
     public Boolean getIsCultureTest() {
@@ -573,6 +576,7 @@ public class Test extends EnumValueItemImpl {
 
     /**
      * Get the culture type for specialized cultures
+     * 
      * @return culture type (NORMAL, NEISSERIA_GONORRHOEAE) or null
      */
     public String getCultureType() {
@@ -585,6 +589,7 @@ public class Test extends EnumValueItemImpl {
 
     /**
      * Check if this is a flora count test (dynamic flora management)
+     * 
      * @return true if this is a flora count test, false otherwise (default: false)
      */
     public Boolean getIsFloraCountTest() {

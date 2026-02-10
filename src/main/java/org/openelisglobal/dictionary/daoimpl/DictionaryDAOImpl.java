@@ -236,8 +236,15 @@ public class DictionaryDAOImpl extends BaseDAOImpl<Dictionary, String> implement
     @Override
     @Transactional(readOnly = true)
     public Dictionary getDictionaryById(String dictionaryId) throws LIMSRuntimeException {
+        // Validate dictionaryId before using it
+        if (dictionaryId == null || dictionaryId.trim().isEmpty() || "null".equals(dictionaryId)) {
+            LogEvent.logWarn(this.getClass().getSimpleName(), "getDictionaryById",
+                    "Invalid dictionary ID: " + dictionaryId);
+            return null;
+        }
+
         try {
-            return entityManager.unwrap(Session.class).get(Dictionary.class, dictionaryId);
+            return entityManager.unwrap(Session.class).get(Dictionary.class, dictionaryId.trim());
         } catch (RuntimeException e) {
             handleException(e, "getDictionaryById");
         }
@@ -248,12 +255,21 @@ public class DictionaryDAOImpl extends BaseDAOImpl<Dictionary, String> implement
     @Override
     @Transactional(readOnly = true)
     public Dictionary getDataForId(String dictionaryId) throws LIMSRuntimeException {
+        // Validate dictionaryId before parsing
+        if (dictionaryId == null || dictionaryId.trim().isEmpty() || "null".equals(dictionaryId)) {
+            return null;
+        }
+
         String sql = "from Dictionary d where d.id = :id";
         try {
             Query<Dictionary> query = entityManager.unwrap(Session.class).createQuery(sql, Dictionary.class);
-            query.setParameter("id", Integer.parseInt(dictionaryId));
+            query.setParameter("id", Integer.parseInt(dictionaryId.trim()));
             return query.uniqueResult();
 
+        } catch (NumberFormatException ignored) {
+            LogEvent.logWarn(this.getClass().getSimpleName(), "getDataForId",
+                    "Invalid dictionary ID format: " + dictionaryId);
+            return null;
         } catch (HibernateException e) {
             handleException(e, "getDataForId");
         }

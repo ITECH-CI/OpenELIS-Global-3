@@ -33,7 +33,7 @@ const BacteriologyResultField = ({
         <Select
           id={id}
           labelText={label}
-          value={value || ""}
+          value={value ?? ""}
           onChange={handleChange}
           disabled={disabled}
           invalid={required && !value}
@@ -54,7 +54,7 @@ const BacteriologyResultField = ({
         <RadioButtonGroup
           legendText={label}
           name={id}
-          valueSelected={value || ""}
+          valueSelected={value ?? ""}
           onChange={handleChange}
           disabled={disabled}
         >
@@ -75,7 +75,10 @@ const BacteriologyResultField = ({
           id={id}
           labelText={label}
           checked={value || false}
-          onChange={(checked) => onChange(checked)}
+          onChange={(_, { checked }) => {
+            // Carbon Checkbox onChange passes (event, { checked })
+            onChange(checked);
+          }}
           disabled={disabled}
         />
       );
@@ -85,13 +88,13 @@ const BacteriologyResultField = ({
         <TextInput
           id={id}
           labelText={label}
-          value={value || ""}
+          value={value ?? ""}
           onChange={handleChange}
           disabled={disabled}
           invalid={required && !value}
           placeholder={placeholder}
           maxLength={maxLength}
-          multiline
+          rows={4}
         />
       );
 
@@ -101,7 +104,7 @@ const BacteriologyResultField = ({
           id={id}
           labelText={label}
           type={type}
-          value={value || ""}
+          value={value ?? ""}
           onChange={handleChange}
           disabled={disabled}
           invalid={required && !value}

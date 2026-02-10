@@ -49,6 +49,22 @@
   line-height: 1.3;
 }
 
+/* Bacteriology: Reset indentation for regular tests (non-child tests) */
+.bacteriology-regular-tests {
+  margin-left: 0 !important;
+  padding-left: 0 !important;
+}
+
+.bacteriology-regular-tests .cds--grid {
+  margin-left: 0 !important;
+  padding-left: 0 !important;
+}
+
+.bacteriology-regular-tests .cds--col {
+  margin-left: 0 !important;
+  padding-left: 0 !important;
+}
+
 .userDetails {
   padding: 5%;
   display: flex;

@@ -40,6 +40,28 @@ public class StatusRules {
         resultsLoadUtility.addIncludedSampleStatus(OrderStatus.NonConforming_depricated);
     }
 
+    /**
+     * Sets allowable status for loading ALL results when searching by patient or
+     * accession number. This includes completed tests (Finalized) in addition to
+     * in-progress tests. Used for patient-specific and accession-specific searches
+     * where users need to see all results.
+     */
+    public void setAllowableStatusForLoadingAllResults(ResultsLoadUtility resultsLoadUtility) {
+        // Include all in-progress statuses
+        resultsLoadUtility.addIncludedAnalysisStatus(AnalysisStatus.BiologistRejected);
+        resultsLoadUtility.addIncludedAnalysisStatus(AnalysisStatus.NotStarted);
+        resultsLoadUtility.addIncludedAnalysisStatus(AnalysisStatus.NonConforming_depricated);
+        resultsLoadUtility.addIncludedAnalysisStatus(AnalysisStatus.TechnicalRejected);
+        resultsLoadUtility.addIncludedAnalysisStatus(AnalysisStatus.TechnicalAcceptance);
+        // Include completed statuses for patient/accession searches
+        resultsLoadUtility.addIncludedAnalysisStatus(AnalysisStatus.Finalized);
+        // Include all sample statuses
+        resultsLoadUtility.addIncludedSampleStatus(OrderStatus.Entered);
+        resultsLoadUtility.addIncludedSampleStatus(OrderStatus.Started);
+        resultsLoadUtility.addIncludedSampleStatus(OrderStatus.Finished);
+        resultsLoadUtility.addIncludedSampleStatus(OrderStatus.NonConforming_depricated);
+    }
+
     public String getStartingAnalysisStatus() {
         return SpringContext.getBean(IStatusService.class).getStatusID(AnalysisStatus.NotStarted);
     }

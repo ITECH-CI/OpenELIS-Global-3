@@ -146,7 +146,7 @@ public class DBSearchResultsDAOImpl implements SearchResultsDAO {
                 query.setParameter(NATIONAL_ID_PARAM, nationalID);
             }
             if (queryExternalId) {
-                query.setParameter(EXTERNAL_ID_PARAM, nationalID);
+                query.setParameter(EXTERNAL_ID_PARAM, externalID);
             }
             if (querySTNumber) {
                 query.setParameter(ST_NUMBER_PARAM, STNumber);
@@ -237,7 +237,7 @@ public class DBSearchResultsDAOImpl implements SearchResultsDAO {
                 query.setParameter(NATIONAL_ID_PARAM, nationalID);
             }
             if (queryExternalId) {
-                query.setParameter(EXTERNAL_ID_PARAM, nationalID);
+                query.setParameter(EXTERNAL_ID_PARAM, externalID);
             }
             if (querySTNumber) {
                 query.setParameter(ST_NUMBER_PARAM, STNumber);
@@ -303,8 +303,9 @@ public class DBSearchResultsDAOImpl implements SearchResultsDAO {
 
         StringBuilder queryBuilder = new StringBuilder();
         queryBuilder.append("select p.id, pr.first_name, pr.last_name, p.gender, p.entered_birth_date, p.national_id,"
-                + " p.external_id, pi.identity_data as st, piSN.identity_data as subject,"
-                + " piGUID.identity_data as guid from patient p join person pr on p.person_id = pr.id" + " ");
+                + " p.external_id, CAST(pi.identity_data AS TEXT) as st, CAST(piSN.identity_data AS TEXT) as subject,"
+                + " CAST(piGUID.identity_data AS TEXT) as guid from patient p join person pr on p.person_id = pr.id"
+                + " ");
         queryBuilder.append("left join patient_identity  pi on pi.patient_id = p.id and pi.identity_type_id = :");
         queryBuilder.append(ID_TYPE_FOR_ST);
         queryBuilder.append(" ");
@@ -320,7 +321,7 @@ public class DBSearchResultsDAOImpl implements SearchResultsDAO {
 
         queryBuilder.append(" ( false or ");
         if (subjectNumber) {
-            queryBuilder.append(" piSN.identity_data ilike :");
+            queryBuilder.append(" CAST(piSN.identity_data AS TEXT) ilike :");
             queryBuilder.append(SUBJECT_NUMBER_PARAM);
             queryBuilder.append(" or");
         }
@@ -338,7 +339,7 @@ public class DBSearchResultsDAOImpl implements SearchResultsDAO {
         }
 
         if (STNumber) {
-            queryBuilder.append(" pi.identity_data ilike :");
+            queryBuilder.append(" CAST(pi.identity_data AS TEXT) ilike :");
             queryBuilder.append(ST_NUMBER_PARAM);
             queryBuilder.append(" and");
         }
@@ -362,7 +363,7 @@ public class DBSearchResultsDAOImpl implements SearchResultsDAO {
         }
 
         if (guid) {
-            queryBuilder.append(" piGUID.identity_data = :");
+            queryBuilder.append(" CAST(piGUID.identity_data AS TEXT) = :");
             queryBuilder.append(GUID);
             queryBuilder.append(" and");
         }

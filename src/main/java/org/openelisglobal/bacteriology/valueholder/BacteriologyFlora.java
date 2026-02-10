@@ -29,10 +29,12 @@ import java.util.List;
 import org.openelisglobal.common.valueholder.BaseObject;
 
 /**
- * BacteriologyFlora - Represents bacterial flora information for bacteriology tests
+ * BacteriologyFlora - Represents bacterial flora information for bacteriology
+ * tests
  *
- * This entity stores flora count data for microscopy results, with details about
- * each identified flora stored in the related BacteriologyFloraDetail entities.
+ * This entity stores flora count data for microscopy results, with details
+ * about each identified flora stored in the related BacteriologyFloraDetail
+ * entities.
  */
 @Entity
 @Table(name = "bacteriology_flora", schema = "clinlims")

@@ -1,0 +1,225 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="RealisationTest" pageWidth="612" pageHeight="792" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="1a7c8cb6-2179-4db0-845a-05efbce5a356">
+	<property name="ireport.zoom" value="2.0"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="180"/>
+	<parameter name="SUBREPORT_DIR" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA["../reports/"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="reportTitle" class="java.lang.String"/>
+	<parameter name="siteName" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="leftHeaderImage" class="java.io.InputStream" isForPrompting="false"/>
+	<parameter name="imagesPath" class="java.lang.String"/>
+	<parameter name="rightHeaderImage" class="java.io.InputStream"/>
+	<parameter name="startDate" class="java.lang.String"/>
+	<parameter name="endDate" class="java.lang.String"/>
+	<parameter name="testReportDataSource" class="net.sf.jasperreports.engine.JRDataSource"/>
+	<parameter name="categoryReportDataSource" class="net.sf.jasperreports.engine.JRDataSource"/>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<pageHeader>
+		<band height="100" splitType="Stretch">
+			<subreport>
+				<reportElement x="0" y="0" width="572" height="100" uuid="0140d0e7-3ab1-4d9e-9a46-5a8a5cfc2803"/>
+				<subreportParameter name="SUBREPORT_DIR">
+					<subreportParameterExpression><![CDATA[$P{SUBREPORT_DIR}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="leftHeaderImage">
+					<subreportParameterExpression><![CDATA[$P{leftHeaderImage}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="startDate">
+					<subreportParameterExpression><![CDATA[$P{startDate}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="reportTitle">
+					<subreportParameterExpression><![CDATA[$P{reportTitle}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="rightHeaderImage">
+					<subreportParameterExpression><![CDATA[$P{rightHeaderImage}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="endDate">
+					<subreportParameterExpression><![CDATA[$P{endDate}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="imagesPath">
+					<subreportParameterExpression><![CDATA[$P{imagesPath}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="siteName">
+					<subreportParameterExpression><![CDATA[$P{siteName}]]></subreportParameterExpression>
+				</subreportParameter>
+				<dataSourceExpression><![CDATA[new net.sf.jasperreports.engine.JREmptyDataSource()]]></dataSourceExpression>
+				<subreportExpression><![CDATA[$P{SUBREPORT_DIR} + "TBReportHeader.jasper"]]></subreportExpression>
+			</subreport>
+		</band>
+	</pageHeader>
+	<detail>
+		<band height="124" splitType="Stretch">
+			<rectangle>
+				<reportElement x="29" y="0" width="514" height="27" backcolor="#CCCCCC" uuid="ee728631-ab65-4ed0-942c-19b7706f382f"/>
+				<graphicElement>
+					<pen lineWidth="0.0"/>
+				</graphicElement>
+			</rectangle>
+			<staticText>
+				<reportElement x="29" y="0" width="514" height="27" backcolor="#CCCCCC" uuid="285c4f27-eb90-4d0f-bfaa-34e0dbe120a3"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="13" isBold="true" isUnderline="true"/>
+				</textElement>
+				<text><![CDATA[FORMULAIRE DE RAPPORT TRIMESTRIEL DE GeneXpert MTB]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="29" y="35" width="94" height="22" uuid="ee132c6f-3b4c-4eaf-8541-e3273450c3bf"/>
+				<textElement verticalAlignment="Middle">
+					<font size="11"/>
+				</textElement>
+				<text><![CDATA[Laboratoire: ]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="29" y="57" width="94" height="22" uuid="b603200c-bbab-4966-a8c4-9e80b732c95b"/>
+				<textElement verticalAlignment="Middle">
+					<font size="11"/>
+				</textElement>
+				<text><![CDATA[Region Sanitaire: ]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="314" y="57" width="67" height="22" uuid="95749cc9-3bcf-45a6-91dc-026ae6d013ad"/>
+				<textElement verticalAlignment="Middle">
+					<font size="11"/>
+				</textElement>
+				<text><![CDATA[District :]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="29" y="79" width="94" height="22" uuid="6f186117-e168-4b98-8d5b-21276014ce56"/>
+				<textElement verticalAlignment="Middle">
+					<font size="11"/>
+				</textElement>
+				<text><![CDATA[Date : ]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="314" y="79" width="67" height="22" uuid="edb2324e-7e47-4e2d-a026-5f9e0ed20984"/>
+				<textElement verticalAlignment="Middle">
+					<font size="11"/>
+				</textElement>
+				<text><![CDATA[Trimestre:]]></text>
+			</staticText>
+			<textField>
+				<reportElement x="123" y="79" width="111" height="22" uuid="78a3fbe7-6ca1-4af7-b18f-f0789cc4c323"/>
+				<textElement verticalAlignment="Middle">
+					<font size="11"/>
+				</textElement>
+				<textFieldExpression><![CDATA[new java.util.Date()]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement x="123" y="35" width="449" height="22" uuid="68746571-a65b-4628-89e7-f0ef2ca04530"/>
+				<textElement verticalAlignment="Middle">
+					<font size="11" isBold="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{siteName}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="381" y="79" width="191" height="22" uuid="72378c84-b24f-4c44-b743-46e760521bc4"/>
+				<textElement verticalAlignment="Middle">
+					<font size="11"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{startDate}+" - "+$P{endDate}]]></textFieldExpression>
+			</textField>
+		</band>
+		<band height="112">
+			<staticText>
+				<reportElement x="76" y="0" width="421" height="20" uuid="db816266-bd6c-4b1b-9852-bbe73c2b30b7"/>
+				<textElement markup="none">
+					<font size="12" isBold="false" isUnderline="true"/>
+				</textElement>
+				<text><![CDATA[A - RAPPORT PAR TEST]]></text>
+			</staticText>
+			<subreport>
+				<reportElement x="0" y="23" width="572" height="72" uuid="e233ec45-d379-4ed1-bcc2-8bfd84a6a8e8"/>
+				<subreportParameter name="leftHeaderImage">
+					<subreportParameterExpression><![CDATA[$P{leftHeaderImage}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="SUBREPORT_DIR">
+					<subreportParameterExpression><![CDATA[$P{SUBREPORT_DIR}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="startDate">
+					<subreportParameterExpression><![CDATA[$P{startDate}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="reportTitle">
+					<subreportParameterExpression><![CDATA[$P{reportTitle}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="testReportDataSource">
+					<subreportParameterExpression><![CDATA[$P{testReportDataSource}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="rightHeaderImage">
+					<subreportParameterExpression><![CDATA[$P{rightHeaderImage}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="endDate">
+					<subreportParameterExpression><![CDATA[$P{endDate}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="imagesPath">
+					<subreportParameterExpression><![CDATA[$P{imagesPath}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="siteName">
+					<subreportParameterExpression><![CDATA[$P{siteName}]]></subreportParameterExpression>
+				</subreportParameter>
+				<dataSourceExpression><![CDATA[$P{testReportDataSource}]]></dataSourceExpression>
+				<subreportExpression><![CDATA[$P{SUBREPORT_DIR} + "TbGeneXpertTestReport.jasper"]]></subreportExpression>
+			</subreport>
+		</band>
+		<band height="118">
+			<staticText>
+				<reportElement x="76" y="0" width="421" height="20" uuid="f9480571-96f0-4c9d-aff2-0be6ca43bb66"/>
+				<textElement markup="none">
+					<font size="12" isBold="false" isUnderline="true"/>
+				</textElement>
+				<text><![CDATA[B - RAPPORT PAR CATEGORIE]]></text>
+			</staticText>
+			<subreport>
+				<reportElement x="0" y="22" width="572" height="88" uuid="b20a6a17-0062-4229-a4ee-7936b839d3c7"/>
+				<subreportParameter name="SUBREPORT_DIR">
+					<subreportParameterExpression><![CDATA[$P{SUBREPORT_DIR}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="leftHeaderImage">
+					<subreportParameterExpression><![CDATA[$P{leftHeaderImage}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="startDate">
+					<subreportParameterExpression><![CDATA[$P{startDate}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="reportTitle">
+					<subreportParameterExpression><![CDATA[$P{reportTitle}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="categoryReportDataSource">
+					<subreportParameterExpression><![CDATA[$P{categoryReportDataSource}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="rightHeaderImage">
+					<subreportParameterExpression><![CDATA[$P{rightHeaderImage}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="endDate">
+					<subreportParameterExpression><![CDATA[$P{endDate}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="imagesPath">
+					<subreportParameterExpression><![CDATA[$P{imagesPath}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="siteName">
+					<subreportParameterExpression><![CDATA[$P{siteName}]]></subreportParameterExpression>
+				</subreportParameter>
+				<dataSourceExpression><![CDATA[$P{categoryReportDataSource}]]></dataSourceExpression>
+				<subreportExpression><![CDATA[$P{SUBREPORT_DIR} + "TbGeneXpertCategoryReport.jasper"]]></subreportExpression>
+			</subreport>
+		</band>
+	</detail>
+	<pageFooter>
+		<band height="68" splitType="Stretch">
+			<textField>
+				<reportElement x="454" y="49" width="118" height="18" uuid="0dbf212d-88a8-4e27-8a2f-fc62729ad5bf"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle" markup="none"/>
+				<textFieldExpression><![CDATA["Page "+$V{PAGE_NUMBER}+"/"+$V{PAGE_COUNT}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="29" y="0" width="514" height="39" uuid="623ce22e-a6b6-45c6-954a-ab6cd786e2d7"/>
+				<textElement verticalAlignment="Middle">
+					<font size="11" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Rapport redigé par : ________________________________________________________________]]></text>
+			</staticText>
+		</band>
+	</pageFooter>
+</jasperReport>

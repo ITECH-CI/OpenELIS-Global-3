@@ -549,7 +549,7 @@ const Index = () => {
     });
   };
 
-  const handlePost = (status) => {
+  const handlePost = (status, responseBody) => {
     setIsSubmitting(false);
     if (status === 200) {
       showAlertMessage(
@@ -558,10 +558,45 @@ const Index = () => {
       );
       setPage(page + 1);
     } else {
-      showAlertMessage(
-        <FormattedMessage id="server.error.msg" />,
-        NotificationKinds.error,
+      // Try to extract detailed error message from response
+      let errorMessage = <FormattedMessage id="server.error.msg" />;
+
+      if (responseBody) {
+        // If response is a JSON object with error details
+        if (typeof responseBody === "object") {
+          if (responseBody.error) {
+            errorMessage = responseBody.error;
+          } else if (responseBody.message) {
+            errorMessage = responseBody.message;
+          } else if (
+            responseBody.errors &&
+            Array.isArray(responseBody.errors)
+          ) {
+            // Multiple validation errors
+            errorMessage = responseBody.errors.map((err, index) => (
+              <div key={index}>{err.message || err}</div>
+            ));
+          } else {
+            // Display the entire object as a string
+            errorMessage = JSON.stringify(responseBody);
+          }
+        } else if (typeof responseBody === "string") {
+          // If response is a plain text error message
+          errorMessage = responseBody;
+        }
+      }
+
+      // Add HTTP status code to error message for clarity
+      const fullErrorMessage = (
+        <div>
+          <div>
+            <strong>Erreur HTTP {status || "inconnue"}</strong>
+          </div>
+          <div>{errorMessage}</div>
+        </div>
       );
+
+      showAlertMessage(fullErrorMessage, NotificationKinds.error);
     }
   };
   const elementError = (path) => {
@@ -591,6 +626,12 @@ const Index = () => {
     if ("days" in orderFormValues.patientProperties) {
       delete orderFormValues.patientProperties.days;
     }
+    // Remove internal Carbon FilterableMultiSelect fields (ending with -input)
+    Object.keys(orderFormValues.patientProperties).forEach((key) => {
+      if (key.endsWith("-input")) {
+        delete orderFormValues.patientProperties[key];
+      }
+    });
     if ("questionnaire" in orderFormValues.sampleOrderItems) {
       delete orderFormValues.sampleOrderItems.questionnaire;
     }

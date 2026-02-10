@@ -142,6 +142,9 @@ public class DictionaryServiceImpl extends AuditableBaseObjectServiceImpl<Dictio
     @Override
     @Transactional(readOnly = true)
     public Dictionary getDictionaryById(String dictionaryId) {
+        if (dictionaryId == null || dictionaryId.trim().isEmpty()) {
+            return null;
+        }
         return getBaseObjectDAO().getDictionaryById(dictionaryId.trim());
     }
 

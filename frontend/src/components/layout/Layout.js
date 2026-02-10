@@ -17,7 +17,8 @@ export default function Layout(props) {
   const [notifications, setNotifications] = useState([]);
 
   const addNotification = (notificationBody) => {
-    setNotifications([...notifications, notificationBody]);
+    // Clear previous notifications before adding new one to prevent stacking
+    setNotifications([notificationBody]);
   };
 
   const removeNotification = (index) => {

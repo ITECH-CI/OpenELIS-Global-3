@@ -51,16 +51,26 @@ const MicroscopySection = ({
 
   // Separate conditional tests, flora tests, and regular tests
   const { conditionalGroups, floraTests, regularTests } = useMemo(() => {
-    const childTests = microscopyTests.filter((test) => test.parentTestId != null);
-    const floraCountTests = microscopyTests.filter((test) => test.isFloraCountTest === true);
+    const childTests = microscopyTests.filter(
+      (test) => test.parentTestId != null,
+    );
+    const floraCountTests = microscopyTests.filter(
+      (test) => test.isFloraCountTest === true,
+    );
 
     // Find tests that are actually parents (have children pointing to them)
-    const parentTestIds = new Set(childTests.map(child => child.parentTestId));
-    const parentTests = microscopyTests.filter((test) => parentTestIds.has(test.testId));
+    const parentTestIds = new Set(
+      childTests.map((child) => child.parentTestId),
+    );
+    const parentTests = microscopyTests.filter((test) =>
+      parentTestIds.has(test.testId),
+    );
 
     // Group children by parent
     const groups = parentTests.map((parent) => {
-      const children = childTests.filter((child) => child.parentTestId === parent.testId);
+      const children = childTests.filter(
+        (child) => child.parentTestId === parent.testId,
+      );
       return {
         parent: {
           ...parent,
@@ -101,82 +111,90 @@ const MicroscopySection = ({
       {/* Flora Count Tests */}
       {floraTests.length > 0 && (
         <div style={{ marginBottom: "2rem" }}>
-          {floraTests.map((test) => (
-            <div key={test.testId} style={{ marginBottom: "2rem" }}>
-              <FloraList
-                accessionNumber={accessionNumber}
-                testId={test.testId}
-                floraCount={floraData[test.testId]?.count || 0}
-                floraDetails={floraData[test.testId]?.details || []}
-                onFloraCountChange={handleFloraCountChange}
-                onFloraDetailsChange={(details) =>
-                  handleFloraDetailsChange(test.testId, details)
-                }
-                disabled={disabled}
-              />
-            </div>
-          ))}
+          {floraTests.map((test) => {
+            const uniqueFloraKey = `${test.analysisId}-${test.testId}`;
+            return (
+              <div key={uniqueFloraKey} style={{ marginBottom: "2rem" }}>
+                <FloraList
+                  accessionNumber={accessionNumber}
+                  testId={test.testId}
+                  floraCount={floraData[test.testId]?.count || 0}
+                  floraDetails={floraData[test.testId]?.details || []}
+                  onFloraCountChange={handleFloraCountChange}
+                  onFloraDetailsChange={(details) =>
+                    handleFloraDetailsChange(test.testId, details)
+                  }
+                  disabled={disabled}
+                />
+              </div>
+            );
+          })}
         </div>
       )}
 
       {/* Conditional Test Groups */}
       {conditionalGroups.length > 0 && (
-        <div style={{ marginBottom: "2rem" }}>
-          {conditionalGroups.map((group) => (
-            <div key={group.parent.testId} style={{ marginBottom: "2rem" }}>
-              <ConditionalTestGroup
-                accessionNumber={accessionNumber}
-                parentTest={group.parent}
-                childTests={group.children}
-                onResultChange={handleFieldChange}
-                disabled={disabled}
-              />
-            </div>
-          ))}
+        <div style={{ marginBottom: "1.5rem" }}>
+          {conditionalGroups.map((group) => {
+            const uniqueGroupKey = `${group.parent.analysisId}-${group.parent.testId}`;
+            return (
+              <div key={uniqueGroupKey} style={{ marginBottom: "1.5rem" }}>
+                <ConditionalTestGroup
+                  accessionNumber={accessionNumber}
+                  parentTest={group.parent}
+                  childTests={group.children}
+                  onResultChange={handleFieldChange}
+                  disabled={disabled}
+                />
+              </div>
+            );
+          })}
         </div>
       )}
 
       {/* Regular Tests */}
       {regularTests.length > 0 && (
-        <Grid>
-          {regularTests.map((test) => {
-            const isDictionary = test.resultType === "D";
-            const isMultiSelect = test.resultType === "M";
-            const uniqueKey = `${test.analysisId}-${test.testId}`;
-            const cleanedName = cleanTestName(test.testName);
+        <div className="bacteriology-regular-tests">
+          <Grid fullWidth>
+            {regularTests.map((test) => {
+              const isDictionary = test.resultType === "D";
+              const isMultiSelect = test.resultType === "M";
+              const uniqueKey = `${test.analysisId}-${test.testId}`;
+              const cleanedName = cleanTestName(test.testName);
 
-            return (
-              <Column
-                key={uniqueKey}
-                lg={8}
-                md={4}
-                sm={4}
-                style={{ marginBottom: "1.5rem" }}
-              >
-                <BacteriologyResultField
-                  id={`micro_${test.testId}`}
-                  label={
-                    test.unitsOfMeasure
-                      ? `${cleanedName} (${test.unitsOfMeasure})`
-                      : cleanedName
-                  }
-                  type={
-                    isDictionary || isMultiSelect
-                      ? "select"
-                      : test.resultType === "N"
-                        ? "number"
-                        : "text"
-                  }
-                  value={microscopyResults[test.testId] || ""}
-                  onChange={(value) => handleFieldChange(test.testId, value)}
-                  options={test.dictionaryResults || []}
-                  disabled={disabled}
-                  required={false}
-                />
-              </Column>
-            );
-          })}
-        </Grid>
+              return (
+                <Column
+                  key={uniqueKey}
+                  lg={8}
+                  md={4}
+                  sm={4}
+                  style={{ marginBottom: "1.5rem" }}
+                >
+                  <BacteriologyResultField
+                    id={`micro_${test.testId}`}
+                    label={
+                      test.unitsOfMeasure
+                        ? `${cleanedName} (${test.unitsOfMeasure})`
+                        : cleanedName
+                    }
+                    type={
+                      isDictionary || isMultiSelect
+                        ? "select"
+                        : test.resultType === "N"
+                          ? "number"
+                          : "text"
+                    }
+                    value={microscopyResults[test.testId] ?? ""}
+                    onChange={(value) => handleFieldChange(test.testId, value)}
+                    options={test.dictionaryResults || []}
+                    disabled={disabled}
+                    required={false}
+                  />
+                </Column>
+              );
+            })}
+          </Grid>
+        </div>
       )}
     </Section>
   );

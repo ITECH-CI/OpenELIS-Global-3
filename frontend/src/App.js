@@ -33,9 +33,11 @@ import PrintBarcode from "./components/printBarcode/Index";
 import ReportIndex from "./components/reports/Index.js";
 import RoutineReports from "./components/reports/Routine";
 import StudyReports from "./components/reports/Study";
+import BacteriologyReports from "./components/reports/Bacteriology";
 import AuditTrailReportIndex from "./components/reports/auditTrailReport/Index.js";
 import RoutineIndex from "./components/reports/routine/Index.js";
 import StudyIndex from "./components/reports/study/index.js";
+import BacteriologyIndex from "./components/reports/bacteriology/Index.js";
 import ResultSearch from "./components/resultPage/ResultSearch";
 import ReferredOutTests from "./components/resultPage/resultsReferredOut/ReferredOutTests.js";
 import Aliquot from "./components/sample/Aliquot";
@@ -506,6 +508,18 @@ export default function App() {
                   path="/StudyReports"
                   exact
                   component={() => <StudyReports />}
+                  role={Roles.REPORTS}
+                />
+                <SecureRoute
+                  path="/BacteriologyReports"
+                  exact
+                  component={() => <BacteriologyReports />}
+                  role={Roles.REPORTS}
+                />
+                <SecureRoute
+                  path="/BacteriologyReport"
+                  exact
+                  component={() => <BacteriologyIndex />}
                   role={Roles.REPORTS}
                 />
                 <SecureRoute

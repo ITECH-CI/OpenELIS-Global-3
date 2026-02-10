@@ -107,7 +107,7 @@ VALUES
   ('Clair Eau De Roche','ClairEauDe','dictionary.bacterio.clairEauDeRoche',4000156),
   ('Bacteries','Bacteries','dictionary.bacterio.bacteries',400004900),
   ('Levures','Levures','dictionary.bacterio.levures',400004901),
-  ('Presence','Presence','dictionary.bacterio.presence',400004900),
+  ('Présence','Presence','dictionary.bacterio.presence',400004900),
   ('Absence','Absence','dictionary.bacterio.absence',400004902),
   ('Amikacin Aminoglycosides','AmikacinAm','dictionary.bacterio.amikacinAminoglycosides',400001),
   ('Ampicillin Penicillins','Ampicillin','dictionary.bacterio.ampicillinPenicillins',400002),

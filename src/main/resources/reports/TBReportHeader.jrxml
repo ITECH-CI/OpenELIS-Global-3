@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="RetroCIHeader" pageWidth="550" pageHeight="134" orientation="Landscape" whenNoDataType="AllSectionsNoDetail" columnWidth="550" leftMargin="0" rightMargin="0" topMargin="0" bottomMargin="0" uuid="c040ed1f-a573-45ab-bc71-8c6f5d4c135a">
+	<property name="ireport.scriptlethandling" value="0"/>
+	<property name="ireport.encoding" value="UTF-8"/>
+	<property name="ireport.zoom" value="3.0"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<import value="net.sf.jasperreports.engine.*"/>
+	<import value="java.util.*"/>
+	<import value="net.sf.jasperreports.engine.data.*"/>
+	<parameter name="SUBREPORT_DIR" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA["c:/tomcat 5.5/webapps/haitiOpenElis/WEB-INF/reports/"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="studyName" class="java.lang.String"/>
+	<parameter name="directorName" class="java.lang.String"/>
+	<parameter name="status" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="contact" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA[null]]></defaultValueExpression>
+	</parameter>
+	<parameter name="leftHeaderImage" class="java.io.InputStream" isForPrompting="false"/>
+	<parameter name="duplicateReport" class="java.lang.Boolean" isForPrompting="false">
+		<defaultValueExpression><![CDATA[Boolean.FALSE]]></defaultValueExpression>
+	</parameter>
+	<parameter name="rightHeaderImage" class="java.io.InputStream"/>
+	<parameter name="imagesPath" class="java.lang.String"/>
+	<parameter name="labName2" class="java.lang.String"/>
+	<queryString>
+		<![CDATA[]]>
+	</queryString>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<detail>
+		<band height="116" splitType="Prevent">
+			<staticText>
+				<reportElement x="18" y="12" width="256" height="39" uuid="c994880a-8e38-4a16-8d8d-7233becb5809"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="9" isBold="false"/>
+				</textElement>
+				<text><![CDATA[MINISTERE DE LA SANTE DE L'HYGIENE PUBLIQUE
+
+ET DE LA COUVERTURE MALADIE UNIVERSELLE]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="102" y="63" width="362" height="20" isPrintWhenDetailOverflows="true" uuid="d3cc8669-72b1-4bd8-a1a0-de92ee5b3fb4"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="12" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Programme National de Lutte contre la Tuberculose]]></text>
+			</staticText>
+			<image hAlign="Right" isUsingCache="true">
+				<reportElement x="465" y="18" width="84" height="63" uuid="53fedbb7-1468-4376-9a85-8fa8111ffc12"/>
+				<imageExpression><![CDATA[$P{rightHeaderImage}]]></imageExpression>
+			</image>
+			<line>
+				<reportElement x="0" y="87" width="550" height="1" uuid="baf3dd5d-b3ec-41e4-9026-0a1e2700f796"/>
+				<graphicElement>
+					<pen lineWidth="1.25"/>
+				</graphicElement>
+			</line>
+			<image>
+				<reportElement x="23" y="52" width="77" height="59" uuid="e3f58386-6170-432c-acc8-b96de8043d0f"/>
+				<imageExpression><![CDATA[$P{imagesPath}+"logo_pnlt.jpg"]]></imageExpression>
+			</image>
+			<staticText>
+				<reportElement x="295" y="12" width="169" height="39" uuid="5844604b-f6d5-41f6-ba2c-ebd839ed67dd"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="9" isBold="false"/>
+				</textElement>
+				<text><![CDATA[REPUBLIQUE DE COTE D'IVOIRE
+
+Union - Discipline - Travail]]></text>
+			</staticText>
+		</band>
+	</detail>
+</jasperReport>

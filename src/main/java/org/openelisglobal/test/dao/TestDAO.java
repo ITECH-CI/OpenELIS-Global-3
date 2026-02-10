@@ -13,8 +13,10 @@
  */
 package org.openelisglobal.test.dao;
 
+import java.sql.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import org.openelisglobal.common.dao.BaseDAO;
 import org.openelisglobal.common.exception.LIMSRuntimeException;
 import org.openelisglobal.method.valueholder.Method;
@@ -129,4 +131,15 @@ public interface TestDAO extends BaseDAO<Test, String> {
     List<Test> getTbTest() throws LIMSRuntimeException;
 
     List<Panel> getTbPanelsByMethod(String method) throws LIMSRuntimeException;
+
+    List<Map<String, Object>> getTbGXTestCountByResult(Date startDate, Date endDate) throws LIMSRuntimeException;
+
+    List<Map<String, Object>> getTbGXTestCountByCategory(Date startDate, Date endDate) throws LIMSRuntimeException;
+
+    List<Map<String, Object>> getTbMicroscopyTestCountByResult(Date startDate, Date endDate)
+            throws LIMSRuntimeException;
+
+    Integer getReceivedTbPresumedMicroscopyTestCount(Date startDate, Date endDate) throws LIMSRuntimeException;
+
+    Integer getPositiveTbMicroscopyTestCount(Date startDate, Date endDate) throws LIMSRuntimeException;
 }

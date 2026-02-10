@@ -1,0 +1,304 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="RetroCIHeader" pageWidth="550" pageHeight="134" orientation="Landscape" whenNoDataType="AllSectionsNoDetail" columnWidth="550" leftMargin="0" rightMargin="0" topMargin="0" bottomMargin="0" uuid="c040ed1f-a573-45ab-bc71-8c6f5d4c135a">
+	<property name="ireport.scriptlethandling" value="0"/>
+	<property name="ireport.encoding" value="UTF-8"/>
+	<property name="ireport.zoom" value="3.0"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<import value="net.sf.jasperreports.engine.*"/>
+	<import value="java.util.*"/>
+	<import value="net.sf.jasperreports.engine.data.*"/>
+	<parameter name="SUBREPORT_DIR" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA["c:/tomcat 5.5/webapps/haitiOpenElis/WEB-INF/reports/"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="studyName" class="java.lang.String"/>
+	<parameter name="directorName" class="java.lang.String"/>
+	<parameter name="status" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="contact" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA[null]]></defaultValueExpression>
+	</parameter>
+	<parameter name="leftHeaderImage" class="java.io.InputStream" isForPrompting="false"/>
+	<parameter name="duplicateReport" class="java.lang.Boolean" isForPrompting="false">
+		<defaultValueExpression><![CDATA[Boolean.FALSE]]></defaultValueExpression>
+	</parameter>
+	<parameter name="rightHeaderImage" class="java.io.InputStream"/>
+	<parameter name="imagesPath" class="java.lang.String"/>
+	<parameter name="labName2" class="java.lang.String"/>
+	<parameter name="categoryReportDataSource" class="net.sf.jasperreports.engine.JRDataSource"/>
+	<queryString>
+		<![CDATA[]]>
+	</queryString>
+	<field name="categoryName" class="java.lang.String"/>
+	<field name="testResultResistant" class="java.lang.Integer"/>
+	<field name="testResultSensitive" class="java.lang.Integer"/>
+	<field name="testResultIndeterminate" class="java.lang.Integer"/>
+	<field name="testResultMTBNonDetected" class="java.lang.Integer"/>
+	<field name="totalTest" class="java.lang.Integer"/>
+	<variable name="sum_rif_resistant" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[$F{testResultResistant}]]></variableExpression>
+		<initialValueExpression><![CDATA[0]]></initialValueExpression>
+	</variable>
+	<variable name="sum_rif_sensitive" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[$F{testResultSensitive}]]></variableExpression>
+		<initialValueExpression><![CDATA[0]]></initialValueExpression>
+	</variable>
+	<variable name="sum_rif_ind" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[$F{testResultIndeterminate}]]></variableExpression>
+		<initialValueExpression><![CDATA[0]]></initialValueExpression>
+	</variable>
+	<variable name="rif_non_detected" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[$F{testResultMTBNonDetected}]]></variableExpression>
+		<initialValueExpression><![CDATA[0]]></initialValueExpression>
+	</variable>
+	<variable name="sum_total" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[$F{totalTest}]]></variableExpression>
+		<initialValueExpression><![CDATA[0]]></initialValueExpression>
+	</variable>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<columnHeader>
+		<band height="40">
+			<rectangle>
+				<reportElement x="1" y="0" width="188" height="16" uuid="6c365a59-e3f7-4a45-81a0-e85ff9ae896f"/>
+			</rectangle>
+			<rectangle>
+				<reportElement mode="Opaque" x="189" y="0" width="211" height="16" backcolor="#CCCCCC" uuid="c7c182b8-5051-43b1-ad0c-ee77946aa625"/>
+			</rectangle>
+			<rectangle>
+				<reportElement x="470" y="0" width="79" height="40" uuid="66bf191c-969b-49b9-86ac-ad9a043450f5"/>
+			</rectangle>
+			<staticText>
+				<reportElement x="189" y="1" width="211" height="15" uuid="e211491c-8b1f-49b3-8516-d5695a751cbc"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font isBold="true"/>
+				</textElement>
+				<text><![CDATA[MTB Détecté]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="470" y="0" width="79" height="40" uuid="641634dd-0416-49b3-9e2e-e29e71852217"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font isBold="true"/>
+				</textElement>
+				<text><![CDATA[TOTAL]]></text>
+			</staticText>
+			<rectangle>
+				<reportElement x="1" y="16" width="188" height="24" uuid="6e47ec52-6383-4c76-9c6a-59603fd2508d"/>
+			</rectangle>
+			<rectangle>
+				<reportElement mode="Opaque" x="189" y="16" width="70" height="24" backcolor="#CCCCCC" uuid="848b89cd-242a-454b-a3bb-a0333daeffdd"/>
+			</rectangle>
+			<rectangle>
+				<reportElement mode="Opaque" x="259" y="16" width="71" height="24" backcolor="#CCCCCC" uuid="28410138-49c8-41ef-a1cb-1924f085d8d7"/>
+			</rectangle>
+			<rectangle>
+				<reportElement mode="Opaque" x="330" y="16" width="70" height="24" backcolor="#CCCCCC" uuid="3ff7d024-6e6f-4fdb-9fbe-d8a19e4fcc0e"/>
+			</rectangle>
+			<rectangle>
+				<reportElement x="400" y="0" width="70" height="40" uuid="edc290b9-1989-43a4-ac6b-bed1fb7a4102"/>
+			</rectangle>
+			<staticText>
+				<reportElement x="189" y="16" width="70" height="24" uuid="b5318c8a-71bf-4972-8ecf-839d89f280b4"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="9" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Rif
+Résistant]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="260" y="16" width="70" height="24" uuid="e27860c7-af64-4e10-a1f4-9f83a15c0e75"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="9" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Rif
+Sensible]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="330" y="16" width="70" height="24" uuid="32438172-3935-4dd6-b98d-7f36e2d95da7"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="9" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Rif
+Indéterminé]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="400" y="0" width="70" height="40" uuid="483640c4-ab9c-444b-a182-3c1b34d96a49"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font isBold="true"/>
+				</textElement>
+				<text><![CDATA[MTB non Détecté]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="1" y="0" width="188" height="16" uuid="f0cf13e2-d4be-435c-97da-0640ac7f2e47"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="10" isBold="true"/>
+				</textElement>
+				<text><![CDATA[RESULTATS]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="1" y="16" width="188" height="24" uuid="d265dc84-e656-441f-896d-ca1143e91ec7"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font isBold="true"/>
+				</textElement>
+				<text><![CDATA[INDICATIONS]]></text>
+			</staticText>
+		</band>
+	</columnHeader>
+	<detail>
+		<band height="17" splitType="Prevent">
+			<textField>
+				<reportElement x="1" y="0" width="188" height="17" uuid="d513dfe8-be74-472d-b4a9-cbabfe77d7c5"/>
+				<box>
+					<pen lineWidth="1.0"/>
+					<topPen lineWidth="1.0"/>
+					<leftPen lineWidth="1.0"/>
+					<bottomPen lineWidth="1.0"/>
+					<rightPen lineWidth="1.0"/>
+				</box>
+				<textElement verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[" "+$F{categoryName}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="189" y="0" width="70" height="17" uuid="b75e4de8-af15-4cad-b31c-0d7e5c388db2"/>
+				<box>
+					<pen lineWidth="1.0"/>
+					<topPen lineWidth="1.0"/>
+					<leftPen lineWidth="1.0"/>
+					<bottomPen lineWidth="1.0"/>
+					<rightPen lineWidth="1.0"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{testResultResistant}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="259" y="0" width="71" height="17" uuid="6f9231d0-2538-4798-92f4-498d76e2b1ad"/>
+				<box>
+					<pen lineWidth="1.0"/>
+					<topPen lineWidth="1.0"/>
+					<leftPen lineWidth="1.0"/>
+					<bottomPen lineWidth="1.0"/>
+					<rightPen lineWidth="1.0"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{testResultSensitive}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="330" y="0" width="70" height="17" uuid="0f05f5a4-1097-45d1-8b5f-73c94e99b6e5"/>
+				<box>
+					<pen lineWidth="1.0"/>
+					<topPen lineWidth="1.0"/>
+					<leftPen lineWidth="1.0"/>
+					<bottomPen lineWidth="1.0"/>
+					<rightPen lineWidth="1.0"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{testResultIndeterminate}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="400" y="0" width="70" height="17" uuid="b20c766c-9b71-4be9-99a7-740b0d9853a6"/>
+				<box>
+					<pen lineWidth="1.0"/>
+					<topPen lineWidth="1.0"/>
+					<leftPen lineWidth="1.0"/>
+					<bottomPen lineWidth="1.0"/>
+					<rightPen lineWidth="1.0"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{testResultMTBNonDetected}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="470" y="0" width="79" height="17" uuid="444dce72-88ba-4aca-9249-4b0709044eca"/>
+				<box>
+					<pen lineWidth="1.0"/>
+					<topPen lineWidth="1.0"/>
+					<leftPen lineWidth="1.0"/>
+					<bottomPen lineWidth="1.0"/>
+					<rightPen lineWidth="1.0"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{totalTest}]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+	<columnFooter>
+		<band height="38">
+			<rectangle>
+				<reportElement x="1" y="0" width="188" height="22" backcolor="#CCCCCC" uuid="e7b820d8-51ab-445f-b54b-2e5ec7a9e553"/>
+			</rectangle>
+			<staticText>
+				<reportElement x="1" y="23" width="548" height="14" uuid="1d38b24b-10fd-46da-9dbb-2d9e21ebe5c5"/>
+				<textElement>
+					<font size="8" isItalic="true"/>
+				</textElement>
+				<text><![CDATA[NB: * patients diagnostiqués sans GeneXpert (par microscopie ou TB-LAMP)]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="1" y="1" width="188" height="20" uuid="4753d6b4-c594-497e-9aa4-e717f3b718aa"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle" markup="none">
+					<font size="10" isBold="true"/>
+				</textElement>
+				<text><![CDATA[TOTAL]]></text>
+			</staticText>
+			<textField>
+				<reportElement x="330" y="0" width="70" height="22" uuid="92bad561-7d86-4252-a48d-27a369b37250"/>
+				<box>
+					<pen lineWidth="1.0"/>
+					<topPen lineWidth="1.0"/>
+					<leftPen lineWidth="1.0"/>
+					<bottomPen lineWidth="1.0"/>
+					<rightPen lineWidth="1.0"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$V{sum_rif_ind}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="189" y="0" width="70" height="22" uuid="4034ec46-7a36-40f6-bf3a-3649e2aac6b7"/>
+				<box>
+					<pen lineWidth="1.0"/>
+					<topPen lineWidth="1.0"/>
+					<leftPen lineWidth="1.0"/>
+					<bottomPen lineWidth="1.0"/>
+					<rightPen lineWidth="1.0"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$V{sum_rif_resistant}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="259" y="0" width="71" height="22" uuid="14ce1fad-9e13-424a-aa6a-0f7a304c0de2"/>
+				<box>
+					<pen lineWidth="1.0"/>
+					<topPen lineWidth="1.0"/>
+					<leftPen lineWidth="1.0"/>
+					<bottomPen lineWidth="1.0"/>
+					<rightPen lineWidth="1.0"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$V{sum_rif_sensitive}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="400" y="0" width="70" height="22" uuid="3b065544-e101-4389-b891-f68722a769d4"/>
+				<box>
+					<pen lineWidth="1.0"/>
+					<topPen lineWidth="1.0"/>
+					<leftPen lineWidth="1.0"/>
+					<bottomPen lineWidth="1.0"/>
+					<rightPen lineWidth="1.0"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$V{rif_non_detected}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="470" y="0" width="79" height="22" uuid="c88679e7-742b-4cea-8beb-589814b31989"/>
+				<box>
+					<pen lineWidth="1.0"/>
+					<topPen lineWidth="1.0"/>
+					<leftPen lineWidth="1.0"/>
+					<bottomPen lineWidth="1.0"/>
+					<rightPen lineWidth="1.0"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$V{sum_total}]]></textFieldExpression>
+			</textField>
+		</band>
+	</columnFooter>
+</jasperReport>

@@ -66,7 +66,7 @@ const AddOrder = (props) => {
 
   const handleChangeUpper = (value) => {
     // CustomTextInput passes the value directly, not the event
-    const upperValue = typeof value === 'string' ? value.toUpperCase() : value;
+    const upperValue = typeof value === "string" ? value.toUpperCase() : value;
     setValue(upperValue);
   };
   const handleDatePickerChange = (datePicker, date) => {

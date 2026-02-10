@@ -339,7 +339,7 @@ public class SamplePatientUpdateData {
             if (!orders.isEmpty()) {
                 electronicOrder = orders.get(orders.size() - 1);
                 electronicOrder.setStatusId(
-                        SpringContext.getBean(IStatusService.class).getStatusID(ExternalOrderStatus.Realized));
+                        SpringContext.getBean(IStatusService.class).getStatusID(ExternalOrderStatus.Completed));
                 electronicOrder.setSysUserId(currentUserId);
 
                 sample.setReferringId(externalOrderNumber);

@@ -153,13 +153,12 @@ public class NonConformity extends BaseObject<String> {
         this.lastUpdatedBy = lastUpdatedBy;
     }
 
-
     @Override
     public String toString() {
-        return "NonConformity [id=" + id + ", ncNumber=" + ncNumber + ", reportDate=" + reportDate
-                + ", siteProvenance=" + siteProvenance + ", sampleType=" + sampleType + ", rejectionReason="
-                + rejectionReason + ", comment=" + comment + ", reporterName=" + reporterName + ", labNumber="
-                + labNumber + ", correctiveAction=" + correctiveAction + ", status=" + status + ", createdBy="
-                + createdBy + ", createdDate=" + createdDate + ", lastUpdatedBy=" + lastUpdatedBy + "]";
+        return "NonConformity [id=" + id + ", ncNumber=" + ncNumber + ", reportDate=" + reportDate + ", siteProvenance="
+                + siteProvenance + ", sampleType=" + sampleType + ", rejectionReason=" + rejectionReason + ", comment="
+                + comment + ", reporterName=" + reporterName + ", labNumber=" + labNumber + ", correctiveAction="
+                + correctiveAction + ", status=" + status + ", createdBy=" + createdBy + ", createdDate=" + createdDate
+                + ", lastUpdatedBy=" + lastUpdatedBy + "]";
     }
 }

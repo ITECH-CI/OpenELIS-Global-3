@@ -822,12 +822,23 @@ export function SearchResults(props) {
 
   useEffect(() => {
     // Detect if this is a Routine Bacteriology analysis
-    if (props.results && props.results.testResult && props.results.testResult.length > 0) {
+    if (
+      props.results &&
+      props.results.testResult &&
+      props.results.testResult.length > 0
+    ) {
       const firstResult = props.results.testResult[0];
       console.log("Bacteriology Detection - First Result:", firstResult);
-      console.log("Bacteriology Detection - testSectionName:", firstResult.testSectionName);
-      console.log("Bacteriology Detection - testSection:", firstResult.testSection);
-      const testSectionName = firstResult.testSectionName || firstResult.testSection || "";
+      console.log(
+        "Bacteriology Detection - testSectionName:",
+        firstResult.testSectionName,
+      );
+      console.log(
+        "Bacteriology Detection - testSection:",
+        firstResult.testSection,
+      );
+      const testSectionName =
+        firstResult.testSectionName || firstResult.testSection || "";
       console.log("Bacteriology Detection - Using name:", testSectionName);
       const isBacterio = isBacteriologyTestSection(testSectionName);
       console.log("Bacteriology Detection - isBacteriology:", isBacterio);
@@ -1761,13 +1772,16 @@ export function SearchResults(props) {
           <BacteriologyResultsContainer
             testResults={props.results?.testResult || []}
             sysUserId={props.results?.sysUserId || "1"}
+            showAllResults={props.results?.showAllResults || false}
             onSave={() => {
               if (props.refreshOnSubmit) {
                 // Trigger refresh if needed
                 addNotification({
                   kind: NotificationKinds.success,
                   title: intl.formatMessage({ id: "notification.title" }),
-                  message: intl.formatMessage({ id: "save.config.success.msg" }),
+                  message: intl.formatMessage({
+                    id: "save.config.success.msg",
+                  }),
                 });
               }
             }}
@@ -1801,58 +1815,60 @@ export function SearchResults(props) {
                   expandableRows
                   expandableRowsComponent={renderReferral}
                 ></DataTable>
-              <Pagination
-                onChange={handlePageChange}
-                page={page}
-                pageSize={pageSize}
-                pageSizes={[10, 20, 30, 50, 100]}
-                totalItems={props.results?.testResult?.length}
-                forwardText={intl.formatMessage({ id: "pagination.forward" })}
-                backwardText={intl.formatMessage({ id: "pagination.backward" })}
-                itemRangeText={(min, max, total) =>
-                  intl.formatMessage(
-                    { id: "pagination.item-range" },
-                    { min: min, max: max, total: total },
-                  )
-                }
-                itemsPerPageText={intl.formatMessage({
-                  id: "pagination.items-per-page",
-                })}
-                itemText={(min, max) =>
-                  intl.formatMessage(
-                    { id: "pagination.item" },
-                    { min: min, max: max },
-                  )
-                }
-                pageNumberText={intl.formatMessage({
-                  id: "pagination.page-number",
-                })}
-                pageRangeText={(_current, total) =>
-                  intl.formatMessage(
-                    { id: "pagination.page-range" },
-                    { total: total },
-                  )
-                }
-                pageText={(page, pagesUnknown) =>
-                  intl.formatMessage(
-                    { id: "pagination.page" },
-                    { page: pagesUnknown ? "" : page },
-                  )
-                }
-              />
+                <Pagination
+                  onChange={handlePageChange}
+                  page={page}
+                  pageSize={pageSize}
+                  pageSizes={[10, 20, 30, 50, 100]}
+                  totalItems={props.results?.testResult?.length}
+                  forwardText={intl.formatMessage({ id: "pagination.forward" })}
+                  backwardText={intl.formatMessage({
+                    id: "pagination.backward",
+                  })}
+                  itemRangeText={(min, max, total) =>
+                    intl.formatMessage(
+                      { id: "pagination.item-range" },
+                      { min: min, max: max, total: total },
+                    )
+                  }
+                  itemsPerPageText={intl.formatMessage({
+                    id: "pagination.items-per-page",
+                  })}
+                  itemText={(min, max) =>
+                    intl.formatMessage(
+                      { id: "pagination.item" },
+                      { min: min, max: max },
+                    )
+                  }
+                  pageNumberText={intl.formatMessage({
+                    id: "pagination.page-number",
+                  })}
+                  pageRangeText={(_current, total) =>
+                    intl.formatMessage(
+                      { id: "pagination.page-range" },
+                      { total: total },
+                    )
+                  }
+                  pageText={(page, pagesUnknown) =>
+                    intl.formatMessage(
+                      { id: "pagination.page" },
+                      { page: pagesUnknown ? "" : page },
+                    )
+                  }
+                />
 
-              <Button
-                type="button"
-                id="saveResults"
-                onClick={handleSave}
-                style={{ marginTop: "16px" }}
-                disabled={isSubmitting}
-              >
-                <FormattedMessage id="label.button.save" />
-              </Button>
-            </Form>
-          )}
-        </Formik>
+                <Button
+                  type="button"
+                  id="saveResults"
+                  onClick={handleSave}
+                  style={{ marginTop: "16px" }}
+                  disabled={isSubmitting}
+                >
+                  <FormattedMessage id="label.button.save" />
+                </Button>
+              </Form>
+            )}
+          </Formik>
         )}
       </>
     </>

@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+    <!-- Create system module for Bacteriology Classic Reports -->
+    <changeSet author="pkomena" id="1-bacterio-system-module">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">
+                SELECT COUNT(*) FROM clinlims.system_module
+                WHERE name = 'BacteriologyClassicReports'
+            </sqlCheck>
+        </preConditions>
+        <comment>Add system module for Bacteriology Classic Reports</comment>
+        <insert tableName="system_module" schemaName="clinlims">
+            <column name="id" valueNumeric="(SELECT MAX(id) + 1 FROM clinlims.system_module)"/>
+            <column name="name" value="BacteriologyClassicReports"/>
+            <column name="description" value="Bacteriology Classic Reports Module"/>
+            <column name="has_select_flag" value="Y"/>
+            <column name="has_add_flag" value="N"/>
+            <column name="has_update_flag" value="N"/>
+            <column name="has_delete_flag" value="N"/>
+        </insert>
+    </changeSet>
+
+    <!-- Add system module URLs and grant permissions -->
+    <changeSet author="pkomena" id="2-bacterio-urls-permissions">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">
+                SELECT COUNT(*) FROM clinlims.system_module_url
+                WHERE url_path = '/BacteriologyReports'
+            </sqlCheck>
+        </preConditions>
+        <comment>Add system module URLs for bacteriology reports and grant permissions</comment>
+        <sql>
+            -- Add system module URLs
+            INSERT INTO clinlims.system_module_url(id, system_module_id, url_path)
+            VALUES (
+                (SELECT MAX(id) + 1 FROM clinlims.system_module_url),
+                (SELECT id FROM clinlims.system_module WHERE name = 'BacteriologyClassicReports'),
+                '/BacteriologyReports'
+            );
+
+            INSERT INTO clinlims.system_module_url(id, system_module_id, url_path)
+            VALUES (
+                (SELECT MAX(id) + 1 FROM clinlims.system_module_url),
+                (SELECT id FROM clinlims.system_module WHERE name = 'BacteriologyClassicReports'),
+                '/BacteriologyReport'
+            );
+
+            -- Grant to Reports role
+            INSERT INTO clinlims.system_role_module(id, system_role_id, system_module_id, has_select, has_add, has_update, has_delete)
+            SELECT
+                (SELECT MAX(id) + 1 FROM clinlims.system_role_module),
+                (SELECT id FROM clinlims.system_role WHERE name = 'Reports'),
+                (SELECT id FROM clinlims.system_module WHERE name = 'BacteriologyClassicReports'),
+                'Y', 'N', 'N', 'N'
+            WHERE NOT EXISTS (
+                SELECT 1 FROM clinlims.system_role_module
+                WHERE system_role_id = (SELECT id FROM clinlims.system_role WHERE name = 'Reports')
+                AND system_module_id = (SELECT id FROM clinlims.system_module WHERE name = 'BacteriologyClassicReports')
+            );
+
+            -- Grant to Results role
+            INSERT INTO clinlims.system_role_module(id, system_role_id, system_module_id, has_select, has_add, has_update, has_delete)
+            SELECT
+                (SELECT MAX(id) + 1 FROM clinlims.system_role_module),
+                (SELECT id FROM clinlims.system_role WHERE name = 'Results'),
+                (SELECT id FROM clinlims.system_module WHERE name = 'BacteriologyClassicReports'),
+                'Y', 'N', 'N', 'N'
+            WHERE NOT EXISTS (
+                SELECT 1 FROM clinlims.system_role_module
+                WHERE system_role_id = (SELECT id FROM clinlims.system_role WHERE name = 'Results')
+                AND system_module_id = (SELECT id FROM clinlims.system_module WHERE name = 'BacteriologyClassicReports')
+            );
+        </sql>
+    </changeSet>
+
+    <!-- Update main bacteriology menu in Sample menu to point to React page -->
+    <changeSet author="pkomena" id="3-update-sample-menu-bacterio">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="1">
+                SELECT COUNT(*) FROM clinlims.menu
+                WHERE element_id = 'menu_microbiology_classic'
+            </sqlCheck>
+        </preConditions>
+        <comment>Update bacteriology classic menu in Sample menu to point to React page</comment>
+        <update tableName="menu" schemaName="clinlims">
+            <column name="action_url" value="/BacteriologyReports"/>
+            <where>element_id = 'menu_microbiology_classic'</where>
+        </update>
+    </changeSet>
+
+    <!-- Update report bacteriology parent menu to clear action URL for submenu structure -->
+    <changeSet author="pkomena" id="4-clear-report-bacterio-parent-url">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="1">
+                SELECT COUNT(*) FROM clinlims.menu
+                WHERE element_id = 'menu_report_microbiology_classic'
+            </sqlCheck>
+        </preConditions>
+        <comment>Clear action URL for bacteriology reports parent menu to enable submenu structure</comment>
+        <update tableName="menu" schemaName="clinlims">
+            <column name="action_url" value=""/>
+            <where>element_id = 'menu_report_microbiology_classic'</where>
+        </update>
+    </changeSet>
+
+    <!-- Add bacteriology patient report submenu -->
+    <changeSet author="pkomena" id="5-add-bacterio-patient-report-submenu">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">
+                SELECT COUNT(*) FROM clinlims.menu
+                WHERE element_id = 'menu_bacterio_patient_report'
+            </sqlCheck>
+        </preConditions>
+        <comment>Add bacteriology patient report submenu</comment>
+        <insert tableName="menu" schemaName="clinlims">
+            <column name="id" valueSequenceNext="menu_seq"/>
+            <column name="parent_id" valueComputed="(SELECT id FROM clinlims.menu WHERE element_id = 'menu_report_microbiology_classic')"/>
+            <column name="presentation_order" value="1"/>
+            <column name="element_id" value="menu_bacterio_patient_report"/>
+            <column name="action_url" value="/BacteriologyReport?type=patient&amp;report=BacterioPatientReport"/>
+            <column name="display_key" value="sidenav.label.bacterio.patientreport"/>
+            <column name="tool_tip_key" value="sidenav.label.bacterio.patientreport"/>
+            <column name="new_window" value="false"/>
+            <column name="is_active" value="true"/>
+        </insert>
+    </changeSet>
+
+    <!-- Add bacteriology CSV export submenu -->
+    <changeSet author="pkomena" id="6-add-bacterio-csv-export-submenu">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">
+                SELECT COUNT(*) FROM clinlims.menu
+                WHERE element_id = 'menu_bacterio_csv_export'
+            </sqlCheck>
+        </preConditions>
+        <comment>Add bacteriology CSV export submenu</comment>
+        <insert tableName="menu" schemaName="clinlims">
+            <column name="id" valueSequenceNext="menu_seq"/>
+            <column name="parent_id" valueComputed="(SELECT id FROM clinlims.menu WHERE element_id = 'menu_report_microbiology_classic')"/>
+            <column name="presentation_order" value="2"/>
+            <column name="element_id" value="menu_bacterio_csv_export"/>
+            <column name="action_url" value="/BacteriologyReport?type=export&amp;report=bacteriologyCSV"/>
+            <column name="display_key" value="sidenav.label.bacterio.csvexport"/>
+            <column name="tool_tip_key" value="sidenav.label.bacterio.csvexport"/>
+            <column name="new_window" value="false"/>
+            <column name="is_active" value="true"/>
+        </insert>
+    </changeSet>
+
+</databaseChangeLog>

@@ -91,7 +91,8 @@ export const TestStepForm = ({ initialData, mode = "add", postCall }) => {
       // Filter free text result types (Free text, Alphanumeric)
       const freeTextList = resultTypeList
         .filter(
-          (item) => item?.value === "Free text" || item?.value === "Alphanumeric",
+          (item) =>
+            item?.value === "Free text" || item?.value === "Alphanumeric",
         )
         .map((item) => item.id)
         .filter(Boolean); // Remove any undefined/null values
@@ -106,14 +107,17 @@ export const TestStepForm = ({ initialData, mode = "add", postCall }) => {
       } else {
         console.warn(
           "[TestStepForm] Warning: 'Numeric' result type not found in resultTypeList.",
-          "\nAvailable result types:", resultTypeList.map(item => item?.value || 'undefined'),
-          "\nCurrent test data:", formData
+          "\nAvailable result types:",
+          resultTypeList.map((item) => item?.value || "undefined"),
+          "\nCurrent test data:",
+          formData,
         );
       }
     } else {
       console.warn(
         "[TestStepForm] Warning: resultTypeList is empty or undefined.",
-        "\nCurrent test data:", formData
+        "\nCurrent test data:",
+        formData,
       );
       // Reset to empty arrays if resultTypeList is empty or undefined
       setCodedResultList([]);

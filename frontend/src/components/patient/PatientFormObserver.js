@@ -29,6 +29,8 @@ const PatientFormObserver = (props) => {
     bacterioFields.forEach((field) => {
       patientRoutineBacterioInfo[field] = formValues[field];
       delete patientProps[field];
+      // Also delete the -input variant created by FilterableMultiSelect
+      delete patientProps[field + "-input"];
     });
     return { patientRoutineBacterioInfo, patientProps };
   };

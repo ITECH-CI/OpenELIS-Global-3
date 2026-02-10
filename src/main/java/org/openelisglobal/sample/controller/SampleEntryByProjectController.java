@@ -741,7 +741,7 @@ public class SampleEntryByProjectController extends BaseSampleEntryController {
                 if (eOrders.size() > 0) {
                     ElectronicOrder eOrder = eOrders.get(eOrders.size() - 1);
                     eOrder.setStatusId(
-                            SpringContext.getBean(IStatusService.class).getStatusID(ExternalOrderStatus.Realized));
+                            SpringContext.getBean(IStatusService.class).getStatusID(ExternalOrderStatus.Completed));
                     electronicOrderService.update(eOrder);
                     form.setElectronicOrder(eOrder);
                 }

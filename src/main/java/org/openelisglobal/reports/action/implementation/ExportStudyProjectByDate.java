@@ -1,15 +1,18 @@
 /**
- * The contents of this file are subject to the Mozilla Public License Version 1.1 (the "License");
- * you may not use this file except in compliance with the License. You may obtain a copy of the
- * License at http://www.mozilla.org/MPL/
+ * The contents of this file are subject to the Mozilla Public License
+ * Version 1.1 (the "License"); you may not use this file except in
+ * compliance with the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
  *
- * <p>Software distributed under the License is distributed on an "AS IS" basis, WITHOUT WARRANTY OF
- * ANY KIND, either express or implied. See the License for the specific language governing rights
- * and limitations under the License.
+ * Software distributed under the License is distributed on an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+ * License for the specific language governing rights and limitations under
+ * the License.
  *
- * <p>The Original Code is OpenELIS code.
+ * The Original Code is OpenELIS code.
  *
- * <p>Copyright (C) CIRG, University of Washington, Seattle WA. All Rights Reserved.
+ * Copyright (C) CIRG, University of Washington, Seattle WA.  All Rights Reserved.
+ *
  */
 package org.openelisglobal.reports.action.implementation;
 
@@ -97,7 +100,9 @@ public class ExportStudyProjectByDate extends CSVSampleExportReport implements I
         createReportItems();
     }
 
-    /** check everything */
+    /**
+     * check everything
+     */
     private boolean validateSubmitParameters() {
         return dateRange.validateHighLowDate("report.error.message.date.received.missing") && validateProject();
     }
@@ -119,7 +124,9 @@ public class ExportStudyProjectByDate extends CSVSampleExportReport implements I
         return true;
     }
 
-    /** creating the list for generation to the report */
+    /**
+     * creating the list for generation to the report
+     */
     private void createReportItems() {
         try {
             csvColumnBuilder = getColumnBuilder(projectStr);
@@ -131,26 +138,29 @@ public class ExportStudyProjectByDate extends CSVSampleExportReport implements I
     }
 
     @Override
-    protected void writeResultsToBuffer(ByteArrayOutputStream buffer) throws IOException, SQLException, ParseException {
+    protected void writeResultsToBuffer(ByteArrayOutputStream buffer) {
+        try {
+            String currentAccessionNumber = null;
+            String[] splitBase = null;
+            while (csvColumnBuilder.next()) {
+                String line = csvColumnBuilder.nextLine();
+                String[] splitLine = line.split(",");
 
-        String currentAccessionNumber = null;
-        String[] splitBase = null;
-        while (csvColumnBuilder.next()) {
-            String line = csvColumnBuilder.nextLine();
-            String[] splitLine = line.split(",");
-
-            if (splitLine[0].equals(currentAccessionNumber)) {
-                merge(splitBase, splitLine);
-            } else {
-                if (currentAccessionNumber != null) {
-                    writeConsolidatedBaseToBuffer(buffer, splitBase);
+                if (splitLine[0].equals(currentAccessionNumber)) {
+                    merge(splitBase, splitLine);
+                } else {
+                    if (currentAccessionNumber != null) {
+                        writeConsolidatedBaseToBuffer(buffer, splitBase);
+                    }
+                    splitBase = splitLine;
+                    currentAccessionNumber = splitBase[0];
                 }
-                splitBase = splitLine;
-                currentAccessionNumber = splitBase[0];
             }
-        }
 
-        writeConsolidatedBaseToBuffer(buffer, splitBase);
+            writeConsolidatedBaseToBuffer(buffer, splitBase);
+        } catch (IOException | SQLException | ParseException e) {
+            Log.error("Error in " + this.getClass().getSimpleName() + " writeResultsToBuffer: ", e);
+        }
     }
 
     private void merge(String[] base, String[] line) {
@@ -172,17 +182,17 @@ public class ExportStudyProjectByDate extends CSVSampleExportReport implements I
             }
 
             consolidatedLine.deleteCharAt(consolidatedLine.lastIndexOf(","));
-            buffer.write(consolidatedLine.toString().getBytes("windows-1252"));
+            buffer.write(consolidatedLine.toString().getBytes("utf-8"));
         }
     }
 
     private CSVColumnBuilder getColumnBuilder(String projectId) {
         String projectTag = CIColumnBuilder.translateProjectId(projectId);
         if (projectTag.equals("ARVB")) {
-            return new ARVInitialColumnBuilder(dateRange, projectStr);
+            return new ARVInitialColumnBuilder(dateRange, projectStr, dateType);
         } else if (projectTag.equals("ARVS")) {
-            return new ARVFollowupColumnBuilder(dateRange, projectStr);
-        } else if (projectTag.equalsIgnoreCase("DBS")) {
+            return new ARVFollowupColumnBuilder(dateRange, projectStr, dateType);
+        } else if (projectTag.equalsIgnoreCase("DBS") || projectTag.equalsIgnoreCase("EID")) {
             return new StudyEIDColumnBuilder(dateRange, projectStr, dateType);
         } else if (projectTag.equalsIgnoreCase("VLS")) {
             return new StudyVLColumnBuilder(dateRange, projectStr, dateType);
@@ -222,4 +232,5 @@ public class ExportStudyProjectByDate extends CSVSampleExportReport implements I
         projects.removeIf(Objects::isNull);
         return projects;
     }
+
 }

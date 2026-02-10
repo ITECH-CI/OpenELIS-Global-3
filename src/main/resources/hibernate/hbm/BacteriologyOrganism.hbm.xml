@@ -4,8 +4,9 @@
     "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 
 <hibernate-mapping>
-    <class name="org.openelisglobal.bacteriology.valueholder.BacteriologyOrganism"
-           table="bacteriology_organism" schema="clinlims">
+    <class
+        name="org.openelisglobal.bacteriology.valueholder.BacteriologyOrganism"
+        table="bacteriology_organism" schema="clinlims">
         <id name="id" type="java.lang.Integer">
             <column name="id" precision="10" scale="0" />
             <generator class="sequence">
@@ -13,10 +14,12 @@
             </generator>
         </id>
         <property name="resultGroupId" type="java.lang.Integer">
-            <column name="result_group_id" precision="10" scale="0" not-null="true" />
+            <column name="result_group_id" precision="10" scale="0"
+                not-null="true" />
         </property>
         <property name="organismNumber" type="java.lang.Integer">
-            <column name="organism_number" precision="10" scale="0" not-null="true" />
+            <column name="organism_number" precision="10" scale="0"
+                not-null="true" />
         </property>
         <property name="organismType" type="string">
             <column name="organism_type" length="20" />

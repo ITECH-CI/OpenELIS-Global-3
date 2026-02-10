@@ -135,6 +135,20 @@ export const RoutineReportsMenu = {
         },
       ],
     },
+    {
+      title: <FormattedMessage id="sideNav.title.tbreports" />,
+      icon: Microscope,
+      SideNavMenuItem: [
+        {
+          link: "/RoutineReport?type=indicator&report=TBOrderReport",
+          label: <FormattedMessage id="sideNav.label.tbactivityreport" />,
+        },
+        {
+          link: "/RoutineReport?type=patient&report=TBOrderExport",
+          label: <FormattedMessage id="sideNav.label.tborderexport" />,
+        },
+      ],
+    },
   ],
   contentRoutes: [],
 };

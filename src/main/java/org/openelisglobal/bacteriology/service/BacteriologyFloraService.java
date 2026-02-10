@@ -23,6 +23,7 @@ public interface BacteriologyFloraService {
 
     /**
      * Save or update flora data
+     * 
      * @param flora The flora to save
      * @return The saved flora
      */
@@ -30,6 +31,7 @@ public interface BacteriologyFloraService {
 
     /**
      * Get flora by ID
+     * 
      * @param id The flora ID
      * @return The flora or null if not found
      */
@@ -37,6 +39,7 @@ public interface BacteriologyFloraService {
 
     /**
      * Get all flora for a specific analysis
+     * 
      * @param analysisId The analysis ID
      * @return List of flora records
      */
@@ -44,28 +47,32 @@ public interface BacteriologyFloraService {
 
     /**
      * Get flora for a specific test within an analysis
+     * 
      * @param analysisId The analysis ID
-     * @param testId The flora count test ID
+     * @param testId     The flora count test ID
      * @return The flora or null if not found
      */
     BacteriologyFlora getByAnalysisIdAndTestId(Integer analysisId, Integer testId);
 
     /**
      * Delete flora by ID
+     * 
      * @param id The flora ID
      */
     void delete(Long id);
 
     /**
      * Delete all flora for a specific analysis
+     * 
      * @param analysisId The analysis ID
      */
     void deleteByAnalysisId(Integer analysisId);
 
     /**
      * Delete flora for a specific test within an analysis
+     * 
      * @param analysisId The analysis ID
-     * @param testId The flora count test ID
+     * @param testId     The flora count test ID
      */
     void deleteByAnalysisIdAndTestId(Integer analysisId, Integer testId);
 }

@@ -35,7 +35,7 @@ public interface BacteriologyFloraDAO extends BaseDAO<BacteriologyFlora, Long> {
     /**
      * Get flora record for a specific test within an analysis
      *
-     * @param analysisId The analysis ID
+     * @param analysisId       The analysis ID
      * @param floraCountTestId The flora count test ID
      * @return Flora record or null if not found
      * @throws LIMSRuntimeException
@@ -54,10 +54,9 @@ public interface BacteriologyFloraDAO extends BaseDAO<BacteriologyFlora, Long> {
     /**
      * Delete flora record for a specific test within an analysis
      *
-     * @param analysisId The analysis ID
+     * @param analysisId       The analysis ID
      * @param floraCountTestId The flora count test ID
      * @throws LIMSRuntimeException
      */
-    void deleteByAnalysisIdAndTestId(Integer analysisId, Integer floraCountTestId)
-            throws LIMSRuntimeException;
+    void deleteByAnalysisIdAndTestId(Integer analysisId, Integer floraCountTestId) throws LIMSRuntimeException;
 }

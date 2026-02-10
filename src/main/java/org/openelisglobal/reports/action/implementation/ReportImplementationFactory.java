@@ -133,6 +133,8 @@ public class ReportImplementationFactory {
                 return new ExportStudyProjectByDate();
             } else if (report.equals("TBOrderExport")) {
                 return new ExportTBOrdersByDate();
+            } else if (report.equals("bacteriologyCSV")) {
+                return new ExportBacteriologyByDate();
             } else if (report.equals("TBOrderReport")) {
                 return new TBOrderReport();
             } else if (report.equals("Trends")) {
@@ -201,6 +203,10 @@ public class ReportImplementationFactory {
                 // return new PatientCILNSPClinical();
             } else if (report.equals("TBPatientReport")) {
                 return new TBPatientReport();
+            } else if (report.equals("BacterioPatientReport")) {
+                return new BacterioPatientReport();
+            } else if (report.equals("bacteriologyCSV")) {
+                return new ExportBacteriologyByDate();
             } else if (report.equals("indicatorHaitiClinicalHIV")) {
                 return new IndicatorHIV();
             } else if (report.equals("indicatorHaitiLNSPHIV")) {
@@ -273,6 +279,8 @@ public class ReportImplementationFactory {
                 return new ExportTrendsByDate();
             } else if (report.equals("TBOrderExport")) {
                 return new ExportTBOrdersByDate();
+            } else if (report.equals("bacteriologyCSV")) {
+                return new ExportBacteriologyByDate();
             } else if (report.equals("MauritiusProtocolSheet")) {
                 return new MauritiusProtocolSheet();
             } else if (report.equals("ExportWHONETReportByDate")) {
@@ -293,6 +301,10 @@ public class ReportImplementationFactory {
                 return new DualInSituHybridizationReport();
             } else if (report.equals("BreastCancerHormoneReceptorReport")) {
                 return new BreastCancerHormoneReceptorReport();
+            } else if (report.equals("EOrderExport")) {
+                return new ExportEOrdersByDate();
+            } else if (report.equals("TBOrderReport")) {
+                return new TBOrderReport();
             }
         }
 

@@ -2,12 +2,10 @@ package org.openelisglobal.bacteriology.service;
 
 import java.util.ArrayList;
 import java.util.List;
-
 import org.openelisglobal.bacteriology.dao.BacteriologyOrganismDAO;
 import org.openelisglobal.bacteriology.valueholder.BacteriologyOrganism;
 import org.openelisglobal.common.log.LogEvent;
 import org.openelisglobal.common.service.BaseObjectServiceImpl;
-import org.openelisglobal.common.services.DisplayListService;
 import org.openelisglobal.dictionary.service.DictionaryService;
 import org.openelisglobal.dictionary.valueholder.Dictionary;
 import org.openelisglobal.dictionarycategory.service.DictionaryCategoryService;

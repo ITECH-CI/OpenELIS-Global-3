@@ -418,7 +418,6 @@ const SampleType = (props) => {
     }
   };
 
-
   const displayTbOrderResonOptions = (res) => {
     if (res) {
       setTbReasonDiagnostic(
@@ -913,7 +912,8 @@ const SampleType = (props) => {
                   setTbData((prev) => ({
                     ...prev,
                     tbSubjectNumber: value,
-                    tbSubjectNumberRes: value.length > 0 ? "" : prev.tbSubjectNumberRes,
+                    tbSubjectNumberRes:
+                      value.length > 0 ? "" : prev.tbSubjectNumberRes,
                   }));
                 }}
                 labelText={intl.formatMessage({
@@ -944,7 +944,8 @@ const SampleType = (props) => {
                   setTbData((prev) => ({
                     ...prev,
                     tbSubjectNumberRes: value,
-                    tbSubjectNumber: value.length > 0 ? "" : prev.tbSubjectNumber,
+                    tbSubjectNumber:
+                      value.length > 0 ? "" : prev.tbSubjectNumber,
                   }));
                 }}
                 labelText={intl.formatMessage({

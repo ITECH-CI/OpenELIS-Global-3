@@ -126,7 +126,9 @@ const FloraList = ({
               className="flora-item"
               style={{ marginBottom: "2rem" }}
             >
-              <h5 style={{ marginBottom: "1rem" }}>Flore {flora.floraNumber}</h5>
+              <h5 style={{ marginBottom: "1rem" }}>
+                Flore {flora.floraNumber}
+              </h5>
               <Grid fullWidth>
                 {/* Gram Type */}
                 <Column lg={8} md={4} sm={4} style={{ marginBottom: "1rem" }}>
@@ -182,8 +184,8 @@ const FloraList = ({
                     id={`flora_capsulated_${idPrefix}_${testId}_${index}`}
                     labelText="Capsulé"
                     checked={flora.capsulated || false}
-                    onChange={(e) =>
-                      handleDetailChange(index, "capsulated", e.target.checked)
+                    onChange={(_, { checked }) =>
+                      handleDetailChange(index, "capsulated", checked)
                     }
                     disabled={disabled}
                   />

@@ -71,12 +71,11 @@ public class BacteriologyFloraRestController extends ControllerUtills {
      * Get flora data for a specific test within an analysis
      *
      * @param analysisId The analysis ID
-     * @param testId The flora count test ID
+     * @param testId     The flora count test ID
      * @return Flora data DTO
      */
     @GetMapping("/analysis/{analysisId}/test/{testId}")
-    public ResponseEntity<FloraDataDTO> getFloraByAnalysisIdAndTestId(
-            @PathVariable Integer analysisId,
+    public ResponseEntity<FloraDataDTO> getFloraByAnalysisIdAndTestId(@PathVariable Integer analysisId,
             @PathVariable Integer testId) {
         try {
             BacteriologyFlora flora = bacteriologyFloraService.getByAnalysisIdAndTestId(analysisId, testId);
@@ -96,18 +95,15 @@ public class BacteriologyFloraRestController extends ControllerUtills {
     /**
      * Save or update flora data for a specific analysis and test
      *
-     * @param analysisId The analysis ID
-     * @param testId The flora count test ID
+     * @param analysisId   The analysis ID
+     * @param testId       The flora count test ID
      * @param floraDataDTO The flora data to save
-     * @param request HTTP request
+     * @param request      HTTP request
      * @return Saved flora data DTO
      */
     @PostMapping("/analysis/{analysisId}/test/{testId}")
-    public ResponseEntity<FloraDataDTO> saveFlora(
-            @PathVariable Integer analysisId,
-            @PathVariable Integer testId,
-            @RequestBody FloraDataDTO floraDataDTO,
-            HttpServletRequest request) {
+    public ResponseEntity<FloraDataDTO> saveFlora(@PathVariable Integer analysisId, @PathVariable Integer testId,
+            @RequestBody FloraDataDTO floraDataDTO, HttpServletRequest request) {
         try {
             // Get sys user ID from session
             String sysUserId = getSysUserId(request);
@@ -179,12 +175,11 @@ public class BacteriologyFloraRestController extends ControllerUtills {
      * Delete flora data for a specific test within an analysis
      *
      * @param analysisId The analysis ID
-     * @param testId The flora count test ID
+     * @param testId     The flora count test ID
      * @return Response indicating success or failure
      */
     @DeleteMapping("/analysis/{analysisId}/test/{testId}")
-    public ResponseEntity<Void> deleteFloraByAnalysisIdAndTestId(
-            @PathVariable Integer analysisId,
+    public ResponseEntity<Void> deleteFloraByAnalysisIdAndTestId(@PathVariable Integer analysisId,
             @PathVariable Integer testId) {
         try {
             bacteriologyFloraService.deleteByAnalysisIdAndTestId(analysisId, testId);
@@ -206,11 +201,8 @@ public class BacteriologyFloraRestController extends ControllerUtills {
 
         if (flora.getDetails() != null) {
             for (BacteriologyFloraDetail detail : flora.getDetails()) {
-                FloraDetailDTO detailDTO = new FloraDetailDTO(
-                        detail.getFloraNumber(),
-                        detail.getGramTypeDictId(),
-                        detail.getGroupingModeDictId(),
-                        detail.getCapsulated());
+                FloraDetailDTO detailDTO = new FloraDetailDTO(detail.getFloraNumber(), detail.getGramTypeDictId(),
+                        detail.getGroupingModeDictId(), detail.getCapsulated());
                 detailDTOs.add(detailDTO);
             }
         }

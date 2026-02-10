@@ -157,12 +157,12 @@ public class SampleTbEntryForm extends BaseForm {
     private String tbSubjectNumberRes;
 
     public String getTbSubjectNumberRes() {
-		return tbSubjectNumberRes;
-	}
+        return tbSubjectNumberRes;
+    }
 
-	public void setTbSubjectNumberRes(String tbSubjectNumberRes) {
-		this.tbSubjectNumberRes = tbSubjectNumberRes;
-	}
+    public void setTbSubjectNumberRes(String tbSubjectNumberRes) {
+        this.tbSubjectNumberRes = tbSubjectNumberRes;
+    }
 
     @NotNull()
     private Boolean modified = false;

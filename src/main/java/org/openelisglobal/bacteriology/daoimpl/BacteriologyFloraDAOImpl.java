@@ -27,12 +27,12 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * BacteriologyFloraDAOImpl - Implementation of Data Access Object for bacterial flora
+ * BacteriologyFloraDAOImpl - Implementation of Data Access Object for bacterial
+ * flora
  */
 @Component
 @Transactional
-public class BacteriologyFloraDAOImpl extends BaseDAOImpl<BacteriologyFlora, Long>
-        implements BacteriologyFloraDAO {
+public class BacteriologyFloraDAOImpl extends BaseDAOImpl<BacteriologyFlora, Long> implements BacteriologyFloraDAO {
 
     @PersistenceContext
     private EntityManager entityManager;
@@ -45,13 +45,11 @@ public class BacteriologyFloraDAOImpl extends BaseDAOImpl<BacteriologyFlora, Lon
     @Transactional(readOnly = true)
     public List<BacteriologyFlora> getByAnalysisId(Integer analysisId) throws LIMSRuntimeException {
         try {
-            String hql = "FROM BacteriologyFlora bf " +
-                         "LEFT JOIN FETCH bf.details " +
-                         "WHERE bf.analysisId = :analysisId " +
-                         "ORDER BY bf.floraCountTestId";
+            String hql = "FROM BacteriologyFlora bf " + "LEFT JOIN FETCH bf.details "
+                    + "WHERE bf.analysisId = :analysisId " + "ORDER BY bf.floraCountTestId";
 
-            Query<BacteriologyFlora> query = entityManager.unwrap(Session.class)
-                    .createQuery(hql, BacteriologyFlora.class);
+            Query<BacteriologyFlora> query = entityManager.unwrap(Session.class).createQuery(hql,
+                    BacteriologyFlora.class);
             query.setParameter("analysisId", analysisId);
 
             return query.list();
@@ -66,13 +64,11 @@ public class BacteriologyFloraDAOImpl extends BaseDAOImpl<BacteriologyFlora, Lon
     public BacteriologyFlora getByAnalysisIdAndTestId(Integer analysisId, Integer floraCountTestId)
             throws LIMSRuntimeException {
         try {
-            String hql = "FROM BacteriologyFlora bf " +
-                         "LEFT JOIN FETCH bf.details " +
-                         "WHERE bf.analysisId = :analysisId " +
-                         "AND bf.floraCountTestId = :testId";
+            String hql = "FROM BacteriologyFlora bf " + "LEFT JOIN FETCH bf.details "
+                    + "WHERE bf.analysisId = :analysisId " + "AND bf.floraCountTestId = :testId";
 
-            Query<BacteriologyFlora> query = entityManager.unwrap(Session.class)
-                    .createQuery(hql, BacteriologyFlora.class);
+            Query<BacteriologyFlora> query = entityManager.unwrap(Session.class).createQuery(hql,
+                    BacteriologyFlora.class);
             query.setParameter("analysisId", analysisId);
             query.setParameter("testId", floraCountTestId);
 
@@ -105,8 +101,7 @@ public class BacteriologyFloraDAOImpl extends BaseDAOImpl<BacteriologyFlora, Lon
 
     @Override
     @Transactional
-    public void deleteByAnalysisIdAndTestId(Integer analysisId, Integer floraCountTestId)
-            throws LIMSRuntimeException {
+    public void deleteByAnalysisIdAndTestId(Integer analysisId, Integer floraCountTestId) throws LIMSRuntimeException {
         try {
             BacteriologyFlora flora = getByAnalysisIdAndTestId(analysisId, floraCountTestId);
             if (flora != null) {

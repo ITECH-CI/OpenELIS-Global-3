@@ -362,7 +362,7 @@ INSERT INTO
             clinlims.test_result(id,test_id,result_group,flags,tst_rslt_type,value,significant_digits,quant_limit,cont_level,lastupdated,scriptlet_id,sort_order,
             is_quantifiable,is_active,is_normal) VALUES
             (nextval('test_result_seq'), (select id from test where description = 'Microscopie - Etat frais Qualitatif - Leucocytes'),null,null,'D',
-            (select id from dictionary where dict_entry = 'Presence' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (select id from dictionary where dict_entry = 'Présence' limit 1),null,null,null,now(),null,1,'f','t','f'),
             (nextval('test_result_seq'), (select id from test where description = 'Microscopie - Etat frais Qualitatif - Leucocytes'),null,null,'D',
             (select id from dictionary where dict_entry = 'Absence' limit 1),null,null,null,now(),null,1,'f','t','f');
 ]]></sql>
@@ -380,7 +380,7 @@ INSERT INTO
             clinlims.test_result(id,test_id,result_group,flags,tst_rslt_type,value,significant_digits,quant_limit,cont_level,lastupdated,scriptlet_id,sort_order,
             is_quantifiable,is_active,is_normal) VALUES
             (nextval('test_result_seq'), (select id from test where description = 'Microscopie - Etat frais Qualitatif - Hématies'),null,null,'D',
-            (select id from dictionary where dict_entry = 'Presence' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (select id from dictionary where dict_entry = 'Présence' limit 1),null,null,null,now(),null,1,'f','t','f'),
             (nextval('test_result_seq'), (select id from test where description = 'Microscopie - Etat frais Qualitatif - Hématies'),null,null,'D',
             (select id from dictionary where dict_entry = 'Absence' limit 1),null,null,null,now(),null,1,'f','t','f');
 ]]></sql>
@@ -398,7 +398,7 @@ INSERT INTO
             clinlims.test_result(id,test_id,result_group,flags,tst_rslt_type,value,significant_digits,quant_limit,cont_level,lastupdated,scriptlet_id,sort_order,
             is_quantifiable,is_active,is_normal) VALUES
             (nextval('test_result_seq'), (select id from test where description = 'Microscopie - Etat frais Qualitatif - Parasites'),null,null,'D',
-            (select id from dictionary where dict_entry = 'Presence' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (select id from dictionary where dict_entry = 'Présence' limit 1),null,null,null,now(),null,1,'f','t','f'),
             (nextval('test_result_seq'), (select id from test where description = 'Microscopie - Etat frais Qualitatif - Parasites'),null,null,'D',
             (select id from dictionary where dict_entry = 'Absence' limit 1),null,null,null,now(),null,1,'f','t','f');
 ]]></sql>
@@ -416,7 +416,7 @@ INSERT INTO
             clinlims.test_result(id,test_id,result_group,flags,tst_rslt_type,value,significant_digits,quant_limit,cont_level,lastupdated,scriptlet_id,sort_order,
             is_quantifiable,is_active,is_normal) VALUES
             (nextval('test_result_seq'), (select id from test where description = 'Diagnostic rapide du Rotavirus'),null,null,'D',
-            (select id from dictionary where dict_entry = 'Presence' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (select id from dictionary where dict_entry = 'Présence' limit 1),null,null,null,now(),null,1,'f','t','f'),
             (nextval('test_result_seq'), (select id from test where description = 'Diagnostic rapide du Rotavirus'),null,null,'D',
             (select id from dictionary where dict_entry = 'Absence' limit 1),null,null,null,now(),null,1,'f','t','f');
 ]]></sql>
@@ -434,7 +434,7 @@ INSERT INTO
             clinlims.test_result(id,test_id,result_group,flags,tst_rslt_type,value,significant_digits,quant_limit,cont_level,lastupdated,scriptlet_id,sort_order,
             is_quantifiable,is_active,is_normal) VALUES
             (nextval('test_result_seq'), (select id from test where description = 'Diagnostic rapide du Adenovirus'),null,null,'D',
-            (select id from dictionary where dict_entry = 'Presence' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (select id from dictionary where dict_entry = 'Présence' limit 1),null,null,null,now(),null,1,'f','t','f'),
             (nextval('test_result_seq'), (select id from test where description = 'Diagnostic rapide du Adenovirus'),null,null,'D',
             (select id from dictionary where dict_entry = 'Absence' limit 1),null,null,null,now(),null,1,'f','t','f');
 ]]></sql>
@@ -452,7 +452,7 @@ INSERT INTO
             clinlims.test_result(id,test_id,result_group,flags,tst_rslt_type,value,significant_digits,quant_limit,cont_level,lastupdated,scriptlet_id,sort_order,
             is_quantifiable,is_active,is_normal) VALUES
             (nextval('test_result_seq'), (select id from test where description = 'Microscopie - Etat frais Qualitatif - Levures'),null,null,'D',
-            (select id from dictionary where dict_entry = 'Presence' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (select id from dictionary where dict_entry = 'Présence' limit 1),null,null,null,now(),null,1,'f','t','f'),
             (nextval('test_result_seq'), (select id from test where description = 'Microscopie - Etat frais Qualitatif - Levures'),null,null,'D',
             (select id from dictionary where dict_entry = 'Absence' limit 1),null,null,null,now(),null,1,'f','t','f');
 ]]></sql>
@@ -470,7 +470,7 @@ INSERT INTO
             clinlims.test_result(id,test_id,result_group,flags,tst_rslt_type,value,significant_digits,quant_limit,cont_level,lastupdated,scriptlet_id,sort_order,
             is_quantifiable,is_active,is_normal) VALUES
             (nextval('test_result_seq'), (select id from test where description = 'Microscopie - Etat frais Qualitatif - Cristaux'),null,null,'D',
-            (select id from dictionary where dict_entry = 'Presence' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (select id from dictionary where dict_entry = 'Présence' limit 1),null,null,null,now(),null,1,'f','t','f'),
             (nextval('test_result_seq'), (select id from test where description = 'Microscopie - Etat frais Qualitatif - Cristaux'),null,null,'D',
             (select id from dictionary where dict_entry = 'Absence' limit 1),null,null,null,now(),null,1,'f','t','f');
 ]]></sql>
@@ -488,7 +488,7 @@ INSERT INTO
             clinlims.test_result(id,test_id,result_group,flags,tst_rslt_type,value,significant_digits,quant_limit,cont_level,lastupdated,scriptlet_id,sort_order,
             is_quantifiable,is_active,is_normal) VALUES
             (nextval('test_result_seq'), (select id from test where description = 'Microscopie - Etat frais Qualitatif - Bactéries'),null,null,'D',
-            (select id from dictionary where dict_entry = 'Presence' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (select id from dictionary where dict_entry = 'Présence' limit 1),null,null,null,now(),null,1,'f','t','f'),
             (nextval('test_result_seq'), (select id from test where description = 'Microscopie - Etat frais Qualitatif - Bactéries'),null,null,'D',
             (select id from dictionary where dict_entry = 'Absence' limit 1),null,null,null,now(),null,1,'f','t','f');
 ]]></sql>
@@ -506,7 +506,7 @@ INSERT INTO
             clinlims.test_result(id,test_id,result_group,flags,tst_rslt_type,value,significant_digits,quant_limit,cont_level,lastupdated,scriptlet_id,sort_order,
             is_quantifiable,is_active,is_normal) VALUES
             (nextval('test_result_seq'), (select id from test where description = 'Microscopie - Etat frais Qualitatif - Spermatozoides'),null,null,'D',
-            (select id from dictionary where dict_entry = 'Presence' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (select id from dictionary where dict_entry = 'Présence' limit 1),null,null,null,now(),null,1,'f','t','f'),
             (nextval('test_result_seq'), (select id from test where description = 'Microscopie - Etat frais Qualitatif - Spermatozoides'),null,null,'D',
             (select id from dictionary where dict_entry = 'Absence' limit 1),null,null,null,now(),null,1,'f','t','f');
 ]]></sql>
@@ -524,7 +524,7 @@ INSERT INTO
             clinlims.test_result(id,test_id,result_group,flags,tst_rslt_type,value,significant_digits,quant_limit,cont_level,lastupdated,scriptlet_id,sort_order,
             is_quantifiable,is_active,is_normal) VALUES
             (nextval('test_result_seq'), (select id from test where description = 'Microscopie - Etat frais Qualitatif - Cylindre'),null,null,'D',
-            (select id from dictionary where dict_entry = 'Presence' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (select id from dictionary where dict_entry = 'Présence' limit 1),null,null,null,now(),null,1,'f','t','f'),
             (nextval('test_result_seq'), (select id from test where description = 'Microscopie - Etat frais Qualitatif - Cylindre'),null,null,'D',
             (select id from dictionary where dict_entry = 'Absence' limit 1),null,null,null,now(),null,1,'f','t','f');
 ]]></sql>
@@ -542,7 +542,7 @@ INSERT INTO
             clinlims.test_result(id,test_id,result_group,flags,tst_rslt_type,value,significant_digits,quant_limit,cont_level,lastupdated,scriptlet_id,sort_order,
             is_quantifiable,is_active,is_normal) VALUES
             (nextval('test_result_seq'), (select id from test where description = 'Microscopie - Etat frais Qualitatif - Cellules épithéaliales'),null,null,'D',
-            (select id from dictionary where dict_entry = 'Presence' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (select id from dictionary where dict_entry = 'Présence' limit 1),null,null,null,now(),null,1,'f','t','f'),
             (nextval('test_result_seq'), (select id from test where description = 'Microscopie - Etat frais Qualitatif - Cellules épithéaliales'),null,null,'D',
             (select id from dictionary where dict_entry = 'Absence' limit 1),null,null,null,now(),null,1,'f','t','f');
 ]]></sql>
@@ -582,7 +582,7 @@ INSERT INTO
             clinlims.test_result(id,test_id,result_group,flags,tst_rslt_type,value,significant_digits,quant_limit,cont_level,lastupdated,scriptlet_id,sort_order,
             is_quantifiable,is_active,is_normal) VALUES
             (nextval('test_result_seq'), (select id from test where description = 'Microscopie - Etat frais Qualitatif - Cellules'),null,null,'D',
-            (select id from dictionary where dict_entry = 'Presence' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (select id from dictionary where dict_entry = 'Présence' limit 1),null,null,null,now(),null,1,'f','t','f'),
             (nextval('test_result_seq'), (select id from test where description = 'Microscopie - Etat frais Qualitatif - Cellules'),null,null,'D',
             (select id from dictionary where dict_entry = 'Absence' limit 1),null,null,null,now(),null,1,'f','t','f');
 ]]></sql>
@@ -600,7 +600,7 @@ INSERT INTO
             clinlims.test_result(id,test_id,result_group,flags,tst_rslt_type,value,significant_digits,quant_limit,cont_level,lastupdated,scriptlet_id,sort_order,
             is_quantifiable,is_active,is_normal) VALUES
             (nextval('test_result_seq'), (select id from test where description = 'Microscopie - Etat frais Qualitatif - Kystes'),null,null,'D',
-            (select id from dictionary where dict_entry = 'Presence' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (select id from dictionary where dict_entry = 'Présence' limit 1),null,null,null,now(),null,1,'f','t','f'),
             (nextval('test_result_seq'), (select id from test where description = 'Microscopie - Etat frais Qualitatif - Kystes'),null,null,'D',
             (select id from dictionary where dict_entry = 'Absence' limit 1),null,null,null,now(),null,1,'f','t','f');
 ]]></sql>
@@ -618,7 +618,7 @@ INSERT INTO
             clinlims.test_result(id,test_id,result_group,flags,tst_rslt_type,value,significant_digits,quant_limit,cont_level,lastupdated,scriptlet_id,sort_order,
             is_quantifiable,is_active,is_normal) VALUES
             (nextval('test_result_seq'), (select id from test where description = 'Microscopie - Etat frais Qualitatif - Oeufs'),null,null,'D',
-            (select id from dictionary where dict_entry = 'Presence' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (select id from dictionary where dict_entry = 'Présence' limit 1),null,null,null,now(),null,1,'f','t','f'),
             (nextval('test_result_seq'), (select id from test where description = 'Microscopie - Etat frais Qualitatif - Oeufs'),null,null,'D',
             (select id from dictionary where dict_entry = 'Absence' limit 1),null,null,null,now(),null,1,'f','t','f');
 ]]></sql>
@@ -636,7 +636,7 @@ INSERT INTO
             clinlims.test_result(id,test_id,result_group,flags,tst_rslt_type,value,significant_digits,quant_limit,cont_level,lastupdated,scriptlet_id,sort_order,
             is_quantifiable,is_active,is_normal) VALUES
             (nextval('test_result_seq'), (select id from test where description = 'Microscopie - Etat frais Qualitatif - Flagellés'),null,null,'D',
-            (select id from dictionary where dict_entry = 'Presence' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (select id from dictionary where dict_entry = 'Présence' limit 1),null,null,null,now(),null,1,'f','t','f'),
             (nextval('test_result_seq'), (select id from test where description = 'Microscopie - Etat frais Qualitatif - Flagellés'),null,null,'D',
             (select id from dictionary where dict_entry = 'Absence' limit 1),null,null,null,now(),null,1,'f','t','f');
 ]]></sql>
@@ -654,7 +654,7 @@ INSERT INTO
             clinlims.test_result(id,test_id,result_group,flags,tst_rslt_type,value,significant_digits,quant_limit,cont_level,lastupdated,scriptlet_id,sort_order,
             is_quantifiable,is_active,is_normal) VALUES
             (nextval('test_result_seq'), (select id from test where description = 'Microscopie - Etat frais Qualitatif - Larves'),null,null,'D',
-            (select id from dictionary where dict_entry = 'Presence' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (select id from dictionary where dict_entry = 'Présence' limit 1),null,null,null,now(),null,1,'f','t','f'),
             (nextval('test_result_seq'), (select id from test where description = 'Microscopie - Etat frais Qualitatif - Larves'),null,null,'D',
             (select id from dictionary where dict_entry = 'Absence' limit 1),	null,null,null,now(),null,1,'f','t','f');
 ]]></sql>
@@ -672,7 +672,7 @@ INSERT INTO
             clinlims.test_result(id,test_id,result_group,flags,tst_rslt_type,value,significant_digits,quant_limit,cont_level,lastupdated,scriptlet_id,sort_order,
             is_quantifiable,is_active,is_normal) VALUES
             (nextval('test_result_seq'), (select id from test where description = 'Microscopie - Etat frais Qualitatif - Spores'),null,null,'D',
-            (select id from dictionary where dict_entry = 'Presence' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (select id from dictionary where dict_entry = 'Présence' limit 1),null,null,null,now(),null,1,'f','t','f'),
             (nextval('test_result_seq'), (select id from test where description = 'Microscopie - Etat frais Qualitatif - Spores'),null,null,'D',
             (select id from dictionary where dict_entry = 'Absence' limit 1),null,null,null,now(),null,1,'f','t','f');
 ]]></sql>
@@ -690,7 +690,7 @@ INSERT INTO
             clinlims.test_result(id,test_id,result_group,flags,tst_rslt_type,value,significant_digits,quant_limit,cont_level,lastupdated,scriptlet_id,sort_order,
             is_quantifiable,is_active,is_normal) VALUES
             (nextval('test_result_seq'), (select id from test where description = 'Microscopie - Etat frais Qualitatif - Encre de chine Cryptocoque'),null,null,'D',
-            (select id from dictionary where dict_entry = 'Presence' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (select id from dictionary where dict_entry = 'Présence' limit 1),null,null,null,now(),null,1,'f','t','f'),
             (nextval('test_result_seq'), (select id from test where description = 'Microscopie - Etat frais Qualitatif - Encre de chine Cryptocoque'),null,null,'D',
             (select id from dictionary where dict_entry = 'Absence' limit 1),null,null,null,now(),null,1,'f','t','f');
 ]]></sql>
@@ -708,7 +708,7 @@ INSERT INTO
             clinlims.test_result(id,test_id,result_group,flags,tst_rslt_type,value,significant_digits,quant_limit,cont_level,lastupdated,scriptlet_id,sort_order,
             is_quantifiable,is_active,is_normal) VALUES
             (nextval('test_result_seq'), (select id from test where description = 'Microscopie - Qualitatif - Recherche Antigènes solubles Escherichia coli k1'),null,null,'D',
-            (select id from dictionary where dict_entry = 'Presence' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (select id from dictionary where dict_entry = 'Présence' limit 1),null,null,null,now(),null,1,'f','t','f'),
             (nextval('test_result_seq'), (select id from test where description = 'Microscopie - Qualitatif - Recherche Antigènes solubles Escherichia coli k1'),null,null,'D',
             (select id from dictionary where dict_entry = 'Absence' limit 1),null,null,null,now(),null,1,'f','t','f');
 ]]></sql>
@@ -726,7 +726,7 @@ INSERT INTO
             clinlims.test_result(id,test_id,result_group,flags,tst_rslt_type,value,significant_digits,quant_limit,cont_level,lastupdated,scriptlet_id,sort_order,
             is_quantifiable,is_active,is_normal) VALUES
             (nextval('test_result_seq'), (select id from test where description = 'Microscopie - Qualitatif - Recherche Antigènes solubles Streptococcus pneumoniae'),null,null,'D',
-            (select id from dictionary where dict_entry = 'Presence' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (select id from dictionary where dict_entry = 'Présence' limit 1),null,null,null,now(),null,1,'f','t','f'),
             (nextval('test_result_seq'), (select id from test where description = 'Microscopie - Qualitatif - Recherche Antigènes solubles Streptococcus pneumoniae'),null,null,'D',
             (select id from dictionary where dict_entry = 'Absence' limit 1),null,null,null,now(),null,1,'f','t','f');
 ]]></sql>
@@ -744,7 +744,7 @@ INSERT INTO
             clinlims.test_result(id,test_id,result_group,flags,tst_rslt_type,value,significant_digits,quant_limit,cont_level,lastupdated,scriptlet_id,sort_order,
             is_quantifiable,is_active,is_normal) VALUES
             (nextval('test_result_seq'), (select id from test where description = 'Microscopie - Qualitatif - Recherche Antigènes solubles Streptoccus B'),null,null,'D',
-            (select id from dictionary where dict_entry = 'Presence' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (select id from dictionary where dict_entry = 'Présence' limit 1),null,null,null,now(),null,1,'f','t','f'),
             (nextval('test_result_seq'), (select id from test where description = 'Microscopie - Qualitatif - Recherche Antigènes solubles Streptoccus B'),null,null,'D',
             (select id from dictionary where dict_entry = 'Absence' limit 1),null,null,null,now(),null,1,'f','t','f');
 ]]></sql>
@@ -762,7 +762,7 @@ INSERT INTO
             clinlims.test_result(id,test_id,result_group,flags,tst_rslt_type,value,significant_digits,quant_limit,cont_level,lastupdated,scriptlet_id,sort_order,
             is_quantifiable,is_active,is_normal) VALUES
             (nextval('test_result_seq'), (select id from test where description = 'Microscopie - Qualitatif - Recherche Antigènes solubles Hemophilus Influenzae B'),null,null,'D',
-            (select id from dictionary where dict_entry = 'Presence' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (select id from dictionary where dict_entry = 'Présence' limit 1),null,null,null,now(),null,1,'f','t','f'),
             (nextval('test_result_seq'), (select id from test where description = 'Microscopie - Qualitatif - Recherche Antigènes solubles Hemophilus Influenzae B'),null,null,'D',
             (select id from dictionary where dict_entry = 'Absence' limit 1),null,null,null,now(),null,1,'f','t','f');
 ]]></sql>
@@ -780,7 +780,7 @@ INSERT INTO
             clinlims.test_result(id,test_id,result_group,flags,tst_rslt_type,value,significant_digits,quant_limit,cont_level,lastupdated,scriptlet_id,sort_order,
             is_quantifiable,is_active,is_normal) VALUES
             (nextval('test_result_seq'), (select id from test where description = 'Microscopie - Qualitatif - Recherche Antigènes solubles Neisseria meningitidis A'),null,null,'D',
-            (select id from dictionary where dict_entry = 'Presence' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (select id from dictionary where dict_entry = 'Présence' limit 1),null,null,null,now(),null,1,'f','t','f'),
             (nextval('test_result_seq'), (select id from test where description = 'Microscopie - Qualitatif - Recherche Antigènes solubles Neisseria meningitidis A'),null,null,'D',
             (select id from dictionary where dict_entry = 'Absence' limit 1),null,null,null,now(),null,1,'f','t','f');
 ]]></sql>
@@ -798,7 +798,7 @@ INSERT INTO
             clinlims.test_result(id,test_id,result_group,flags,tst_rslt_type,value,significant_digits,quant_limit,cont_level,lastupdated,scriptlet_id,sort_order,
             is_quantifiable,is_active,is_normal) VALUES
             (nextval('test_result_seq'), (select id from test where description = 'Microscopie - Qualitatif - Recherche Antigènes solubles Neisseria meningitidis B'),null,null,'D',
-            (select id from dictionary where dict_entry = 'Presence' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (select id from dictionary where dict_entry = 'Présence' limit 1),null,null,null,now(),null,1,'f','t','f'),
             (nextval('test_result_seq'), (select id from test where description = 'Microscopie - Qualitatif - Recherche Antigènes solubles Neisseria meningitidis B'),null,null,'D',
             (select id from dictionary where dict_entry = 'Absence' limit 1),null,null,null,now(),null,1,'f','t','f');
 ]]></sql>
@@ -816,7 +816,7 @@ INSERT INTO
             clinlims.test_result(id,test_id,result_group,flags,tst_rslt_type,value,significant_digits,quant_limit,cont_level,lastupdated,scriptlet_id,sort_order,
             is_quantifiable,is_active,is_normal) VALUES
             (nextval('test_result_seq'), (select id from test where description = 'Microscopie - Qualitatif - Recherche Antigènes solubles Neisseria meningitidis C'),null,null,'D',
-            (select id from dictionary where dict_entry = 'Presence' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (select id from dictionary where dict_entry = 'Présence' limit 1),null,null,null,now(),null,1,'f','t','f'),
             (nextval('test_result_seq'), (select id from test where description = 'Microscopie - Qualitatif - Recherche Antigènes solubles Neisseria meningitidis C'),null,null,'D',
             (select id from dictionary where dict_entry = 'Absence' limit 1),null,null,null,now(),null,1,'f','t','f');
 ]]></sql>
@@ -834,7 +834,7 @@ INSERT INTO
             clinlims.test_result(id,test_id,result_group,flags,tst_rslt_type,value,significant_digits,quant_limit,cont_level,lastupdated,scriptlet_id,sort_order,
             is_quantifiable,is_active,is_normal) VALUES
             (nextval('test_result_seq'), (select id from test where description = 'Microscopie - Qualitatif - Recherche Antigènes solubles Neisseria meningitidis Y/W135'),null,null,'D',
-            (select id from dictionary where dict_entry = 'Presence' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (select id from dictionary where dict_entry = 'Présence' limit 1),null,null,null,now(),null,1,'f','t','f'),
             (nextval('test_result_seq'), (select id from test where description = 'Microscopie - Qualitatif - Recherche Antigènes solubles Neisseria meningitidis Y/W135'),null,null,'D',
             (select id from dictionary where dict_entry = 'Absence' limit 1),null,null,null,now(),null,1,'f','t','f');
 ]]></sql>
@@ -872,7 +872,7 @@ INSERT INTO
             clinlims.test_result(id,test_id,result_group,flags,tst_rslt_type,value,significant_digits,quant_limit,cont_level,lastupdated,scriptlet_id,sort_order,
             is_quantifiable,is_active,is_normal) VALUES
             (nextval('test_result_seq'), (select id from test where description = 'Macroscopie - Vulve - Ulcération'),null,null,'D',
-            (select id from dictionary where dict_entry = 'Presence' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (select id from dictionary where dict_entry = 'Présence' limit 1),null,null,null,now(),null,1,'f','t','f'),
             (nextval('test_result_seq'), (select id from test where description = 'Macroscopie - Vulve - Ulcération'),null,null,'D',
             (select id from dictionary where dict_entry = 'Absence' limit 1),null,null,null,now(),null,1,'f','t','f');
 ]]></sql>
@@ -890,7 +890,7 @@ INSERT INTO
             clinlims.test_result(id,test_id,result_group,flags,tst_rslt_type,value,significant_digits,quant_limit,cont_level,lastupdated,scriptlet_id,sort_order,
             is_quantifiable,is_active,is_normal) VALUES
             (nextval('test_result_seq'), (select id from test where description = 'Macroscopie - Vulve - Condylomes'),null,null,'D',
-            (select id from dictionary where dict_entry = 'Presence' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (select id from dictionary where dict_entry = 'Présence' limit 1),null,null,null,now(),null,1,'f','t','f'),
             (nextval('test_result_seq'), (select id from test where description = 'Macroscopie - Vulve - Condylomes'),null,null,'D',
             (select id from dictionary where dict_entry = 'Absence' limit 1),null,null,null,now(),null,1,'f','t','f');
 ]]></sql>
@@ -908,7 +908,7 @@ INSERT INTO
             clinlims.test_result(id,test_id,result_group,flags,tst_rslt_type,value,significant_digits,quant_limit,cont_level,lastupdated,scriptlet_id,sort_order,
             is_quantifiable,is_active,is_normal) VALUES
             (nextval('test_result_seq'), (select id from test where description = 'Macroscopie - Vulve - Inflammation'),null,null,'D',
-            (select id from dictionary where dict_entry = 'Presence' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (select id from dictionary where dict_entry = 'Présence' limit 1),null,null,null,now(),null,1,'f','t','f'),
             (nextval('test_result_seq'), (select id from test where description = 'Macroscopie - Vulve - Inflammation'),null,null,'D',
             (select id from dictionary where dict_entry = 'Absence' limit 1),null,null,null,now(),null,1,'f','t','f');
 ]]></sql>
@@ -944,7 +944,7 @@ INSERT INTO
             clinlims.test_result(id,test_id,result_group,flags,tst_rslt_type,value,significant_digits,quant_limit,cont_level,lastupdated,scriptlet_id,sort_order,
             is_quantifiable,is_active,is_normal) VALUES
             (nextval('test_result_seq'), (select id from test where description = 'Macroscopie - Muqueuse vaginale - Ulcération'),null,null,'D',
-            (select id from dictionary where dict_entry = 'Presence' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (select id from dictionary where dict_entry = 'Présence' limit 1),null,null,null,now(),null,1,'f','t','f'),
             (nextval('test_result_seq'), (select id from test where description = 'Macroscopie - Muqueuse vaginale - Ulcération'),null,null,'D',
             (select id from dictionary where dict_entry = 'Absence' limit 1),null,null,null,now(),null,1,'f','t','f');
 ]]></sql>
@@ -962,7 +962,7 @@ INSERT INTO
             clinlims.test_result(id,test_id,result_group,flags,tst_rslt_type,value,significant_digits,quant_limit,cont_level,lastupdated,scriptlet_id,sort_order,
             is_quantifiable,is_active,is_normal) VALUES
             (nextval('test_result_seq'), (select id from test where description = 'Macroscopie - Muqueuse vaginale - Condylomes'),null,null,'D',
-            (select id from dictionary where dict_entry = 'Presence' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (select id from dictionary where dict_entry = 'Présence' limit 1),null,null,null,now(),null,1,'f','t','f'),
             (nextval('test_result_seq'), (select id from test where description = 'Macroscopie - Muqueuse vaginale - Condylomes'),null,null,'D',
             (select id from dictionary where dict_entry = 'Absence' limit 1),null,null,null,now(),null,1,'f','t','f');
 ]]></sql>
@@ -980,7 +980,7 @@ INSERT INTO
             clinlims.test_result(id,test_id,result_group,flags,tst_rslt_type,value,significant_digits,quant_limit,cont_level,lastupdated,scriptlet_id,sort_order,
             is_quantifiable,is_active,is_normal) VALUES
             (nextval('test_result_seq'), (select id from test where description = 'Macroscopie - Muqueuse vaginale - Inflammation'),null,null,'D',
-            (select id from dictionary where dict_entry = 'Presence' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (select id from dictionary where dict_entry = 'Présence' limit 1),null,null,null,now(),null,1,'f','t','f'),
             (nextval('test_result_seq'), (select id from test where description = 'Macroscopie - Muqueuse vaginale - Inflammation'),null,null,'D',
             (select id from dictionary where dict_entry = 'Absence' limit 1),null,null,null,now(),null,1,'f','t','f');
 ]]></sql>
@@ -1016,7 +1016,7 @@ INSERT INTO
             clinlims.test_result(id,test_id,result_group,flags,tst_rslt_type,value,significant_digits,quant_limit,cont_level,lastupdated,scriptlet_id,sort_order,
             is_quantifiable,is_active,is_normal) VALUES
             (nextval('test_result_seq'), (select id from test where description = 'Macroscopie - Col - Ulcération'),null,null,'D',
-            (select id from dictionary where dict_entry = 'Presence' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (select id from dictionary where dict_entry = 'Présence' limit 1),null,null,null,now(),null,1,'f','t','f'),
             (nextval('test_result_seq'), (select id from test where description = 'Macroscopie - Col - Ulcération'),null,null,'D',
             (select id from dictionary where dict_entry = 'Absence' limit 1),null,null,null,now(),null,1,'f','t','f');
 ]]></sql>
@@ -1034,7 +1034,7 @@ INSERT INTO
             clinlims.test_result(id,test_id,result_group,flags,tst_rslt_type,value,significant_digits,quant_limit,cont_level,lastupdated,scriptlet_id,sort_order,
             is_quantifiable,is_active,is_normal) VALUES
             (nextval('test_result_seq'), (select id from test where description = 'Macroscopie - Col - Condylomes'),null,null,'D',
-            (select id from dictionary where dict_entry = 'Presence' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (select id from dictionary where dict_entry = 'Présence' limit 1),null,null,null,now(),null,1,'f','t','f'),
             (nextval('test_result_seq'), (select id from test where description = 'Macroscopie - Col - Condylomes'),null,null,'D',
             (select id from dictionary where dict_entry = 'Absence' limit 1),null,null,null,now(),null,1,'f','t','f');
 ]]></sql>
@@ -1052,7 +1052,7 @@ INSERT INTO
             clinlims.test_result(id,test_id,result_group,flags,tst_rslt_type,value,significant_digits,quant_limit,cont_level,lastupdated,scriptlet_id,sort_order,
             is_quantifiable,is_active,is_normal) VALUES
             (nextval('test_result_seq'), (select id from test where description = 'Macroscopie - Col - Inflammation'),null,null,'D',
-            (select id from dictionary where dict_entry = 'Presence' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (select id from dictionary where dict_entry = 'Présence' limit 1),null,null,null,now(),null,1,'f','t','f'),
             (nextval('test_result_seq'), (select id from test where description = 'Macroscopie - Col - Inflammation'),null,null,'D',
             (select id from dictionary where dict_entry = 'Absence' limit 1),null,null,null,now(),null,1,'f','t','f');
 ]]></sql>
@@ -1215,7 +1215,7 @@ INSERT INTO
             clinlims.test_result(id,test_id,result_group,flags,tst_rslt_type,value,significant_digits,quant_limit,cont_level,lastupdated,scriptlet_id,sort_order,
             is_quantifiable,is_active,is_normal) VALUES
             (nextval('test_result_seq'), (select id from test where description = 'Microscopie - Frottis Coloration Gram - Bactéries - Sécrétion vaginale - clue cells'),null,null,'D',
-            (select id from dictionary where dict_entry = 'Presence' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (select id from dictionary where dict_entry = 'Présence' limit 1),null,null,null,now(),null,1,'f','t','f'),
             (nextval('test_result_seq'), (select id from test where description = 'Microscopie - Frottis Coloration Gram - Bactéries - Sécrétion vaginale - clue cells'),null,null,'D',
             (select id from dictionary where dict_entry = 'Absence' limit 1),null,null,null,now(),null,1,'f','t','f');
 ]]></sql>
@@ -1233,7 +1233,7 @@ INSERT INTO
             clinlims.test_result(id,test_id,result_group,flags,tst_rslt_type,value,significant_digits,quant_limit,cont_level,lastupdated,scriptlet_id,sort_order,
             is_quantifiable,is_active,is_normal) VALUES
             (nextval('test_result_seq'), (select id from test where description = 'Microscopie - Frotis Coloration Gram - Autres - Sécrétion vaginale - Levure'),null,null,'D',
-            (select id from dictionary where dict_entry = 'Presence' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (select id from dictionary where dict_entry = 'Présence' limit 1),null,null,null,now(),null,1,'f','t','f'),
             (nextval('test_result_seq'), (select id from test where description = 'Microscopie - Frotis Coloration Gram - Autres - Sécrétion vaginale - Levure'),null,null,'D',
             (select id from dictionary where dict_entry = 'Absence' limit 1),null,null,null,now(),null,1,'f','t','f');
 ]]></sql>
@@ -1311,7 +1311,7 @@ INSERT INTO
             clinlims.test_result(id,test_id,result_group,flags,tst_rslt_type,value,significant_digits,quant_limit,cont_level,lastupdated,scriptlet_id,sort_order,
             is_quantifiable,is_active,is_normal) VALUES
             (nextval('test_result_seq'), (select id from test where description = 'Macroscopie - Gland - Ulceration'),null,null,'D',
-            (select id from dictionary where dict_entry = 'Presence' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (select id from dictionary where dict_entry = 'Présence' limit 1),null,null,null,now(),null,1,'f','t','f'),
             (nextval('test_result_seq'), (select id from test where description = 'Macroscopie - Gland - Ulceration'),null,null,'D',
             (select id from dictionary where dict_entry = 'Absence' limit 1),null,null,null,now(),null,1,'f','t','f');
 ]]></sql>
@@ -1329,7 +1329,7 @@ INSERT INTO
             clinlims.test_result(id,test_id,result_group,flags,tst_rslt_type,value,significant_digits,quant_limit,cont_level,lastupdated,scriptlet_id,sort_order,
             is_quantifiable,is_active,is_normal) VALUES
             (nextval('test_result_seq'), (select id from test where description = 'Macroscopie - Gland - Condylomes'),null,null,'D',
-            (select id from dictionary where dict_entry = 'Presence' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (select id from dictionary where dict_entry = 'Présence' limit 1),null,null,null,now(),null,1,'f','t','f'),
             (nextval('test_result_seq'), (select id from test where description = 'Macroscopie - Gland - Condylomes'),null,null,'D',
             (select id from dictionary where dict_entry = 'Absence' limit 1),null,null,null,now(),null,1,'f','t','f');
 ]]></sql>
@@ -1347,7 +1347,7 @@ INSERT INTO
             clinlims.test_result(id,test_id,result_group,flags,tst_rslt_type,value,significant_digits,quant_limit,cont_level,lastupdated,scriptlet_id,sort_order,
             is_quantifiable,is_active,is_normal) VALUES
             (nextval('test_result_seq'), (select id from test where description = 'Macroscopie - Gland - Inflammation'),null,null,'D',
-            (select id from dictionary where dict_entry = 'Presence' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (select id from dictionary where dict_entry = 'Présence' limit 1),null,null,null,now(),null,1,'f','t','f'),
             (nextval('test_result_seq'), (select id from test where description = 'Macroscopie - Gland - Inflammation'),null,null,'D',
             (select id from dictionary where dict_entry = 'Absence' limit 1),null,null,null,now(),null,1,'f','t','f');
 ]]></sql>
@@ -1365,7 +1365,7 @@ INSERT INTO
             clinlims.test_result(id,test_id,result_group,flags,tst_rslt_type,value,significant_digits,quant_limit,cont_level,lastupdated,scriptlet_id,sort_order,
             is_quantifiable,is_active,is_normal) VALUES
             (nextval('test_result_seq'), (select id from test where description = 'Macroscopie - Gland - Normale'),null,null,'D',
-            (select id from dictionary where dict_entry = 'Presence' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (select id from dictionary where dict_entry = 'Présence' limit 1),null,null,null,now(),null,1,'f','t','f'),
             (nextval('test_result_seq'), (select id from test where description = 'Macroscopie - Gland - Normale'),null,null,'D',
             (select id from dictionary where dict_entry = 'Absence' limit 1),null,null,null,now(),null,1,'f','t','f');
 ]]></sql>
@@ -1383,7 +1383,7 @@ INSERT INTO
             clinlims.test_result(id,test_id,result_group,flags,tst_rslt_type,value,significant_digits,quant_limit,cont_level,lastupdated,scriptlet_id,sort_order,
             is_quantifiable,is_active,is_normal) VALUES
             (nextval('test_result_seq'), (select id from test where description = 'Microscopie - Frottis Coloration Gram - Autre - Lévures'),null,null,'D',
-            (select id from dictionary where dict_entry = 'Presence' limit 1),null,null,null,now(),null,1,'f','t','f'),
+            (select id from dictionary where dict_entry = 'Présence' limit 1),null,null,null,now(),null,1,'f','t','f'),
             (nextval('test_result_seq'), (select id from test where description = 'Microscopie - Frottis Coloration Gram - Autre - Lévures'),null,null,'D',
             (select id from dictionary where dict_entry = 'Absence' limit 1),null,null,null,now(),null,1,'f','t','f');
 ]]></sql>

@@ -355,6 +355,7 @@ public class DictionaryRestController extends BaseController {
 
     /**
      * Get all dictionary entries for a given category name
+     * 
      * @param categoryName the name of the dictionary category
      * @return list of dictionary entries
      */

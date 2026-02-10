@@ -38,11 +38,10 @@ public class BacteriologyResultGroupServiceImpl extends BaseObjectServiceImpl<Ba
         try {
             // Validate group type
             if (!isValidGroupType(resultGroup.getGroupType())) {
-                throw new IllegalArgumentException("Invalid group type: " + resultGroup.getGroupType()
-                        + ". Must be one of: " + VALID_GROUP_TYPES);
+                throw new IllegalArgumentException(
+                        "Invalid group type: " + resultGroup.getGroupType() + ". Must be one of: " + VALID_GROUP_TYPES);
             }
 
-            
             if (resultGroup.getId() == null) {
                 Integer id = insert(resultGroup);
                 resultGroup.setId(id);

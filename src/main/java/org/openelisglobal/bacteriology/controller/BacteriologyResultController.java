@@ -1,14 +1,18 @@
 package org.openelisglobal.bacteriology.controller;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
-import org.openelisglobal.bacteriology.action.bean.AntibioticDTO;
 import org.openelisglobal.bacteriology.action.bean.AntibiogramResultBean;
+import org.openelisglobal.bacteriology.action.bean.AntibioticDTO;
 import org.openelisglobal.bacteriology.action.bean.BacteriologyOrganismBean;
 import org.openelisglobal.bacteriology.action.bean.BacteriologyResultForm;
+import org.openelisglobal.bacteriology.action.bean.BacteriologyValidationForm;
 import org.openelisglobal.bacteriology.service.BacteriologyAntibiogramService;
 import org.openelisglobal.bacteriology.service.BacteriologyOrganismService;
 import org.openelisglobal.bacteriology.service.BacteriologyResultGroupService;
@@ -18,12 +22,17 @@ import org.openelisglobal.bacteriology.service.BacteriologyWorkflowService.Organ
 import org.openelisglobal.bacteriology.valueholder.BacteriologyAntibiogram;
 import org.openelisglobal.bacteriology.valueholder.BacteriologyOrganism;
 import org.openelisglobal.bacteriology.valueholder.BacteriologyResultGroup;
+import org.openelisglobal.common.controller.BaseController;
 import org.openelisglobal.common.log.LogEvent;
+import org.openelisglobal.common.services.IStatusService;
 import org.openelisglobal.dictionary.valueholder.Dictionary;
+import org.openelisglobal.spring.util.SpringContext;
+import org.openelisglobal.typeoftestresult.service.TypeOfTestResultServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -36,7 +45,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/rest/bacteriology")
-public class BacteriologyResultController {
+public class BacteriologyResultController extends BaseController {
 
     @Autowired
     private BacteriologyWorkflowService workflowService;
@@ -49,6 +58,21 @@ public class BacteriologyResultController {
 
     @Autowired
     private BacteriologyAntibiogramService antibiogramService;
+
+    @Autowired
+    private org.openelisglobal.result.service.ResultService resultService;
+
+    @Autowired
+    private org.openelisglobal.analysis.service.AnalysisService analysisService;
+
+    @Autowired
+    private org.openelisglobal.testresult.service.TestResultService testResultService;
+
+    @Autowired
+    private org.openelisglobal.dictionary.service.DictionaryService dictionaryService;
+
+    @Autowired
+    private org.openelisglobal.test.service.TestService testService;
 
     /**
      * Get all antibiotics from dictionary
@@ -90,14 +114,198 @@ public class BacteriologyResultController {
      * Get bacteriology results for an analysis
      */
     @GetMapping(value = "/results/{analysisId}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Transactional(readOnly = true)
     public ResponseEntity<BacteriologyResultData> getBacteriologyResults(
             @PathVariable("analysisId") Integer analysisId) {
         try {
+            // Get bacteriology-specific data (organisms, antibiograms)
             BacteriologyResultData resultData = workflowService.getBacteriologyResults(analysisId);
+
+            // Load test results (macroscopy, microscopy, culture) from result table
+            loadTestResults(analysisId, resultData);
+
             return ResponseEntity.ok(resultData);
         } catch (Exception e) {
             LogEvent.logError(e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    /**
+     * Load test results from result table and add to BacteriologyResultData Loads
+     * ALL test results for the accessionNumber (not just one analysisId)
+     */
+    private void loadTestResults(Integer analysisId, BacteriologyResultData resultData) {
+        try {
+            org.openelisglobal.analysis.valueholder.Analysis primaryAnalysis = analysisService
+                    .get(String.valueOf(analysisId));
+
+            if (primaryAnalysis == null) {
+                return;
+            }
+
+            // Get ALL analyses for this sample item (all tests: macroscopy, microscopy,
+            // culture, etc.)
+            List<org.openelisglobal.analysis.valueholder.Analysis> allAnalyses = analysisService
+                    .getAnalysesBySampleItem(primaryAnalysis.getSampleItem());
+
+            // Filter out analyses that are already validated (Finalized)
+            // These should not appear in the validation page
+            IStatusService statusService = SpringContext.getBean(IStatusService.class);
+            String finalizedStatusId = statusService
+                    .getStatusID(org.openelisglobal.common.services.StatusService.AnalysisStatus.Finalized);
+
+            allAnalyses = allAnalyses.stream().filter(analysis -> {
+                String statusId = analysis.getStatusId();
+                return statusId != null && !statusId.equals(finalizedStatusId);
+            }).collect(java.util.stream.Collectors.toList());
+
+            // Collect results from ALL analyses for this sample
+            List<org.openelisglobal.result.valueholder.Result> results = new ArrayList<>();
+            for (org.openelisglobal.analysis.valueholder.Analysis analysis : allAnalyses) {
+                List<org.openelisglobal.result.valueholder.Result> analysisResults = resultService
+                        .getResultsByAnalysis(analysis);
+                if (analysisResults != null) {
+                    results.addAll(analysisResults);
+                }
+            }
+
+            // Use Maps to store unique results (testId -> test result bean)
+            // This automatically deduplicates - if same testId appears multiple times,
+            // latest value wins
+            java.util.Map<String, BacteriologyWorkflowService.BacteriologyTestResultBean> macroscopyMap = new java.util.LinkedHashMap<>();
+            java.util.Map<String, BacteriologyWorkflowService.BacteriologyTestResultBean> microscopyMap = new java.util.LinkedHashMap<>();
+            java.util.Map<String, BacteriologyWorkflowService.BacteriologyTestResultBean> cultureMap = new java.util.LinkedHashMap<>();
+
+            // Also build simple Maps (testId -> value) for result entry form
+            java.util.Map<String, String> macroscopyResultsMap = new java.util.HashMap<>();
+            java.util.Map<String, String> microscopyResultsMap = new java.util.HashMap<>();
+            java.util.Map<String, String> cultureResultsMap = new java.util.HashMap<>();
+
+            for (org.openelisglobal.result.valueholder.Result result : results) {
+                org.openelisglobal.testresult.valueholder.TestResult testResult = result.getTestResult();
+                if (testResult == null || testResult.getTest() == null) {
+                    continue;
+                }
+
+                org.openelisglobal.test.valueholder.Test test = testResult.getTest();
+                String testId = test.getId();
+                String testName = test.getName();
+                String testDescription = test.getDescription();
+                String value = result.getValue();
+
+                if (value == null || value.trim().isEmpty()) {
+                    continue;
+                }
+
+                // Create test result bean with full details
+                BacteriologyWorkflowService.BacteriologyTestResultBean testResultBean = new BacteriologyWorkflowService.BacteriologyTestResultBean();
+                testResultBean.setAnalysisId(String.valueOf(analysisId));
+                testResultBean.setTestId(testId);
+                testResultBean.setTestName(testName);
+                testResultBean.setTestDescription(testDescription);
+                testResultBean.setValue(value);
+                testResultBean.setResultType(result.getResultType());
+
+                // Get unit of measure if available
+                String uom = resultService.getUOM(result);
+                if (uom != null && !uom.trim().isEmpty()) {
+                    testResultBean.setUnitOfMeasure(uom);
+                }
+
+                // Resolve dictionary value if this is a dictionary result
+                String displayValue = value;
+                if (TypeOfTestResultServiceImpl.ResultType.DICTIONARY.matches(result.getResultType())) {
+                    try {
+                        Dictionary dictionary = dictionaryService.getDataForId(value);
+                        if (dictionary != null) {
+                            displayValue = dictionary.getLocalizedName();
+                        }
+                    } catch (Exception e) {
+                        LogEvent.logWarn("BacteriologyResultController", "loadTestResults",
+                                "Could not resolve dictionary value " + value + ": " + e.getMessage());
+                    }
+                }
+                testResultBean.setDisplayValue(displayValue);
+
+                // Categorize by test name - store in Maps (automatically deduplicates)
+                if (testName != null) {
+                    String lowerName = testName.toLowerCase();
+                    if (lowerName.contains("macroscopie")) {
+                        macroscopyMap.put(testId, testResultBean);
+                        macroscopyResultsMap.put(testId, value);
+                    } else if (lowerName.contains("microscopie")) {
+                        microscopyMap.put(testId, testResultBean);
+                        microscopyResultsMap.put(testId, value);
+                    } else if (lowerName.contains("culture") || test.getIsCultureTest()) {
+                        cultureMap.put(testId, testResultBean);
+                        cultureResultsMap.put(testId, value);
+                    }
+                }
+            }
+
+            // Build culture results from bacteriology_result_group table for ALL analyses
+            // Culture results are NOT in the result table - they are managed in
+            // bacteriology tables
+            for (org.openelisglobal.analysis.valueholder.Analysis analysis : allAnalyses) {
+                Integer currentAnalysisId = Integer.parseInt(analysis.getId());
+                List<BacteriologyResultGroup> cultureGroups = resultGroupService
+                        .getGroupsByAnalysisAndType(currentAnalysisId, "CULTURE");
+
+                for (BacteriologyResultGroup cultureGroup : cultureGroups) {
+                    Integer testId = cultureGroup.getTestId();
+                    if (testId == null) {
+                        continue;
+                    }
+
+                    // Skip if already processed (deduplicate by testId)
+                    if (cultureMap.containsKey(String.valueOf(testId))) {
+                        continue;
+                    }
+
+                    // Get test details
+                    org.openelisglobal.test.valueholder.Test test = testService.get(String.valueOf(testId));
+                    if (test == null) {
+                        continue;
+                    }
+
+                    // Create test result bean for culture
+                    BacteriologyWorkflowService.BacteriologyTestResultBean cultureResultBean = new BacteriologyWorkflowService.BacteriologyTestResultBean();
+                    cultureResultBean.setAnalysisId(String.valueOf(currentAnalysisId));
+                    cultureResultBean.setTestId(String.valueOf(testId));
+                    cultureResultBean.setTestName(test.getName());
+                    cultureResultBean.setTestDescription(test.getDescription());
+
+                    // Culture result value is determined by whether organisms exist
+                    boolean hasOrganisms = resultData.getOrganisms() != null
+                            && resultData.getOrganisms().stream().anyMatch(org -> org.getOrganismGroup() != null
+                                    && testId.equals(org.getOrganismGroup().getTestId()));
+
+                    String cultureValue = hasOrganisms ? "Positive" : "Negative";
+                    cultureResultBean.setValue(cultureValue);
+                    cultureResultBean.setDisplayValue(cultureValue);
+                    cultureResultBean.setResultType("A"); // Alphanumeric
+
+                    // Add to culture map (deduplicate by testId)
+                    cultureMap.put(String.valueOf(testId), cultureResultBean);
+                    cultureResultsMap.put(String.valueOf(testId), cultureValue);
+                }
+            }
+
+            // Convert Maps to Lists for validation display
+            resultData.setMacroscopyResults(new java.util.ArrayList<>(macroscopyMap.values()));
+            resultData.setMicroscopyResults(new java.util.ArrayList<>(microscopyMap.values()));
+            resultData.setCultureResults(new java.util.ArrayList<>(cultureMap.values()));
+
+            // Set simple Maps for result entry form
+            resultData.setMacroscopyResultsMap(macroscopyResultsMap);
+            resultData.setMicroscopyResultsMap(microscopyResultsMap);
+            resultData.setCultureResultsMap(cultureResultsMap);
+
+        } catch (Exception e) {
+            LogEvent.logError("BacteriologyResultController", "loadTestResults",
+                    "Error loading test results: " + e.getMessage());
+            LogEvent.logError(e);
         }
     }
 
@@ -126,11 +334,25 @@ public class BacteriologyResultController {
         }
 
         try {
-            // Convert form to BacteriologyResultData
-            BacteriologyResultData resultData = convertFormToResultData(form);
+            // Save test results (macroscopy, microscopy, culture) to result table
+            // Returns map of testId -> analysisId for correct linking
+            Map<String, Integer> testIdToAnalysisIdMap = saveTestResults(form);
 
-            // Save results
+            // Convert form to BacteriologyResultData with correct analysis IDs
+            BacteriologyResultData resultData = convertFormToResultData(form, testIdToAnalysisIdMap);
+
+            // Save bacteriology-specific data (organisms, antibiograms)
             workflowService.saveBacteriologyResults(form.getAnalysisId(), resultData, form.getSysUserId());
+
+            // Update ALL affected analyses to TechnicalAcceptance so they all appear in
+            // validation
+            // This includes the primary analysis AND all analyses for tests that had
+            // results saved
+            java.util.Set<Integer> affectedAnalysisIds = new java.util.HashSet<>(testIdToAnalysisIdMap.values());
+            affectedAnalysisIds.add(form.getAnalysisId()); // Ensure primary analysis is included
+            for (Integer analysisId : affectedAnalysisIds) {
+                updateAnalysisStatusToTechnicalAcceptance(analysisId, form.getSysUserId());
+            }
 
             return ResponseEntity.ok("Bacteriology results saved successfully");
         } catch (IllegalArgumentException e) {
@@ -144,10 +366,370 @@ public class BacteriologyResultController {
     }
 
     /**
+     * Update analysis status to TechnicalAcceptance after results are saved
+     */
+    private void updateAnalysisStatusToTechnicalAcceptance(Integer analysisId, String sysUserId) {
+        try {
+            org.openelisglobal.analysis.valueholder.Analysis analysis = analysisService.get(String.valueOf(analysisId));
+
+            if (analysis == null) {
+                LogEvent.logError("BacteriologyResultController", "updateAnalysisStatusToTechnicalAcceptance",
+                        "Analysis not found: " + analysisId);
+                return;
+            }
+
+            String currentStatusId = analysis.getStatusId();
+
+            String technicalAcceptanceStatusId = SpringContext.getBean(IStatusService.class)
+                    .getStatusID(org.openelisglobal.common.services.StatusService.AnalysisStatus.TechnicalAcceptance);
+            String finalizedStatusId = SpringContext.getBean(IStatusService.class)
+                    .getStatusID(org.openelisglobal.common.services.StatusService.AnalysisStatus.Finalized);
+            String biologistRejectedStatusId = SpringContext.getBean(IStatusService.class)
+                    .getStatusID(org.openelisglobal.common.services.StatusService.AnalysisStatus.BiologistRejected);
+
+            // Update to TechnicalAcceptance if current status is not already at a higher
+            // level
+            if (technicalAcceptanceStatusId.equals(currentStatusId)) {
+                return;
+            }
+
+            if (finalizedStatusId.equals(currentStatusId) || biologistRejectedStatusId.equals(currentStatusId)) {
+                return;
+            }
+
+            // Update the status
+            analysis.setStatusId(technicalAcceptanceStatusId);
+            analysis.setSysUserId(sysUserId);
+            analysisService.update(analysis);
+
+        } catch (Exception e) {
+            LogEvent.logError("BacteriologyResultController", "updateAnalysisStatusToTechnicalAcceptance",
+                    "Error updating analysis status for analysis " + analysisId + ": " + e.getMessage());
+            LogEvent.logError(e);
+            e.printStackTrace();
+            // Don't throw - status update failure shouldn't prevent result save
+        }
+    }
+
+    /**
+     * Save test results (macroscopy, microscopy, culture) to result table Returns
+     * a map of testId to analysisId for correct linking of organisms to culture tests
+     */
+    private Map<String, Integer> saveTestResults(BacteriologyResultForm form) {
+        Map<String, Integer> testIdToAnalysisIdMap = new HashMap<>();
+
+        // Get the primary analysis to extract accession number
+        org.openelisglobal.analysis.valueholder.Analysis primaryAnalysis = analysisService
+                .get(String.valueOf(form.getAnalysisId()));
+
+        if (primaryAnalysis == null) {
+            throw new IllegalArgumentException("Analysis not found: " + form.getAnalysisId());
+        }
+
+        // Get accession number from sample
+        String accessionNumber = primaryAnalysis.getSampleItem().getSample().getAccessionNumber();
+
+        // Save macroscopy results
+        if (form.getMacroscopyResults() != null && !form.getMacroscopyResults().isEmpty()) {
+            for (Map.Entry<String, String> entry : form.getMacroscopyResults().entrySet()) {
+                String testId = entry.getKey();
+                String value = entry.getValue();
+
+                // Skip empty values
+                if (value == null || value.trim().isEmpty()) {
+                    continue;
+                }
+
+                // Find or create the analysis for this specific test
+                org.openelisglobal.analysis.valueholder.Analysis analysis = findOrCreateAnalysisForTest(
+                        primaryAnalysis.getSampleItem(), testId, form.getSysUserId());
+                if (analysis != null) {
+                    testIdToAnalysisIdMap.put(testId, Integer.parseInt(analysis.getId()));
+                    saveOrUpdateResult(analysis, testId, value, form.getSysUserId());
+                }
+            }
+        }
+
+        // Save microscopy results
+        if (form.getMicroscopyResults() != null && !form.getMicroscopyResults().isEmpty()) {
+            for (Map.Entry<String, String> entry : form.getMicroscopyResults().entrySet()) {
+                String testId = entry.getKey();
+                String value = entry.getValue();
+
+                // Skip empty values, but keep "0" which is a valid numeric value
+                if (value == null || value.trim().isEmpty()) {
+                    continue;
+                }
+
+                // Find or create the analysis for this specific test
+                org.openelisglobal.analysis.valueholder.Analysis analysis = findOrCreateAnalysisForTest(
+                        primaryAnalysis.getSampleItem(), testId, form.getSysUserId());
+                if (analysis != null) {
+                    testIdToAnalysisIdMap.put(testId, Integer.parseInt(analysis.getId()));
+                    saveOrUpdateResult(analysis, testId, value, form.getSysUserId());
+                }
+            }
+        }
+
+        // Save culture results from new cultures format
+        if (form.getCultures() != null && !form.getCultures().isEmpty()) {
+            for (Map.Entry<String, BacteriologyResultForm.CultureData> entry : form.getCultures().entrySet()) {
+                String testId = entry.getKey();
+                BacteriologyResultForm.CultureData cultureData = entry.getValue();
+                String cultureResult = cultureData.getCultureResult();
+
+                // Skip "default" key
+                if ("default".equals(testId)) {
+                    continue;
+                }
+
+                // Skip empty values
+                if (cultureResult == null || cultureResult.trim().isEmpty()) {
+                    continue;
+                }
+
+                // Find or create the analysis for this specific test (culture tests may not exist yet)
+                org.openelisglobal.analysis.valueholder.Analysis analysis = findOrCreateAnalysisForTest(
+                        primaryAnalysis.getSampleItem(), testId, form.getSysUserId());
+                if (analysis != null) {
+                    testIdToAnalysisIdMap.put(testId, Integer.parseInt(analysis.getId()));
+                    saveOrUpdateResult(analysis, testId, cultureResult, form.getSysUserId());
+                }
+            }
+        }
+        // Fallback: save from old cultureResult field if cultures is empty
+        else if (form.getCultureResult() != null && !form.getCultureResult().trim().isEmpty()) {
+            // This is for backward compatibility - we don't have the testId here
+            // The culture test would need to be looked up from the analysis
+            LogEvent.logWarn("BacteriologyResultController", "saveBacteriologyResults",
+                    "Using deprecated cultureResult field. Please use cultures map instead.");
+        }
+
+        return testIdToAnalysisIdMap;
+    }
+
+    /**
+     * Find the analysis for a specific test within an accession number
+     */
+    private org.openelisglobal.analysis.valueholder.Analysis findAnalysisForTest(String accessionNumber,
+            String testId) {
+        List<org.openelisglobal.analysis.valueholder.Analysis> analyses = analysisService
+                .getAnalysisByAccessionAndTestId(accessionNumber, testId);
+
+        if (analyses == null || analyses.isEmpty()) {
+            LogEvent.logWarn("BacteriologyResultController", "findAnalysisForTest",
+                    "No analysis found for accessionNumber=" + accessionNumber + ", testId=" + testId);
+            return null;
+        }
+
+        // Return the first (should be only one for a given accessionNumber + testId
+        // combination)
+        return analyses.get(0);
+    }
+
+    /**
+     * Find or create the analysis for a specific test This is needed for
+     * conditional child tests that may not have an analysis created yet
+     */
+    private org.openelisglobal.analysis.valueholder.Analysis findOrCreateAnalysisForTest(
+            org.openelisglobal.sampleitem.valueholder.SampleItem sampleItem, String testId, String sysUserId) {
+
+        String accessionNumber = sampleItem.getSample().getAccessionNumber();
+
+        // Try to find existing analysis
+        List<org.openelisglobal.analysis.valueholder.Analysis> analyses = analysisService
+                .getAnalysisByAccessionAndTestId(accessionNumber, testId);
+
+        if (analyses != null && !analyses.isEmpty()) {
+            return analyses.get(0);
+        }
+
+        // Analysis doesn't exist - create it (this happens for conditional child tests)
+        try {
+            org.openelisglobal.analysis.valueholder.Analysis newAnalysis = new org.openelisglobal.analysis.valueholder.Analysis();
+
+            // Get the test
+            org.openelisglobal.test.valueholder.Test test = testService.get(testId);
+            if (test == null) {
+                LogEvent.logError("BacteriologyResultController", "findOrCreateAnalysisForTest",
+                        "Test not found: " + testId);
+                return null;
+            }
+
+            // Set analysis properties
+            newAnalysis.setTest(test);
+            newAnalysis.setSampleItem(sampleItem);
+            newAnalysis.setRevision("0");
+            newAnalysis.setIsReportable(test.getIsReportable());
+            newAnalysis.setAnalysisType("MANUAL"); // Manual entry for bacteriology
+            newAnalysis.setStartedDate(new java.sql.Date(System.currentTimeMillis()));
+            newAnalysis.setTestSection(test.getTestSection()); // Set the test section from the test
+            newAnalysis.setSysUserId(sysUserId);
+
+            // Set status to NotStarted initially
+            String notStartedStatusId = SpringContext.getBean(IStatusService.class)
+                    .getStatusID(org.openelisglobal.common.services.StatusService.AnalysisStatus.NotStarted);
+            newAnalysis.setStatusId(notStartedStatusId);
+
+            // Save the new analysis
+            analysisService.insert(newAnalysis);
+
+            return newAnalysis;
+        } catch (Exception e) {
+            LogEvent.logError("BacteriologyResultController", "findOrCreateAnalysisForTest",
+                    "Failed to create analysis for test " + testId + ": " + e.getMessage());
+            LogEvent.logError(e);
+            return null;
+        }
+    }
+
+    /**
+     * Save or update a single result
+     */
+    private void saveOrUpdateResult(org.openelisglobal.analysis.valueholder.Analysis analysis, String testId,
+            String value, String sysUserId) {
+        try {
+            // Find existing result for this analysis
+            List<org.openelisglobal.result.valueholder.Result> existingResults = resultService
+                    .getResultsByAnalysis(analysis);
+
+            // Find ALL existing results for this test (there may be duplicates from
+            // previous bug)
+            List<org.openelisglobal.result.valueholder.Result> resultsForThisTest = new ArrayList<>();
+            for (org.openelisglobal.result.valueholder.Result r : existingResults) {
+                org.openelisglobal.testresult.valueholder.TestResult tr = r.getTestResult();
+                if (tr != null && tr.getTest() != null && testId.equals(tr.getTest().getId())) {
+                    resultsForThisTest.add(r);
+                }
+            }
+
+            // Find available test results for this test
+            List<org.openelisglobal.testresult.valueholder.TestResult> availableTestResults = testResultService
+                    .getActiveTestResultsByTest(testId);
+
+            if (resultsForThisTest.isEmpty()) {
+                // No existing result - create new one
+                org.openelisglobal.result.valueholder.Result newResult = new org.openelisglobal.result.valueholder.Result();
+                newResult.setAnalysis(analysis);
+                newResult.setSysUserId(sysUserId);
+                newResult.setValue(value);
+
+                // Determine result type and test result based on availableTestResults
+                org.openelisglobal.testresult.valueholder.TestResult matchedTestResult = null;
+                String resultType = "A"; // Default to alphanumeric/text
+
+                if (!availableTestResults.isEmpty()) {
+                    // Check the result type from TestResult
+                    org.openelisglobal.testresult.valueholder.TestResult firstTr = availableTestResults.get(0);
+                    String trResultType = firstTr.getTestResultType();
+
+                    if ("D".equals(trResultType) || "M".equals(trResultType)) {
+                        // Dictionary or Multiselect - find matching test result by value
+                        resultType = trResultType;
+                        for (org.openelisglobal.testresult.valueholder.TestResult tr : availableTestResults) {
+                            if (value.equals(tr.getValue())) {
+                                matchedTestResult = tr;
+                                break;
+                            }
+                        }
+                    } else if ("N".equals(trResultType)) {
+                        // Numeric - use first test result, value is numeric
+                        resultType = "N";
+                        matchedTestResult = firstTr;
+                    } else {
+                        // Text or other - use first test result
+                        resultType = trResultType;
+                        matchedTestResult = firstTr;
+                    }
+                }
+
+                newResult.setResultType(resultType);
+                if (matchedTestResult != null) {
+                    newResult.setTestResult(matchedTestResult);
+                }
+
+                resultService.insert(newResult);
+            } else if (resultsForThisTest.size() == 1) {
+                // Single existing result - update it
+                org.openelisglobal.result.valueholder.Result existingResult = resultsForThisTest.get(0);
+                existingResult.setValue(value);
+                existingResult.setSysUserId(sysUserId);
+
+                // Update result type and test result based on availableTestResults
+                if (!availableTestResults.isEmpty()) {
+                    org.openelisglobal.testresult.valueholder.TestResult firstTr = availableTestResults.get(0);
+                    String trResultType = firstTr.getTestResultType();
+
+                    existingResult.setResultType(trResultType);
+
+                    if ("D".equals(trResultType) || "M".equals(trResultType)) {
+                        // Dictionary or Multiselect - find matching test result by value
+                        for (org.openelisglobal.testresult.valueholder.TestResult tr : availableTestResults) {
+                            if (value.equals(tr.getValue())) {
+                                existingResult.setTestResult(tr);
+                                break;
+                            }
+                        }
+                    } else {
+                        // Numeric, text, or other - use first test result
+                        existingResult.setTestResult(firstTr);
+                    }
+                }
+
+                resultService.update(existingResult);
+            } else {
+                // MULTIPLE existing results (duplicates from previous bug) - clean up!
+                LogEvent.logWarn("BacteriologyResultController", "saveOrUpdateResult",
+                        "Found " + resultsForThisTest.size() + " duplicate results for test " + testId
+                                + ". Keeping first, deleting others.");
+
+                // Keep the first one, delete the rest
+                org.openelisglobal.result.valueholder.Result resultToKeep = resultsForThisTest.get(0);
+                resultToKeep.setValue(value);
+                resultToKeep.setSysUserId(sysUserId);
+
+                // Update result type and test result based on availableTestResults
+                if (!availableTestResults.isEmpty()) {
+                    org.openelisglobal.testresult.valueholder.TestResult firstTr = availableTestResults.get(0);
+                    String trResultType = firstTr.getTestResultType();
+
+                    resultToKeep.setResultType(trResultType);
+
+                    if ("D".equals(trResultType) || "M".equals(trResultType)) {
+                        // Dictionary or Multiselect - find matching test result by value
+                        for (org.openelisglobal.testresult.valueholder.TestResult tr : availableTestResults) {
+                            if (value.equals(tr.getValue())) {
+                                resultToKeep.setTestResult(tr);
+                                break;
+                            }
+                        }
+                    } else {
+                        // Numeric, text, or other - use first test result
+                        resultToKeep.setTestResult(firstTr);
+                    }
+                }
+
+                resultService.update(resultToKeep);
+
+                // Delete duplicates
+                for (int i = 1; i < resultsForThisTest.size(); i++) {
+                    org.openelisglobal.result.valueholder.Result duplicate = resultsForThisTest.get(i);
+                    resultService.delete(duplicate);
+                }
+            }
+        } catch (Exception e) {
+            LogEvent.logError("BacteriologyResultController", "saveOrUpdateResult",
+                    "Error saving result for test " + testId + ": " + e.getMessage());
+            LogEvent.logError(e);
+        }
+    }
+
+    /**
      * Create a new organism group
      */
     @PostMapping(value = "/organism/group", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<BacteriologyResultGroup> createOrganismGroup(@RequestParam("cultureGroupId") Integer cultureGroupId,
+    public ResponseEntity<BacteriologyResultGroup> createOrganismGroup(
+            @RequestParam("cultureGroupId") Integer cultureGroupId,
             @RequestParam("organismNumber") Integer organismNumber, @RequestParam("analysisId") Integer analysisId,
             @RequestParam("sysUserId") String sysUserId) {
         try {
@@ -193,11 +775,12 @@ public class BacteriologyResultController {
      */
     @PostMapping(value = "/antibiogram/{organismId}", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<String> saveAntibiogramResults(@PathVariable("organismId") Integer organismId,
-            @RequestBody List<@Valid AntibiogramResultBean> antibiogramBeans, @RequestParam("sysUserId") String sysUserId) {
+            @RequestBody List<@Valid AntibiogramResultBean> antibiogramBeans,
+            @RequestParam("sysUserId") String sysUserId) {
         try {
             // Convert beans to entities
-            List<BacteriologyAntibiogram> antibiograms = antibiogramBeans.stream()
-                    .map(this::convertBeanToAntibiogram).collect(Collectors.toList());
+            List<BacteriologyAntibiogram> antibiograms = antibiogramBeans.stream().map(this::convertBeanToAntibiogram)
+                    .collect(Collectors.toList());
 
             // Save antibiograms
             workflowService.saveAntibiogramResults(organismId, antibiograms, sysUserId);
@@ -242,9 +825,128 @@ public class BacteriologyResultController {
         }
     }
 
+    /**
+     * Validate bacteriology results - mark analysis as finalized or rejected
+     */
+    @PostMapping(value = "/validate", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @Transactional
+    public ResponseEntity<String> validateBacteriologyResults(@RequestBody BacteriologyValidationForm form,
+            HttpServletRequest request) {
+        try {
+            // Get sysUserId from session
+            String sysUserId = getSysUserId(request);
+            if (sysUserId == null) {
+                sysUserId = "1"; // Fallback to default
+            }
+
+            Integer analysisId = form.getAnalysisId();
+
+            if (analysisId == null) {
+                return ResponseEntity.badRequest().body("Analysis ID is required");
+            }
+
+            // Get the primary analysis to access the sample and accession number
+            org.openelisglobal.analysis.valueholder.Analysis primaryAnalysis = analysisService
+                    .get(String.valueOf(analysisId));
+
+            if (primaryAnalysis == null) {
+                return ResponseEntity.badRequest().body("Analysis not found: " + analysisId);
+            }
+
+            String accessionNumber = primaryAnalysis.getSampleItem().getSample().getAccessionNumber();
+
+            // Get status IDs
+            IStatusService statusService = SpringContext.getBean(IStatusService.class);
+            String finalizedStatusId = statusService
+                    .getStatusID(org.openelisglobal.common.services.StatusService.AnalysisStatus.Finalized);
+            String notStartedStatusId = statusService
+                    .getStatusID(org.openelisglobal.common.services.StatusService.AnalysisStatus.NotStarted);
+
+            // Determine if the analysis is being accepted or rejected
+            BacteriologyValidationForm.ValidatedItems validated = form.getValidated();
+            BacteriologyValidationForm.RejectedItems rejected = form.getRejected();
+
+            // Collect all testIds that need validation or rejection
+            List<String> allValidatedTestIds = new ArrayList<>();
+            List<String> allRejectedTestIds = new ArrayList<>();
+
+            if (validated != null) {
+                if (validated.getMacroscopy() != null) {
+                    allValidatedTestIds.addAll(validated.getMacroscopy());
+                }
+                if (validated.getMicroscopy() != null) {
+                    allValidatedTestIds.addAll(validated.getMicroscopy());
+                }
+                if (validated.getCulture() != null) {
+                    allValidatedTestIds.addAll(validated.getCulture());
+                }
+            }
+
+            if (rejected != null) {
+                if (rejected.getMacroscopy() != null) {
+                    allRejectedTestIds.addAll(rejected.getMacroscopy());
+                }
+                if (rejected.getMicroscopy() != null) {
+                    allRejectedTestIds.addAll(rejected.getMicroscopy());
+                }
+                if (rejected.getCulture() != null) {
+                    allRejectedTestIds.addAll(rejected.getCulture());
+                }
+            }
+
+            if (allValidatedTestIds.isEmpty() && allRejectedTestIds.isEmpty()) {
+                return ResponseEntity.badRequest().body("No items selected for validation or rejection");
+            }
+
+            int validatedCount = 0;
+            int rejectedCount = 0;
+
+            // Process validated tests - set status to Finalized
+            for (String testId : allValidatedTestIds) {
+                List<org.openelisglobal.analysis.valueholder.Analysis> analyses = analysisService
+                        .getAnalysisByAccessionAndTestId(accessionNumber, testId);
+
+                if (analyses != null) {
+                    for (org.openelisglobal.analysis.valueholder.Analysis analysis : analyses) {
+                        analysis.setStatusId(finalizedStatusId);
+                        analysis.setReleasedDate(new java.sql.Date(System.currentTimeMillis()));
+                        analysis.setSysUserId(sysUserId);
+                        analysisService.update(analysis);
+                        validatedCount++;
+                    }
+                }
+            }
+
+            // Process rejected tests - set status to NotStarted to force re-entry
+            for (String testId : allRejectedTestIds) {
+                List<org.openelisglobal.analysis.valueholder.Analysis> analyses = analysisService
+                        .getAnalysisByAccessionAndTestId(accessionNumber, testId);
+
+                if (analyses != null) {
+                    for (org.openelisglobal.analysis.valueholder.Analysis analysis : analyses) {
+                        analysis.setStatusId(notStartedStatusId);
+                        analysis.setSysUserId(sysUserId);
+                        analysisService.update(analysis);
+                        rejectedCount++;
+                    }
+                }
+            }
+
+            return ResponseEntity.ok("Bacteriology results validated successfully: " + validatedCount + " validated, "
+                    + rejectedCount + " rejected");
+        } catch (Exception e) {
+            LogEvent.logError("BacteriologyResultController", "validateBacteriologyResults",
+                    "Error validating bacteriology results: " + e.getMessage());
+            LogEvent.logError(e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Failed to validate bacteriology results: " + e.getMessage());
+        }
+    }
+
     // Helper methods for conversion
 
-    private BacteriologyResultData convertFormToResultData(BacteriologyResultForm form) {
+    private BacteriologyResultData convertFormToResultData(BacteriologyResultForm form,
+            Map<String, Integer> testIdToAnalysisIdMap) {
         BacteriologyResultData resultData = new BacteriologyResultData();
         Timestamp now = new Timestamp(System.currentTimeMillis());
 
@@ -260,7 +962,8 @@ public class BacteriologyResultController {
             macroscopyGroups.add(macroscopyGroup);
             resultData.setMacroscopyGroups(macroscopyGroups);
 
-            // Note: The actual test result values in macroscopyResults map (testId -> dictionaryId)
+            // Note: The actual test result values in macroscopyResults map (testId ->
+            // dictionaryId)
             // should be saved to the standard result table via the Result service.
             // This is handled separately from the bacteriology workflow.
         }
@@ -277,48 +980,117 @@ public class BacteriologyResultController {
             microscopyGroups.add(microscopyGroup);
             resultData.setMicroscopyGroups(microscopyGroups);
 
-            // Note: The actual test result values in microscopyResults map (testId -> dictionaryId)
+            // Note: The actual test result values in microscopyResults map (testId ->
+            // dictionaryId)
             // should be saved to the standard result table via the Result service.
             // This is handled separately from the bacteriology workflow.
         }
 
-        // Create culture group if culture result is provided
-        if (form.getCultureResult() != null && !form.getCultureResult().isEmpty()) {
-            BacteriologyResultGroup cultureGroup = new BacteriologyResultGroup();
-            cultureGroup.setAnalysisId(form.getAnalysisId());
-            cultureGroup.setGroupType("CULTURE");
-            cultureGroup.setDisplayOrder(1);
-            cultureGroup.setIsActive(true);
-            cultureGroup.setCreatedDate(now);
-            resultData.setCultureGroup(cultureGroup);
+        // Process cultures map (new architecture)
+        List<OrganismWithAntibiogram> allOrganisms = new ArrayList<>();
+        Map<String, Integer> cultureGroupIdsByTestId = new HashMap<>(); // testId -> cultureGroupId
+
+        if (form.getCultures() != null && !form.getCultures().isEmpty()) {
+            // Create a culture group for each test
+            for (Map.Entry<String, BacteriologyResultForm.CultureData> entry : form.getCultures().entrySet()) {
+                String testId = entry.getKey();
+                BacteriologyResultForm.CultureData cultureData = entry.getValue();
+
+                // Skip "default" key (backward compatibility)
+                if ("default".equals(testId)) {
+                    continue;
+                }
+
+                // Get the CORRECT analysisId for this culture test
+                Integer cultureAnalysisId = testIdToAnalysisIdMap.get(testId);
+                if (cultureAnalysisId == null) {
+                    // Fallback to primary analysis if mapping not found
+                    cultureAnalysisId = form.getAnalysisId();
+                    LogEvent.logWarn("BacteriologyResultController", "convertFormToResultData",
+                            "No analysisId found for testId: " + testId + ", using primary analysis");
+                }
+
+                // Create a culture group for this specific test
+                BacteriologyResultGroup cultureGroup = new BacteriologyResultGroup();
+                cultureGroup.setAnalysisId(cultureAnalysisId); // ✓ CORRECT - Use the culture's analysisId
+                cultureGroup.setGroupType("CULTURE");
+                cultureGroup.setTestId(Integer.parseInt(testId)); // Link to specific test
+                cultureGroup.setDisplayOrder(1);
+                cultureGroup.setIsActive(true);
+                cultureGroup.setCreatedDate(now);
+
+                // We'll save this later in the workflow service, but store it for now
+                // Track this culture group by testId for organism linking
+                cultureGroupIdsByTestId.put(testId, -1); // Placeholder, will be set after save
+
+                // Convert organisms for this culture
+                if (cultureData.getOrganisms() != null) {
+                    for (BacteriologyOrganismBean organismBean : cultureData.getOrganisms()) {
+                        OrganismWithAntibiogram organismData = new OrganismWithAntibiogram();
+
+                        // Create organism group
+                        BacteriologyResultGroup organismGroup = new BacteriologyResultGroup();
+                        organismGroup.setAnalysisId(cultureAnalysisId); // ✓ CORRECT - Use the culture's analysisId
+                        organismGroup.setGroupType("ORGANISM");
+                        organismGroup.setGroupNumber(organismBean.getOrganismNumber());
+                        organismGroup.setDisplayOrder(organismBean.getOrganismNumber());
+                        organismGroup.setTestId(Integer.parseInt(testId)); // Link organism to test
+                        organismGroup.setIsActive(true);
+                        organismData.setOrganismGroup(organismGroup);
+
+                        // Set organism
+                        BacteriologyOrganism organism = convertBeanToOrganism(organismBean);
+                        organismData.setOrganism(organism);
+
+                        // Set antibiograms
+                        List<BacteriologyAntibiogram> antibiograms = organismBean.getAntibiograms().stream()
+                                .map(this::convertBeanToAntibiogram).collect(Collectors.toList());
+                        organismData.setAntibiograms(antibiograms);
+
+                        allOrganisms.add(organismData);
+                    }
+                }
+            }
+        } else {
+            // Backward compatibility: use old fields if cultures not provided
+            // Create culture group if culture result is provided
+            if (form.getCultureResult() != null && !form.getCultureResult().isEmpty()) {
+                BacteriologyResultGroup cultureGroup = new BacteriologyResultGroup();
+                cultureGroup.setAnalysisId(form.getAnalysisId());
+                cultureGroup.setGroupType("CULTURE");
+                cultureGroup.setDisplayOrder(1);
+                cultureGroup.setIsActive(true);
+                cultureGroup.setCreatedDate(now);
+                resultData.setCultureGroup(cultureGroup);
+            }
+
+            // Convert organism beans to workflow data (old way)
+            allOrganisms = form.getOrganisms().stream().map(organismBean -> {
+                OrganismWithAntibiogram organismData = new OrganismWithAntibiogram();
+
+                // Create organism group
+                BacteriologyResultGroup organismGroup = new BacteriologyResultGroup();
+                organismGroup.setAnalysisId(form.getAnalysisId());
+                organismGroup.setGroupType("ORGANISM");
+                organismGroup.setGroupNumber(organismBean.getOrganismNumber());
+                organismGroup.setDisplayOrder(organismBean.getOrganismNumber());
+                organismGroup.setIsActive(true);
+                organismData.setOrganismGroup(organismGroup);
+
+                // Set organism
+                BacteriologyOrganism organism = convertBeanToOrganism(organismBean);
+                organismData.setOrganism(organism);
+
+                // Set antibiograms
+                List<BacteriologyAntibiogram> antibiograms = organismBean.getAntibiograms().stream()
+                        .map(this::convertBeanToAntibiogram).collect(Collectors.toList());
+                organismData.setAntibiograms(antibiograms);
+
+                return organismData;
+            }).collect(Collectors.toList());
         }
 
-        // Convert organism beans to workflow data
-        List<OrganismWithAntibiogram> organisms = form.getOrganisms().stream().map(organismBean -> {
-            OrganismWithAntibiogram organismData = new OrganismWithAntibiogram();
-
-            // Create organism group
-            BacteriologyResultGroup organismGroup = new BacteriologyResultGroup();
-            organismGroup.setAnalysisId(form.getAnalysisId());
-            organismGroup.setGroupType("ORGANISM");
-            organismGroup.setGroupNumber(organismBean.getOrganismNumber());
-            organismGroup.setDisplayOrder(organismBean.getOrganismNumber());
-            organismGroup.setIsActive(true);
-            organismData.setOrganismGroup(organismGroup);
-
-            // Set organism
-            BacteriologyOrganism organism = convertBeanToOrganism(organismBean);
-            organismData.setOrganism(organism);
-
-            // Set antibiograms
-            List<BacteriologyAntibiogram> antibiograms = organismBean.getAntibiograms().stream()
-                    .map(this::convertBeanToAntibiogram).collect(Collectors.toList());
-            organismData.setAntibiograms(antibiograms);
-
-            return organismData;
-        }).collect(Collectors.toList());
-
-        resultData.setOrganisms(organisms);
+        resultData.setOrganisms(allOrganisms);
 
         return resultData;
     }
@@ -348,5 +1120,20 @@ public class BacteriologyResultController {
         antibiogram.setInterpretationComment(bean.getInterpretationComment());
         antibiogram.setIsActive(true);
         return antibiogram;
+    }
+
+    @Override
+    protected String findLocalForward(String forward) {
+        return forward;
+    }
+
+    @Override
+    protected String getPageTitleKey() {
+        return "bacteriology.result.title";
+    }
+
+    @Override
+    protected String getPageSubtitleKey() {
+        return "bacteriology.result.subtitle";
     }
 }

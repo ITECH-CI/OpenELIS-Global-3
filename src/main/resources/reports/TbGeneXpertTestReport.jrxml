@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="RetroCIHeader" pageWidth="550" pageHeight="134" orientation="Landscape" whenNoDataType="AllSectionsNoDetail" columnWidth="550" leftMargin="0" rightMargin="0" topMargin="0" bottomMargin="0" uuid="c040ed1f-a573-45ab-bc71-8c6f5d4c135a">
+	<property name="ireport.scriptlethandling" value="0"/>
+	<property name="ireport.encoding" value="UTF-8"/>
+	<property name="ireport.zoom" value="3.0"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<import value="net.sf.jasperreports.engine.*"/>
+	<import value="java.util.*"/>
+	<import value="net.sf.jasperreports.engine.data.*"/>
+	<parameter name="SUBREPORT_DIR" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA["c:/tomcat 5.5/webapps/haitiOpenElis/WEB-INF/reports/"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="studyName" class="java.lang.String"/>
+	<parameter name="directorName" class="java.lang.String"/>
+	<parameter name="status" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="contact" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA[null]]></defaultValueExpression>
+	</parameter>
+	<parameter name="leftHeaderImage" class="java.io.InputStream" isForPrompting="false"/>
+	<parameter name="duplicateReport" class="java.lang.Boolean" isForPrompting="false">
+		<defaultValueExpression><![CDATA[Boolean.FALSE]]></defaultValueExpression>
+	</parameter>
+	<parameter name="rightHeaderImage" class="java.io.InputStream"/>
+	<parameter name="imagesPath" class="java.lang.String"/>
+	<parameter name="labName2" class="java.lang.String"/>
+	<parameter name="testReportDataSource" class="net.sf.jasperreports.engine.JRDataSource"/>
+	<queryString>
+		<![CDATA[]]>
+	</queryString>
+	<field name="resultLabel" class="java.lang.String"/>
+	<field name="testInMonth1" class="java.lang.Integer"/>
+	<field name="testInMonth2" class="java.lang.Integer"/>
+	<field name="testInMonth3" class="java.lang.Integer"/>
+	<field name="totalTest" class="java.lang.Integer"/>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<columnHeader>
+		<band height="19">
+			<rectangle>
+				<reportElement x="1" y="0" width="188" height="19" uuid="6c365a59-e3f7-4a45-81a0-e85ff9ae896f"/>
+			</rectangle>
+			<rectangle>
+				<reportElement mode="Opaque" x="189" y="0" width="90" height="19" backcolor="#CCCCCC" uuid="c7c182b8-5051-43b1-ad0c-ee77946aa625"/>
+			</rectangle>
+			<rectangle>
+				<reportElement mode="Opaque" x="279" y="0" width="90" height="19" backcolor="#CCCCCC" uuid="138ddb1a-ed95-462a-8b09-df82c0c9c835"/>
+			</rectangle>
+			<rectangle>
+				<reportElement mode="Opaque" x="369" y="0" width="90" height="19" backcolor="#CCCCCC" uuid="135983ce-b18d-418b-a335-c6e79d0f61a1"/>
+			</rectangle>
+			<rectangle>
+				<reportElement x="459" y="0" width="90" height="19" uuid="66bf191c-969b-49b9-86ac-ad9a043450f5"/>
+			</rectangle>
+			<staticText>
+				<reportElement x="189" y="0" width="90" height="18" uuid="e211491c-8b1f-49b3-8516-d5695a751cbc"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font isBold="true"/>
+				</textElement>
+				<text><![CDATA[Mois 1]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="279" y="0" width="90" height="18" uuid="b51333e1-7d7d-4c58-bd61-f5e212e1485b"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font isBold="true"/>
+				</textElement>
+				<text><![CDATA[Mois 2]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="369" y="0" width="90" height="18" uuid="7bdf7d2a-8412-464b-aeb7-3179c20686f5"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font isBold="true"/>
+				</textElement>
+				<text><![CDATA[Mois 3]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="459" y="0" width="90" height="18" uuid="641634dd-0416-49b3-9e2e-e29e71852217"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font isBold="true"/>
+				</textElement>
+				<text><![CDATA[TOTAL]]></text>
+			</staticText>
+		</band>
+	</columnHeader>
+	<detail>
+		<band height="17" splitType="Prevent">
+			<textField>
+				<reportElement x="1" y="0" width="188" height="17" uuid="fbde735e-a067-439e-bd17-31eda541fd91"/>
+				<box>
+					<pen lineWidth="1.0"/>
+					<topPen lineWidth="1.0"/>
+					<leftPen lineWidth="1.0"/>
+					<bottomPen lineWidth="1.0"/>
+					<rightPen lineWidth="1.0"/>
+				</box>
+				<textElement verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[" "+$F{resultLabel}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="189" y="0" width="90" height="17" uuid="be0401bf-b87e-41be-8299-9b8c7c9cdf7a"/>
+				<box>
+					<pen lineWidth="1.0"/>
+					<topPen lineWidth="1.0"/>
+					<leftPen lineWidth="1.0"/>
+					<bottomPen lineWidth="1.0"/>
+					<rightPen lineWidth="1.0"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{testInMonth1}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="279" y="0" width="90" height="17" uuid="0acf2e28-127e-461c-82af-a8551752c645"/>
+				<box>
+					<pen lineWidth="1.0"/>
+					<topPen lineWidth="1.0"/>
+					<leftPen lineWidth="1.0"/>
+					<bottomPen lineWidth="1.0"/>
+					<rightPen lineWidth="1.0"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{testInMonth2}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="369" y="0" width="90" height="17" uuid="44e61639-c1cd-4aea-ab0e-3d878a718e37"/>
+				<box>
+					<pen lineWidth="1.0"/>
+					<topPen lineWidth="1.0"/>
+					<leftPen lineWidth="1.0"/>
+					<bottomPen lineWidth="1.0"/>
+					<rightPen lineWidth="1.0"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{testInMonth3}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="459" y="0" width="90" height="17" uuid="80699c60-a7d6-4362-a74d-7c68dda945f9"/>
+				<box>
+					<pen lineWidth="1.0"/>
+					<topPen lineWidth="1.0"/>
+					<leftPen lineWidth="1.0"/>
+					<bottomPen lineWidth="1.0"/>
+					<rightPen lineWidth="1.0"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{totalTest}]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+</jasperReport>

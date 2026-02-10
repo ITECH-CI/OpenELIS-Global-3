@@ -1,8 +1,10 @@
 package org.openelisglobal.test.service;
 
 import jakarta.servlet.http.HttpServletRequest;
+import java.sql.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
 import org.openelisglobal.common.exception.LIMSRuntimeException;
 import org.openelisglobal.common.service.BaseObjectService;
@@ -134,4 +136,15 @@ public interface TestService extends BaseObjectService<Test, String> {
     void activateTestsAndDeactivateOthers(List<String> asList);
 
     List<Test> getTriggeringAntimicrobialResistanceTests();
+
+    List<Map<String, Object>> getTbGXTestCountByResult(Date startDate, Date endDate) throws LIMSRuntimeException;
+
+    List<Map<String, Object>> getTbGXTestCountByCategory(Date startDate, Date endDate) throws LIMSRuntimeException;
+
+    List<Map<String, Object>> getTbMicroscopyTestCountByResult(Date startDate, Date endDate)
+            throws LIMSRuntimeException;
+
+    Integer getReceivedTbPresumedMicroscopyTestCount(Date startDate, Date endDate) throws LIMSRuntimeException;
+
+    Integer getPositiveTbMicroscopyTestCount(Date startDate, Date endDate) throws LIMSRuntimeException;
 }

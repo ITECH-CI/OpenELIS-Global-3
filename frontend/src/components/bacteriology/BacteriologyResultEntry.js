@@ -1,11 +1,5 @@
 import { Reset, Save } from "@carbon/icons-react";
-import {
-  Button,
-  ButtonSet,
-  Form,
-  InlineLoading,
-  Stack,
-} from "@carbon/react";
+import { Button, ButtonSet, Form, InlineLoading, Stack } from "@carbon/react";
 import { useContext, useEffect, useState } from "react";
 import { FormattedMessage } from "react-intl";
 import { NotificationContext } from "../layout/Layout";
@@ -27,13 +21,14 @@ const BacteriologyResultEntry = ({
   onSave,
   disabled = false,
 }) => {
-  const { addNotification } = useContext(NotificationContext);
+  const { addNotification, setNotificationVisible } =
+    useContext(NotificationContext);
 
   const [macroscopyResults, setMacroscopyResults] = useState({});
   const [microscopyResults, setMicroscopyResults] = useState({});
   const [floraData, setFloraData] = useState({});
-  const [cultureResult, setCultureResult] = useState("");
-  const [organisms, setOrganisms] = useState([]);
+  // Map of testId -> { cultureResult, organisms }
+  const [cultures, setCultures] = useState({});
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [initialData, setInitialData] = useState(null);
@@ -49,28 +44,162 @@ const BacteriologyResultEntry = ({
     getFromOpenElisServer(
       `${API_ENDPOINTS.GET_RESULTS}/${analysisId}`,
       (data) => {
-        // Load existing bacteriology results
-        if (data && data.organisms) {
-          setOrganisms(data.organisms.map(o => o.organism));
-          if (data.organisms.length > 0) {
-            setCultureResult("positive");
-          }
+        // Load macroscopy results from Map (testId -> value)
+        if (data && data.macroscopyResultsMap) {
+          setMacroscopyResults(data.macroscopyResultsMap);
         }
-        if (data && data.cultureGroup) {
-          // Culture result would be stored in the standard result table
-          // This is just for loading the state
+
+        // Load microscopy results from Map (testId -> value)
+        if (data && data.microscopyResultsMap) {
+          setMicroscopyResults(data.microscopyResultsMap);
         }
+
+        // Load culture results and organisms
+        const loadedCultures = {};
+
+        if (data && data.cultureResultsMap) {
+          // Reconstruct cultures map from cultureResultsMap (testId -> value)
+          Object.entries(data.cultureResultsMap).forEach(
+            ([testId, cultureResult]) => {
+              loadedCultures[testId] = {
+                cultureResult: cultureResult,
+                organisms: [],
+              };
+            },
+          );
+        }
+
+        // Add organisms to appropriate cultures using testId from organismGroup
+        if (data && data.organisms && Array.isArray(data.organisms)) {
+          // Group organisms by their testId (from organismGroup)
+          const organismsByCulture = {}; // testId -> organisms array
+
+          data.organisms.forEach((orgData) => {
+            const organism = orgData?.organism;
+            const organismGroup = orgData?.organismGroup;
+
+            // Skip if organism is null or invalid
+            if (!organism) {
+              return;
+            }
+
+            // Ensure organism has required fields - map antibiograms if they exist
+            const normalizedOrganism = {
+              id: organism.id || null,
+              organismGroupId: organismGroup?.id || null,
+              organismNumber: organism.organismNumber || null, // Keep original, will be set later
+              organismType: organism.organismType || "BACTERIA",
+              organismNameDictId: organism.organismNameDictId || null,
+              organismNameText: organism.organismNameText || "",
+              gramType: organism.gramType || "",
+              groupingMode: organism.groupingMode || "",
+              capsulePresence: Boolean(organism.capsulePresence),
+              otherCharacteristics: organism.otherCharacteristics || "",
+              antibiograms: Array.isArray(orgData.antibiograms)
+                ? orgData.antibiograms.map((ab) => ({
+                    id: ab.id || null,
+                    antibioticDictId: ab.antibioticDictId || null,
+                    result: ab.result || "",
+                    diameterMm: ab.diameterMm || null,
+                    micValue: ab.micValue || "",
+                    interpretationComment: ab.interpretationComment || "",
+                  }))
+                : [],
+            };
+
+            // Use testId from organismGroup to assign to correct culture
+            const testId = organismGroup?.testId;
+            let assignedCultureKey = testId ? String(testId) : null;
+
+            // If no testId, try backward compatibility - assign to first culture
+            if (!assignedCultureKey) {
+              const cultureKeys = Object.keys(loadedCultures);
+              if (cultureKeys.length > 0) {
+                assignedCultureKey = cultureKeys[0];
+              } else {
+                assignedCultureKey = "default";
+              }
+            }
+
+            // Group organisms by their assigned culture
+            if (!organismsByCulture[assignedCultureKey]) {
+              organismsByCulture[assignedCultureKey] = [];
+            }
+            organismsByCulture[assignedCultureKey].push(normalizedOrganism);
+          });
+
+          // Now assign organisms to cultures with proper numbering within each culture
+          Object.entries(organismsByCulture).forEach(
+            ([cultureKey, organisms]) => {
+              if (cultureKey === "default") {
+                loadedCultures["default"] = {
+                  cultureResult: "positive",
+                  organisms: organisms.map((org, index) => ({
+                    ...org,
+                    organismNumber: org.organismNumber || index + 1,
+                  })),
+                };
+              } else {
+                if (!loadedCultures[cultureKey]) {
+                  // Culture result not saved yet, but we have organisms - create entry
+                  loadedCultures[cultureKey] = {
+                    cultureResult: "",
+                    organisms: [],
+                  };
+                }
+                // Renumber organisms within this culture (1, 2, 3)
+                loadedCultures[cultureKey].organisms = organisms.map(
+                  (org, index) => ({
+                    ...org,
+                    organismNumber: org.organismNumber || index + 1,
+                  }),
+                );
+              }
+            },
+          );
+        }
+
+        setCultures(loadedCultures);
         setInitialData(data);
         setLoading(false);
       },
       () => {
         setLoading(false);
-      }
+      },
     );
   };
 
   const handleSave = () => {
     setSaving(true);
+
+    // Filter out "default" culture key (used for backward compatibility in loading)
+    const validCultures = {};
+    Object.entries(cultures).forEach(([testId, culture]) => {
+      // Only include cultures with numeric testIds (exclude "default")
+      if (testId !== "default" && !isNaN(parseInt(testId))) {
+        validCultures[testId] = culture;
+      }
+    });
+
+    // Collect all organisms from all cultures
+    // Keep organism numbers as they are (1-3 per culture), don't renumber globally
+    const allOrganisms = [];
+    Object.values(validCultures).forEach((culture) => {
+      if (culture.organisms && culture.organisms.length > 0) {
+        // Ensure each organism in this culture has a valid organismNumber (1-3)
+        culture.organisms.forEach((organism, cultureIndex) => {
+          allOrganisms.push({
+            ...organism,
+            // Keep original organismNumber if valid, otherwise use position in culture (1-3)
+            organismNumber: organism.organismNumber || cultureIndex + 1,
+            // Filter out antibiograms that don't have an antibiotic selected
+            antibiograms: (organism.antibiograms || []).filter(
+              (ab) => ab.antibioticDictId && ab.antibioticDictId !== "",
+            ),
+          });
+        });
+      }
+    });
 
     const formData = {
       analysisId: parseInt(analysisId),
@@ -78,39 +207,55 @@ const BacteriologyResultEntry = ({
       macroscopyResults,
       microscopyResults,
       floraData,
-      cultureResult,
-      organisms: organisms.map((organism, index) => ({
-        ...organism,
-        organismNumber: index + 1,
-        // Filter out antibiograms that don't have an antibiotic selected
-        antibiograms: (organism.antibiograms || []).filter(
-          (ab) => ab.antibioticDictId && ab.antibioticDictId !== ""
-        ),
-      })),
+      // For backward compatibility, use first culture's result or empty
+      cultureResult: Object.values(validCultures)[0]?.cultureResult || "",
+      organisms: allOrganisms,
+      // Add cultures data for future use (only valid numeric testIds)
+      cultures: validCultures,
     };
-console.log("Saving Bacteriology Results:", formData);
+
+    // Validate JSON serializability before sending
+    try {
+      JSON.stringify(formData);
+    } catch (err) {
+      console.error("[BacteriologyResultEntry] Data serialization error:", err);
+      setSaving(false);
+      addNotification({
+        kind: "error",
+        title: "Error",
+        message: "Data serialization error: " + err.message,
+      });
+      setNotificationVisible(true);
+      return;
+    }
+
     postToOpenElisServerJsonResponse(
       API_ENDPOINTS.SAVE_RESULTS,
       JSON.stringify(formData),
-      (response) => {
+      () => {
         setSaving(false);
         addNotification({
           kind: "success",
           title: "Success",
           message: "Bacteriology results saved successfully",
         });
+        setNotificationVisible(true);
+        // Reload data to get updated values and prevent duplicates
+        loadBacteriologyResults();
         if (onSave) {
           onSave(formData);
         }
       },
       (error) => {
+        console.error("[BacteriologyResultEntry] Save failed! Error:", error);
         setSaving(false);
         addNotification({
           kind: "error",
           title: "Error",
           message: "Failed to save bacteriology results: " + error,
         });
-      }
+        setNotificationVisible(true);
+      },
     );
   };
 
@@ -118,17 +263,9 @@ console.log("Saving Bacteriology Results:", formData);
     setMacroscopyResults({});
     setMicroscopyResults({});
     setFloraData({});
-    setCultureResult("");
-    setOrganisms([]);
+    setCultures({});
     if (initialData) {
       loadBacteriologyResults();
-    }
-  };
-
-  const handleCultureResultChange = (value) => {
-    setCultureResult(value);
-    if (value === "negative") {
-      setOrganisms([]);
     }
   };
 
@@ -143,7 +280,10 @@ console.log("Saving Bacteriology Results:", formData);
   return (
     <Form className="bacteriology-result-entry">
       <Stack gap={6}>
-        <ResultHeader testResult={testResults[0]} />
+        <ResultHeader
+          testResult={testResults[0]}
+          totalTests={testResults.length}
+        />
 
         <MacroscopySection
           accessionNumber={accessionNumber}
@@ -166,10 +306,8 @@ console.log("Saving Bacteriology Results:", formData);
         <CultureSection
           accessionNumber={accessionNumber}
           testResults={testResults}
-          cultureResult={cultureResult}
-          onCultureResultChange={handleCultureResultChange}
-          organisms={organisms}
-          onOrganismsChange={setOrganisms}
+          cultures={cultures}
+          onCulturesChange={setCultures}
           disabled={disabled || saving}
         />
 

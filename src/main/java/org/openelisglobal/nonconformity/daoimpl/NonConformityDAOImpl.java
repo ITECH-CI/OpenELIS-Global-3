@@ -3,7 +3,6 @@ package org.openelisglobal.nonconformity.daoimpl;
 import java.sql.Date;
 import java.util.ArrayList;
 import java.util.List;
-
 import org.hibernate.Session;
 import org.hibernate.query.Query;
 import org.openelisglobal.common.daoimpl.BaseDAOImpl;
@@ -26,7 +25,7 @@ public class NonConformityDAOImpl extends BaseDAOImpl<NonConformity, String> imp
     @Transactional(readOnly = true)
     public List<NonConformity> getAllNonConformities() throws LIMSRuntimeException {
         try {
-            //String sql = "select from NonConformity order by reportDate DESC, id DESC";
+            // String sql = "select from NonConformity order by reportDate DESC, id DESC";
             String sql = "from NonConformity n order by n.reportDate desc, n.id desc";
 
             Query query = entityManager.unwrap(Session.class).createQuery(sql);
@@ -74,11 +73,10 @@ public class NonConformityDAOImpl extends BaseDAOImpl<NonConformity, String> imp
 
     @Override
     @Transactional(readOnly = true)
-    public List<NonConformity> getNonConformitiesByDateRange(Date startDate, Date endDate)
-            throws LIMSRuntimeException {
+    public List<NonConformity> getNonConformitiesByDateRange(Date startDate, Date endDate) throws LIMSRuntimeException {
         try {
-            String sql = "FROM NonConformity nc WHERE nc.reportDate BETWEEN :startDate AND :endDate " +
-                        "ORDER BY nc.reportDate DESC";
+            String sql = "FROM NonConformity nc WHERE nc.reportDate BETWEEN :startDate AND :endDate "
+                    + "ORDER BY nc.reportDate DESC";
             Query query = entityManager.unwrap(Session.class).createQuery(sql);
             query.setParameter("startDate", startDate);
             query.setParameter("endDate", endDate);
@@ -109,10 +107,8 @@ public class NonConformityDAOImpl extends BaseDAOImpl<NonConformity, String> imp
 
     @Override
     @Transactional(readOnly = true)
-    public List<NonConformity> searchNonConformities(String siteProvenance, String sampleType,
-                                                     String rejectionReason, Date startDate,
-                                                     Date endDate, String status)
-            throws LIMSRuntimeException {
+    public List<NonConformity> searchNonConformities(String siteProvenance, String sampleType, String rejectionReason,
+            Date startDate, Date endDate, String status) throws LIMSRuntimeException {
         try {
             StringBuilder sql = new StringBuilder("FROM NonConformity nc WHERE 1=1");
 
@@ -166,4 +162,3 @@ public class NonConformityDAOImpl extends BaseDAOImpl<NonConformity, String> imp
         throw new LIMSRuntimeException("Error in " + methodName, e);
     }
 }
-

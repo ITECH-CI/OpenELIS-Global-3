@@ -1,5 +1,6 @@
 package org.openelisglobal.bacteriology.action.bean;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -13,6 +14,7 @@ import org.openelisglobal.validation.annotations.SafeHtml;
 /**
  * Bean for organism identification data
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class BacteriologyOrganismBean {
 
     private Integer id;

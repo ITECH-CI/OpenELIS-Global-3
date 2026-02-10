@@ -41,10 +41,12 @@ public class BacteriologyOrganismDAOImpl extends BaseDAOImpl<BacteriologyOrganis
     @Transactional(readOnly = true)
     public List<BacteriologyOrganism> getOrganismsByAnalysisId(Integer analysisId) {
         try {
-            String hql = "SELECT bo FROM BacteriologyOrganism bo " +
-                    "JOIN BacteriologyResultGroup brg ON bo.resultGroupId = brg.id " +
-                    "WHERE brg.analysisId = :analysisId AND bo.isActive = true " +
-                    "ORDER BY bo.organismNumber";
+            // Use subquery since there's no direct association between BacteriologyOrganism and BacteriologyResultGroup
+            String hql = "SELECT bo FROM BacteriologyOrganism bo "
+                    + "WHERE bo.resultGroupId IN ("
+                    + "  SELECT brg.id FROM BacteriologyResultGroup brg WHERE brg.analysisId = :analysisId"
+                    + ") AND bo.isActive = true "
+                    + "ORDER BY bo.organismNumber";
             Query<BacteriologyOrganism> query = entityManager.unwrap(Session.class).createQuery(hql,
                     BacteriologyOrganism.class);
             query.setParameter("analysisId", analysisId);
@@ -58,9 +60,8 @@ public class BacteriologyOrganismDAOImpl extends BaseDAOImpl<BacteriologyOrganis
     @Override
     public void deactivateOrganismsForAnalysis(Integer analysisId) {
         try {
-            String hql = "UPDATE BacteriologyOrganism bo SET bo.isActive = false " +
-                    "WHERE bo.resultGroupId IN " +
-                    "(SELECT brg.id FROM BacteriologyResultGroup brg WHERE brg.analysisId = :analysisId)";
+            String hql = "UPDATE BacteriologyOrganism bo SET bo.isActive = false " + "WHERE bo.resultGroupId IN "
+                    + "(SELECT brg.id FROM BacteriologyResultGroup brg WHERE brg.analysisId = :analysisId)";
             Query query = entityManager.unwrap(Session.class).createQuery(hql);
             query.setParameter("analysisId", analysisId);
             query.executeUpdate();

@@ -58,40 +58,65 @@ const TestCatalog = () => {
 
     // Log summary of tests with missing data
     if (res.testCatalogList && res.testCatalogList.length > 0) {
-      const testsWithoutLocalization = res.testCatalogList.filter(item => !item.localization);
-      const testsWithoutReportLocalization = res.testCatalogList.filter(item => !item.reportLocalization);
-      const testsWithoutTestUnit = res.testCatalogList.filter(item => !item.testUnit);
-      const testsWithoutResultType = res.testCatalogList.filter(item => !item.resultType);
+      const testsWithoutLocalization = res.testCatalogList.filter(
+        (item) => !item.localization,
+      );
+      const testsWithoutReportLocalization = res.testCatalogList.filter(
+        (item) => !item.reportLocalization,
+      );
+      const testsWithoutTestUnit = res.testCatalogList.filter(
+        (item) => !item.testUnit,
+      );
+      const testsWithoutResultType = res.testCatalogList.filter(
+        (item) => !item.resultType,
+      );
 
       if (testsWithoutLocalization.length > 0) {
         console.warn(
           `[ViewTestCatalog] ${testsWithoutLocalization.length} test(s) without localization:`,
-          testsWithoutLocalization.map(t => ({ id: t.id, name: t.name || 'N/A', testUnit: t.testUnit || 'N/A' }))
+          testsWithoutLocalization.map((t) => ({
+            id: t.id,
+            name: t.name || "N/A",
+            testUnit: t.testUnit || "N/A",
+          })),
         );
       }
 
       if (testsWithoutReportLocalization.length > 0) {
         console.warn(
           `[ViewTestCatalog] ${testsWithoutReportLocalization.length} test(s) without reportLocalization:`,
-          testsWithoutReportLocalization.map(t => ({ id: t.id, name: t.name || 'N/A', testUnit: t.testUnit || 'N/A' }))
+          testsWithoutReportLocalization.map((t) => ({
+            id: t.id,
+            name: t.name || "N/A",
+            testUnit: t.testUnit || "N/A",
+          })),
         );
       }
 
       if (testsWithoutTestUnit.length > 0) {
         console.warn(
           `[ViewTestCatalog] ${testsWithoutTestUnit.length} test(s) without testUnit:`,
-          testsWithoutTestUnit.map(t => ({ id: t.id, name: t.name || 'N/A' }))
+          testsWithoutTestUnit.map((t) => ({
+            id: t.id,
+            name: t.name || "N/A",
+          })),
         );
       }
 
       if (testsWithoutResultType.length > 0) {
         console.warn(
           `[ViewTestCatalog] ${testsWithoutResultType.length} test(s) without resultType:`,
-          testsWithoutResultType.map(t => ({ id: t.id, name: t.name || 'N/A', testUnit: t.testUnit || 'N/A' }))
+          testsWithoutResultType.map((t) => ({
+            id: t.id,
+            name: t.name || "N/A",
+            testUnit: t.testUnit || "N/A",
+          })),
         );
       }
 
-      console.log(`[ViewTestCatalog] Loaded ${res.testCatalogList.length} test(s) total`);
+      console.log(
+        `[ViewTestCatalog] Loaded ${res.testCatalogList.length} test(s) total`,
+      );
     }
   };
 
@@ -248,35 +273,39 @@ const TestCatalog = () => {
       console.warn(
         `[ViewTestCatalog] Test missing localization:`,
         `\n  Test ID: ${item.id}`,
-        `\n  Test Name (if available): ${item.name || 'N/A'}`,
-        `\n  Test Unit: ${item.testUnit || 'N/A'}`,
-        `\n  Full item:`, item
+        `\n  Test Name (if available): ${item.name || "N/A"}`,
+        `\n  Test Unit: ${item.testUnit || "N/A"}`,
+        `\n  Full item:`,
+        item,
       );
     }
     if (!item.reportLocalization) {
       console.warn(
         `[ViewTestCatalog] Test missing reportLocalization:`,
         `\n  Test ID: ${item.id}`,
-        `\n  Test Name (if available): ${item.name || 'N/A'}`,
-        `\n  Test Unit: ${item.testUnit || 'N/A'}`,
-        `\n  Full item:`, item
+        `\n  Test Name (if available): ${item.name || "N/A"}`,
+        `\n  Test Unit: ${item.testUnit || "N/A"}`,
+        `\n  Full item:`,
+        item,
       );
     }
     if (!item.testUnit) {
       console.warn(
         `[ViewTestCatalog] Test missing testUnit:`,
         `\n  Test ID: ${item.id}`,
-        `\n  Test Name (if available): ${item.name || 'N/A'}`,
-        `\n  Full item:`, item
+        `\n  Test Name (if available): ${item.name || "N/A"}`,
+        `\n  Full item:`,
+        item,
       );
     }
     if (!item.resultType) {
       console.warn(
         `[ViewTestCatalog] Test missing resultType:`,
         `\n  Test ID: ${item.id}`,
-        `\n  Test Name (if available): ${item.name || 'N/A'}`,
-        `\n  Test Unit: ${item.testUnit || 'N/A'}`,
-        `\n  Full item:`, item
+        `\n  Test Name (if available): ${item.name || "N/A"}`,
+        `\n  Test Unit: ${item.testUnit || "N/A"}`,
+        `\n  Full item:`,
+        item,
       );
     }
 
@@ -290,40 +319,40 @@ const TestCatalog = () => {
         id: `${item.id}-name`,
         field: intl.formatMessage({ id: "field.name" }),
         value: item.localization
-          ? `en: ${item.localization.english || 'N/A'},  fr: ${item.localization.french || 'N/A'}`
-          : 'N/A',
+          ? `en: ${item.localization.english || "N/A"},  fr: ${item.localization.french || "N/A"}`
+          : "N/A",
       },
       {
         id: `${item.id}-reportName`,
         field: intl.formatMessage({ id: "field.reportName" }),
         value: item.reportLocalization
-          ? `en: ${item.reportLocalization.english || 'N/A'},  fr: ${item.reportLocalization.french || 'N/A'}`
-          : 'N/A',
+          ? `en: ${item.reportLocalization.english || "N/A"},  fr: ${item.reportLocalization.french || "N/A"}`
+          : "N/A",
       },
       {
         id: `${item.id}-testUnit`,
         field: intl.formatMessage({ id: "field.testUnit" }),
-        value: item.testUnit || 'N/A',
+        value: item.testUnit || "N/A",
       },
       {
         id: `${item.id}-sampleType`,
         field: intl.formatMessage({ id: "field.sampleType" }),
-        value: item.sampleType || 'N/A',
+        value: item.sampleType || "N/A",
       },
       {
         id: `${item.id}-panel`,
         field: intl.formatMessage({ id: "field.panel" }),
-        value: item.panel || 'N/A',
+        value: item.panel || "N/A",
       },
       {
         id: `${item.id}-resultType`,
         field: intl.formatMessage({ id: "field.resultType" }),
-        value: item.resultType || 'N/A',
+        value: item.resultType || "N/A",
       },
       {
         id: `${item.id}-uom`,
         field: intl.formatMessage({ id: "field.uom" }),
-        value: item.uom || 'N/A',
+        value: item.uom || "N/A",
       },
       item.resultType == "N" && {
         id: `${item.id}-significantDigits`,

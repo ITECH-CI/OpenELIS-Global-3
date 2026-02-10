@@ -6,25 +6,25 @@ import org.openelisglobal.dictionary.valueholder.Dictionary;
 
 public interface BacteriologyAntibiogramService {
 
-	BacteriologyAntibiogram get(Integer id);
+    BacteriologyAntibiogram get(Integer id);
 
-	BacteriologyAntibiogram save(BacteriologyAntibiogram antibiogram);
+    BacteriologyAntibiogram save(BacteriologyAntibiogram antibiogram);
 
-	BacteriologyAntibiogram update(BacteriologyAntibiogram antibiogram);
+    BacteriologyAntibiogram update(BacteriologyAntibiogram antibiogram);
 
-	List<BacteriologyAntibiogram> getAntibiogramsByOrganismId(Integer organismId);
+    List<BacteriologyAntibiogram> getAntibiogramsByOrganismId(Integer organismId);
 
-	BacteriologyAntibiogram getByOrganismAndAntibiotic(Integer organismId, Integer antibioticDictId);
+    BacteriologyAntibiogram getByOrganismAndAntibiotic(Integer organismId, Integer antibioticDictId);
 
-	List<Dictionary> getAllAntibiotics();
+    List<Dictionary> getAllAntibiotics();
 
-	List<Dictionary> getAllAntibioticsSorted();
+    List<Dictionary> getAllAntibioticsSorted();
 
-	Dictionary getAntibioticById(Integer antibioticDictId);
+    Dictionary getAntibioticById(Integer antibioticDictId);
 
-	void deactivateAntibiogramsForAnalysis(Integer analysisId);
+    void deactivateAntibiogramsForAnalysis(Integer analysisId);
 
-	List<BacteriologyAntibiogram> getAntibiogramsByAnalysisId(Integer analysisId);
+    List<BacteriologyAntibiogram> getAntibiogramsByAnalysisId(Integer analysisId);
 
-	void deleteAntibiogram(Integer id, String sysUserId);
+    void deleteAntibiogram(Integer id, String sysUserId);
 }

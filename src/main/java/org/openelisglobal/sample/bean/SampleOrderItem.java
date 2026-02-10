@@ -643,14 +643,14 @@ public class SampleOrderItem implements Serializable {
         this.programId = programId;
     }
 
-     public String getProgramCode() {
+    public String getProgramCode() {
         return programCode;
     }
 
     public void setProgramCode(String programCode) {
         this.programCode = programCode;
     }
-    
+
     public String getEpidemiologicalWeek() {
         return epidemiologicalWeek;
     }

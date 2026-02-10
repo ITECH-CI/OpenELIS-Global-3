@@ -1,5 +1,6 @@
 package org.openelisglobal.bacteriology.action.bean;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import java.util.ArrayList;
@@ -10,6 +11,7 @@ import java.util.Map;
 /**
  * Form bean for complete bacteriology result submission
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class BacteriologyResultForm {
 
     @NotNull
@@ -24,17 +26,50 @@ public class BacteriologyResultForm {
     // Microscopy results - map of test ID to result value (dictionary ID or text)
     private Map<String, String> microscopyResults = new HashMap<>();
 
-    // Culture result - positive or negative (dictionary ID)
+    // Culture result - positive or negative (dictionary ID) - DEPRECATED, use
+    // cultures instead
     private String cultureResult;
+
+    // Cultures - map of test ID to culture data (cultureResult + organisms)
+    private Map<String, CultureData> cultures = new HashMap<>();
 
     // Flora data - map of test ID to flora information (count and details)
     private Map<String, Object> floraData = new HashMap<>();
 
-    // Organisms identified (1-3)
+    // Organisms identified (1-3) - DEPRECATED, use cultures instead
     @Valid
     private List<BacteriologyOrganismBean> organisms = new ArrayList<>();
 
     public BacteriologyResultForm() {
+    }
+
+    /**
+     * Inner class to hold culture data for a specific test
+     */
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public static class CultureData {
+        private String cultureResult;
+        @Valid
+        private List<BacteriologyOrganismBean> organisms = new ArrayList<>();
+
+        public CultureData() {
+        }
+
+        public String getCultureResult() {
+            return cultureResult;
+        }
+
+        public void setCultureResult(String cultureResult) {
+            this.cultureResult = cultureResult;
+        }
+
+        public List<BacteriologyOrganismBean> getOrganisms() {
+            return organisms;
+        }
+
+        public void setOrganisms(List<BacteriologyOrganismBean> organisms) {
+            this.organisms = organisms;
+        }
     }
 
     public Integer getAnalysisId() {
@@ -91,5 +126,13 @@ public class BacteriologyResultForm {
 
     public void setOrganisms(List<BacteriologyOrganismBean> organisms) {
         this.organisms = organisms;
+    }
+
+    public Map<String, CultureData> getCultures() {
+        return cultures;
+    }
+
+    public void setCultures(Map<String, CultureData> cultures) {
+        this.cultures = cultures;
     }
 }

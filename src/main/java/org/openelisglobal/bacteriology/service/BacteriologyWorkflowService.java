@@ -1,26 +1,120 @@
 package org.openelisglobal.bacteriology.service;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import org.openelisglobal.bacteriology.valueholder.BacteriologyAntibiogram;
 import org.openelisglobal.bacteriology.valueholder.BacteriologyOrganism;
 import org.openelisglobal.bacteriology.valueholder.BacteriologyResultGroup;
 
 /**
  * Orchestrates bacteriology workflow operations including: - Creating and
- * managing result groups hierarchy - Handling organism identification - Managing
- * antibiogram results - Coordinating save operations across multiple entities
+ * managing result groups hierarchy - Handling organism identification -
+ * Managing antibiogram results - Coordinating save operations across multiple
+ * entities
  */
 public interface BacteriologyWorkflowService {
+
+    /**
+     * Single bacteriology test result with full details
+     */
+    static class BacteriologyTestResultBean {
+        private String analysisId;
+        private String testId;
+        private String testName;
+        private String testDescription;
+        private String value;
+        private String displayValue;
+        private String unitOfMeasure;
+        private String resultType;
+
+        public String getAnalysisId() {
+            return analysisId;
+        }
+
+        public void setAnalysisId(String analysisId) {
+            this.analysisId = analysisId;
+        }
+
+        public String getTestId() {
+            return testId;
+        }
+
+        public void setTestId(String testId) {
+            this.testId = testId;
+        }
+
+        public String getTestName() {
+            return testName;
+        }
+
+        public void setTestName(String testName) {
+            this.testName = testName;
+        }
+
+        public String getTestDescription() {
+            return testDescription;
+        }
+
+        public void setTestDescription(String testDescription) {
+            this.testDescription = testDescription;
+        }
+
+        public String getValue() {
+            return value;
+        }
+
+        public void setValue(String value) {
+            this.value = value;
+        }
+
+        public String getDisplayValue() {
+            return displayValue;
+        }
+
+        public void setDisplayValue(String displayValue) {
+            this.displayValue = displayValue;
+        }
+
+        public String getUnitOfMeasure() {
+            return unitOfMeasure;
+        }
+
+        public void setUnitOfMeasure(String unitOfMeasure) {
+            this.unitOfMeasure = unitOfMeasure;
+        }
+
+        public String getResultType() {
+            return resultType;
+        }
+
+        public void setResultType(String resultType) {
+            this.resultType = resultType;
+        }
+    }
 
     /**
      * Complete bacteriology result data including all groups, organisms, and
      * antibiograms
      */
-    class BacteriologyResultData {
+    static class BacteriologyResultData {
         private List<BacteriologyResultGroup> macroscopyGroups;
         private List<BacteriologyResultGroup> microscopyGroups;
         private BacteriologyResultGroup cultureGroup;
         private List<OrganismWithAntibiogram> organisms;
+        private String sampleTypeName; // Type of sample (e.g., "Sécrétions vaginales")
+
+        // Test results lists with full details (test name, value, unit, etc.)
+        private List<BacteriologyTestResultBean> macroscopyResults = new ArrayList<>();
+        private List<BacteriologyTestResultBean> microscopyResults = new ArrayList<>();
+        private List<BacteriologyTestResultBean> cultureResults = new ArrayList<>();
+
+        // Test results as maps (testId -> value) for easy lookup and automatic
+        // deduplication
+        private Map<String, String> macroscopyResultsMap = new HashMap<>();
+        private Map<String, String> microscopyResultsMap = new HashMap<>();
+        private Map<String, String> cultureResultsMap = new HashMap<>();
 
         public List<BacteriologyResultGroup> getMacroscopyGroups() {
             return macroscopyGroups;
@@ -53,12 +147,68 @@ public interface BacteriologyWorkflowService {
         public void setOrganisms(List<OrganismWithAntibiogram> organisms) {
             this.organisms = organisms;
         }
+
+        public List<BacteriologyTestResultBean> getMacroscopyResults() {
+            return macroscopyResults;
+        }
+
+        public void setMacroscopyResults(List<BacteriologyTestResultBean> macroscopyResults) {
+            this.macroscopyResults = macroscopyResults;
+        }
+
+        public List<BacteriologyTestResultBean> getMicroscopyResults() {
+            return microscopyResults;
+        }
+
+        public void setMicroscopyResults(List<BacteriologyTestResultBean> microscopyResults) {
+            this.microscopyResults = microscopyResults;
+        }
+
+        public List<BacteriologyTestResultBean> getCultureResults() {
+            return cultureResults;
+        }
+
+        public void setCultureResults(List<BacteriologyTestResultBean> cultureResults) {
+            this.cultureResults = cultureResults;
+        }
+
+        public String getSampleTypeName() {
+            return sampleTypeName;
+        }
+
+        public void setSampleTypeName(String sampleTypeName) {
+            this.sampleTypeName = sampleTypeName;
+        }
+
+        public Map<String, String> getMacroscopyResultsMap() {
+            return macroscopyResultsMap;
+        }
+
+        public void setMacroscopyResultsMap(Map<String, String> macroscopyResultsMap) {
+            this.macroscopyResultsMap = macroscopyResultsMap;
+        }
+
+        public Map<String, String> getMicroscopyResultsMap() {
+            return microscopyResultsMap;
+        }
+
+        public void setMicroscopyResultsMap(Map<String, String> microscopyResultsMap) {
+            this.microscopyResultsMap = microscopyResultsMap;
+        }
+
+        public Map<String, String> getCultureResultsMap() {
+            return cultureResultsMap;
+        }
+
+        public void setCultureResultsMap(Map<String, String> cultureResultsMap) {
+            this.cultureResultsMap = cultureResultsMap;
+        }
     }
 
     /**
      * Organism with its antibiogram results
      */
-    class OrganismWithAntibiogram {
+    static class OrganismWithAntibiogram {
         private BacteriologyOrganism organism;
         private BacteriologyResultGroup organismGroup;
         private List<BacteriologyAntibiogram> antibiograms;

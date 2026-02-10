@@ -265,6 +265,14 @@ public class TestModifyEntryRestController extends BaseController {
 
         if (TypeOfTestResultServiceImpl.ResultType.isDictionaryVariant(testResult.getTestResultType())) {
             Dictionary dictionary = dictionaryService.getDataForId(testResult.getValue());
+
+            // Check if dictionary was found
+            if (dictionary == null) {
+                LogEvent.logWarn(this.getClass().getSimpleName(), "getDictionaryValue",
+                        "Dictionary not found for ID: " + testResult.getValue());
+                return null;
+            }
+
             String displayValue = dictionary.getLocalizedName();
 
             if ("unknown".equals(displayValue)) {

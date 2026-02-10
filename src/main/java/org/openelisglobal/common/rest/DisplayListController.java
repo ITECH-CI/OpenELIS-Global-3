@@ -34,7 +34,6 @@ import org.openelisglobal.common.util.LabelValuePair;
 import org.openelisglobal.dictionary.service.DictionaryService;
 import org.openelisglobal.dictionary.valueholder.Dictionary;
 import org.openelisglobal.dictionarycategory.service.DictionaryCategoryService;
-import org.openelisglobal.dictionarycategory.valueholder.DictionaryCategory;
 import org.openelisglobal.localization.service.LocalizationService;
 import org.openelisglobal.method.service.MethodService;
 import org.openelisglobal.method.valueholder.Method;
@@ -686,14 +685,10 @@ public class DisplayListController extends BaseRestController {
     }
 
     /**
-     * Get TB dictionary mappings by their local abbreviations
-     * Returns a map of local_abbrev -> ID to avoid hardcoding IDs in frontend
+     * Get TB dictionary mappings by their local abbreviations Returns a map of
+     * local_abbrev -> ID to avoid hardcoding IDs in frontend
      *
-     * Example response:
-     * {
-     *   "Microsc": "1392",
-     *   "TB Line1": "1389",
-     *   "TB Line2": "1390"
+     * Example response: { "Microsc": "1392", "TB Line1": "1389", "TB Line2": "1390"
      * }
      */
     @GetMapping(value = "tb-dictionary-mapping", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -709,15 +704,11 @@ public class DisplayListController extends BaseRestController {
             String localAbbrev = dict.getLocalAbbreviation();
             if (localAbbrev != null && !localAbbrev.isEmpty()) {
                 // Include TB Analysis Methods
-                if (localAbbrev.equals("Microsc") ||
-                    localAbbrev.equals("TB DiagMol") ||
-                    localAbbrev.equals("CultureTB") ||
-                    localAbbrev.equals("ImmunTB") ||
-                    localAbbrev.equals("LPATests") ||
-                    localAbbrev.equals("PhenoTests") ||
-                    // Include TB Followup reasons
-                    localAbbrev.equals("TB Line1") ||
-                    localAbbrev.equals("TB Line2")) {
+                if (localAbbrev.equals("Microsc") || localAbbrev.equals("TB DiagMol") || localAbbrev.equals("CultureTB")
+                        || localAbbrev.equals("ImmunTB") || localAbbrev.equals("LPATests")
+                        || localAbbrev.equals("PhenoTests") ||
+                        // Include TB Followup reasons
+                        localAbbrev.equals("TB Line1") || localAbbrev.equals("TB Line2")) {
                     mapping.put(localAbbrev, dict.getId());
                 }
             }
@@ -727,8 +718,8 @@ public class DisplayListController extends BaseRestController {
     }
 
     /**
-     * Get TB followup period options for Line 1 (TB Sensible)
-     * Returns pregenerated list of periods: M2, M5, M6
+     * Get TB followup period options for Line 1 (TB Sensible) Returns pregenerated
+     * list of periods: M2, M5, M6
      */
     @GetMapping(value = "tb-followup-periods-line1", produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
@@ -737,8 +728,8 @@ public class DisplayListController extends BaseRestController {
     }
 
     /**
-     * Get TB followup period options for Line 2 (TB-RR)
-     * Returns pregenerated list of periods: M0 to M24
+     * Get TB followup period options for Line 2 (TB-RR) Returns pregenerated list
+     * of periods: M0 to M24
      */
     @GetMapping(value = "tb-followup-periods-line2", produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody

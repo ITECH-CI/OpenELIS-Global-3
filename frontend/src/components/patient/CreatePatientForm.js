@@ -565,19 +565,21 @@ function CreatePatientForm(props) {
     postToOpenElisServer(
       "/rest/PatientManagement",
       JSON.stringify(values),
-      (status) => {
-        handlePost(status);
-        resetForm({ values: CreatePatientFormValues });
-        setDateOfBirthFormatter({
-          years: "",
-          months: "",
-          days: "",
-        });
+      (status, responseBody) => {
+        handlePost(status, responseBody);
+        if (status === 200) {
+          resetForm({ values: CreatePatientFormValues });
+          setDateOfBirthFormatter({
+            years: "",
+            months: "",
+            days: "",
+          });
+        }
       },
     );
   };
 
-  const handlePost = (status) => {
+  const handlePost = (status, responseBody) => {
     setNotificationVisible(true);
     setIsSubmitting(false);
     if (status === 200) {
@@ -587,9 +589,37 @@ function CreatePatientForm(props) {
         kind: NotificationKinds.success,
       });
     } else {
+      // Try to extract detailed error message from response
+      let errorMessage = intl.formatMessage({ id: "error.save.patient" });
+
+      if (responseBody) {
+        // If response is a JSON object with error details
+        if (typeof responseBody === "object") {
+          if (responseBody.error) {
+            errorMessage = responseBody.error;
+          } else if (responseBody.message) {
+            errorMessage = responseBody.message;
+          } else if (
+            responseBody.errors &&
+            Array.isArray(responseBody.errors)
+          ) {
+            // Multiple validation errors
+            errorMessage = responseBody.errors
+              .map((err) => err.message || err)
+              .join(", ");
+          }
+        } else if (
+          typeof responseBody === "string" &&
+          responseBody.trim() !== ""
+        ) {
+          // If response is a plain text error message
+          errorMessage = responseBody;
+        }
+      }
+
       addNotification({
         title: intl.formatMessage({ id: "notification.title" }),
-        message: intl.formatMessage({ id: "error.save.patient" }),
+        message: `${errorMessage}${status ? ` (HTTP ${status})` : ""}`,
         kind: NotificationKinds.error,
       });
     }
@@ -680,7 +710,7 @@ function CreatePatientForm(props) {
                 <Field name="nationalId">
                   {({ field }) => (
                     <TextInput
-                      type={'number'}
+                      type={"number"}
                       value={values.nationalId || ""}
                       name={field.name}
                       labelText={
@@ -833,16 +863,18 @@ function CreatePatientForm(props) {
               </Column>
               <Column lg={8} md={4} sm={4}>
                 {values.gender === "F" && (
-                    <Select
-                      className="pregnant"
-                      id={"pregnant"}
-                      name="pregnant"
-                      labelText={intl.formatMessage({ id: "patient.female.pregnant" })}
-                      required
-                    >
+                  <Select
+                    className="pregnant"
+                    id={"pregnant"}
+                    name="pregnant"
+                    labelText={intl.formatMessage({
+                      id: "patient.female.pregnant",
+                    })}
+                    required
+                  >
                     <SelectItem text="Non" value="N" />
                     <SelectItem text="Oui" value="O" />
-                    </Select>
+                  </Select>
                 )}
               </Column>
               <Column lg={8} md={4} sm={4}>

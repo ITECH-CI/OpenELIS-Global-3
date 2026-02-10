@@ -38,6 +38,7 @@ export const API_ENDPOINTS = {
   ORGANISMS: "/rest/bacteriology/organisms",
   GET_RESULTS: "/rest/bacteriology/results",
   SAVE_RESULTS: "/rest/bacteriology/results",
+  VALIDATE_RESULTS: "/rest/bacteriology/validate",
   CHECK_EXISTS: "/rest/bacteriology/results/{analysisId}/exists",
   CREATE_ORGANISM_GROUP: "/rest/bacteriology/organism/group",
   SAVE_ORGANISM: "/rest/bacteriology/organism",

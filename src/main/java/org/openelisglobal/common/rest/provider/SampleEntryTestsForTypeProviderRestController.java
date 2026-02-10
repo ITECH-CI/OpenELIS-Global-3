@@ -152,6 +152,13 @@ public class SampleEntryTestsForTypeProviderRestController extends BaseRestContr
     private void addTests(List<Test> tests) {
         testsMapList.clear();
         for (Test test : tests) {
+            // Skip child tests (tests that have a parent)
+            // Child tests are automatically shown in the result entry when parent has
+            // trigger value
+            if (test.getParentTestId() != null && !test.getParentTestId().isEmpty()) {
+                continue;
+            }
+
             testsMapList.add(new TestMap(test.getId(), TestServiceImpl.getUserLocalizedTestName(test),
                     USER_TEST_SECTION_ID.equals(test.getTestSection().getId())));
         }

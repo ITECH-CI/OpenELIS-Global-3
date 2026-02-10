@@ -23,6 +23,7 @@ import {
   convertAlphaNumLabNumForDisplay,
   postToOpenElisServer,
 } from "../utils/Utils";
+import BacteriologyValidation from "../bacteriology/BacteriologyValidation";
 
 const Validation = (props) => {
   const componentMounted = useRef(false);
@@ -38,6 +39,8 @@ const Validation = (props) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [, forceUpdate] = useState({});
   const [validationState, setValidationState] = useState({});
+  const [bacteriologyPage, setBacteriologyPage] = useState(1);
+  const [bacteriologyPageSize, setBacteriologyPageSize] = useState(5);
 
   useEffect(() => {
     componentMounted.current = true;
@@ -260,6 +263,78 @@ const Validation = (props) => {
     return Array.from(samplesMap.values());
   };
 
+  // Helper function to detect if a result is bacteriology
+  const isBacteriologyResult = (result) => {
+    if (!result) return false;
+    const testName = result.testName || "";
+    const testSectionName = result.testSection || "";
+
+    // Log for debugging
+    console.log("[Validation] Checking result:", {
+      accessionNumber: result.accessionNumber,
+      testName: testName,
+      testSection: testSectionName,
+      testId: result.testId,
+    });
+
+    // Check if test section contains "Bacteriology" or test name indicates bacteriology
+    const isBacterio =
+      testSectionName.toLowerCase().includes("bacteriology") ||
+      testSectionName.toLowerCase().includes("bactériologie") ||
+      testSectionName.toLowerCase().includes("routine bacteriology") ||
+      testName.toLowerCase().includes("macroscopie") ||
+      testName.toLowerCase().includes("microscopie") ||
+      testName.toLowerCase().includes("culture");
+
+    console.log("[Validation] Is bacteriology?", isBacterio);
+    return isBacterio;
+  };
+
+  // Group results by sample and bacteriology status
+  const groupResultsBySample = () => {
+    if (!props.results?.resultList) {
+      return { bacteriology: [], standard: [] };
+    }
+
+    const bacteriologySamples = new Map(); // accessionNumber -> { analysisId, results }
+    const standardResults = [];
+
+    console.log(
+      "[Validation] Total results to process:",
+      props.results.resultList.length,
+    );
+
+    props.results.resultList.forEach((result) => {
+      if (isBacteriologyResult(result)) {
+        const key = result.accessionNumber;
+        if (!bacteriologySamples.has(key)) {
+          bacteriologySamples.set(key, {
+            accessionNumber: result.accessionNumber,
+            analysisId: result.analysisId,
+            sampleId: result.sampleId,
+            results: [],
+          });
+        }
+        bacteriologySamples.get(key).results.push(result);
+      } else {
+        standardResults.push(result);
+      }
+    });
+
+    const grouped = {
+      bacteriology: Array.from(bacteriologySamples.values()),
+      standard: standardResults,
+    };
+
+    console.log("[Validation] Grouped results:", {
+      bacteriologyCount: grouped.bacteriology.length,
+      standardCount: grouped.standard.length,
+      bacteriologySamples: grouped.bacteriology,
+    });
+
+    return grouped;
+  };
+
   const validateResults = (e, rowId) => {
     handleChange(e, rowId);
   };
@@ -461,9 +536,14 @@ const Validation = (props) => {
     return row.result;
   };
 
+  // Check if there are any non-bacteriology results
+  const hasStandardResults = props.results?.resultList?.some(
+    (result) => !isBacteriologyResult(result),
+  );
+
   return (
     <>
-      {props.results?.resultList?.length > 0 && (
+      {props.results?.resultList?.length > 0 && hasStandardResults && (
         <Grid style={{ marginTop: "20px" }} className="gridBoundary">
           <Column lg={7} md={8} sm={2}>
             <picture>
@@ -492,14 +572,17 @@ const Validation = (props) => {
               labelText={intl.formatMessage({ id: "validation.accept.normal" })}
               onChange={(e) => {
                 const nomalResults = props.results.resultList?.filter(
-                  (result) => result.normal == true,
+                  (result) =>
+                    result.normal == true && !isBacteriologyResult(result),
                 );
-                nomalResults.forEach((result) => {
+                nomalResults?.forEach((result) => {
                   const checkbox = document.getElementById(
                     "resultList" + result.id + ".isAccepted",
                   );
-                  checkbox.checked = e.target.checked;
-                  handleAutomatedCheck(e.target.checked, checkbox.name);
+                  if (checkbox) {
+                    checkbox.checked = e.target.checked;
+                    handleAutomatedCheck(e.target.checked, checkbox.name);
+                  }
                 });
               }}
             />
@@ -510,13 +593,17 @@ const Validation = (props) => {
               name={"autochecks"}
               labelText={intl.formatMessage({ id: "validation.accept.all" })}
               onChange={(e) => {
-                const nomalResults = props.results.resultList;
-                nomalResults.forEach((result) => {
+                const nomalResults = props.results.resultList?.filter(
+                  (result) => !isBacteriologyResult(result),
+                );
+                nomalResults?.forEach((result) => {
                   const checkbox = document.getElementById(
                     "resultList" + result.id + ".isAccepted",
                   );
-                  checkbox.checked = e.target.checked;
-                  handleAutomatedCheck(e.target.checked, checkbox.name);
+                  if (checkbox) {
+                    checkbox.checked = e.target.checked;
+                    handleAutomatedCheck(e.target.checked, checkbox.name);
+                  }
                 });
               }}
             />
@@ -527,13 +614,17 @@ const Validation = (props) => {
               name={"autochecks"}
               labelText={intl.formatMessage({ id: "validation.reject.all" })}
               onChange={(e) => {
-                const nomalResults = props.results.resultList;
-                nomalResults.forEach((result) => {
+                const nomalResults = props.results.resultList?.filter(
+                  (result) => !isBacteriologyResult(result),
+                );
+                nomalResults?.forEach((result) => {
                   const checkbox = document.getElementById(
                     "resultList" + result.id + ".isRejected",
                   );
-                  checkbox.checked = e.target.checked;
-                  handleAutomatedCheck(e.target.checked, checkbox.name);
+                  if (checkbox) {
+                    checkbox.checked = e.target.checked;
+                    handleAutomatedCheck(e.target.checked, checkbox.name);
+                  }
                 });
               }}
             />
@@ -546,140 +637,240 @@ const Validation = (props) => {
         onSubmit
         onChange
       >
-        {({ values, errors, touched, handleChange }) => (
-          <Form onChange={handleChange}>
-            {/* Sample Interpretation Section - One per unique sample */}
-            {props.results?.resultList?.length > 0 &&
-              getUniqueSamples().length > 0 && (
-                <Grid
-                  className="gridBoundary"
-                  style={{ marginTop: "20px", marginBottom: "20px" }}
-                >
-                  <Column lg={16} md={8} sm={4}>
-                    <h6 style={{ marginBottom: "10px", fontWeight: "bold" }}>
-                      <FormattedMessage id="validation.sampleInterpretation.label" />
-                    </h6>
-                    {getUniqueSamples().map((sample) => (
-                      <div
-                        key={sample.sampleId}
-                        style={{ marginBottom: "15px" }}
-                      >
-                        <label
-                          style={{
-                            display: "block",
-                            marginBottom: "5px",
-                            fontWeight: "500",
-                          }}
+        {({ values, errors, touched, handleChange }) => {
+          const groupedResults = groupResultsBySample();
+          return (
+            <Form onChange={handleChange}>
+              {/* Bacteriology Results Section */}
+              {groupedResults.bacteriology.length > 0 && (
+                <div style={{ marginTop: "20px", marginBottom: "40px" }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      marginBottom: "20px",
+                    }}
+                  >
+                    <h4 style={{ margin: 0 }}>
+                      <FormattedMessage id="bacteriology.validation.title" />
+                    </h4>
+                    <div
+                      style={{
+                        fontSize: "0.875rem",
+                        color: "#525252",
+                        fontWeight: "500",
+                      }}
+                    >
+                      {groupedResults.bacteriology.length} échantillon
+                      {groupedResults.bacteriology.length > 1 ? "s" : ""} |{" "}
+                      {(() => {
+                        const totalTests = groupedResults.bacteriology.reduce(
+                          (sum, sample) => sum + (sample.results?.length || 0),
+                          0,
+                        );
+                        return `${totalTests} test${totalTests > 1 ? "s" : ""}`;
+                      })()}
+                    </div>
+                  </div>
+                  {groupedResults.bacteriology
+                    .slice(
+                      (bacteriologyPage - 1) * bacteriologyPageSize,
+                      bacteriologyPage * bacteriologyPageSize,
+                    )
+                    .map((bacterioSample) => {
+                      // Extract test name and sample type from first result
+                      let testName = "";
+                      let sampleType = "";
+                      if (
+                        bacterioSample.results &&
+                        bacterioSample.results.length > 0
+                      ) {
+                        const fullTestName =
+                          bacterioSample.results[0].testName || "";
+                        const splitIndex = fullTestName.lastIndexOf("(");
+                        if (splitIndex > 0) {
+                          testName = fullTestName
+                            .substring(0, splitIndex)
+                            .trim();
+                          sampleType = fullTestName
+                            .substring(splitIndex + 1, fullTestName.length - 1)
+                            .trim();
+                        } else {
+                          testName = fullTestName;
+                        }
+                      }
+
+                      return (
+                        <div
+                          key={bacterioSample.accessionNumber}
+                          style={{ marginBottom: "30px" }}
                         >
-                          {intl.formatMessage({ id: "column.name.sampleInfo" })}
-                          :{" "}
-                          {configurationProperties.AccessionFormat ===
-                          "ALPHANUM"
-                            ? convertAlphaNumLabNumForDisplay(
-                                sample.accessionNumber,
-                              )
-                            : sample.accessionNumber}
-                        </label>
-                        <TextArea
-                          id={`interpretation-${sample.sampleId}`}
-                          labelText=""
-                          maxCount={200}
-                          placeholder={intl.formatMessage({
-                            id: "validation.sampleInterpretation.placeholder",
-                          })}
-                          value={sample.sampleInterpretation || ""}
-                          onChange={(e) =>
-                            handleInterpretationChange(e, sample.sampleId)
-                          }
-                          rows={3}
-                          style={{ width: "100%" }}
-                        />
-                      </div>
-                    ))}
-                  </Column>
-                </Grid>
+                          <BacteriologyValidation
+                            analysisId={bacterioSample.analysisId}
+                            accessionNumber={bacterioSample.accessionNumber}
+                            sampleId={bacterioSample.sampleId}
+                            testName={testName}
+                            sampleType={sampleType}
+                            onSave={() => {
+                              // Reload validation results after save
+                              window.location.reload();
+                            }}
+                          />
+                        </div>
+                      );
+                    })}
+                  {groupedResults.bacteriology.length >
+                    bacteriologyPageSize && (
+                    <Pagination
+                      page={bacteriologyPage}
+                      pageSize={bacteriologyPageSize}
+                      pageSizes={[5, 10, 20]}
+                      totalItems={groupedResults.bacteriology.length}
+                      onChange={({ page, pageSize }) => {
+                        setBacteriologyPage(page);
+                        setBacteriologyPageSize(pageSize);
+                      }}
+                    />
+                  )}
+                </div>
               )}
-            <DataTable
-              data={
-                props.results
-                  ? props?.results?.resultList?.slice(
+
+              {/* Sample Interpretation Section - One per unique sample (non-bacteriology) */}
+              {groupedResults.standard.length > 0 &&
+                getUniqueSamples().length > 0 && (
+                  <Grid
+                    className="gridBoundary"
+                    style={{ marginTop: "20px", marginBottom: "20px" }}
+                  >
+                    <Column lg={16} md={8} sm={4}>
+                      <h6 style={{ marginBottom: "10px", fontWeight: "bold" }}>
+                        <FormattedMessage id="validation.sampleInterpretation.label" />
+                      </h6>
+                      {getUniqueSamples().map((sample) => (
+                        <div
+                          key={sample.sampleId}
+                          style={{ marginBottom: "15px" }}
+                        >
+                          <label
+                            style={{
+                              display: "block",
+                              marginBottom: "5px",
+                              fontWeight: "500",
+                            }}
+                          >
+                            {intl.formatMessage({
+                              id: "column.name.sampleInfo",
+                            })}
+                            :{" "}
+                            {configurationProperties.AccessionFormat ===
+                            "ALPHANUM"
+                              ? convertAlphaNumLabNumForDisplay(
+                                  sample.accessionNumber,
+                                )
+                              : sample.accessionNumber}
+                          </label>
+                          <TextArea
+                            id={`interpretation-${sample.sampleId}`}
+                            labelText=""
+                            maxCount={200}
+                            placeholder={intl.formatMessage({
+                              id: "validation.sampleInterpretation.placeholder",
+                            })}
+                            value={sample.sampleInterpretation || ""}
+                            onChange={(e) =>
+                              handleInterpretationChange(e, sample.sampleId)
+                            }
+                            rows={3}
+                            style={{ width: "100%" }}
+                          />
+                        </div>
+                      ))}
+                    </Column>
+                  </Grid>
+                )}
+
+              {/* Standard Results DataTable (non-bacteriology only) */}
+              {groupedResults.standard.length > 0 && (
+                <>
+                  <DataTable
+                    data={groupedResults.standard.slice(
                       (page - 1) * pageSize,
                       page * pageSize,
-                    )
-                  : []
-              }
-              columns={columns}
-              isSortable
-              customStyles={{
-                cells: {
-                  style: {
-                    "&:nth-child(5)": {
-                      // Target the result column (5th column)
-                      paddingLeft: "0px",
-                      paddingRight: "0px",
-                    },
-                  },
-                },
-              }}
-            ></DataTable>
-            <Pagination
-              onChange={handlePageChange}
-              page={page}
-              pageSize={pageSize}
-              pageSizes={[10, 20, 30, 50, 100]}
-              totalItems={
-                props.results
-                  ? props.results.resultList
-                    ? props.results.resultList.length
-                    : 0
-                  : 0
-              }
-              forwardText={intl.formatMessage({ id: "pagination.forward" })}
-              backwardText={intl.formatMessage({ id: "pagination.backward" })}
-              itemRangeText={(min, max, total) =>
-                intl.formatMessage(
-                  { id: "pagination.item-range" },
-                  { min: min, max: max, total: total },
-                )
-              }
-              itemsPerPageText={intl.formatMessage({
-                id: "pagination.items-per-page",
-              })}
-              itemText={(min, max) =>
-                intl.formatMessage(
-                  { id: "pagination.item" },
-                  { min: min, max: max },
-                )
-              }
-              pageNumberText={intl.formatMessage({
-                id: "pagination.page-number",
-              })}
-              pageRangeText={(_current, total) =>
-                intl.formatMessage(
-                  { id: "pagination.page-range" },
-                  { total: total },
-                )
-              }
-              pageText={(page, pagesUnknown) =>
-                intl.formatMessage(
-                  { id: "pagination.page" },
-                  { page: pagesUnknown ? "" : page },
-                )
-              }
-            />
+                    )}
+                    columns={columns}
+                    isSortable
+                    customStyles={{
+                      cells: {
+                        style: {
+                          "&:nth-child(5)": {
+                            // Target the result column (5th column)
+                            paddingLeft: "0px",
+                            paddingRight: "0px",
+                          },
+                        },
+                      },
+                    }}
+                  ></DataTable>
+                  <Pagination
+                    onChange={handlePageChange}
+                    page={page}
+                    pageSize={pageSize}
+                    pageSizes={[10, 20, 30, 50, 100]}
+                    totalItems={groupedResults.standard.length}
+                    forwardText={intl.formatMessage({
+                      id: "pagination.forward",
+                    })}
+                    backwardText={intl.formatMessage({
+                      id: "pagination.backward",
+                    })}
+                    itemRangeText={(min, max, total) =>
+                      intl.formatMessage(
+                        { id: "pagination.item-range" },
+                        { min: min, max: max, total: total },
+                      )
+                    }
+                    itemsPerPageText={intl.formatMessage({
+                      id: "pagination.items-per-page",
+                    })}
+                    itemText={(min, max) =>
+                      intl.formatMessage(
+                        { id: "pagination.item" },
+                        { min: min, max: max },
+                      )
+                    }
+                    pageNumberText={intl.formatMessage({
+                      id: "pagination.page-number",
+                    })}
+                    pageRangeText={(_current, total) =>
+                      intl.formatMessage(
+                        { id: "pagination.page-range" },
+                        { total: total },
+                      )
+                    }
+                    pageText={(page, pagesUnknown) =>
+                      intl.formatMessage(
+                        { id: "pagination.page" },
+                        { page: pagesUnknown ? "" : page },
+                      )
+                    }
+                  />
 
-            <Button
-              type="button"
-              onClick={() => handleSave(values)}
-              id="submit"
-              style={{ marginTop: "16px" }}
-              data-testid="Save-btn"
-              disabled={isSubmitting}
-            >
-              <FormattedMessage id="label.button.save" />
-            </Button>
-          </Form>
-        )}
+                  <Button
+                    type="button"
+                    onClick={() => handleSave(values)}
+                    id="submit"
+                    style={{ marginTop: "16px" }}
+                    data-testid="Save-btn"
+                    disabled={isSubmitting}
+                  >
+                    <FormattedMessage id="label.button.save" />
+                  </Button>
+                </>
+              )}
+            </Form>
+          );
+        }}
       </Formik>
     </>
   );

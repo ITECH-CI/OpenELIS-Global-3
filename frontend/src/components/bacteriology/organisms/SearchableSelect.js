@@ -42,7 +42,9 @@ const SearchableSelect = ({
     if (!selectedValue) return null;
 
     // First try to match by value (for dictionaries)
-    let found = comboBoxItems.find((item) => item.originalValue === selectedValue);
+    let found = comboBoxItems.find(
+      (item) => item.originalValue === selectedValue,
+    );
 
     // If not found, try to match by id
     if (!found) {

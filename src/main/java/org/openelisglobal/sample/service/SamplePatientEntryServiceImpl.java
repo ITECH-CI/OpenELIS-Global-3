@@ -47,6 +47,7 @@ import org.openelisglobal.panel.valueholder.Panel;
 import org.openelisglobal.patient.action.bean.PatientManagementInfo;
 import org.openelisglobal.patient.action.bean.PatientRoutineBacterioInfo;
 import org.openelisglobal.patient.action.bean.PatientTbInfo;
+import org.openelisglobal.patient.valueholder.Patient;
 import org.openelisglobal.patientidentity.service.PatientIdentityService;
 import org.openelisglobal.patientidentity.valueholder.PatientIdentity;
 import org.openelisglobal.patientidentitytype.util.PatientIdentityTypeMap;
@@ -174,11 +175,29 @@ public class SamplePatientEntryServiceImpl implements SamplePatientEntryService 
     }
 
     private void persistObservations(SamplePatientUpdateData updateData) {
+        deleteExistingObservations(updateData);
 
         for (ObservationHistory observation : updateData.getObservations()) {
             observation.setSampleId(updateData.getSample().getId());
             observation.setPatientId(updateData.getPatientId());
             observationHistoryService.insert(observation);
+        }
+    }
+
+    private void deleteExistingObservations(SamplePatientUpdateData updateData) {
+        if (GenericValidator.isBlankOrNull(updateData.getPatientId()) || updateData.getSample() == null
+                || GenericValidator.isBlankOrNull(updateData.getSample().getId())) {
+            return;
+        }
+
+        Patient patient = new Patient();
+        patient.setId(updateData.getPatientId());
+
+        List<ObservationHistory> existingObservations = observationHistoryService.getAll(patient, updateData.getSample());
+        for (ObservationHistory observation : existingObservations) {
+            if (!GenericValidator.isBlankOrNull(observation.getId())) {
+                observationHistoryService.delete(observation.getId(), updateData.getCurrentUserId());
+            }
         }
     }
 

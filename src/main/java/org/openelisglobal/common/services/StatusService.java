@@ -65,7 +65,7 @@ public class StatusService implements IStatusService {
     }
 
     public enum ExternalOrderStatus {
-        Entered, Cancelled, Realized, NonConforming
+        Entered, InProgress, Cancelled, Completed, NonConforming
     }
 
     private Map<String, OrderStatus> idToOrderStatusMap = null;
@@ -414,10 +414,12 @@ public class StatusService implements IStatusService {
 
         if (name.equals("Entered")) {
             externalOrderStatusToObjectMap.put(ExternalOrderStatus.Entered, status);
+        } else if (name.equals("InProgress")) {
+            externalOrderStatusToObjectMap.put(ExternalOrderStatus.InProgress, status);
         } else if (name.equals("Cancelled")) {
             externalOrderStatusToObjectMap.put(ExternalOrderStatus.Cancelled, status);
-        } else if (name.equals("Realized")) {
-            externalOrderStatusToObjectMap.put(ExternalOrderStatus.Realized, status);
+        } else if (name.equals("Completed")) {
+            externalOrderStatusToObjectMap.put(ExternalOrderStatus.Completed, status);
         } else if (name.equals("NonConforming")) {
             externalOrderStatusToObjectMap.put(ExternalOrderStatus.NonConforming, status);
         }

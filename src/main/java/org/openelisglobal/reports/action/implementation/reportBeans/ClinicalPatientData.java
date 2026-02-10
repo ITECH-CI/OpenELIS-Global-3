@@ -25,6 +25,7 @@ public final class ClinicalPatientData {
     private String age;
     private String stNumber;
     private String subjectNumber;
+    private String phoneContact;
     private String contactInfo;
     private String siteInfo;
     private String testName;
@@ -99,6 +100,11 @@ public final class ClinicalPatientData {
     private String clinicalInformation; // Renseignements cliniques (texte libre + infos structurées TB/VIH)
     private String otherIdentifier; // Autre identifiant du patient
     private String interpretation; // Note d'interprétation générale pour la demande d'analyse
+    private String labNo; // Numéro de laboratoire / ordonnance
+    private String urgence; // Indicateur d'urgence
+    private String status; // Statut du rapport
+    private String clinicalInfo; // Alias pour clinicalInformation (compatibilité JRXML)
+    private boolean isBacterioParentTest;
 
     public ClinicalPatientData() {
     }
@@ -175,6 +181,10 @@ public final class ClinicalPatientData {
         clinicalInformation = data.getClinicalInformation();
         otherIdentifier = data.getOtherIdentifier();
         interpretation = data.getInterpretation();
+        labNo = data.getLabNo();
+        urgence = data.getUrgence();
+        status = data.getStatus();
+        isBacterioParentTest = data.getIsBacterioParentTest();
     }
 
     public String getReferralRefRange() {
@@ -829,4 +839,54 @@ public final class ClinicalPatientData {
     public void setSectionMethods(String sectionMethods) {
         this.sectionMethods = sectionMethods;
     }
+
+    public String getPhoneContact() {
+        return phoneContact;
+    }
+
+    public void setPhoneContact(String phoneContact) {
+        this.phoneContact = phoneContact;
+    }
+
+    public String getLabNo() {
+        return labNo;
+    }
+
+    public void setLabNo(String labNo) {
+        this.labNo = labNo;
+    }
+
+    public String getUrgence() {
+        return urgence;
+    }
+
+    public void setUrgence(String urgence) {
+        this.urgence = urgence;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public String getClinicalInfo() {
+        // Return clinicalInformation for backward compatibility with JRXML
+        return clinicalInformation;
+    }
+
+    public void setClinicalInfo(String clinicalInfo) {
+        // Set clinicalInformation for backward compatibility with JRXML
+        this.clinicalInformation = clinicalInfo;
+    }
+    
+	public boolean getIsBacterioParentTest() {
+		return isBacterioParentTest;
+	}
+	
+	public void setIsBacterioParentTest(boolean isBacterioParentTest) {
+		this.isBacterioParentTest = isBacterioParentTest;
+	}
 }

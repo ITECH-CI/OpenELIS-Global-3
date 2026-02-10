@@ -93,8 +93,7 @@ public interface BacteriologyResultGroupService extends BaseObjectService<Bacter
      * with organisms and antibiograms)
      *
      * @param analysisId The analysis ID
-     * @return Root groups (macroscopy, microscopy, culture) with populated
-     *         children
+     * @return Root groups (macroscopy, microscopy, culture) with populated children
      */
     List<BacteriologyResultGroup> getGroupHierarchyForAnalysis(Integer analysisId);
 }

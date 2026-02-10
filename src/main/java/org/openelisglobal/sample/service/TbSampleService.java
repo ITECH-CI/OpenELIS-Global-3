@@ -6,5 +6,6 @@ import org.openelisglobal.sample.form.SampleTbEntryForm;
 public interface TbSampleService {
     boolean persistTbData(SampleTbEntryForm form, HttpServletRequest request);
 
-    void getTBFormData(SampleTbEntryForm form);
+    // void getTBFormData(SampleTbEntryForm form);
+    SampleTbEntryForm getTBSampleFormData(String labnoForSearch);
 }
