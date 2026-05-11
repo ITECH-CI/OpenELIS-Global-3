@@ -63,6 +63,8 @@
         file="fix_unit_of_measure_sequence.xml" />
     <include relativeToChangelogFile="true"
         file="remove_pus_unwanted_tests.xml" />
+    <include relativeToChangelogFile="true"
+        file="add_microscopy_tests_to_urines_lcr_lp.xml" />
 
 
 </databaseChangeLog>

@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+     http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+    <!--
+        Ajouter 5 tests de microscopie (Hématies / Leucocytes en état frais quantitatif,
+        Polynucléaires / Lymphocytes au Giemsa, Nombre de flore au Gram) :
+          - au type d'échantillon Liquide de ponction (Urines et LCR les ont déjà)
+          - aux panels ECBU, ECB-LCR et ECB-LP
+        Aucun id codé en dur — résolution par name / description pour portabilité.
+    -->
+
+    <changeSet author="pkomena"
+        id="add-microscopy-tests-liquide-ponction-sampletype-1">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="1">SELECT count(*) FROM
+                clinlims.type_of_sample WHERE description = 'Liquide de ponction'</sqlCheck>
+        </preConditions>
+        <comment>Associer 5 tests de microscopie au type d'échantillon Liquide de ponction (sampletype_test)</comment>
+        <sql><![CDATA[
+            INSERT INTO clinlims.sampletype_test (id, sample_type_id, test_id)
+            SELECT
+                nextval('clinlims.sample_type_test_seq'),
+                tos.id,
+                t.id
+            FROM clinlims.type_of_sample tos
+            CROSS JOIN clinlims.test t
+            WHERE tos.description = 'Liquide de ponction'
+              AND t.name IN (
+                  'Microscopie - Etat frais Quantitatif - Hématies',
+                  'Microscopie - Etat frais Quantitatif - Leucocytes',
+                  'Microscopie - Frottis Coloration Giemsa - Polynucléaires',
+                  'Microscopie - Frottis Coloration Giemsa - Lymphocytes',
+                  'Microscopie - Frottis Coloration Gram - Bactéries - Nombre de flore'
+              )
+              AND NOT EXISTS (
+                  SELECT 1 FROM clinlims.sampletype_test st
+                  WHERE st.sample_type_id = tos.id AND st.test_id = t.id
+              );
+        ]]></sql>
+    </changeSet>
+
+    <changeSet author="pkomena"
+        id="add-microscopy-tests-ecbu-ecblcr-ecblp-panelitem-1">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <sqlCheck expectedResult="3">SELECT count(*) FROM
+                    clinlims.panel WHERE name IN ('ECBU','ECB-LCR','ECB-LP')</sqlCheck>
+            </and>
+        </preConditions>
+        <comment>Associer 5 tests de microscopie aux panels ECBU, ECB-LCR et ECB-LP (panel_item)</comment>
+        <sql><![CDATA[
+            INSERT INTO clinlims.panel_item (id, panel_id, test_id, lastupdated)
+            SELECT
+                nextval('clinlims.panel_item_seq'),
+                p.id,
+                t.id,
+                NOW()
+            FROM clinlims.panel p
+            CROSS JOIN clinlims.test t
+            WHERE p.name IN ('ECBU','ECB-LCR','ECB-LP')
+              AND t.name IN (
+                  'Microscopie - Etat frais Quantitatif - Hématies',
+                  'Microscopie - Etat frais Quantitatif - Leucocytes',
+                  'Microscopie - Frottis Coloration Giemsa - Polynucléaires',
+                  'Microscopie - Frottis Coloration Giemsa - Lymphocytes',
+                  'Microscopie - Frottis Coloration Gram - Bactéries - Nombre de flore'
+              )
+              AND NOT EXISTS (
+                  SELECT 1 FROM clinlims.panel_item pi
+                  WHERE pi.panel_id = p.id AND pi.test_id = t.id
+              );
+        ]]></sql>
+    </changeSet>
+
+</databaseChangeLog>
