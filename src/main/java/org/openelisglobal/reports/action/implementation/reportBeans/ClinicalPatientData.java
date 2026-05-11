@@ -106,6 +106,16 @@ public final class ClinicalPatientData {
     private String clinicalInfo; // Alias pour clinicalInformation (compatibilité JRXML)
     private boolean isBacterioParentTest;
 
+    // Bacteriology layout fields
+    private String bacterioRowType; // TEST_PAIR | TEST_SINGLE | ORGANISM | ANTIBIOGRAM_HEADER | ANTIBIOGRAM_ROW
+    private String testNameLeft;
+    private String resultLeft;
+    private String testNameRight;
+    private String resultRight;
+    private String abgInterpretation;
+    private String abgDiameter;
+    private String abgMic;
+
     public ClinicalPatientData() {
     }
 
@@ -185,6 +195,14 @@ public final class ClinicalPatientData {
         urgence = data.getUrgence();
         status = data.getStatus();
         isBacterioParentTest = data.getIsBacterioParentTest();
+        bacterioRowType = data.getBacterioRowType();
+        testNameLeft = data.getTestNameLeft();
+        resultLeft = data.getResultLeft();
+        testNameRight = data.getTestNameRight();
+        resultRight = data.getResultRight();
+        abgInterpretation = data.getAbgInterpretation();
+        abgDiameter = data.getAbgDiameter();
+        abgMic = data.getAbgMic();
     }
 
     public String getReferralRefRange() {
@@ -885,8 +903,72 @@ public final class ClinicalPatientData {
 	public boolean getIsBacterioParentTest() {
 		return isBacterioParentTest;
 	}
-	
+
 	public void setIsBacterioParentTest(boolean isBacterioParentTest) {
 		this.isBacterioParentTest = isBacterioParentTest;
 	}
+
+    public String getBacterioRowType() {
+        return bacterioRowType;
+    }
+
+    public void setBacterioRowType(String bacterioRowType) {
+        this.bacterioRowType = bacterioRowType;
+    }
+
+    public String getTestNameLeft() {
+        return testNameLeft;
+    }
+
+    public void setTestNameLeft(String testNameLeft) {
+        this.testNameLeft = testNameLeft;
+    }
+
+    public String getResultLeft() {
+        return resultLeft;
+    }
+
+    public void setResultLeft(String resultLeft) {
+        this.resultLeft = resultLeft;
+    }
+
+    public String getTestNameRight() {
+        return testNameRight;
+    }
+
+    public void setTestNameRight(String testNameRight) {
+        this.testNameRight = testNameRight;
+    }
+
+    public String getResultRight() {
+        return resultRight;
+    }
+
+    public void setResultRight(String resultRight) {
+        this.resultRight = resultRight;
+    }
+
+    public String getAbgInterpretation() {
+        return abgInterpretation;
+    }
+
+    public void setAbgInterpretation(String abgInterpretation) {
+        this.abgInterpretation = abgInterpretation;
+    }
+
+    public String getAbgDiameter() {
+        return abgDiameter;
+    }
+
+    public void setAbgDiameter(String abgDiameter) {
+        this.abgDiameter = abgDiameter;
+    }
+
+    public String getAbgMic() {
+        return abgMic;
+    }
+
+    public void setAbgMic(String abgMic) {
+        this.abgMic = abgMic;
+    }
 }

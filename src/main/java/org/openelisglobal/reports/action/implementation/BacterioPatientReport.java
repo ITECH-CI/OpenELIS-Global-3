@@ -60,6 +60,7 @@ public class BacterioPatientReport extends PatientReport implements IReportCreat
 
     private static Set<Integer> analysisStatusIds;
     protected List<ClinicalPatientData> clinicalReportItems;
+    private java.util.Date maxCompletionDate;
 
     // Test type identifiers for bacteriology (based on test names, not sections)
     private static final int TYPE_ORDER_MACROSCOPY = 1;
@@ -146,6 +147,16 @@ public class BacterioPatientReport extends PatientReport implements IReportCreat
 
         for (Analysis analysis : filteredAnalysisList) {
             if (!analysis.getTest().isInLabOnly()) {
+                // Track the most recent completion date across all analyses in the report.
+                // Prefer completedDate, fall back to releasedDate when the former is null.
+                java.util.Date analysisDate = analysis.getCompletedDate();
+                if (analysisDate == null) {
+                    analysisDate = analysis.getReleasedDate();
+                }
+                if (analysisDate != null
+                        && (maxCompletionDate == null || analysisDate.after(maxCompletionDate))) {
+                    maxCompletionDate = analysisDate;
+                }
                 boolean hasParentResult = analysis.getParentResult() != null;
                 sampleSet.add(analysis.getSampleItem());
                 if (analysis.getTest() != null) {
@@ -210,12 +221,14 @@ public class BacterioPatientReport extends PatientReport implements IReportCreat
                         }
                         resultsData.setAlerts(alerts);
                     }
+                    resultsData.setBacterioRowType("TEST");
                     reportItems.add(resultsData);
                     currentSampleReportItems.add(resultsData);
 
                     // For culture tests, add organisms and antibiograms
                     if (parts.mainSection != null && parts.mainSection.toUpperCase().contains("CULTURE")) {
-                        addOrganismsAndAntibiograms(analysis, parts.mainSection, reportItems, currentSampleReportItems);
+                        addOrganismsAndAntibiograms(analysis, parts.mainSection, resultsData, reportItems,
+                                currentSampleReportItems);
                     }
                 }
             }
@@ -228,10 +241,13 @@ public class BacterioPatientReport extends PatientReport implements IReportCreat
      *
      * @param analysis The culture analysis
      * @param mainSection The main section name (CULTURE)
+     * @param patientTemplate A test row already populated with patient/order identity fields,
+     *                       used to propagate those onto organism/antibiogram rows
      * @param reportItems The global report items list
      * @param currentSampleReportItems The current sample report items list
      */
     private void addOrganismsAndAntibiograms(Analysis analysis, String mainSection,
+            ClinicalPatientData patientTemplate,
             List<ClinicalPatientData> reportItems, List<ClinicalPatientData> currentSampleReportItems) {
 
         // Get accession number from analysis
@@ -262,12 +278,14 @@ public class BacterioPatientReport extends PatientReport implements IReportCreat
                 continue; // Skip inactive organisms
             }
 
-            // Create organism display item
-            ClinicalPatientData organismData = new ClinicalPatientData();
+            // Create organism display item, copying patient/order identity from the culture test row
+            ClinicalPatientData organismData = new ClinicalPatientData(patientTemplate);
             organismData.setTestSection(mainSection);
             organismData.setAccessionNumber(accessionNumber);
             organismData.setSampleType(analysis.getSampleTypeName());
             organismData.setSampleId(analysis.getSampleItem() != null ? analysis.getSampleItem().getId() : null);
+            organismData.setPanelName(null);
+            organismData.setBacterioRowType("ORGANISM");
 
             // Resolve organism name
             String organismName = organism.getOrganismNameText();
@@ -298,7 +316,7 @@ public class BacterioPatientReport extends PatientReport implements IReportCreat
                 organismDetails.append("Capsule présente");
             }
 
-            organismData.setTestName("Organisme " + organism.getOrganismNumber() + ": " + organismName);
+            organismData.setTestName("Organisme " + organism.getOrganismNumber() + " : " + organismName);
             organismData.setResult(organismDetails.length() > 0 ? organismDetails.toString() : "");
             organismData.setParentMarker(false);
 
@@ -309,29 +327,26 @@ public class BacterioPatientReport extends PatientReport implements IReportCreat
             List<BacteriologyAntibiogram> antibiograms = antibiogramService.getAntibiogramsByOrganismId(organism.getId());
 
             if (antibiograms != null && !antibiograms.isEmpty()) {
-                // Sort antibiograms by sort order if available, otherwise alphabetically by antibiotic name
+                // Sort antibiograms alphabetically by antibiotic name
                 antibiograms.sort((a1, a2) -> {
-                    // First try to sort by dictionary sort_order
-                    // For now, just sort alphabetically by antibiotic name
                     String name1 = a1.getAntibioticNameText();
                     String name2 = a2.getAntibioticNameText();
-
                     if (name1 == null) name1 = "";
                     if (name2 == null) name2 = "";
-
                     return name1.compareToIgnoreCase(name2);
                 });
 
-                // Add a subsection header for antibiogram
-                ClinicalPatientData antibiogramHeader = new ClinicalPatientData();
+                // Add antibiogram table header (one row, will render as table column titles in JRXML)
+                ClinicalPatientData antibiogramHeader = new ClinicalPatientData(patientTemplate);
                 antibiogramHeader.setTestSection(mainSection);
-                antibiogramHeader.setPanelName("Antibiogramme");
+                antibiogramHeader.setPanelName(null);
                 antibiogramHeader.setTestName("");
                 antibiogramHeader.setResult("");
                 antibiogramHeader.setParentMarker(false);
                 antibiogramHeader.setAccessionNumber(accessionNumber);
                 antibiogramHeader.setSampleType(analysis.getSampleTypeName());
                 antibiogramHeader.setSampleId(analysis.getSampleItem() != null ? analysis.getSampleItem().getId() : null);
+                antibiogramHeader.setBacterioRowType("ANTIBIOGRAM_HEADER");
 
                 reportItems.add(antibiogramHeader);
                 currentSampleReportItems.add(antibiogramHeader);
@@ -342,12 +357,13 @@ public class BacterioPatientReport extends PatientReport implements IReportCreat
                         continue;
                     }
 
-                    ClinicalPatientData abgData = new ClinicalPatientData();
+                    ClinicalPatientData abgData = new ClinicalPatientData(patientTemplate);
                     abgData.setTestSection(mainSection);
-                    abgData.setPanelName("Antibiogramme");
+                    abgData.setPanelName(null);
                     abgData.setAccessionNumber(accessionNumber);
                     abgData.setSampleType(analysis.getSampleTypeName());
                     abgData.setSampleId(analysis.getSampleItem() != null ? analysis.getSampleItem().getId() : null);
+                    abgData.setBacterioRowType("ANTIBIOGRAM_ROW");
 
                     // Resolve antibiotic name
                     String antibioticName = abg.getAntibioticNameText();
@@ -362,34 +378,20 @@ public class BacterioPatientReport extends PatientReport implements IReportCreat
 
                     abgData.setTestName(antibioticName);
 
-                    // Build result string with interpretation, diameter, and MIC
-                    StringBuilder resultStr = new StringBuilder();
-
-                    // Add interpretation text (Sensible, Intermédiaire, Résistant)
+                    // Split into separate fields so JRXML can render them in table columns
+                    String interpretation = "";
                     if (abg.getInterpretationText() != null && !abg.getInterpretationText().isEmpty()) {
-                        resultStr.append(abg.getInterpretationText());
+                        interpretation = abg.getInterpretationText();
                     } else if (abg.getResult() != null) {
-                        // Fallback to S/I/R code
-                        resultStr.append(abg.getResult());
+                        interpretation = abg.getResult();
                     }
+                    abgData.setAbgInterpretation(interpretation);
 
-                    // Add diameter if available
-                    if (abg.getDiameterMm() != null) {
-                        if (resultStr.length() > 0) {
-                            resultStr.append(" - ");
-                        }
-                        resultStr.append("Ø ").append(abg.getDiameterMm()).append(" mm");
-                    }
+                    abgData.setAbgDiameter(abg.getDiameterMm() != null ? abg.getDiameterMm() + " mm" : "");
+                    abgData.setAbgMic(abg.getMicValue() != null ? abg.getMicValue() : "");
 
-                    // Add MIC if available
-                    if (abg.getMicValue() != null && !abg.getMicValue().isEmpty()) {
-                        if (resultStr.length() > 0) {
-                            resultStr.append(" - ");
-                        }
-                        resultStr.append("CMI: ").append(abg.getMicValue());
-                    }
-
-                    abgData.setResult(resultStr.toString());
+                    // Keep result populated for legacy/fallback use
+                    abgData.setResult(interpretation);
                     abgData.setParentMarker(false);
 
                     reportItems.add(abgData);
@@ -733,6 +735,179 @@ public class BacterioPatientReport extends PatientReport implements IReportCreat
             reportItem
                     .setCorrectedResult(sampleCorrectedMap.get(reportItem.getAccessionNumber().split("_")[0]) != null);
         }
+
+        // Re-order culture section: root TEST rows -> "Nombre de germes" -> ORGANISM+ANTIBIOGRAM_* grouped
+        // Also appends a LEGEND row at the end so JRXML can render the S/I/R legend.
+        reportItems = reorderCultureSection(reportItems);
+
+        // Propagate the most recent test completion date onto every row (max across all rows).
+        // The JRXML reads testCompletedDate to display "Date de réalisation".
+        propagateMaxCompletionDate(reportItems);
+
+        // Final step: pair up consecutive TEST rows in Macroscopy/Microscopy to render two tests per line
+        reportItems = pairMacroMicroTests(reportItems);
+    }
+
+    /**
+     * Find the most recent testCompletedDate among all rows and assign it back to every row
+     * so the JRXML can show a single "Date de réalisation" value. Dates are compared as the
+     * String produced by DateUtil.convertSqlDateToStringDate(), which uses the configured
+     * locale format. Since all rows share the same format, lexicographic compare on dd/MM/yyyy
+     * would be wrong, so we parse and pick the latest by epoch order.
+     */
+    private void propagateMaxCompletionDate(List<ClinicalPatientData> items) {
+        if (maxCompletionDate == null) {
+            return;
+        }
+        String maxDate = new java.text.SimpleDateFormat(
+                org.openelisglobal.common.util.DateUtil.getDateFormat())
+                .format(maxCompletionDate);
+        for (ClinicalPatientData item : items) {
+            item.setTestCompletedDate(maxDate);
+        }
+    }
+
+    /**
+     * For the Culture section, ensure that simple TEST rows (the root culture tests like
+     * "Sécrétions vaginales : Positive") appear BEFORE any ORGANISM / ANTIBIOGRAM rows,
+     * and inject a synthetic "Nombre de germes : N" row right after the last culture TEST row.
+     * Other sections (Macroscopy/Microscopy) are untouched.
+     */
+    private List<ClinicalPatientData> reorderCultureSection(List<ClinicalPatientData> items) {
+        String culture = MessageUtil.getMessage("bacteriology.section.culture");
+
+        List<ClinicalPatientData> nonCulture = new ArrayList<>();
+        List<ClinicalPatientData> cultureTests = new ArrayList<>();
+        List<ClinicalPatientData> cultureOrganisms = new ArrayList<>();
+        ClinicalPatientData firstCultureTemplate = null;
+
+        for (ClinicalPatientData item : items) {
+            if (culture.equals(item.getTestSection())) {
+                String type = item.getBacterioRowType();
+                if ("TEST".equals(type) || type == null) {
+                    cultureTests.add(item);
+                    if (firstCultureTemplate == null) {
+                        firstCultureTemplate = item;
+                    }
+                } else {
+                    cultureOrganisms.add(item);
+                }
+            } else {
+                nonCulture.add(item);
+            }
+        }
+
+        if (cultureTests.isEmpty() && cultureOrganisms.isEmpty()) {
+            return items;
+        }
+
+        int organismCount = 0;
+        for (ClinicalPatientData item : cultureOrganisms) {
+            if ("ORGANISM".equals(item.getBacterioRowType())) {
+                organismCount++;
+            }
+        }
+
+        if (firstCultureTemplate != null) {
+            ClinicalPatientData countRow = new ClinicalPatientData(firstCultureTemplate);
+            countRow.setTestSection(culture);
+            countRow.setPanelName(null);
+            countRow.setBacterioRowType("TEST");
+            countRow.setIsBacterioParentTest(false);
+            countRow.setParentMarker(false);
+            countRow.setTestName("Nombre de germes");
+            countRow.setResult(String.valueOf(organismCount));
+            countRow.setSeparator(false);
+            cultureTests.add(countRow);
+        }
+
+        // Append a LEGEND row at the very end of the culture section so the JRXML can
+        // render the S/I/R legend once after all antibiograms.
+        if (!cultureOrganisms.isEmpty() && firstCultureTemplate != null) {
+            ClinicalPatientData legendRow = new ClinicalPatientData(firstCultureTemplate);
+            legendRow.setTestSection(culture);
+            legendRow.setPanelName(null);
+            legendRow.setBacterioRowType("LEGEND");
+            legendRow.setIsBacterioParentTest(false);
+            legendRow.setParentMarker(false);
+            legendRow.setTestName("");
+            legendRow.setResult("");
+            legendRow.setSeparator(false);
+            cultureOrganisms.add(legendRow);
+        }
+
+        List<ClinicalPatientData> result = new ArrayList<>(items.size() + 2);
+        result.addAll(nonCulture);
+        result.addAll(cultureTests);
+        result.addAll(cultureOrganisms);
+        return result;
+    }
+
+    /**
+     * Pair consecutive simple TEST rows (Macroscopy / Microscopy only) sharing the same
+     * section, subsection and accession into a single TEST_PAIR row, so the JRXML can
+     * render two tests per line. Tests with parent triggers, parent markers, or in the
+     * Culture section stay as single rows.
+     */
+    private List<ClinicalPatientData> pairMacroMicroTests(List<ClinicalPatientData> items) {
+        List<ClinicalPatientData> paired = new ArrayList<>(items.size());
+        String macroscopy = MessageUtil.getMessage("bacteriology.section.macroscopy");
+        String microscopy = MessageUtil.getMessage("bacteriology.section.microscopy");
+
+        int i = 0;
+        while (i < items.size()) {
+            ClinicalPatientData current = items.get(i);
+            // Pairable = simple TEST in Macro/Micro, not a parent (has subtests), not a parent marker,
+            // not a conditional subtest (those have parentResult != null and must stay aligned).
+            // separator flag is ignored: first item of a subsection is still pairable.
+            boolean isPairable = "TEST".equals(current.getBacterioRowType())
+                    && (macroscopy.equals(current.getTestSection()) || microscopy.equals(current.getTestSection()))
+                    && !current.getIsBacterioParentTest()
+                    && !current.getParentMarker()
+                    && current.getParentResult() == null;
+
+            if (!isPairable) {
+                paired.add(current);
+                i++;
+                continue;
+            }
+
+            // Look ahead for a partner with matching section/subsection/accession.
+            // The partner must also not be a separator (start of a new subsection) — that would
+            // visually break the layout. So here separator IS respected for the partner.
+            ClinicalPatientData partner = null;
+            int j = i + 1;
+            if (j < items.size()) {
+                ClinicalPatientData candidate = items.get(j);
+                boolean candidatePairable = "TEST".equals(candidate.getBacterioRowType())
+                        && current.getTestSection().equals(candidate.getTestSection())
+                        && java.util.Objects.equals(current.getPanelName(), candidate.getPanelName())
+                        && current.getAccessionNumber().equals(candidate.getAccessionNumber())
+                        && !candidate.getIsBacterioParentTest()
+                        && !candidate.getParentMarker()
+                        && candidate.getParentResult() == null
+                        && !Boolean.TRUE.equals(candidate.getSeparator());
+                if (candidatePairable) {
+                    partner = candidate;
+                }
+            }
+
+            current.setBacterioRowType("TEST_PAIR");
+            current.setTestNameLeft(current.getTestName());
+            current.setResultLeft(current.getResult());
+            if (partner != null) {
+                current.setTestNameRight(partner.getTestName());
+                current.setResultRight(partner.getResult());
+                paired.add(current);
+                i += 2;
+            } else {
+                current.setTestNameRight(null);
+                current.setResultRight(null);
+                paired.add(current);
+                i++;
+            }
+        }
+        return paired;
     }
 
     @Override

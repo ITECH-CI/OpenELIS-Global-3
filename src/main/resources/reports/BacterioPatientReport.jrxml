@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Created with Jaspersoft Studio version 6.21.3.final using JasperReports Library version 6.20.6  -->
-<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="PatientReport" columnCount="2" printOrder="Horizontal" pageWidth="612" pageHeight="1100" whenNoDataType="AllSectionsNoDetail" columnWidth="276" leftMargin="30" rightMargin="30" topMargin="20" bottomMargin="20" resourceBundle="languages/message" whenResourceMissingType="Empty" uuid="d612f334-d625-401a-9542-6d1fca793e90">
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="PatientReport" columnCount="1" printOrder="Vertical" pageWidth="612" pageHeight="1100" whenNoDataType="AllSectionsNoDetail" columnWidth="552" leftMargin="30" rightMargin="30" topMargin="20" bottomMargin="20" resourceBundle="languages/message" whenResourceMissingType="Empty" uuid="d612f334-d625-401a-9542-6d1fca793e90">
 	<property name="ireport.scriptlethandling" value="0"/>
 	<property name="ireport.encoding" value="UTF-8"/>
 	<property name="ireport.zoom" value="1.5"/>
@@ -95,6 +95,16 @@
 	<field name="status" class="java.lang.String"/>
 	<field name="clinicalInfo" class="java.lang.String"/>
 	<field name="isBacterioParentTest" class="java.lang.Boolean"/>
+	<field name="bacterioRowType" class="java.lang.String"/>
+	<field name="testNameLeft" class="java.lang.String"/>
+	<field name="resultLeft" class="java.lang.String"/>
+	<field name="testNameRight" class="java.lang.String"/>
+	<field name="resultRight" class="java.lang.String"/>
+	<field name="abgInterpretation" class="java.lang.String"/>
+	<field name="abgDiameter" class="java.lang.String"/>
+	<field name="abgMic" class="java.lang.String"/>
+	<field name="testCompletedDate" class="java.lang.String"/>
+	<field name="lastValidationDate" class="java.lang.String"/>
 	<variable name="subsectionItemCount" class="java.lang.Integer" resetType="Group" resetGroup="subsection name" calculation="Count">
 		<variableExpression><![CDATA[$F{testName}]]></variableExpression>
 		<initialValueExpression><![CDATA[0]]></initialValueExpression>
@@ -104,11 +114,18 @@
 		<groupFooter>
 			<band height="61">
 				<textField evaluationTime="Group" evaluationGroup="person" pattern="">
-					<reportElement x="373" y="40" width="100" height="20" isRemoveLineWhenBlank="true" uuid="396b7540-121d-4a13-9bf1-9d436d2d7a9a"/>
+					<reportElement x="373" y="40" width="60" height="20" isRemoveLineWhenBlank="true" uuid="396b7540-121d-4a13-9bf1-9d436d2d7a9a"/>
 					<textElement verticalAlignment="Middle">
 						<font size="9" isBold="false"/>
 					</textElement>
-					<textFieldExpression><![CDATA[$R{report.date}]]></textFieldExpression>
+					<textFieldExpression><![CDATA[$R{report.date}+" :"]]></textFieldExpression>
+				</textField>
+				<textField evaluationTime="Group" evaluationGroup="person" isBlankWhenNull="true">
+					<reportElement x="433" y="40" width="115" height="20" isRemoveLineWhenBlank="true" uuid="8e2c7a91-5d3f-4e6b-a1c9-7d4f2b8e3a6d"/>
+					<textElement verticalAlignment="Middle">
+						<font size="9" isBold="true"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{lastValidationDate}]]></textFieldExpression>
 				</textField>
 				<textField evaluationTime="Group" evaluationGroup="person" pattern="">
 					<reportElement x="370" y="0" width="183" height="61" isRemoveLineWhenBlank="true" uuid="511d4db7-878f-4be0-911d-c31de6fdb275"/>
@@ -592,7 +609,7 @@
 					<textFieldExpression><![CDATA[$F{siteInfo}]]></textFieldExpression>
 				</textField>
 			</band>
-			<band height="40">
+			<band height="60">
 				<textField>
 					<reportElement mode="Opaque" x="0" y="0" width="138" height="20" backcolor="#E6E6E6" uuid="1862fd47-b1df-4bcb-97e9-b7786bbc723a"/>
 					<box leftPadding="4">
@@ -643,13 +660,42 @@
 					</textElement>
 					<textFieldExpression><![CDATA[$F{sampleType}]]></textFieldExpression>
 				</textField>
+				<staticText>
+					<reportElement mode="Opaque" x="0" y="40" width="138" height="20" backcolor="#E6E6E6" uuid="4f8a91b2-d3e5-4c7a-bfe2-9d8c1a3b5e7f">
+						<printWhenExpression><![CDATA[$V{PAGE_NUMBER} == 1]]></printWhenExpression>
+					</reportElement>
+					<box leftPadding="4">
+						<topPen lineWidth="0.5" lineStyle="Solid"/>
+						<leftPen lineWidth="0.5" lineStyle="Solid"/>
+						<bottomPen lineWidth="0.5" lineStyle="Solid"/>
+						<rightPen lineWidth="0.5" lineStyle="Solid"/>
+					</box>
+					<textElement verticalAlignment="Middle">
+						<font size="9"/>
+					</textElement>
+					<text><![CDATA[Date de réalisation]]></text>
+				</staticText>
+				<textField isBlankWhenNull="true">
+					<reportElement x="138" y="40" width="415" height="20" uuid="6c3e4d7a-1b2f-4d8e-bc5a-2e9f7b1d6a4c">
+						<printWhenExpression><![CDATA[$V{PAGE_NUMBER} == 1]]></printWhenExpression>
+					</reportElement>
+					<box leftPadding="4">
+						<topPen lineWidth="1.0"/>
+						<bottomPen lineWidth="0.5"/>
+						<rightPen lineWidth="0.5"/>
+					</box>
+					<textElement>
+						<font size="9"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{testCompletedDate}]]></textFieldExpression>
+				</textField>
 			</band>
 		</groupHeader>
 		<groupFooter>
 			<band splitType="Stretch"/>
 		</groupFooter>
 	</group>
-	<group name="section name" isReprintHeaderOnEachPage="true">
+	<group name="section name" isReprintHeaderOnEachPage="true" keepTogether="true">
 		<groupExpression><![CDATA[$F{testSection}]]></groupExpression>
 		<groupHeader>
 			<band height="31" splitType="Prevent">
@@ -695,16 +741,16 @@
 				<property name="com.jaspersoft.studio.unit.height" value="px"/>
 				<printWhenExpression><![CDATA[$F{isBacterioParentTest}]]></printWhenExpression>
 				<textField textAdjust="StretchHeight" isBlankWhenNull="true">
-					<reportElement x="15" y="0" width="140" height="15" isRemoveLineWhenBlank="true" isPrintWhenDetailOverflows="true" uuid="7e68fb8a-f31d-4df9-888c-079e0b42d25e">
+					<reportElement x="15" y="0" width="200" height="15" isRemoveLineWhenBlank="true" isPrintWhenDetailOverflows="true" uuid="7e68fb8a-f31d-4df9-888c-079e0b42d25e">
 						<printWhenExpression><![CDATA[$F{isBacterioParentTest}]]></printWhenExpression>
 					</reportElement>
 					<textElement>
-						<font size="10"/>
+						<font size="10" isBold="true"/>
 					</textElement>
 					<textFieldExpression><![CDATA[$F{testName} + " :"]]></textFieldExpression>
 				</textField>
 				<textField textAdjust="StretchHeight" isBlankWhenNull="true">
-					<reportElement x="155" y="0" width="118" height="15" isRemoveLineWhenBlank="true" isPrintWhenDetailOverflows="true" uuid="44e3025d-81d1-4114-a0e0-a35251f604b2">
+					<reportElement x="220" y="0" width="330" height="15" isRemoveLineWhenBlank="true" isPrintWhenDetailOverflows="true" uuid="44e3025d-81d1-4114-a0e0-a35251f604b2">
 						<printWhenExpression><![CDATA[$F{isBacterioParentTest}]]></printWhenExpression>
 					</reportElement>
 					<textElement textAlignment="Left">
@@ -815,32 +861,210 @@
 		<band splitType="Stretch"/>
 	</columnHeader>
 	<detail>
-		<band height="17" splitType="Stretch">
-			<property name="com.jaspersoft.studio.layout"/>
+		<!-- Band 1: TEST_PAIR - two tests rendered side-by-side (Macroscopy/Microscopy) -->
+		<band height="17" splitType="Prevent">
+			<printWhenExpression><![CDATA["TEST_PAIR".equals($F{bacterioRowType})]]></printWhenExpression>
 			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
-				<reportElement x="15" y="1" width="140" height="15" isRemoveLineWhenBlank="true" isPrintWhenDetailOverflows="true" uuid="d4e5f6a7-b8c9-4d5e-1f2a-3b4c5d6e7f8a">
-					<printWhenExpression><![CDATA[!$F{isBacterioParentTest}]]></printWhenExpression>
+				<reportElement x="15" y="1" width="140" height="15" isRemoveLineWhenBlank="true" isPrintWhenDetailOverflows="true" uuid="426ec571-cc74-4779-bc57-0c02f46b760a"/>
+				<textElement>
+					<font size="10"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{testNameLeft} != null ? $F{testNameLeft} + " :" : ""]]></textFieldExpression>
+			</textField>
+			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
+				<reportElement x="155" y="1" width="118" height="15" isRemoveLineWhenBlank="true" isPrintWhenDetailOverflows="true" uuid="659990d6-13f6-404a-80da-9263137b21f2"/>
+				<textElement textAlignment="Left">
+					<font size="10" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{resultLeft}]]></textFieldExpression>
+			</textField>
+			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
+				<reportElement x="290" y="1" width="140" height="15" isRemoveLineWhenBlank="true" isPrintWhenDetailOverflows="true" uuid="f42bce54-927e-4107-83ee-9c6009aeccaa">
+					<printWhenExpression><![CDATA[$F{testNameRight} != null]]></printWhenExpression>
 				</reportElement>
 				<textElement>
 					<font size="10"/>
 				</textElement>
+				<textFieldExpression><![CDATA[$F{testNameRight} + " :"]]></textFieldExpression>
+			</textField>
+			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
+				<reportElement x="430" y="1" width="120" height="15" isRemoveLineWhenBlank="true" isPrintWhenDetailOverflows="true" uuid="d5389675-2e7f-4282-a492-6483bd233f9f">
+					<printWhenExpression><![CDATA[$F{testNameRight} != null]]></printWhenExpression>
+				</reportElement>
+				<textElement textAlignment="Left">
+					<font size="10" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{resultRight}]]></textFieldExpression>
+			</textField>
+		</band>
+		<!-- Band 2: TEST - simple single-line test (parent markers, culture root tests, leftover singles) -->
+		<band height="17" splitType="Prevent">
+			<printWhenExpression><![CDATA["TEST".equals($F{bacterioRowType}) && !$F{isBacterioParentTest}]]></printWhenExpression>
+			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
+				<reportElement x="15" y="1" width="200" height="15" isRemoveLineWhenBlank="true" isPrintWhenDetailOverflows="true" uuid="0ae78609-2e0c-405e-a9a4-efdf6d998969"/>
+				<textElement>
+					<font size="10" isBold="true" isItalic="false"/>
+				</textElement>
 				<textFieldExpression><![CDATA[$F{testName} + " :"]]></textFieldExpression>
 			</textField>
 			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
-				<reportElement x="155" y="1" width="118" height="15" isRemoveLineWhenBlank="true" isPrintWhenDetailOverflows="true" uuid="e5f6a7b8-c9d0-4e5f-2a3b-4c5d6e7f8a9b">
-					<printWhenExpression><![CDATA[!$F{isBacterioParentTest}]]></printWhenExpression>
-				</reportElement>
+				<reportElement x="220" y="1" width="330" height="15" isRemoveLineWhenBlank="true" isPrintWhenDetailOverflows="true" uuid="4c9948ba-8b53-41e8-8a4a-14074a6e0777"/>
 				<textElement textAlignment="Left">
 					<font size="10" isBold="true"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{result}]]></textFieldExpression>
 			</textField>
-			<break>
-				<reportElement x="0" y="1" width="99" height="1" uuid="b4431e92-e833-480e-90e0-f6069fdfa297">
-					<property name="com.jaspersoft.studio.unit.y" value="pixel"/>
-					<printWhenExpression><![CDATA[$F{isBacterioParentTest}]]></printWhenExpression>
-				</reportElement>
-			</break>
+		</band>
+		<!-- Band 3: ORGANISM - organism title row, full width with colored background -->
+		<band height="22" splitType="Prevent">
+			<printWhenExpression><![CDATA["ORGANISM".equals($F{bacterioRowType})]]></printWhenExpression>
+			<frame>
+				<reportElement mode="Opaque" x="0" y="3" width="552" height="18" backcolor="#F0F0F0" uuid="7d6706bf-c2e5-495c-877d-609c4b7206c5"/>
+				<box leftPadding="6">
+					<pen lineWidth="0.5"/>
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textField textAdjust="StretchHeight" isBlankWhenNull="true">
+					<reportElement x="0" y="1" width="280" height="16" uuid="ef782748-13a4-4210-a37c-4231ba9e909c"/>
+					<textElement verticalAlignment="Middle">
+						<font size="10" isBold="true"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{testName}]]></textFieldExpression>
+				</textField>
+				<textField textAdjust="StretchHeight" isBlankWhenNull="true">
+					<reportElement x="280" y="1" width="266" height="16" uuid="56edd897-e433-4797-b6a1-f8e1c1ee8ee2"/>
+					<textElement verticalAlignment="Middle">
+						<font size="9" isItalic="true"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{result}]]></textFieldExpression>
+				</textField>
+			</frame>
+		</band>
+		<!-- Band 4: ANTIBIOGRAM_HEADER - column titles for the antibiogram table -->
+		<band height="20" splitType="Prevent">
+			<printWhenExpression><![CDATA["ANTIBIOGRAM_HEADER".equals($F{bacterioRowType})]]></printWhenExpression>
+			<staticText>
+				<reportElement mode="Opaque" x="0" y="3" width="370" height="16" backcolor="#D9D9D9" uuid="04f8146e-f519-4c00-b261-9ae0e5a5a78b"/>
+				<box leftPadding="6">
+					<pen lineWidth="0.5"/>
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font size="9" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Antibiotique]]></text>
+			</staticText>
+			<staticText>
+				<reportElement mode="Opaque" x="370" y="3" width="90" height="16" backcolor="#D9D9D9" uuid="c8205778-9a53-454d-a167-4867834b005c"/>
+				<box leftPadding="2">
+					<pen lineWidth="0.5"/>
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="9" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Interprétation]]></text>
+			</staticText>
+			<staticText>
+				<reportElement mode="Opaque" x="460" y="3" width="46" height="16" backcolor="#D9D9D9" uuid="fd3732f2-1543-4b0f-baa4-4620be61649d"/>
+				<box leftPadding="2">
+					<pen lineWidth="0.5"/>
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="9" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Ø (mm)]]></text>
+			</staticText>
+			<staticText>
+				<reportElement mode="Opaque" x="506" y="3" width="46" height="16" backcolor="#D9D9D9" uuid="e35819a3-5ea6-42d4-ab92-9822f85efbc5"/>
+				<box leftPadding="2">
+					<pen lineWidth="0.5"/>
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="9" isBold="true"/>
+				</textElement>
+				<text><![CDATA[CMI]]></text>
+			</staticText>
+		</band>
+		<!-- Band 6: LEGEND - S/I/R legend printed once after the last antibiogram row -->
+		<band height="18" splitType="Prevent">
+			<printWhenExpression><![CDATA["LEGEND".equals($F{bacterioRowType})]]></printWhenExpression>
+			<staticText>
+				<reportElement x="0" y="3" width="552" height="13" uuid="3b2cd1f9-7e8a-4f6d-9b1c-5e2a7d4f8b6e"/>
+				<textElement>
+					<font size="8" isItalic="true"/>
+				</textElement>
+				<text><![CDATA[Légende interprétations : S = Sensible    |    I = Intermédiaire    |    R = Résistant]]></text>
+			</staticText>
+		</band>
+		<!-- Band 5: ANTIBIOGRAM_ROW - one row of the antibiogram table -->
+		<band height="16" splitType="Prevent">
+			<printWhenExpression><![CDATA["ANTIBIOGRAM_ROW".equals($F{bacterioRowType})]]></printWhenExpression>
+			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
+				<reportElement x="0" y="0" width="370" height="15" uuid="7a7f6e7f-35c1-406d-a8ed-97325f19f3cf"/>
+				<box leftPadding="6">
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.25" lineColor="#CCCCCC"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{testName}]]></textFieldExpression>
+			</textField>
+			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
+				<reportElement x="370" y="0" width="90" height="15" uuid="076e6b84-c9f4-433f-a729-df1bf6ce6436"/>
+				<box leftPadding="2">
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.25" lineColor="#CCCCCC"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="9" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{abgInterpretation}]]></textFieldExpression>
+			</textField>
+			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
+				<reportElement x="460" y="0" width="46" height="15" uuid="25750044-57a4-42f1-8a59-0c5674182e63"/>
+				<box leftPadding="2">
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.25" lineColor="#CCCCCC"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{abgDiameter}]]></textFieldExpression>
+			</textField>
+			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
+				<reportElement x="506" y="0" width="46" height="15" uuid="b9f4b1bf-3f2d-4b1c-9c3a-2e4f6c7e8b9a"/>
+				<box leftPadding="2">
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.25" lineColor="#CCCCCC"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{abgMic}]]></textFieldExpression>
+			</textField>
 		</band>
 	</detail>
 	<columnFooter>
