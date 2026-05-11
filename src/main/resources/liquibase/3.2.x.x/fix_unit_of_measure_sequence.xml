@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+     http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+    <changeSet author="pkomena"
+        id="fix-unit-of-measure-sequence-1">
+        <comment>Resynchroniser unit_of_measure_seq sur le MAX(id) actuel pour éviter les erreurs de clé dupliquée lors de l'ajout de nouvelles unités via /UomCreate (la séquence avait été dépassée par des INSERT explicites de migrations antérieures)</comment>
+        <sql dbms="postgresql">
+            SELECT setval('clinlims.unit_of_measure_seq',
+                          GREATEST(
+                              (SELECT COALESCE(MAX(id), 1)::bigint FROM clinlims.unit_of_measure),
+                              (SELECT last_value FROM clinlims.unit_of_measure_seq)
+                          ));
+        </sql>
+    </changeSet>
+
+</databaseChangeLog>

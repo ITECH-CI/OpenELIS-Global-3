@@ -234,7 +234,10 @@ public abstract class ConfigurationProperties {
         SI_UNIT_CONVERSION("siUnitConversion", "text"), // If true, automatic SI unit conversion is enabled
         SI_UNIT_CONVERSION_IN_REPORTS("siUnitConversionInReports", "text"), // If true, SI values are displayed in
                                                                             // reports
-        SI_UNIT_CONVERSION_IN_UI("siUnitConversionInUI", "text"); // If true, SI values are displayed in the UI
+        SI_UNIT_CONVERSION_IN_UI("siUnitConversionInUI", "text"), // If true, SI values are displayed in the UI
+        SHOW_SAMPLE_QUANTITY_AND_UOM("showSampleQuantityAndUom", "text"); // If true, sample quantity and unit of
+                                                                          // measure fields are displayed in
+                                                                          // /SamplePatientEntry sample addition section
 
         // visible on
         // the ui

@@ -255,7 +255,7 @@
   "banner.menu.patient.addOrEdit": "Ajouter/Modifier un Patient",
   "banner.menu.patient.Create": "Étude",
   "banner.menu.patienthistory": "Historique du Patient",
-  "banner.menu.nonconformity": "Non Conforme",
+  "banner.menu.nonconformity": "Non Conformité",
   "banner.menu.nonconformity.report": "Signaler un Événement Non Conforme",
   "banner.menu.nonconformity.view": "Voir les Nouveaux Événements Non Conformes",
   "banner.menu.nonconformity.correctiveActions": "Actions Correctives",
@@ -1592,5 +1592,6 @@
   "bacteriology.validation.title": "Validation des résultats de bactériologie",
   "label.button.validate": "Valider",
   "testsection.bacteriology": "Bactériologie",
-  "testsection.routine.bacteriology": "Bactériologie Classique"
+  "testsection.routine.bacteriology": "Bactériologie Classique",
+  "siteInfo.instruction.showSampleQtyUom": "Si activé, les champs Quantité et Unité de mesure de l'échantillon sont affichés dans la section d'ajout d'échantillon du formulaire de saisie patient."
 }

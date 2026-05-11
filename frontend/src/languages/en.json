@@ -2172,5 +2172,6 @@
   "bacteriology.validation.title": "Validation of Bacteriology Results",
   "label.button.validate": "Validate",
   "testsection.bacteriology": "Bacteriology",
-  "testsection.routine.bacteriology": "Routine Bacteriology"
+  "testsection.routine.bacteriology": "Routine Bacteriology",
+  "siteInfo.instruction.showSampleQtyUom": "If enabled, the Sample Quantity and Unit of Measure fields are displayed in the sample addition section of the patient entry form."
 }

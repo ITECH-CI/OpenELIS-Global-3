@@ -603,9 +603,34 @@ const SampleType = (props) => {
     getFromOpenElisServer(`/rest/UomCreate`, fetchUomCreate);
   }, []);
 
+  // When the SHOW_SAMPLE_QUANTITY_AND_UOM config is OFF, ensure the hidden fields don't
+  // submit any value (e.g. left over from a previous toggle or a stale default).
+  useEffect(() => {
+    if (configurationProperties?.SHOW_SAMPLE_QUANTITY_AND_UOM !== "true") {
+      if (sampleXml.quantity !== "" || sampleXml.uom !== "") {
+        setSampleXml({ ...sampleXml, quantity: "", uom: "" });
+      }
+    }
+  }, [
+    configurationProperties?.SHOW_SAMPLE_QUANTITY_AND_UOM,
+    sampleXml.quantity,
+    sampleXml.uom,
+  ]);
+
   const fetchUomCreate = (res) => {
     if (componentMounted.current) {
-      setUomList(res.existingUomList || []);
+      const all = res.existingUomList || [];
+      // Sample entry only supports mm³ and mL. Match by display value (case-insensitive),
+      // tolerating both "mm3"/"mm³" and "mL"/"ml" spellings stored in unit_of_measure.
+      const allowed = ["mm3", "mm³", "ml"];
+      const filtered = all.filter((u) => {
+        const v = (u.value || u.label || u.unitOfMeasureName || "")
+          .toString()
+          .toLowerCase()
+          .trim();
+        return allowed.includes(v);
+      });
+      setUomList(filtered);
     }
   };
 
@@ -813,31 +838,33 @@ const SampleType = (props) => {
             onChange={(e) => handleReasons(e)}
           />
         )}
-        <div className="inlineDiv" style={{ display: "flex", gap: "1rem" }}>
-          <TextInput
-            value={sampleXml.quantity}
-            name="quantity"
-            labelText={intl.formatMessage({
-              id: "sample.quantity.label",
-            })}
-            id="quantity"
-            type="number"
-            min="0"
-            onChange={(value) => handleQuantity(value)}
-            placeholder={intl.formatMessage({
-              id: "sample.quantity.label",
-            })}
-          />
+        {configurationProperties?.SHOW_SAMPLE_QUANTITY_AND_UOM === "true" && (
+          <div className="inlineDiv" style={{ display: "flex", gap: "1rem" }}>
+            <TextInput
+              value={sampleXml.quantity}
+              name="quantity"
+              labelText={intl.formatMessage({
+                id: "sample.quantity.label",
+              })}
+              id="quantity"
+              type="number"
+              min="0"
+              onChange={(value) => handleQuantity(value)}
+              placeholder={intl.formatMessage({
+                id: "sample.quantity.label",
+              })}
+            />
 
-          <CustomSelect
-            id={"uomId_" + index}
-            labelText={intl.formatMessage({ id: "sample.uom.label" })}
-            options={uomList}
-            disabled={false}
-            value={sampleXml.uom}
-            onChange={(value) => handleUom(value)}
-          />
-        </div>
+            <CustomSelect
+              id={"uomId_" + index}
+              labelText={intl.formatMessage({ id: "sample.uom.label" })}
+              options={uomList}
+              disabled={false}
+              value={sampleXml.uom}
+              onChange={(value) => handleUom(value)}
+            />
+          </div>
+        )}
         <div className="inlineDiv">
           <CustomDatePicker
             id={"collectionDate_" + index}

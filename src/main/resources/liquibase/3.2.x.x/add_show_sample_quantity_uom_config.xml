@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+     http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+    <property name="now" value="now()" dbms="postgresql" />
+
+    <changeSet author="pkomena"
+        id="add-show-sample-quantity-uom-site-info-1">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">SELECT count(*) FROM
+                clinlims.site_information WHERE name =
+                'showSampleQuantityAndUom'</sqlCheck>
+        </preConditions>
+        <comment>Ajouter le paramètre pour activer/désactiver l'affichage des champs Quantité et Unité de mesure de l'échantillon dans /SamplePatientEntry</comment>
+        <insert schemaName="clinlims" tableName="site_information">
+            <column name="id" valueSequenceNext="site_information_seq" />
+            <column name="name" value="showSampleQuantityAndUom" />
+            <column name="lastupdated" valueComputed="${now}" />
+            <column name="description"
+                value="Activer l'affichage des champs Quantité et Unité de mesure dans la section ajout d'échantillon" />
+            <column name="value" value="false" />
+            <column name="encrypted" value="false" />
+            <column name="domain_id"
+                valueComputed="(SELECT id FROM site_information_domain WHERE name = 'sampleEntryConfig' LIMIT 1)" />
+            <column name="value_type" value="boolean" />
+            <column name="instruction_key"
+                value="siteInfo.instruction.showSampleQtyUom" />
+            <column name="group" value="0" />
+            <column name="description_key"
+                value="siteInfo.description.showSampleQtyUom" />
+        </insert>
+    </changeSet>
+
+</databaseChangeLog>
