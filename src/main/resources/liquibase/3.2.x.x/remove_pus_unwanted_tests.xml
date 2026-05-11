@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+     http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+    <changeSet author="pkomena"
+        id="remove-pus-unwanted-tests-1">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="1">SELECT count(*) FROM
+                clinlims.type_of_sample WHERE description = 'Pus'</sqlCheck>
+        </preConditions>
+        <comment>Retirer 6 tests qui ne s'appliquent pas au type d'échantillon Pus (Macroscopie - Ecoulement, Hématies/Leucocytes en état frais quantitatif, Nombre de flore au Gram, Polynucléaires/Lymphocytes au Giemsa)</comment>
+        <sql><![CDATA[
+            DELETE FROM clinlims.sampletype_test
+            WHERE sample_type_id = (
+                SELECT id FROM clinlims.type_of_sample
+                WHERE description = 'Pus' LIMIT 1
+            )
+            AND test_id IN (
+                SELECT id FROM clinlims.test
+                WHERE name IN (
+                    'Macroscopie - Ecoulement',
+                    'Microscopie - Etat frais Quantitatif - Hématies',
+                    'Microscopie - Frottis Coloration Gram - Bactéries - Nombre de flore',
+                    'Microscopie - Etat frais Quantitatif - Leucocytes',
+                    'Microscopie - Frottis Coloration Giemsa - Polynucléaires',
+                    'Microscopie - Frottis Coloration Giemsa - Lymphocytes'
+                )
+            );
+        ]]></sql>
+    </changeSet>
+
+</databaseChangeLog>

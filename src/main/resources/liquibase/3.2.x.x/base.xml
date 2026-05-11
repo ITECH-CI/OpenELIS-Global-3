@@ -61,6 +61,8 @@
         file="add_show_sample_quantity_uom_config.xml" />
     <include relativeToChangelogFile="true"
         file="fix_unit_of_measure_sequence.xml" />
+    <include relativeToChangelogFile="true"
+        file="remove_pus_unwanted_tests.xml" />
 
 
 </databaseChangeLog>
