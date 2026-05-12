@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+     http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+    <!--
+        Remplacer la colonne booléenne capsulated par other_characteristic_dict_id
+        (FK vers dictionary). La sémantique "Capsulé" / "Non Capsulé" est portée par
+        les entrées dict 3274 et 3275 (catégorie Bacteriology Capsule). Migration des
+        valeurs existantes (TRUE -> 3274, FALSE -> 3275, NULL -> NULL) puis suppression
+        de la colonne capsulated.
+    -->
+
+    <changeSet author="pkomena" id="flora-detail-add-other-char-1">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <columnExists schemaName="clinlims" tableName="bacteriology_flora_detail" columnName="capsulated"/>
+                <not>
+                    <columnExists schemaName="clinlims" tableName="bacteriology_flora_detail"
+                            columnName="other_characteristic_dict_id"/>
+                </not>
+            </and>
+        </preConditions>
+        <comment>Ajout colonne other_characteristic_dict_id sur bacteriology_flora_detail</comment>
+        <addColumn schemaName="clinlims" tableName="bacteriology_flora_detail">
+            <column name="other_characteristic_dict_id" type="integer"/>
+        </addColumn>
+    </changeSet>
+
+    <changeSet author="pkomena" id="flora-detail-migrate-capsulated-1">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <columnExists schemaName="clinlims" tableName="bacteriology_flora_detail" columnName="capsulated"/>
+                <columnExists schemaName="clinlims" tableName="bacteriology_flora_detail"
+                        columnName="other_characteristic_dict_id"/>
+            </and>
+        </preConditions>
+        <comment>Migrer capsulated TRUE/FALSE vers les dict ids Capsulé (3274) / Non Capsulé (3275)</comment>
+        <sql dbms="postgresql"><![CDATA[
+            UPDATE clinlims.bacteriology_flora_detail
+            SET other_characteristic_dict_id = CASE
+                WHEN capsulated = TRUE THEN
+                    (SELECT id FROM clinlims.dictionary
+                     WHERE dict_entry = 'Capsulé'
+                       AND dictionary_category_id = (SELECT id FROM clinlims.dictionary_category
+                                                    WHERE name = 'Bacteriology Capsule' LIMIT 1)
+                     LIMIT 1)
+                WHEN capsulated = FALSE THEN
+                    (SELECT id FROM clinlims.dictionary
+                     WHERE dict_entry = 'Non Capsulé'
+                       AND dictionary_category_id = (SELECT id FROM clinlims.dictionary_category
+                                                    WHERE name = 'Bacteriology Capsule' LIMIT 1)
+                     LIMIT 1)
+                ELSE NULL
+            END
+            WHERE other_characteristic_dict_id IS NULL;
+        ]]></sql>
+    </changeSet>
+
+    <changeSet author="pkomena" id="flora-detail-drop-capsulated-1">
+        <preConditions onFail="MARK_RAN">
+            <columnExists schemaName="clinlims" tableName="bacteriology_flora_detail" columnName="capsulated"/>
+        </preConditions>
+        <comment>Supprimer la colonne capsulated désormais inutile</comment>
+        <dropColumn schemaName="clinlims" tableName="bacteriology_flora_detail" columnName="capsulated"/>
+    </changeSet>
+
+</databaseChangeLog>

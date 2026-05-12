@@ -23,6 +23,9 @@ import java.util.List;
  */
 public class FloraDataDTO {
 
+    @JsonProperty("floraCountTestId")
+    private Integer floraCountTestId;
+
     @JsonProperty("count")
     private Integer count;
 
@@ -33,9 +36,18 @@ public class FloraDataDTO {
         this.details = new ArrayList<>();
     }
 
-    public FloraDataDTO(Integer count, List<FloraDetailDTO> details) {
+    public FloraDataDTO(Integer floraCountTestId, Integer count, List<FloraDetailDTO> details) {
+        this.floraCountTestId = floraCountTestId;
         this.count = count;
         this.details = details != null ? details : new ArrayList<>();
+    }
+
+    public Integer getFloraCountTestId() {
+        return floraCountTestId;
+    }
+
+    public void setFloraCountTestId(Integer floraCountTestId) {
+        this.floraCountTestId = floraCountTestId;
     }
 
     public Integer getCount() {

@@ -548,10 +548,13 @@ public class ResultsLoadUtility {
                             initialConditions, SpringContext.getBean(TypeOfSampleService.class)
                                     .getTypeOfSampleNameForId(sampleItem.getTypeOfSampleId()));
 
-                    // Override the test-specific fields with child test data
+                    // Override the test-specific fields with child test data — the virtual
+                    // item was built from the parent analysis so flags that depend on the
+                    // *test* (rather than the analysis) must be re-derived from the child.
                     childItem.setTestId(childTest.getId());
                     childItem.setTestName(TestServiceImpl.getUserLocalizedTestName(childTest));
                     childItem.setResultType(testService.getResultType(childTest));
+                    childItem.setIsFloraCountTest(Boolean.TRUE.equals(childTest.getIsFloraCountTest()));
 
                     // Mark that this is a virtual child test (no analysis ID means not in DB)
                     childItem.setAnalysisId(""); // Empty analysis ID = virtual test

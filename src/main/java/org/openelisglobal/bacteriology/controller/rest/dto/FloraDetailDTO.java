@@ -30,18 +30,18 @@ public class FloraDetailDTO {
     @JsonProperty("groupingModeDictId")
     private Integer groupingModeDictId;
 
-    @JsonProperty("capsulated")
-    private Boolean capsulated;
+    @JsonProperty("otherCharacteristicDictId")
+    private Integer otherCharacteristicDictId;
 
     public FloraDetailDTO() {
-        this.capsulated = false;
     }
 
-    public FloraDetailDTO(Integer floraNumber, Integer gramTypeDictId, Integer groupingModeDictId, Boolean capsulated) {
+    public FloraDetailDTO(Integer floraNumber, Integer gramTypeDictId, Integer groupingModeDictId,
+            Integer otherCharacteristicDictId) {
         this.floraNumber = floraNumber;
         this.gramTypeDictId = gramTypeDictId;
         this.groupingModeDictId = groupingModeDictId;
-        this.capsulated = capsulated != null ? capsulated : false;
+        this.otherCharacteristicDictId = otherCharacteristicDictId;
     }
 
     public Integer getFloraNumber() {
@@ -68,11 +68,11 @@ public class FloraDetailDTO {
         this.groupingModeDictId = groupingModeDictId;
     }
 
-    public Boolean getCapsulated() {
-        return capsulated;
+    public Integer getOtherCharacteristicDictId() {
+        return otherCharacteristicDictId;
     }
 
-    public void setCapsulated(Boolean capsulated) {
-        this.capsulated = capsulated != null ? capsulated : false;
+    public void setOtherCharacteristicDictId(Integer otherCharacteristicDictId) {
+        this.otherCharacteristicDictId = otherCharacteristicDictId;
     }
 }

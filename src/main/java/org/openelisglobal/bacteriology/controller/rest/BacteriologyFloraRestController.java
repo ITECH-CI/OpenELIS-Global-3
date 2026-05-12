@@ -134,7 +134,7 @@ public class BacteriologyFloraRestController extends ControllerUtills {
                     detail.setFloraNumber(detailDTO.getFloraNumber());
                     detail.setGramTypeDictId(detailDTO.getGramTypeDictId());
                     detail.setGroupingModeDictId(detailDTO.getGroupingModeDictId());
-                    detail.setCapsulated(detailDTO.getCapsulated());
+                    detail.setOtherCharacteristicDictId(detailDTO.getOtherCharacteristicDictId());
                     detail.setSysUserId(sysUserId);
 
                     flora.addDetail(detail);
@@ -202,7 +202,7 @@ public class BacteriologyFloraRestController extends ControllerUtills {
         if (flora.getDetails() != null) {
             for (BacteriologyFloraDetail detail : flora.getDetails()) {
                 FloraDetailDTO detailDTO = new FloraDetailDTO(detail.getFloraNumber(), detail.getGramTypeDictId(),
-                        detail.getGroupingModeDictId(), detail.getCapsulated());
+                        detail.getGroupingModeDictId(), detail.getOtherCharacteristicDictId());
                 detailDTOs.add(detailDTO);
             }
         }
@@ -217,6 +217,6 @@ public class BacteriologyFloraRestController extends ControllerUtills {
             }
         }
 
-        return new FloraDataDTO(count, detailDTOs);
+        return new FloraDataDTO(flora.getFloraCountTestId(), count, detailDTOs);
     }
 }

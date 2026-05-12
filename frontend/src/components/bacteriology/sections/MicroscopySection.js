@@ -18,24 +18,28 @@ const MicroscopySection = ({
     onChange({ ...microscopyResults, [testId]: value });
   };
 
+  // IMPORTANT: both callbacks below MUST use the functional updater form because
+  // FloraList fires onFloraCountChange and onFloraDetailsChange back-to-back when
+  // the user changes the count, and React batches state updates within an event.
+  // Without the functional form the second call would overwrite the first.
   const handleFloraCountChange = (testId, count) => {
-    onFloraChange({
-      ...floraData,
+    onFloraChange((prev) => ({
+      ...(prev || {}),
       [testId]: {
-        ...floraData[testId],
+        ...((prev || {})[testId] || {}),
         count: count,
       },
-    });
+    }));
   };
 
   const handleFloraDetailsChange = (testId, details) => {
-    onFloraChange({
-      ...floraData,
+    onFloraChange((prev) => ({
+      ...(prev || {}),
       [testId]: {
-        ...floraData[testId],
+        ...((prev || {})[testId] || {}),
         details: details,
       },
-    });
+    }));
   };
 
   // Clean test name by removing trailing parentheses (sample type)
@@ -58,12 +62,14 @@ const MicroscopySection = ({
       (test) => test.isFloraCountTest === true,
     );
 
-    // Find tests that are actually parents (have children pointing to them)
+    // Find tests that are actually parents (have children pointing to them).
+    // A flora-count test is a parent too, but it owns its own rendering (FloraList)
+    // so we must NOT render it again in a ConditionalTestGroup.
     const parentTestIds = new Set(
       childTests.map((child) => child.parentTestId),
     );
-    const parentTests = microscopyTests.filter((test) =>
-      parentTestIds.has(test.testId),
+    const parentTests = microscopyTests.filter(
+      (test) => parentTestIds.has(test.testId) && !test.isFloraCountTest,
     );
 
     // Group children by parent
@@ -118,6 +124,7 @@ const MicroscopySection = ({
                 <FloraList
                   accessionNumber={accessionNumber}
                   testId={test.testId}
+                  testName={cleanTestName(test.testName)}
                   floraCount={floraData[test.testId]?.count || 0}
                   floraDetails={floraData[test.testId]?.details || []}
                   onFloraCountChange={handleFloraCountChange}

@@ -13,6 +13,7 @@
  */
 package org.openelisglobal.bacteriology.valueholder;
 
+import jakarta.persistence.AttributeOverride;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -23,19 +24,21 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
-import java.sql.Timestamp;
 import org.openelisglobal.common.valueholder.BaseObject;
 
 /**
  * BacteriologyFloraDetail - Represents detailed information about a single
- * bacterial flora
+ * bacterial flora.
  *
- * This entity stores the characteristics of each identified flora including: -
- * Gram type (Gram positive/negative, cocci/bacilli, etc.) - Grouping mode
- * (isolated, clusters, chains, etc.) - Capsulation status
+ * Stores the characteristics of each identified flora: Gram type, grouping mode
+ * and an "other characteristic" dictionary value (e.g. Capsulé / Non Capsulé,
+ * category "Bacteriology Capsule").
  */
 @Entity
 @Table(name = "bacteriology_flora_detail", schema = "clinlims")
+// Override the parent BaseObject mapping: the actual column in this table is
+// "lastupdated" (no underscore), unlike the convention used elsewhere.
+@AttributeOverride(name = "lastupdated", column = @Column(name = "lastupdated"))
 public class BacteriologyFloraDetail extends BaseObject<Long> {
 
     private static final long serialVersionUID = 1L;
@@ -59,11 +62,8 @@ public class BacteriologyFloraDetail extends BaseObject<Long> {
     @Column(name = "grouping_mode_dict_id")
     private Integer groupingModeDictId;
 
-    @Column(name = "capsulated", nullable = false)
-    private Boolean capsulated = false;
-
-    @Column(name = "lastupdated", nullable = false)
-    private Timestamp lastUpdated;
+    @Column(name = "other_characteristic_dict_id")
+    private Integer otherCharacteristicDictId;
 
     public BacteriologyFloraDetail() {
         super();
@@ -111,19 +111,11 @@ public class BacteriologyFloraDetail extends BaseObject<Long> {
         this.groupingModeDictId = groupingModeDictId;
     }
 
-    public Boolean getCapsulated() {
-        return capsulated;
+    public Integer getOtherCharacteristicDictId() {
+        return otherCharacteristicDictId;
     }
 
-    public void setCapsulated(Boolean capsulated) {
-        this.capsulated = capsulated;
-    }
-
-    public Timestamp getLastUpdated() {
-        return lastUpdated;
-    }
-
-    public void setLastUpdated(Timestamp lastUpdated) {
-        this.lastUpdated = lastUpdated;
+    public void setOtherCharacteristicDictId(Integer otherCharacteristicDictId) {
+        this.otherCharacteristicDictId = otherCharacteristicDictId;
     }
 }

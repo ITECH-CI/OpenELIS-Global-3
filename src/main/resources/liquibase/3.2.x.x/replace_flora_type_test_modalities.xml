@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+     http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+    <!--
+        Remplacer les modalités (1, 2, 3, >=4) du test
+        "Microscopie - Frottis Coloration Gram - Bactéries - Sécrétion vaginale - Type de flore"
+        (id 494) par (I, II, III, IV) afin d'éviter la confusion visuelle avec le test
+        "Nombre de flore" (id 557) qui utilise (0, 1, 2, >=3).
+
+        Étapes :
+          1. Créer la catégorie de dictionnaire 'Bacteriology Flora Type' si absente.
+          2. Insérer 4 entrées dict (I, II, III, IV) dans cette catégorie si absentes.
+          3. Remplacer les 4 entrées test_result du test 494 par les nouveaux dict ids.
+          4. Migrer les result existants pour le test 494 vers les nouveaux dict ids
+             selon le mapping (1->I, 2->II, 3->III, >=4->IV).
+    -->
+
+    <property name="now" value="now()" dbms="postgresql" />
+
+    <changeSet author="pkomena" id="flora-type-create-dict-category-1">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">SELECT count(*) FROM
+                clinlims.dictionary_category WHERE name = 'Bacteriology Flora Type'</sqlCheck>
+        </preConditions>
+        <comment>Créer la catégorie 'Bacteriology Flora Type'</comment>
+        <insert schemaName="clinlims" tableName="dictionary_category">
+            <column name="id" valueSequenceNext="dictionary_category_seq"/>
+            <column name="name" value="Bacteriology Flora Type"/>
+            <column name="description" value="Bacteriology Flora Type (Roman numerals)"/>
+            <column name="lastupdated" valueComputed="${now}"/>
+        </insert>
+    </changeSet>
+
+    <changeSet author="pkomena" id="flora-type-insert-dict-entries-1">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">SELECT count(*) FROM clinlims.dictionary d
+                JOIN clinlims.dictionary_category dc ON dc.id = d.dictionary_category_id
+                WHERE dc.name = 'Bacteriology Flora Type'
+                  AND d.dict_entry IN ('I','II','III','IV')</sqlCheck>
+        </preConditions>
+        <comment>Insérer les 4 modalités I, II, III, IV dans la catégorie Bacteriology Flora Type</comment>
+        <sql dbms="postgresql"><![CDATA[
+            INSERT INTO clinlims.dictionary (id, dictionary_category_id, dict_entry, is_active, lastupdated)
+            SELECT nextval('clinlims.dictionary_seq'),
+                   (SELECT id FROM clinlims.dictionary_category WHERE name = 'Bacteriology Flora Type' LIMIT 1),
+                   entry,
+                   'Y',
+                   NOW()
+            FROM (VALUES ('I'), ('II'), ('III'), ('IV')) AS v(entry);
+        ]]></sql>
+    </changeSet>
+
+    <changeSet author="pkomena" id="flora-type-replace-test-results-2">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <sqlCheck expectedResult="1">SELECT count(*) FROM clinlims.test
+                    WHERE id = 494
+                      AND name = 'Microscopie - Frottis Coloration Gram - Bactéries - Sécrétion vaginale - Type de flore'</sqlCheck>
+                <sqlCheck expectedResult="4">SELECT count(*) FROM clinlims.dictionary d
+                    JOIN clinlims.dictionary_category dc ON dc.id = d.dictionary_category_id
+                    WHERE dc.name = 'Bacteriology Flora Type'
+                      AND d.dict_entry IN ('I','II','III','IV')</sqlCheck>
+                <!-- Only run if old test_result rows still exist (idempotency safety) -->
+                <sqlCheck expectedResult="4">SELECT count(*) FROM clinlims.test_result
+                    WHERE test_id = 494 AND value IN ('1627','1628','1598','1692')</sqlCheck>
+            </and>
+        </preConditions>
+        <comment>Migrer les test_result du test 494 vers les nouveaux dict ids (I, II, III, IV) et nettoyer les anciens</comment>
+        <sql dbms="postgresql"><![CDATA[
+            -- 1) Insérer d'abord les nouveaux test_result (avec sort_order 1..4) pour le test 494.
+            INSERT INTO clinlims.test_result (id, test_id, tst_rslt_type, value, sort_order, is_active, lastupdated)
+            SELECT nextval('clinlims.test_result_seq'),
+                   494,
+                   'D',
+                   d.id::varchar,
+                   CASE d.dict_entry WHEN 'I' THEN 1 WHEN 'II' THEN 2 WHEN 'III' THEN 3 WHEN 'IV' THEN 4 END,
+                   TRUE,
+                   NOW()
+            FROM clinlims.dictionary d
+            JOIN clinlims.dictionary_category dc ON dc.id = d.dictionary_category_id
+            WHERE dc.name = 'Bacteriology Flora Type'
+              AND d.dict_entry IN ('I','II','III','IV');
+
+            -- 2) Migrer chaque result.value ET result.test_result_id en une passe par mapping :
+            --    1627 ("1") -> "I", 1628 ("2") -> "II", 1598 ("3") -> "III", 1692 (">=4") -> "IV"
+            WITH mapping AS (
+                SELECT old_val::varchar AS old_val, entry FROM (
+                    VALUES ('1627','I'), ('1628','II'), ('1598','III'), ('1692','IV')
+                ) AS v(old_val, entry)
+            ),
+            new_test_results AS (
+                SELECT tr.id AS new_tr_id, tr.value AS dict_id
+                FROM clinlims.test_result tr
+                JOIN clinlims.dictionary d ON d.id::varchar = tr.value
+                JOIN clinlims.dictionary_category dc ON dc.id = d.dictionary_category_id
+                WHERE tr.test_id = 494 AND dc.name = 'Bacteriology Flora Type'
+            )
+            UPDATE clinlims.result r
+            SET value = ntr.dict_id,
+                test_result_id = ntr.new_tr_id::numeric
+            FROM clinlims.analysis a, mapping m, clinlims.dictionary d, new_test_results ntr
+            WHERE r.analysis_id = a.id
+              AND a.test_id = 494
+              AND r.value = m.old_val
+              AND d.dict_entry = m.entry
+              AND d.dictionary_category_id = (SELECT id FROM clinlims.dictionary_category
+                                              WHERE name = 'Bacteriology Flora Type' LIMIT 1)
+              AND ntr.dict_id = d.id::varchar;
+
+            -- 3) Supprimer les anciens test_result du test 494 (plus de FK résiduelle).
+            DELETE FROM clinlims.test_result
+            WHERE test_id = 494 AND value IN ('1627','1628','1598','1692');
+        ]]></sql>
+    </changeSet>
+
+</databaseChangeLog>

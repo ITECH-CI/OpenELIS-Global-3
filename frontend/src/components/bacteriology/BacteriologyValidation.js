@@ -409,9 +409,11 @@ const BacteriologyValidation = ({
                           )}
                       </TableCell>
                       <TableCell>
-                        {testResult.displayValue}
-                        {testResult.unitOfMeasure &&
-                          ` ${testResult.unitOfMeasure}`}
+                        <span style={{ whiteSpace: "pre-line" }}>
+                          {testResult.displayValue}
+                          {testResult.unitOfMeasure &&
+                            ` ${testResult.unitOfMeasure}`}
+                        </span>
                       </TableCell>
                       <TableCell>
                         <Checkbox
@@ -505,9 +507,11 @@ const BacteriologyValidation = ({
                           )}
                       </TableCell>
                       <TableCell>
-                        {testResult.displayValue}
-                        {testResult.unitOfMeasure &&
-                          ` ${testResult.unitOfMeasure}`}
+                        <span style={{ whiteSpace: "pre-line" }}>
+                          {testResult.displayValue}
+                          {testResult.unitOfMeasure &&
+                            ` ${testResult.unitOfMeasure}`}
+                        </span>
                       </TableCell>
                       <TableCell>
                         <Checkbox

@@ -65,6 +65,12 @@
         file="remove_pus_unwanted_tests.xml" />
     <include relativeToChangelogFile="true"
         file="add_microscopy_tests_to_urines_lcr_lp.xml" />
+    <include relativeToChangelogFile="true"
+        file="replace_flora_capsulated_with_other_characteristic.xml" />
+    <include relativeToChangelogFile="true"
+        file="replace_flora_type_test_modalities.xml" />
+    <include relativeToChangelogFile="true"
+        file="create_bacteriology_flora_sequences.xml" />
 
 
 </databaseChangeLog>

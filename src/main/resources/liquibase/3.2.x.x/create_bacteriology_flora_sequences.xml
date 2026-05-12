@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+     http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+    <!--
+        Créer les séquences bacteriology_flora_seq et bacteriology_flora_detail_seq.
+        Les entités JPA BacteriologyFlora et BacteriologyFloraDetail déclarent
+        @SequenceGenerator(sequenceName = "bacteriology_flora_seq") et
+        @SequenceGenerator(sequenceName = "bacteriology_flora_detail_seq").
+        Or les tables ont été créées avec autoIncrement="true" mais Liquibase
+        n'a pas généré ces séquences nommées, d'où l'erreur Hibernate
+        "relation bacteriology_flora_seq does not exist" au save.
+        On crée les séquences en partant du MAX(id)+1 actuel pour éviter toute
+        collision avec des inserts antérieurs (table actuellement vide → start=1).
+    -->
+
+    <changeSet author="pkomena" id="create-bacteriology-flora-seq-1">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <sequenceExists schemaName="clinlims" sequenceName="bacteriology_flora_seq"/>
+            </not>
+        </preConditions>
+        <comment>Créer la séquence bacteriology_flora_seq pour Hibernate JPA</comment>
+        <sql dbms="postgresql"><![CDATA[
+            CREATE SEQUENCE clinlims.bacteriology_flora_seq START WITH 1;
+            SELECT setval('clinlims.bacteriology_flora_seq',
+                          GREATEST((SELECT COALESCE(MAX(id), 0) FROM clinlims.bacteriology_flora) + 1, 1),
+                          false);
+        ]]></sql>
+    </changeSet>
+
+    <changeSet author="pkomena" id="create-bacteriology-flora-detail-seq-1">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <sequenceExists schemaName="clinlims" sequenceName="bacteriology_flora_detail_seq"/>
+            </not>
+        </preConditions>
+        <comment>Créer la séquence bacteriology_flora_detail_seq pour Hibernate JPA</comment>
+        <sql dbms="postgresql"><![CDATA[
+            CREATE SEQUENCE clinlims.bacteriology_flora_detail_seq START WITH 1;
+            SELECT setval('clinlims.bacteriology_flora_detail_seq',
+                          GREATEST((SELECT COALESCE(MAX(id), 0) FROM clinlims.bacteriology_flora_detail) + 1, 1),
+                          false);
+        ]]></sql>
+    </changeSet>
+
+</databaseChangeLog>

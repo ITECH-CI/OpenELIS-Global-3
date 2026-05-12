@@ -13,6 +13,7 @@
  */
 package org.openelisglobal.bacteriology.valueholder;
 
+import jakarta.persistence.AttributeOverride;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -23,7 +24,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
-import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 import org.openelisglobal.common.valueholder.BaseObject;
@@ -38,6 +38,9 @@ import org.openelisglobal.common.valueholder.BaseObject;
  */
 @Entity
 @Table(name = "bacteriology_flora", schema = "clinlims")
+// Override the parent BaseObject mapping: the actual column in this table is
+// "lastupdated" (no underscore), unlike the convention used elsewhere.
+@AttributeOverride(name = "lastupdated", column = @Column(name = "lastupdated"))
 public class BacteriologyFlora extends BaseObject<Long> {
 
     private static final long serialVersionUID = 1L;
@@ -59,9 +62,6 @@ public class BacteriologyFlora extends BaseObject<Long> {
 
     @OneToMany(mappedBy = "flora", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<BacteriologyFloraDetail> details = new ArrayList<>();
-
-    @Column(name = "lastupdated", nullable = false)
-    private Timestamp lastUpdated;
 
     public BacteriologyFlora() {
         super();
@@ -121,13 +121,5 @@ public class BacteriologyFlora extends BaseObject<Long> {
     public void removeDetail(BacteriologyFloraDetail detail) {
         details.remove(detail);
         detail.setFlora(null);
-    }
-
-    public Timestamp getLastUpdated() {
-        return lastUpdated;
-    }
-
-    public void setLastUpdated(Timestamp lastUpdated) {
-        this.lastUpdated = lastUpdated;
     }
 }

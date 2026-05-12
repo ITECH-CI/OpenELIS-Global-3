@@ -45,4 +45,5 @@ export const API_ENDPOINTS = {
   SAVE_ANTIBIOGRAM: "/rest/bacteriology/antibiogram",
   DELETE_ORGANISM: "/rest/bacteriology/organism",
   CLEAR_RESULTS: "/rest/bacteriology/results",
+  FLORA_BY_ANALYSIS: "/rest/bacteriology/flora/analysis",
 };

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Grid, Column, Select, SelectItem, Checkbox } from "@carbon/react";
+import { Grid, Column, Select, SelectItem } from "@carbon/react";
 import { FormattedMessage } from "react-intl";
 import { getFromOpenElisServer } from "../utils/Utils";
 
@@ -7,7 +7,7 @@ import { getFromOpenElisServer } from "../utils/Utils";
  * FloraList - Manages dynamic flora count and details
  *
  * Allows users to select the number of floras (0, 1, 2, >=3)
- * and provide details for each flora (gram type, grouping mode, capsulated)
+ * and provide details for each flora (gram type, grouping mode, other characteristic)
  *
  * @param {string} accessionNumber - Used for generating unique IDs
  * @param {string} testId - The flora count test ID
@@ -20,6 +20,7 @@ import { getFromOpenElisServer } from "../utils/Utils";
 const FloraList = ({
   accessionNumber,
   testId,
+  testName,
   floraCount = 0,
   floraDetails = [],
   onFloraCountChange,
@@ -28,6 +29,7 @@ const FloraList = ({
 }) => {
   const [gramTypes, setGramTypes] = useState([]);
   const [groupingModes, setGroupingModes] = useState([]);
+  const [otherCharacteristics, setOtherCharacteristics] = useState([]);
   const [loading, setLoading] = useState(true);
 
   // Generate unique ID prefix
@@ -36,25 +38,39 @@ const FloraList = ({
     : "flora";
 
   useEffect(() => {
-    // Load gram types and grouping modes from backend
+    let cancelled = false;
+    // Load gram types, grouping modes and other-characteristic options from backend
     Promise.all([
       new Promise((resolve) => {
         getFromOpenElisServer(
-          "/rest/dictionary/category/Bacteriology Flora Gram Type",
+          "/rest/dictionary/category/Bacteriology Gram Type",
           (data) => resolve(data || []),
         );
       }),
       new Promise((resolve) => {
         getFromOpenElisServer(
-          "/rest/dictionary/category/Bacteriology Flora Grouping Mode",
+          "/rest/dictionary/category/Bacteriology Grouping Mode",
           (data) => resolve(data || []),
         );
       }),
-    ]).then(([gramData, groupingData]) => {
+      new Promise((resolve) => {
+        getFromOpenElisServer(
+          "/rest/dictionary/category/Bacteriology Capsule",
+          (data) => resolve(data || []),
+        );
+      }),
+    ]).then(([gramData, groupingData, otherCharData]) => {
+      if (cancelled) {
+        return;
+      }
       setGramTypes(gramData);
       setGroupingModes(groupingData);
+      setOtherCharacteristics(otherCharData);
       setLoading(false);
     });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   // Handle flora count change
@@ -68,9 +84,9 @@ const FloraList = ({
       for (let i = floraDetails.length; i < newCount; i++) {
         newDetails.push({
           floraNumber: i + 1,
-          gramTypeId: "",
-          groupingModeId: "",
-          capsulated: false,
+          gramTypeDictId: "",
+          groupingModeDictId: "",
+          otherCharacteristicDictId: "",
         });
       }
       onFloraDetailsChange(newDetails);
@@ -101,7 +117,7 @@ const FloraList = ({
         <Column lg={8} md={4} sm={4} style={{ marginBottom: "1.5rem" }}>
           <Select
             id={`flora_count_${idPrefix}_${testId}`}
-            labelText="Nombre de flores"
+            labelText={testName || "Nombre de flores"}
             value={floraCount}
             onChange={handleCountChange}
             disabled={disabled}
@@ -135,9 +151,13 @@ const FloraList = ({
                   <Select
                     id={`flora_gram_${idPrefix}_${testId}_${index}`}
                     labelText="Type de Gram"
-                    value={flora.gramTypeId || ""}
+                    value={flora.gramTypeDictId || ""}
                     onChange={(e) =>
-                      handleDetailChange(index, "gramTypeId", e.target.value)
+                      handleDetailChange(
+                        index,
+                        "gramTypeDictId",
+                        e.target.value,
+                      )
                     }
                     disabled={disabled}
                   >
@@ -157,11 +177,11 @@ const FloraList = ({
                   <Select
                     id={`flora_grouping_${idPrefix}_${testId}_${index}`}
                     labelText="Mode de regroupement"
-                    value={flora.groupingModeId || ""}
+                    value={flora.groupingModeDictId || ""}
                     onChange={(e) =>
                       handleDetailChange(
                         index,
-                        "groupingModeId",
+                        "groupingModeDictId",
                         e.target.value,
                       )
                     }
@@ -178,17 +198,30 @@ const FloraList = ({
                   </Select>
                 </Column>
 
-                {/* Capsulated */}
+                {/* Autre caractère (Capsulé / Non Capsulé) */}
                 <Column lg={8} md={4} sm={4} style={{ marginBottom: "1rem" }}>
-                  <Checkbox
-                    id={`flora_capsulated_${idPrefix}_${testId}_${index}`}
-                    labelText="Capsulé"
-                    checked={flora.capsulated || false}
-                    onChange={(_, { checked }) =>
-                      handleDetailChange(index, "capsulated", checked)
+                  <Select
+                    id={`flora_other_${idPrefix}_${testId}_${index}`}
+                    labelText="Autre caractère"
+                    value={flora.otherCharacteristicDictId || ""}
+                    onChange={(e) =>
+                      handleDetailChange(
+                        index,
+                        "otherCharacteristicDictId",
+                        e.target.value,
+                      )
                     }
                     disabled={disabled}
-                  />
+                  >
+                    <SelectItem value="" text="Sélectionner..." />
+                    {otherCharacteristics.map((item) => (
+                      <SelectItem
+                        key={item.id}
+                        value={item.id}
+                        text={item.value}
+                      />
+                    ))}
+                  </Select>
                 </Column>
               </Grid>
             </div>

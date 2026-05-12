@@ -315,11 +315,13 @@ public class BacteriologyColumnBuilder extends RoutineColumnBuilder {
         query.append("\n     d_gram.dict_entry || ':' || ");
         query.append("\n     COALESCE(d_grouping.dict_entry, '') || ");
         query.append(
-                "\n     CASE WHEN bfd.capsulated = true THEN ' (capsulated)' WHEN bfd.capsulated = false THEN ' (non-capsulated)' ELSE '' END,");
+                "\n     CASE WHEN d_other.dict_entry IS NOT NULL THEN ' (' || d_other.dict_entry || ')' ELSE '' END,");
         query.append("\n     '; ' ORDER BY bfd.id)");
         query.append("\n   FROM clinlims.bacteriology_flora_detail bfd");
         query.append("\n   LEFT JOIN clinlims.dictionary d_gram ON d_gram.id = bfd.gram_type_dict_id");
         query.append("\n   LEFT JOIN clinlims.dictionary d_grouping ON d_grouping.id = bfd.grouping_mode_dict_id");
+        query.append(
+                "\n   LEFT JOIN clinlims.dictionary d_other ON d_other.id = bfd.other_characteristic_dict_id");
         query.append("\n   WHERE bfd.flora_id = inner_bf.id");
         query.append("\n )) as flora_details");
         query.append("\n FROM clinlims.sample inner_s");

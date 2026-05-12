@@ -74,6 +74,9 @@ public class BacteriologyResultController extends BaseController {
     @Autowired
     private org.openelisglobal.test.service.TestService testService;
 
+    @Autowired
+    private org.openelisglobal.bacteriology.service.BacteriologyFloraService bacteriologyFloraService;
+
     /**
      * Get all antibiotics from dictionary
      */
@@ -251,10 +254,16 @@ public class BacteriologyResultController extends BaseController {
                 }
             }
 
-            // Build culture results from bacteriology_result_group table for ALL analyses
-            // Culture results are NOT in the result table - they are managed in
-            // bacteriology tables
-            for (org.openelisglobal.analysis.valueholder.Analysis analysis : allAnalyses) {
+            // Build culture results from bacteriology_result_group table.
+            // IMPORTANT: iterate over ALL analyses of the sample item, NOT only those
+            // kept after the Finalized filter above. The validation page needs the full
+            // list of cultures even when they are already validated, because it uses
+            // cultureResults as the lookup table to match each organism to its parent
+            // culture (organismGroup.testId == cultureResult.testId). Filtering out
+            // Finalized cultures would orphan all already-validated organisms.
+            List<org.openelisglobal.analysis.valueholder.Analysis> allAnalysesForCultures = analysisService
+                    .getAnalysesBySampleItem(primaryAnalysis.getSampleItem());
+            for (org.openelisglobal.analysis.valueholder.Analysis analysis : allAnalysesForCultures) {
                 Integer currentAnalysisId = Integer.parseInt(analysis.getId());
                 List<BacteriologyResultGroup> cultureGroups = resultGroupService
                         .getGroupsByAnalysisAndType(currentAnalysisId, "CULTURE");
@@ -299,6 +308,75 @@ public class BacteriologyResultController extends BaseController {
                 }
             }
 
+            // Inject flora-count tests: their value is NOT stored in the `result` table
+            // but in `bacteriology_flora` (count + per-flora details). They are microscopy
+            // tests by nature (e.g. "Nombre de flore"), so they show up in microscopyMap.
+            for (org.openelisglobal.analysis.valueholder.Analysis analysis : allAnalyses) {
+                org.openelisglobal.test.valueholder.Test test = analysis.getTest();
+                if (test == null || !Boolean.TRUE.equals(test.getIsFloraCountTest())) {
+                    continue;
+                }
+                String testId = test.getId();
+                if (microscopyMap.containsKey(testId)) {
+                    // Already populated (shouldn't happen since `result` table is empty for
+                    // these tests, but be defensive).
+                    continue;
+                }
+                Integer analysisIdInt;
+                try {
+                    analysisIdInt = Integer.valueOf(analysis.getId());
+                } catch (NumberFormatException nfe) {
+                    continue;
+                }
+                org.openelisglobal.bacteriology.valueholder.BacteriologyFlora flora = bacteriologyFloraService
+                        .getByAnalysisIdAndTestId(analysisIdInt, Integer.valueOf(testId));
+                String floraCount = flora != null ? flora.getFloraCount() : null;
+                if (floraCount == null || floraCount.trim().isEmpty()) {
+                    continue;
+                }
+
+                // Build a human-readable summary including per-flora details (Gram type,
+                // grouping mode, "Capsulé"/"Non Capsulé") so the validation page shows
+                // every characteristic that was saved. Newlines are used between the
+                // count and each flora line; the frontend renders this cell with
+                // white-space: pre-line so they appear as real line breaks.
+                String displayValue = floraCount;
+                if (flora.getDetails() != null && !flora.getDetails().isEmpty()) {
+                    StringBuilder sb = new StringBuilder();
+                    sb.append(floraCount);
+                    List<org.openelisglobal.bacteriology.valueholder.BacteriologyFloraDetail> sorted = new java.util.ArrayList<>(
+                            flora.getDetails());
+                    sorted.sort(java.util.Comparator.comparing(
+                            d -> d.getFloraNumber() != null ? d.getFloraNumber() : Integer.MAX_VALUE));
+                    for (org.openelisglobal.bacteriology.valueholder.BacteriologyFloraDetail detail : sorted) {
+                        sb.append("\nFlore ");
+                        sb.append(detail.getFloraNumber() != null ? detail.getFloraNumber() : "?");
+                        sb.append(" : ");
+                        String gram = resolveDictLabel(detail.getGramTypeDictId());
+                        String grouping = resolveDictLabel(detail.getGroupingModeDictId());
+                        String other = resolveDictLabel(detail.getOtherCharacteristicDictId());
+                        List<String> parts = new java.util.ArrayList<>();
+                        if (gram != null) parts.add(gram);
+                        if (grouping != null) parts.add(grouping);
+                        if (other != null) parts.add(other);
+                        sb.append(parts.isEmpty() ? "-" : String.join(", ", parts));
+                    }
+                    displayValue = sb.toString();
+                }
+
+                BacteriologyWorkflowService.BacteriologyTestResultBean floraBean = new BacteriologyWorkflowService.BacteriologyTestResultBean();
+                floraBean.setAnalysisId(String.valueOf(analysis.getId()));
+                floraBean.setTestId(testId);
+                floraBean.setTestName(test.getName());
+                floraBean.setTestDescription(test.getDescription());
+                floraBean.setValue(floraCount);
+                floraBean.setDisplayValue(displayValue);
+                floraBean.setResultType("A");
+
+                microscopyMap.put(testId, floraBean);
+                microscopyResultsMap.put(testId, floraCount);
+            }
+
             // Convert Maps to Lists for validation display
             resultData.setMacroscopyResults(new java.util.ArrayList<>(macroscopyMap.values()));
             resultData.setMicroscopyResults(new java.util.ArrayList<>(microscopyMap.values()));
@@ -313,6 +391,29 @@ public class BacteriologyResultController extends BaseController {
             LogEvent.logError("BacteriologyResultController", "loadTestResults",
                     "Error loading test results: " + e.getMessage());
             LogEvent.logError(e);
+        }
+    }
+
+    /**
+     * Resolve a dictionary id to its localized label, returning null when the id
+     * is missing or the entry can't be found (so callers can skip the segment).
+     */
+    private String resolveDictLabel(Integer dictId) {
+        if (dictId == null) {
+            return null;
+        }
+        try {
+            Dictionary dict = dictionaryService.getDataForId(String.valueOf(dictId));
+            if (dict == null) {
+                return null;
+            }
+            String label = dict.getLocalizedName();
+            if (label == null || label.trim().isEmpty()) {
+                label = dict.getDictEntry();
+            }
+            return (label == null || label.trim().isEmpty()) ? null : label;
+        } catch (Exception e) {
+            return null;
         }
     }
 

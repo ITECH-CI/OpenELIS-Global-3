@@ -13,11 +13,9 @@
  */
 package org.openelisglobal.bacteriology.service;
 
-import java.sql.Timestamp;
 import java.util.List;
 import org.openelisglobal.bacteriology.dao.BacteriologyFloraDAO;
 import org.openelisglobal.bacteriology.valueholder.BacteriologyFlora;
-import org.openelisglobal.bacteriology.valueholder.BacteriologyFloraDetail;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -34,15 +32,9 @@ public class BacteriologyFloraServiceImpl implements BacteriologyFloraService {
     @Override
     @Transactional
     public BacteriologyFlora save(BacteriologyFlora flora) {
-        Timestamp now = new Timestamp(System.currentTimeMillis());
-        flora.setLastUpdated(now);
-
-        // Update timestamps for all details
-        if (flora.getDetails() != null) {
-            for (BacteriologyFloraDetail detail : flora.getDetails()) {
-                detail.setLastUpdated(now);
-            }
-        }
+        // Do NOT touch lastupdated manually: BaseObject maps it with @Version, so any
+        // manual write here breaks Hibernate's optimistic-lock check on the next save
+        // ("Row was updated or deleted by another transaction").
 
         // Insert or update based on whether ID exists
         if (flora.getId() == null) {

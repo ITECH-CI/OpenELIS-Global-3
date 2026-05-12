@@ -118,10 +118,12 @@ public class BacteriologyResultValidator {
                     String.format("Invalid grouping mode ID for flora #%d in test: %s", floraNumber, testName));
         }
 
-        // Validate capsulated (should never be null due to default, but check anyway)
-        if (detail.getCapsulated() == null) {
-            errors.rejectValue(fieldPrefix + ".capsulated", "error.floraDetail.capsulated.required",
-                    String.format("Capsulated field is required for flora #%d in test: %s", floraNumber, testName));
+        // "Other characteristic" (Capsulé / Non Capsulé) is optional, but if provided
+        // it must be a positive dictionary id.
+        if (detail.getOtherCharacteristicDictId() != null && detail.getOtherCharacteristicDictId() <= 0) {
+            errors.rejectValue(fieldPrefix + ".otherCharacteristicDictId",
+                    "error.floraDetail.otherCharacteristic.invalid",
+                    String.format("Invalid other-characteristic ID for flora #%d in test: %s", floraNumber, testName));
         }
     }
 

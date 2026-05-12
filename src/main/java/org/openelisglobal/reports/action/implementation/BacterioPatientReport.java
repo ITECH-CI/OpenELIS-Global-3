@@ -222,6 +222,32 @@ public class BacterioPatientReport extends PatientReport implements IReportCreat
                         resultsData.setAlerts(alerts);
                     }
                     resultsData.setBacterioRowType("TEST");
+
+                    // Flora-count tests (e.g. "Nombre de flore") store their value in
+                    // bacteriology_flora, not in the result table — so the standard
+                    // pipeline left resultsData.result at "En cours". If the analysis is
+                    // biologically validated (Finalized), replace it by the actual count.
+                    if (Boolean.TRUE.equals(test.getIsFloraCountTest())) {
+                        String finalizedStatusId = SpringContext.getBean(IStatusService.class)
+                                .getStatusID(AnalysisStatus.Finalized);
+                        if (finalizedStatusId != null && finalizedStatusId.equals(analysis.getStatusId())) {
+                            try {
+                                Integer aid = Integer.valueOf(analysis.getId());
+                                Integer tid = Integer.valueOf(test.getId());
+                                org.openelisglobal.bacteriology.service.BacteriologyFloraService floraSvc = SpringContext
+                                        .getBean(org.openelisglobal.bacteriology.service.BacteriologyFloraService.class);
+                                org.openelisglobal.bacteriology.valueholder.BacteriologyFlora flora = floraSvc
+                                        .getByAnalysisIdAndTestId(aid, tid);
+                                if (flora != null && flora.getFloraCount() != null
+                                        && !flora.getFloraCount().trim().isEmpty()) {
+                                    resultsData.setResult(flora.getFloraCount());
+                                }
+                            } catch (NumberFormatException nfe) {
+                                // ids non-numeric — keep the in-progress placeholder.
+                            }
+                        }
+                    }
+
                     reportItems.add(resultsData);
                     currentSampleReportItems.add(resultsData);
 
@@ -816,7 +842,13 @@ public class BacterioPatientReport extends PatientReport implements IReportCreat
             countRow.setIsBacterioParentTest(false);
             countRow.setParentMarker(false);
             countRow.setTestName("Nombre de germes");
-            countRow.setResult(String.valueOf(organismCount));
+            // If the culture root test is not biologically validated yet (its result is the
+            // "in progress" placeholder set by setEmptyResult), the germ count is not
+            // meaningful — display "En cours" instead of the raw number.
+            String inProgressMsg = MessageUtil.getMessage("report.test.status.inProgress");
+            boolean cultureInProgress = inProgressMsg != null
+                    && inProgressMsg.equals(firstCultureTemplate.getResult());
+            countRow.setResult(cultureInProgress ? inProgressMsg : String.valueOf(organismCount));
             countRow.setSeparator(false);
             cultureTests.add(countRow);
         }

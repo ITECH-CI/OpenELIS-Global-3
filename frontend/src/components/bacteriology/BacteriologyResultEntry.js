@@ -165,6 +165,27 @@ const BacteriologyResultEntry = ({
         setCultures(loadedCultures);
         setInitialData(data);
         setLoading(false);
+
+        // Load flora data asynchronously (count + per-flora details for "Nombre de
+        // flore" tests). The form is already usable; floraData is hydrated when the
+        // response arrives.
+        getFromOpenElisServer(
+          `${API_ENDPOINTS.FLORA_BY_ANALYSIS}/${analysisId}`,
+          (floraList) => {
+            if (Array.isArray(floraList)) {
+              const loadedFlora = {};
+              floraList.forEach((entry) => {
+                if (entry && entry.floraCountTestId != null) {
+                  loadedFlora[String(entry.floraCountTestId)] = {
+                    count: entry.count || 0,
+                    details: Array.isArray(entry.details) ? entry.details : [],
+                  };
+                }
+              });
+              setFloraData(loadedFlora);
+            }
+          },
+        );
       },
       () => {
         setLoading(false);
@@ -236,6 +257,47 @@ const BacteriologyResultEntry = ({
       API_ENDPOINTS.SAVE_RESULTS,
       JSON.stringify(formData),
       () => {
+        // After the main save succeeds, persist flora data per flora-count test.
+        // The flora REST endpoint is separate (BacteriologyFloraRestController) so we
+        // fire one POST per (analysisId, floraCountTestId) entry collected by FloraList.
+        const floraEntries = Object.entries(floraData || {});
+        floraEntries.forEach(([testId, data]) => {
+          if (!testId || isNaN(parseInt(testId))) {
+            return;
+          }
+          const payload = {
+            count: data?.count != null ? parseInt(data.count) : 0,
+            details: (data?.details || []).map((d) => ({
+              floraNumber: d.floraNumber,
+              gramTypeDictId:
+                d.gramTypeDictId && d.gramTypeDictId !== ""
+                  ? parseInt(d.gramTypeDictId)
+                  : null,
+              groupingModeDictId:
+                d.groupingModeDictId && d.groupingModeDictId !== ""
+                  ? parseInt(d.groupingModeDictId)
+                  : null,
+              otherCharacteristicDictId:
+                d.otherCharacteristicDictId &&
+                d.otherCharacteristicDictId !== ""
+                  ? parseInt(d.otherCharacteristicDictId)
+                  : null,
+            })),
+          };
+          postToOpenElisServerJsonResponse(
+            `${API_ENDPOINTS.FLORA_BY_ANALYSIS}/${analysisId}/test/${testId}`,
+            JSON.stringify(payload),
+            () => {},
+            (err) => {
+              console.error(
+                "[BacteriologyResultEntry] Flora save failed for test",
+                testId,
+                err,
+              );
+            },
+          );
+        });
+
         setSaving(false);
         addNotification({
           kind: "success",
