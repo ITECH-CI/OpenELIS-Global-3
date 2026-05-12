@@ -423,7 +423,14 @@ public class SampleEditServiceImpl implements SampleEditService {
         for (SampleEditItem sampleEditItem : tests) {
             if (sampleEditItem.isAdd()) {
 
-                Analysis analysis = newOrExistingCanceledAnalysis(sampleEditItem);
+                Analysis analysis = newOrExistingAnalysisForAdd(sampleEditItem);
+
+                if (analysis == null) {
+                    // An active (non-canceled) analysis already exists for this (sampleItem, test).
+                    // Skip silently to avoid creating duplicates that would shadow the existing
+                    // result on result-entry / modify-order pages.
+                    continue;
+                }
 
                 if (analysis.getId() == null) {
                     SampleItem sampleItem = sampleItemService.get(sampleEditItem.getSampleItemId());
@@ -451,17 +458,31 @@ public class SampleEditServiceImpl implements SampleEditService {
         return addAnalysisList;
     }
 
-    private Analysis newOrExistingCanceledAnalysis(SampleEditItem sampleEditItem) {
-        List<Analysis> canceledAnalysis = analysisService
-                .getAnalysesBySampleItemIdAndStatusId(sampleEditItem.getSampleItemId(), CANCELED_TEST_STATUS_ID);
+    /**
+     * Resolve the Analysis to use when an "add" edit item is processed.
+     * Returns null when an active (non-canceled) analysis already exists for the
+     * same (sampleItem, test) pair, so the caller can skip the insert and preserve
+     * the existing result.
+     */
+    private Analysis newOrExistingAnalysisForAdd(SampleEditItem sampleEditItem) {
+        SampleItem sampleItem = sampleItemService.get(sampleEditItem.getSampleItemId());
+        List<Analysis> existing = analysisService.getAnalysesBySampleItem(sampleItem);
 
-        for (Analysis analysis : canceledAnalysis) {
-            if (sampleEditItem.getTestId().equals(analysis.getTest().getId())) {
-                return analysis;
+        Analysis canceledMatch = null;
+        for (Analysis analysis : existing) {
+            if (analysis.getTest() == null
+                    || !sampleEditItem.getTestId().equals(analysis.getTest().getId())) {
+                continue;
+            }
+            if (CANCELED_TEST_STATUS_ID.equals(analysis.getStatusId())) {
+                canceledMatch = analysis;
+            } else {
+                // Active analysis already present — signal the caller to skip.
+                return null;
             }
         }
 
-        return new Analysis();
+        return canceledMatch != null ? canceledMatch : new Analysis();
     }
 
     private List<Analysis> createRemoveList(List<SampleEditItem> tests, String sysUserId) {

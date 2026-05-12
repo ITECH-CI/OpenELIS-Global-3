@@ -116,13 +116,18 @@ public class BacteriologyResultController extends BaseController {
     @GetMapping(value = "/results/{analysisId}", produces = MediaType.APPLICATION_JSON_VALUE)
     @Transactional(readOnly = true)
     public ResponseEntity<BacteriologyResultData> getBacteriologyResults(
-            @PathVariable("analysisId") Integer analysisId) {
+            @PathVariable("analysisId") Integer analysisId,
+            @org.springframework.web.bind.annotation.RequestParam(name = "includeFinalized",
+                    required = false, defaultValue = "false") boolean includeFinalized) {
         try {
             // Get bacteriology-specific data (organisms, antibiograms)
             BacteriologyResultData resultData = workflowService.getBacteriologyResults(analysisId);
 
-            // Load test results (macroscopy, microscopy, culture) from result table
-            loadTestResults(analysisId, resultData);
+            // Load test results (macroscopy, microscopy, culture) from result table.
+            // includeFinalized=true is required by the result-entry / modification pages so
+            // already-validated tests remain visible and editable (lab-number / accession
+            // search). For the validation page (default), Finalized tests are hidden.
+            loadTestResults(analysisId, resultData, includeFinalized);
 
             return ResponseEntity.ok(resultData);
         } catch (Exception e) {
@@ -135,7 +140,7 @@ public class BacteriologyResultController extends BaseController {
      * Load test results from result table and add to BacteriologyResultData Loads
      * ALL test results for the accessionNumber (not just one analysisId)
      */
-    private void loadTestResults(Integer analysisId, BacteriologyResultData resultData) {
+    private void loadTestResults(Integer analysisId, BacteriologyResultData resultData, boolean includeFinalized) {
         try {
             org.openelisglobal.analysis.valueholder.Analysis primaryAnalysis = analysisService
                     .get(String.valueOf(analysisId));
@@ -149,16 +154,18 @@ public class BacteriologyResultController extends BaseController {
             List<org.openelisglobal.analysis.valueholder.Analysis> allAnalyses = analysisService
                     .getAnalysesBySampleItem(primaryAnalysis.getSampleItem());
 
-            // Filter out analyses that are already validated (Finalized)
-            // These should not appear in the validation page
-            IStatusService statusService = SpringContext.getBean(IStatusService.class);
-            String finalizedStatusId = statusService
-                    .getStatusID(org.openelisglobal.common.services.StatusService.AnalysisStatus.Finalized);
+            // Filter out analyses that are already validated (Finalized) unless the caller
+            // asked to include them (modification by lab number / accession needs them).
+            if (!includeFinalized) {
+                IStatusService statusService = SpringContext.getBean(IStatusService.class);
+                String finalizedStatusId = statusService
+                        .getStatusID(org.openelisglobal.common.services.StatusService.AnalysisStatus.Finalized);
 
-            allAnalyses = allAnalyses.stream().filter(analysis -> {
-                String statusId = analysis.getStatusId();
-                return statusId != null && !statusId.equals(finalizedStatusId);
-            }).collect(java.util.stream.Collectors.toList());
+                allAnalyses = allAnalyses.stream().filter(analysis -> {
+                    String statusId = analysis.getStatusId();
+                    return statusId != null && !statusId.equals(finalizedStatusId);
+                }).collect(java.util.stream.Collectors.toList());
+            }
 
             // Collect results from ALL analyses for this sample
             List<org.openelisglobal.result.valueholder.Result> results = new ArrayList<>();
@@ -382,22 +389,15 @@ public class BacteriologyResultController extends BaseController {
 
             String technicalAcceptanceStatusId = SpringContext.getBean(IStatusService.class)
                     .getStatusID(org.openelisglobal.common.services.StatusService.AnalysisStatus.TechnicalAcceptance);
-            String finalizedStatusId = SpringContext.getBean(IStatusService.class)
-                    .getStatusID(org.openelisglobal.common.services.StatusService.AnalysisStatus.Finalized);
-            String biologistRejectedStatusId = SpringContext.getBean(IStatusService.class)
-                    .getStatusID(org.openelisglobal.common.services.StatusService.AnalysisStatus.BiologistRejected);
 
-            // Update to TechnicalAcceptance if current status is not already at a higher
-            // level
+            // Already in TechnicalAcceptance → skip the write, nothing to do.
             if (technicalAcceptanceStatusId.equals(currentStatusId)) {
                 return;
             }
 
-            if (finalizedStatusId.equals(currentStatusId) || biologistRejectedStatusId.equals(currentStatusId)) {
-                return;
-            }
-
-            // Update the status
+            // Any other status (NotStarted, Finalized, BiologistRejected, ...) must regress
+            // to TechnicalAcceptance when results are (re-)saved on this endpoint, so the
+            // modified analysis reappears in the biological-validation queue.
             analysis.setStatusId(technicalAcceptanceStatusId);
             analysis.setSysUserId(sysUserId);
             analysisService.update(analysis);

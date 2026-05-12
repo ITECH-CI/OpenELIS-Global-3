@@ -41,8 +41,11 @@ const BacteriologyResultEntry = ({
 
   const loadBacteriologyResults = () => {
     setLoading(true);
+    // includeFinalized=true so already-validated tests remain visible and editable on
+    // the result-entry / modify-order pages (lab-number / accession search). Without
+    // this flag the backend strips Finalized analyses and the fields appear empty.
     getFromOpenElisServer(
-      `${API_ENDPOINTS.GET_RESULTS}/${analysisId}`,
+      `${API_ENDPOINTS.GET_RESULTS}/${analysisId}?includeFinalized=true`,
       (data) => {
         // Load macroscopy results from Map (testId -> value)
         if (data && data.macroscopyResultsMap) {
