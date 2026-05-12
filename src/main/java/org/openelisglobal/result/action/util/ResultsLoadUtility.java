@@ -727,6 +727,13 @@ public class ResultsLoadUtility {
             }
         }
 
+        // Cross-source dedup by (accessionNumber, testId).
+        // A child test may be emitted twice:
+        //   - as a "virtual" item by loadChildTestItems (no analysisId), and
+        //   - as a real item when its own Analysis row exists in DB.
+        // Keep the real one (it has a non-empty analysisId so it can be saved/edited).
+        testList = dedupKeepingRealAnalysis(testList);
+
         reverseSortByAccessionAndSequence(testList);
         setSampleGroupingNumbers(testList);
         addUserSelectionReflexes(testList);
@@ -735,6 +742,29 @@ public class ResultsLoadUtility {
         testList.toArray(testArray);
 
         return testArray;
+    }
+
+    private List<TestResultItem> dedupKeepingRealAnalysis(List<TestResultItem> items) {
+        java.util.Map<String, TestResultItem> byKey = new java.util.LinkedHashMap<>();
+        for (TestResultItem item : items) {
+            if (item.getTestId() == null || item.getAccessionNumber() == null) {
+                byKey.put("__nokey_" + System.identityHashCode(item), item);
+                continue;
+            }
+            String key = item.getAccessionNumber() + "|" + item.getTestId();
+            TestResultItem existing = byKey.get(key);
+            if (existing == null) {
+                byKey.put(key, item);
+                continue;
+            }
+            // Prefer the entry backed by a real Analysis row.
+            boolean existingIsReal = !GenericValidator.isBlankOrNull(existing.getAnalysisId());
+            boolean candidateIsReal = !GenericValidator.isBlankOrNull(item.getAnalysisId());
+            if (candidateIsReal && !existingIsReal) {
+                byKey.put(key, item);
+            }
+        }
+        return new ArrayList<>(byKey.values());
     }
 
     private void addUserSelectionReflexes(List<TestResultItem> testList) {
