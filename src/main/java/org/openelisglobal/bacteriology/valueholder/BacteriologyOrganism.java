@@ -18,6 +18,12 @@ public class BacteriologyOrganism extends BaseObject<Integer> {
     private String otherCharacteristics;
     private Boolean isActive = true;
     private Timestamp lastupdated;
+    /**
+     * Display-only name resolved from organismNameDictId; populated server-side for
+     * consumers that need the human-readable label (e.g. validation page) without
+     * polluting organismNameText (which is the user-typed free text). Not persisted.
+     */
+    private transient String resolvedOrganismName;
 
     @Override
     public Integer getId() {
@@ -115,5 +121,13 @@ public class BacteriologyOrganism extends BaseObject<Integer> {
 
     public void setLastupdated(Timestamp lastupdated) {
         this.lastupdated = lastupdated;
+    }
+
+    public String getResolvedOrganismName() {
+        return resolvedOrganismName;
+    }
+
+    public void setResolvedOrganismName(String resolvedOrganismName) {
+        this.resolvedOrganismName = resolvedOrganismName;
     }
 }

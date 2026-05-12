@@ -727,7 +727,8 @@ const BacteriologyValidation = ({
                                   Organisme #{organism.organismNumber}:
                                 </strong>
                                 <span>
-                                  {organism.organismNameText ||
+                                  {organism.resolvedOrganismName ||
+                                    organism.organismNameText ||
                                     (organism.organismNameDictId
                                       ? `ID: ${organism.organismNameDictId}`
                                       : "N/A")}
@@ -964,7 +965,8 @@ const BacteriologyValidation = ({
                               Organisme #{organism.organismNumber}:
                             </strong>
                             <span>
-                              {organism.organismNameText ||
+                              {organism.resolvedOrganismName ||
+                                organism.organismNameText ||
                                 (organism.organismNameDictId
                                   ? `ID: ${organism.organismNameDictId}`
                                   : "N/A")}

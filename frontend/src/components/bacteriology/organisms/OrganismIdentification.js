@@ -5,7 +5,6 @@ import {
   Grid,
   RadioButton,
   RadioButtonGroup,
-  TextInput,
 } from "@carbon/react";
 import { useEffect, useState } from "react";
 import { getFromOpenElisServer } from "../../utils/Utils";
@@ -129,17 +128,10 @@ const OrganismIdentification = ({
               placeholder="Rechercher un organisme..."
             />
 
-            <TextInput
-              id={`organismNameText_${idPrefix}_${organismNumber}`}
-              labelText="Ou saisir un nom libre"
-              value={organism.organismNameText || ""}
-              onChange={(e) =>
-                handleFieldChange("organismNameText", e.target.value)
-              }
-              disabled={disabled}
-              placeholder="Si non trouvé dans la liste"
-              style={{ marginTop: "1rem" }}
-            />
+            {/* "Ou saisir un nom libre" hidden from the result-entry/modification
+                screen on request — the dictionary picker above is the only entry
+                point. Any pre-existing organismNameText value is preserved in the
+                data model and still rendered in reports/validation. */}
           </Column>
 
           {isBacteria && (
@@ -169,20 +161,9 @@ const OrganismIdentification = ({
               </Column>
 
               {/* Capsule presence removed - not needed in result entry */}
-
-              <Column lg={12} md={8} sm={4}>
-                <TextInput
-                  id={`otherChar_${idPrefix}_${organismNumber}`}
-                  labelText="Autres caractéristiques"
-                  value={organism.otherCharacteristics || ""}
-                  onChange={(e) =>
-                    handleFieldChange("otherCharacteristics", e.target.value)
-                  }
-                  disabled={disabled}
-                  placeholder="Autres observations..."
-                  rows={4}
-                />
-              </Column>
+              {/* "Autres caractéristiques" hidden from the result-entry/modification
+                  screen on request — kept in the data model so any value previously
+                  saved is preserved and still rendered in reports/validation. */}
             </>
           )}
 

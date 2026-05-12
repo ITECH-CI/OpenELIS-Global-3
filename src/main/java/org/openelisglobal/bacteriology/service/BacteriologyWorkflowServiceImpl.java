@@ -304,22 +304,27 @@ public class BacteriologyWorkflowServiceImpl implements BacteriologyWorkflowServ
                 // Get organism
                 BacteriologyOrganism organism = organismService.getByGroupId(organismGroup.getId());
 
-                // Resolve organism name from dictionary if needed
-                if (organism != null && organism.getOrganismNameDictId() != null
-                        && (organism.getOrganismNameText() == null
-                                || organism.getOrganismNameText().trim().isEmpty())) {
-                    try {
-                        Dictionary dict = dictionaryService
-                                .getDataForId(String.valueOf(organism.getOrganismNameDictId()));
-
-                        if (dict != null) {
-                            organism.setOrganismNameText(dict.getLocalizedName());
+                // Provide a display-ready label in resolvedOrganismName: free text wins,
+                // otherwise resolve from the dictionary. organismNameText itself is left
+                // untouched so the result-entry screen keeps its free-text input empty
+                // when the user picked the organism from the dictionary.
+                if (organism != null) {
+                    String displayName = organism.getOrganismNameText();
+                    if ((displayName == null || displayName.trim().isEmpty())
+                            && organism.getOrganismNameDictId() != null) {
+                        try {
+                            Dictionary dict = dictionaryService
+                                    .getDataForId(String.valueOf(organism.getOrganismNameDictId()));
+                            if (dict != null) {
+                                displayName = dict.getLocalizedName();
+                            }
+                        } catch (Exception e) {
+                            LogEvent.logError("BacteriologyWorkflowServiceImpl", "getBacteriologyResults",
+                                    "Exception resolving organism name for dictId "
+                                            + organism.getOrganismNameDictId() + ": " + e.getMessage());
                         }
-                    } catch (Exception e) {
-                        LogEvent.logError("BacteriologyWorkflowServiceImpl", "getBacteriologyResults",
-                                "Exception resolving organism name for dictId " + organism.getOrganismNameDictId()
-                                        + ": " + e.getMessage());
                     }
+                    organism.setResolvedOrganismName(displayName);
                 }
 
                 organismData.setOrganism(organism);
