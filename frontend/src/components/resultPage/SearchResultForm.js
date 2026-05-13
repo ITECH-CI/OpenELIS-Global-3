@@ -1806,10 +1806,79 @@ export function SearchResults(props) {
                 //onBlur={handleBlur}
               >
                 <DataTable
-                  data={props.results?.testResult?.slice(
-                    (page - 1) * pageSize,
-                    page * pageSize,
-                  )}
+                  data={(() => {
+                    const all = props.results?.testResult || [];
+                    // Hide conditional child rows whose parent (same sample item)
+                    // has not yet received the triggering result.
+                    const visible = all.filter((row) => {
+                      if (!row.parentTestId) return true;
+                      const parent = all.find(
+                        (p) =>
+                          String(p.testId) === String(row.parentTestId) &&
+                          p.accessionNumber === row.accessionNumber &&
+                          String(p.sequenceNumber) === String(row.sequenceNumber),
+                      );
+                      if (!parent) return true;
+                      const expected = parent.parentTriggerValue;
+                      if (!expected) return true;
+                      const current = parent.resultValue;
+                      return current != null && String(current) === String(expected);
+                    });
+                    // Reorder so each visible conditional child appears
+                    // immediately AFTER its parent row.
+                    const ordered = [];
+                    const placedIds = new Set();
+                    const childrenByParent = new Map();
+                    visible.forEach((row) => {
+                      if (row.parentTestId) {
+                        const parent = visible.find(
+                          (p) =>
+                            String(p.testId) === String(row.parentTestId) &&
+                            p.accessionNumber === row.accessionNumber &&
+                            String(p.sequenceNumber) === String(row.sequenceNumber),
+                        );
+                        if (parent) {
+                          const key = parent.id;
+                          if (!childrenByParent.has(key)) {
+                            childrenByParent.set(key, []);
+                          }
+                          childrenByParent.get(key).push(row);
+                          return;
+                        }
+                      }
+                    });
+                    visible.forEach((row) => {
+                      if (placedIds.has(row.id)) return;
+                      if (row.parentTestId) {
+                        // Children are inserted after their parent below; if a child has
+                        // no parent in the visible set (edge case), append it as-is.
+                        const hasParent = visible.some(
+                          (p) =>
+                            String(p.testId) === String(row.parentTestId) &&
+                            p.accessionNumber === row.accessionNumber &&
+                            String(p.sequenceNumber) === String(row.sequenceNumber),
+                        );
+                        if (hasParent) return;
+                      }
+                      ordered.push(row);
+                      placedIds.add(row.id);
+                      const kids = childrenByParent.get(row.id) || [];
+                      kids.forEach((kid) => {
+                        if (!placedIds.has(kid.id)) {
+                          ordered.push(kid);
+                          placedIds.add(kid.id);
+                        }
+                      });
+                    });
+                    // Append orphan children (no matching parent in visible set)
+                    visible.forEach((row) => {
+                      if (!placedIds.has(row.id)) {
+                        ordered.push(row);
+                        placedIds.add(row.id);
+                      }
+                    });
+                    return ordered.slice((page - 1) * pageSize, page * pageSize);
+                  })()}
                   columns={columns}
                   isSortable
                   expandableRows

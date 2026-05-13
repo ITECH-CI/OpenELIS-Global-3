@@ -86,6 +86,8 @@ import org.openelisglobal.role.service.RoleService;
 import org.openelisglobal.sample.service.SampleService;
 import org.openelisglobal.sample.valueholder.OrderPriority;
 import org.openelisglobal.sample.valueholder.Sample;
+import org.openelisglobal.sampleitem.valueholder.SampleItem;
+import org.openelisglobal.test.service.TestService;
 import org.openelisglobal.samplehuman.service.SampleHumanService;
 import org.openelisglobal.sampleitem.service.SampleItemService;
 import org.openelisglobal.search.service.SearchResultsService;
@@ -486,6 +488,10 @@ public class LogbookResultsRestController extends LogbookResultsBaseController {
             saveErrors(errors);
         }
 
+        // Create real analyses on the fly for conditional child tests that are
+        // still virtual (empty analysisId) but now triggered by their parent.
+        materializeVirtualChildAnalyses(actionDataSet, getSysUserId(request));
+
         createResultsFromItems(actionDataSet, supportReferrals, alwaysValidate, useTechnicianName, statusRuleSet);
         createAnalysisOnlyUpdates(actionDataSet);
 
@@ -560,6 +566,66 @@ public class LogbookResultsRestController extends LogbookResultsBaseController {
             params.put("type", form.getType());
         }
         return reflexMap;
+    }
+
+    /**
+     * Conditional child tests are emitted by the backend with an empty analysisId
+     * (they are "virtual" until the parent has the triggering result). Before the
+     * save flow runs, materialize a real Analysis row for each modified child so
+     * downstream code can persist its result normally.
+     */
+    private void materializeVirtualChildAnalyses(ResultsUpdateDataSet actionDataSet, String sysUserId) {
+        for (TestResultItem item : actionDataSet.getModifiedItems()) {
+            if (!GenericValidator.isBlankOrNull(item.getAnalysisId())) {
+                continue;
+            }
+            if (GenericValidator.isBlankOrNull(item.getParentTestId())
+                    || GenericValidator.isBlankOrNull(item.getTestId())) {
+                continue;
+            }
+            try {
+                Sample sample = sampleService.getSampleByAccessionNumber(item.getAccessionNumber());
+                if (sample == null) {
+                    continue;
+                }
+                List<SampleItem> sampleItems = sampleItemService.getSampleItemsBySampleId(sample.getId());
+                SampleItem target = null;
+                String expectedSeq = item.getSequenceNumber();
+                for (SampleItem si : sampleItems) {
+                    if (expectedSeq == null || expectedSeq.equals(si.getSortOrder())) {
+                        target = si;
+                        break;
+                    }
+                }
+                if (target == null) {
+                    continue;
+                }
+                org.openelisglobal.test.valueholder.Test test = SpringContext.getBean(TestService.class)
+                        .get(item.getTestId());
+                if (test == null) {
+                    continue;
+                }
+                Analysis newAnalysis = new Analysis();
+                newAnalysis.setTest(test);
+                newAnalysis.setSampleItem(target);
+                newAnalysis.setRevision("0");
+                newAnalysis.setIsReportable(test.getIsReportable());
+                newAnalysis.setAnalysisType("MANUAL");
+                newAnalysis.setStartedDate(new java.sql.Date(System.currentTimeMillis()));
+                newAnalysis.setTestSection(test.getTestSection());
+                newAnalysis.setSysUserId(sysUserId);
+                String notStartedStatusId = SpringContext.getBean(IStatusService.class)
+                        .getStatusID(AnalysisStatus.NotStarted);
+                newAnalysis.setStatusId(notStartedStatusId);
+                analysisService.insert(newAnalysis);
+                item.setAnalysisId(newAnalysis.getId());
+            } catch (RuntimeException e) {
+                LogEvent.logError("LogbookResultsRestController", "materializeVirtualChildAnalyses",
+                        "Failed to create analysis for virtual child test " + item.getTestId() + ": "
+                                + e.getMessage());
+                LogEvent.logError(e);
+            }
+        }
     }
 
     private void createAnalysisOnlyUpdates(ResultsUpdateDataSet actionDataSet) {
