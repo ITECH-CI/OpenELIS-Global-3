@@ -1,6 +1,7 @@
 import {
   Checkbox,
   Column,
+  ComboBox,
   FormGroup,
   Layer,
   Loading,
@@ -329,19 +330,29 @@ const SampleType = (props) => {
     }
   }
 
-  const handleFetchSampleTypeTests = (e, index) => {
+  const handleFetchSampleTypeTests = (sampleTypeId, sampleTypeLabel, index) => {
+    // Décocher les tests issus des panels précédemment sélectionnés.
+    for (let i in selectedPanels) {
+      const testIds = isTb
+        ? selectedPanels[i].test_ids
+        : selectedPanels[i].testIds;
+      triggerPanelCheckBoxChange(false, testIds);
+    }
+    setSelectedPanels([]);
+    setPanelSearchTerm("");
+    setSearchBoxPanels([]);
     setSelectedTests([]);
     setReferralRequests([]);
-    const { value } = e.target;
-    const selectedSampleTypeOption =
-      sampleTypesRef.current.options[sampleTypesRef.current.selectedIndex].text;
     setSelectedSampleType({
       ...selectedSampleType,
-      id: value,
-      name: selectedSampleTypeOption,
+      id: sampleTypeId,
+      name: sampleTypeLabel,
       element_index: index,
     });
-    props.sampleTypeObject({ sampleTypeId: value, sampleObjectIndex: index });
+    props.sampleTypeObject({
+      sampleTypeId: sampleTypeId,
+      sampleObjectIndex: index,
+    });
   };
 
   const handleFetchSampleTbTypeTests = (e, index) => {
@@ -802,25 +813,40 @@ const SampleType = (props) => {
     <>
       {loading && <Loading />}
       <div className="sampleBody">
-        <Select
+        <ComboBox
           className="selectSampleType"
           id={"sampleId_" + index}
-          ref={sampleTypesRef}
-          value={
-            props.sample.sampleTypeId === "" ? "" : props.sample.sampleTypeId
-          }
           name="sampleId"
-          labelText=""
-          onChange={(e) => {
-            handleFetchSampleTypeTests(e, index);
+          items={sampleTypes || []}
+          itemToString={(item) => (item && item.value ? item.value : "")}
+          shouldFilterItem={({ item, inputValue }) => {
+            if (!inputValue) return true;
+            const label = (item && item.value ? item.value : "").toLowerCase();
+            return label.includes(inputValue.toLowerCase());
+          }}
+          selectedItem={
+            (sampleTypes || []).find(
+              (st) => String(st.id) === String(props.sample.sampleTypeId),
+            ) || null
+          }
+          placeholder={intl.formatMessage({ id: "sample.select.type" })}
+          titleText=""
+          onChange={({ selectedItem }) => {
+            handleFetchSampleTypeTests(
+              selectedItem ? selectedItem.id : "",
+              selectedItem ? selectedItem.value : "",
+              index,
+            );
           }}
           required
-        >
-          <SelectItem text="Select sample type" value="" />
-          {sampleTypes?.map((sampleType, i) => (
-            <SelectItem text={sampleType.value} value={sampleType.id} key={i} />
-          ))}
-        </Select>
+        />
+        {/* Hidden field kept for backwards-compat refs/forms */}
+        <input
+          type="hidden"
+          ref={sampleTypesRef}
+          name="sampleIdHidden"
+          value={props.sample.sampleTypeId || ""}
+        />
 
         <CustomCheckBox
           id={"reject_" + index}
