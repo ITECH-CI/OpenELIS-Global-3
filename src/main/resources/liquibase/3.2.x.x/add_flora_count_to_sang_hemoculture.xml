@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+    <!--
+        Le test "Microscopie - Frottis Coloration Gram - Bactéries - Nombre de flore"
+        manquait pour le sample type "Sang (hémoculture)" (avec espace, id 53) et pour
+        le panel "ECB-Sang". La migration précédente ciblait "Sang(hémoculture)" sans
+        espace, valeur absente de la base. On corrige ici les deux liens.
+    -->
+    <changeSet id="add-flora-count-to-sang-hemoculture-sampletype" author="pkomena">
+        <comment>Lier le test 'Nombre de flore' au sample type 'Sang (hémoculture)'</comment>
+        <sql dbms="postgresql"><![CDATA[
+            INSERT INTO clinlims.sampletype_test (id, sample_type_id, test_id)
+            SELECT nextval('sample_type_test_seq'), st.id, t.id
+            FROM clinlims.type_of_sample st
+            JOIN clinlims.test t
+              ON t.name = 'Microscopie - Frottis Coloration Gram - Bactéries - Nombre de flore'
+            WHERE st.description = 'Sang (hémoculture)'
+              AND NOT EXISTS (
+                  SELECT 1 FROM clinlims.sampletype_test stt
+                  WHERE stt.sample_type_id = st.id AND stt.test_id = t.id
+              );
+        ]]></sql>
+    </changeSet>
+
+    <changeSet id="add-flora-count-to-ecb-sang-panel" author="pkomena">
+        <comment>Ajouter le test 'Nombre de flore' au panel ECB-Sang</comment>
+        <sql dbms="postgresql"><![CDATA[
+            INSERT INTO clinlims.panel_item (id, panel_id, lastupdated, test_id)
+            SELECT nextval('panel_item_seq'), p.id, now(), t.id
+            FROM clinlims.panel p
+            JOIN clinlims.test t
+              ON t.name = 'Microscopie - Frottis Coloration Gram - Bactéries - Nombre de flore'
+            WHERE p.name = 'ECB-Sang'
+              AND NOT EXISTS (
+                  SELECT 1 FROM clinlims.panel_item pi
+                  WHERE pi.panel_id = p.id AND pi.test_id = t.id
+              );
+        ]]></sql>
+    </changeSet>
+
+</databaseChangeLog>
