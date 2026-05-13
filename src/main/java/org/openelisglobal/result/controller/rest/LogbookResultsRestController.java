@@ -281,11 +281,8 @@ public class LogbookResultsRestController extends LogbookResultsBaseController {
 
             if (!GenericValidator.isBlankOrNull(form.getTestSectionId())) {
                 tests = resultsLoadUtility.getUnfinishedTestResultItemsInTestSection(form.getTestSectionId());
-                System.out.println("Tests size for test section " + form.getTestSectionId() + ": " + tests.size());
                 filteredTests = userService.filterResultsByLabUnitRoles(getSysUserId(request), tests,
                         Constants.ROLE_RESULTS);
-                System.out.println("Filtered Tests size for test section " + form.getTestSectionId() + ": "
-                        + filteredTests.size());
                 int count = resultsLoadUtility.getTotalCountAnalysisByTestSectionAndStatus(form.getTestSectionId());
                 request.setAttribute("analysisCount", count);
                 request.setAttribute("pageSize", filteredTests.size());

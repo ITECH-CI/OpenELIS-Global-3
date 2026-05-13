@@ -98,7 +98,6 @@ public class NonConformityRestController extends org.openelisglobal.common.rest.
     @PostMapping(value = "/rest/nonconformity", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> saveNonConformity(@RequestBody NonConformityForm form, HttpServletRequest request) {
         try {
-            System.out.println("ENTER Saving Non-Conformity with data:");
             NonConformity nc;
             boolean isNew = form.getId() == null || form.getId().isEmpty();
 
@@ -108,17 +107,13 @@ public class NonConformityRestController extends org.openelisglobal.common.rest.
                 nc.setNcNumber(ncNumber);
                 nc.setStatus("NEW");
             } else {
-                System.out.println("UPDATE ELSE: ");
 
                 if (form.getNcNumber() == null && form.getId() == null) {
-                    System.out.println("No identifier provided for update");
                     return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                             .body("Either ncNumber or id must be provided for update");
                 }
 
                 // Use service method to get entity in a writable transaction
-                System.out.println(
-                        "Finding Non-Conformity with ncNumber: " + form.getNcNumber() + ", ID: " + form.getId());
                 nc = nonConformityService.getAndPrepareForUpdate(form.getNcNumber(), form.getId());
 
                 if (nc == null) {
@@ -127,11 +122,9 @@ public class NonConformityRestController extends org.openelisglobal.common.rest.
                             + (form.getNcNumber() != null ? "ncNumber: " + form.getNcNumber() : "id: " + form.getId()));
                 }
 
-                System.out.println("Updating Non-Conformity: " + nc.getNcNumber() + " (ID: " + nc.getId() + ")");
             }
 
             // Update fields
-            System.out.println("Setting report date: " + form.getReportDate());
             if (form.getReportDate() != null && !form.getReportDate().isEmpty()) {
                 nc.setReportDate(parseDate(form.getReportDate()));
             }
