@@ -209,6 +209,7 @@ function SearchPatientForm(props) {
     setPagination(false);
     setLoading(true);
     values.dateOfBirth = dob;
+    const nationalIdValue = values.nationalId || values.patientId || "";
     let searchEndPoint =
       "/rest/patient-search-results?" +
       "lastName=" +
@@ -220,7 +221,7 @@ function SearchPatientForm(props) {
       "&subjectNumber=" +
       values.patientId +
       "&nationalID=" +
-      values.patientId +
+      nationalIdValue +
       "&labNumber=" +
       values.labNumber +
       "&guid=" +
@@ -420,6 +421,28 @@ function SearchPatientForm(props) {
                       onChange={(e, rawValue) => {
                         setFieldValue(field.name, rawValue);
                       }}
+                    />
+                  )}
+                </Field>
+              </Column>
+              <Column lg={16} md={8} sm={4}>
+                {" "}
+                <br />{" "}
+              </Column>
+              <Column lg={8} md={4} sm={4}>
+                <Field name="nationalId">
+                  {({ field }) => (
+                    <TextInput
+                      name={field.name}
+                      value={values[field.name]}
+                      placeholder={intl.formatMessage({
+                        id: "patient.information.nationalid",
+                      })}
+                      labelText={intl.formatMessage({
+                        id: "patient.natioanalid",
+                        defaultMessage: "CMU number",
+                      })}
+                      id={field.name}
                     />
                   )}
                 </Field>
