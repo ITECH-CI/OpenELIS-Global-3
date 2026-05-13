@@ -77,6 +77,12 @@ public class BacteriologyResultController extends BaseController {
     @Autowired
     private org.openelisglobal.bacteriology.service.BacteriologyFloraService bacteriologyFloraService;
 
+    @Autowired
+    private org.openelisglobal.observationhistory.service.ObservationHistoryService observationHistoryService;
+
+    @Autowired
+    private org.openelisglobal.sample.service.SampleService sampleService;
+
     /**
      * Get all antibiotics from dictionary
      */
@@ -131,6 +137,19 @@ public class BacteriologyResultController extends BaseController {
             // already-validated tests remain visible and editable (lab-number / accession
             // search). For the validation page (default), Finalized tests are hidden.
             loadTestResults(analysisId, resultData, includeFinalized);
+
+            // Load biologist's interpretation note (SAMPLE_INTERPRETATION observation),
+            // so the validation UI can pre-fill the existing note on mount.
+            org.openelisglobal.analysis.valueholder.Analysis analysisForInterp = analysisService
+                    .get(String.valueOf(analysisId));
+            if (analysisForInterp != null && analysisForInterp.getSampleItem() != null
+                    && analysisForInterp.getSampleItem().getSample() != null) {
+                String sampleIdForInterp = analysisForInterp.getSampleItem().getSample().getId();
+                String existingInterp = observationHistoryService.getValueForSample(
+                        org.openelisglobal.observationhistory.service.ObservationHistoryServiceImpl.ObservationType.SAMPLE_INTERPRETATION,
+                        sampleIdForInterp);
+                resultData.setSampleInterpretation(existingInterp);
+            }
 
             return ResponseEntity.ok(resultData);
         } catch (Exception e) {
@@ -1029,6 +1048,45 @@ public class BacteriologyResultController extends BaseController {
                         analysis.setSysUserId(sysUserId);
                         analysisService.update(analysis);
                         rejectedCount++;
+                    }
+                }
+            }
+
+            // Persist the biologist's interpretation note (if any) as a SAMPLE_INTERPRETATION
+            // observation history attached to the sample. The bacterio report's
+            // "Remarques générales du laboratoire" cell reads from this same source.
+            String interpretationNote = form.getSampleInterpretation();
+            if (interpretationNote != null && primaryAnalysis.getSampleItem() != null
+                    && primaryAnalysis.getSampleItem().getSample() != null) {
+                String sampleId = primaryAnalysis.getSampleItem().getSample().getId();
+                String patientId = sampleService.getPatient(primaryAnalysis.getSampleItem().getSample()) != null
+                        ? sampleService.getPatient(primaryAnalysis.getSampleItem().getSample()).getId()
+                        : null;
+                String typeId = observationHistoryService.getObservationTypeIdForType(
+                        org.openelisglobal.observationhistory.service.ObservationHistoryServiceImpl.ObservationType.SAMPLE_INTERPRETATION);
+                if (sampleId != null && typeId != null) {
+                    List<org.openelisglobal.observationhistory.valueholder.ObservationHistory> existing = observationHistoryService
+                            .getAll(null, primaryAnalysis.getSampleItem().getSample(), typeId);
+                    String value = interpretationNote.trim();
+                    if (existing != null && !existing.isEmpty()) {
+                        org.openelisglobal.observationhistory.valueholder.ObservationHistory obs = existing.get(0);
+                        obs.setValue(value);
+                        obs.setValueType(
+                                org.openelisglobal.observationhistory.valueholder.ObservationHistory.ValueType.LITERAL
+                                        .getCode());
+                        obs.setSysUserId(sysUserId);
+                        observationHistoryService.update(obs);
+                    } else if (!value.isEmpty()) {
+                        org.openelisglobal.observationhistory.valueholder.ObservationHistory obs = new org.openelisglobal.observationhistory.valueholder.ObservationHistory();
+                        obs.setSampleId(sampleId);
+                        obs.setPatientId(patientId);
+                        obs.setObservationHistoryTypeId(typeId);
+                        obs.setValue(value);
+                        obs.setValueType(
+                                org.openelisglobal.observationhistory.valueholder.ObservationHistory.ValueType.LITERAL
+                                        .getCode());
+                        obs.setSysUserId(sysUserId);
+                        observationHistoryService.insert(obs);
                     }
                 }
             }

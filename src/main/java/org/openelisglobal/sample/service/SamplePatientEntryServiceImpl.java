@@ -163,11 +163,25 @@ public class SamplePatientEntryServiceImpl implements SamplePatientEntryService 
 
         }
 
-        // Persist Bacteriologie Classique data if present
+        // Persist Bacteriologie Classique data if present (this already covers
+        // BacterioTypeExamens via the order items).
         if (form.getPatientRoutineBacterioInfo() != null) {
             persistBacterioObservations(form.getPatientRoutineBacterioInfo(), form.getPatientProperties(),
                     form.getSampleOrderItems(), updateData.getSample().getId(), updateData.getPatientId(),
                     updateData.getCurrentUserId());
+        } else {
+            // Safety net for orders that don't carry a PatientRoutineBacterioInfo block
+            // but still selected an order type: persist BacterioTypeExamens here.
+            SampleOrderItem orderItems = form.getSampleOrderItems();
+            if (orderItems != null && !GenericValidator.isBlankOrNull(orderItems.getOrderType())) {
+                List<ObservationHistory> orderTypeObs = new ArrayList<>();
+                addObservationIfTypeExists(orderTypeObs, "BacterioTypeExamens",
+                        updateData.getSample().getId(), updateData.getPatientId(),
+                        updateData.getCurrentUserId(), ValueType.LITERAL, orderItems.getOrderType());
+                for (ObservationHistory obs : orderTypeObs) {
+                    observationHistoryService.insert(obs);
+                }
+            }
         }
 
         request.getSession().setAttribute("lastAccessionNumber", updateData.getAccessionNumber());

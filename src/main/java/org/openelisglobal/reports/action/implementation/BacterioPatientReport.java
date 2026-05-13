@@ -163,6 +163,32 @@ public class BacterioPatientReport extends PatientReport implements IReportCreat
                     currentAnalysis = analysis;
                     ClinicalPatientData resultsData = buildClinicalPatientData(hasParentResult);
 
+                    // Override the parent's labOrderType (which uses the PROGRAM observation,
+                    // i.e. "Routine Bacteriology Testing") with the actual order type saved
+                    // by the bacterio entry form ("IN" / "OUT", stored as BacterioTypeExamens
+                    // observation). Then translate to a human-readable label.
+                    String rawOrderType = SpringContext
+                            .getBean(org.openelisglobal.observationhistory.service.ObservationHistoryService.class)
+                            .getValueForSample(
+                                    org.openelisglobal.observationhistory.service.ObservationHistoryServiceImpl.ObservationType.BACTERIO_ORDER_TYPE,
+                                    sampleService.getId(currentSample));
+                    if (rawOrderType != null && !rawOrderType.trim().isEmpty()) {
+                        String labelKey;
+                        if ("IN".equalsIgnoreCase(rawOrderType)) {
+                            labelKey = "report.bacterio.ordonnancetype.in";
+                        } else if ("OUT".equalsIgnoreCase(rawOrderType)) {
+                            labelKey = "report.bacterio.ordonnancetype.out";
+                        } else {
+                            labelKey = null;
+                        }
+                        resultsData.setLabOrderType(
+                                labelKey != null ? MessageUtil.getMessage(labelKey) : rawOrderType);
+                    } else {
+                        // No bacterio-specific order type — clear the parent's PROGRAM value
+                        // so the report doesn't display "Routine Bacteriology Testing".
+                        resultsData.setLabOrderType("");
+                    }
+
                     // Get test name to determine grouping
                     Test test = analysis.getTest();
                     String testName = TestServiceImpl.getLocalizedTestNameWithType(test);
@@ -197,9 +223,12 @@ public class BacterioPatientReport extends PatientReport implements IReportCreat
                     
                     resultsData.setIsBacterioParentTest(ObjectUtils.isNotEmpty(test.getParentTriggerValue()));
 
-                    var sampleOrganization = sampleOrganizationService.getDataBySample(currentSample);
-                    Organization referringOrg = sampleOrganization != null ? sampleOrganization.getOrganization()
-                            : null;
+                    // Look up the referring site via sample_requester (where the UI stores
+                    // it), like the parent PatientReport does. sample_organization is
+                    // typically empty on bacterio orders, hence the previously blank
+                    // "Site référant" cell.
+                    Organization referringOrg = sampleService.getOrganizationRequester(currentSample,
+                            org.openelisglobal.common.services.TableIdService.getInstance().REFERRING_ORG_TYPE_ID);
                     currentSiteInfo = referringOrg == null ? "" : referringOrg.getOrganizationName();
                     resultsData.setSiteInfo(currentSiteInfo);
 
@@ -310,6 +339,16 @@ public class BacterioPatientReport extends PatientReport implements IReportCreat
     private void addOrganismsAndAntibiograms(Analysis analysis, String mainSection,
             ClinicalPatientData patientTemplate,
             List<ClinicalPatientData> reportItems, List<ClinicalPatientData> currentSampleReportItems) {
+
+        // Suppress organisms and antibiogram rendering until the culture analysis has
+        // been biologically validated. While the culture is still "En cours" we don't
+        // surface preliminary identifications on the printed report. The "Nombre de
+        // germes" row already handles the parent-row label separately.
+        String finalizedStatusId = SpringContext.getBean(IStatusService.class)
+                .getStatusID(AnalysisStatus.Finalized);
+        if (finalizedStatusId != null && !finalizedStatusId.equals(analysis.getStatusId())) {
+            return;
+        }
 
         // Get accession number from analysis
         String accessionNumber = "";

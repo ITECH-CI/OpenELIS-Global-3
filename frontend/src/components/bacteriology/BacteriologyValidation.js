@@ -72,6 +72,11 @@ const BacteriologyValidation = ({
       `${API_ENDPOINTS.GET_RESULTS}/${analysisId}`,
       (responseData) => {
         setData(responseData);
+        if (responseData && responseData.sampleInterpretation != null) {
+          setSampleInterpretation(responseData.sampleInterpretation);
+        } else {
+          setSampleInterpretation("");
+        }
         setLoading(false);
       },
       () => {
@@ -118,6 +123,7 @@ const BacteriologyValidation = ({
       analysisId: parseInt(analysisId),
       validated: validatedItems,
       rejected: rejectedItems,
+      sampleInterpretation: sampleInterpretation || "",
     };
 
     postToOpenElisServerJsonResponse(

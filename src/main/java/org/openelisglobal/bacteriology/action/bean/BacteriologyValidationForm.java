@@ -8,6 +8,8 @@ public class BacteriologyValidationForm {
     private String sysUserId;
     private ValidatedItems validated;
     private RejectedItems rejected;
+    /** Biologist's interpretation note for the sample (persisted as observation history). */
+    private String sampleInterpretation;
 
     public Integer getAnalysisId() {
         return analysisId;
@@ -39,6 +41,14 @@ public class BacteriologyValidationForm {
 
     public void setRejected(RejectedItems rejected) {
         this.rejected = rejected;
+    }
+
+    public String getSampleInterpretation() {
+        return sampleInterpretation;
+    }
+
+    public void setSampleInterpretation(String sampleInterpretation) {
+        this.sampleInterpretation = sampleInterpretation;
     }
 
     public static class ValidatedItems {

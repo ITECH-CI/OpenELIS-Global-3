@@ -109,6 +109,7 @@
 	<field name="floraGramType" class="java.lang.String"/>
 	<field name="floraGroupingMode" class="java.lang.String"/>
 	<field name="floraOtherCharacteristic" class="java.lang.String"/>
+	<field name="interpretation" class="java.lang.String"/>
 	<variable name="subsectionItemCount" class="java.lang.Integer" resetType="Group" resetGroup="subsection name" calculation="Count">
 		<variableExpression><![CDATA[$F{testName}]]></variableExpression>
 		<initialValueExpression><![CDATA[0]]></initialValueExpression>
@@ -146,18 +147,30 @@
 					<textFieldExpression><![CDATA[$R{report.signValidation}]]></textFieldExpression>
 				</textField>
 				<textField evaluationTime="Group" evaluationGroup="person" pattern="">
-					<reportElement x="5" y="0" width="365" height="61" isRemoveLineWhenBlank="true" uuid="cb6c624d-3174-4cfc-aca4-adb7b4e2db07"/>
+					<reportElement x="5" y="0" width="365" height="14" isRemoveLineWhenBlank="true" uuid="cb6c624d-3174-4cfc-aca4-adb7b4e2db07"/>
 					<box topPadding="0" leftPadding="4">
 						<pen lineWidth="0.5"/>
 						<topPen lineWidth="0.5"/>
 						<leftPen lineWidth="0.5"/>
+						<rightPen lineWidth="0.5"/>
+					</box>
+					<textElement verticalAlignment="Top">
+						<font size="9" isBold="true"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$R{report.labInfomation}]]></textFieldExpression>
+				</textField>
+				<textField textAdjust="StretchHeight" evaluationTime="Group" evaluationGroup="person" isBlankWhenNull="true">
+					<reportElement x="5" y="14" width="365" height="47" isRemoveLineWhenBlank="true" uuid="0b4d2c83-5da7-4f0d-8e8a-7c6e3b7d2a91"/>
+					<box topPadding="2" leftPadding="4" rightPadding="4" bottomPadding="2">
+						<leftPen lineWidth="0.5"/>
 						<bottomPen lineWidth="0.5"/>
 						<rightPen lineWidth="0.5"/>
 					</box>
-					<textElement>
-						<font size="9" isBold="false"/>
+					<textElement verticalAlignment="Top">
+						<font size="9"/>
+						<paragraph lineSpacing="Single"/>
 					</textElement>
-					<textFieldExpression><![CDATA[$R{report.labInfomation}]]></textFieldExpression>
+					<textFieldExpression><![CDATA[$F{interpretation}]]></textFieldExpression>
 				</textField>
 				<image onErrorType="Blank">
 					<reportElement x="371" y="16" width="178" height="43" isRemoveLineWhenBlank="true" isPrintInFirstWholeBand="true" uuid="b8d6074f-983c-46d8-bf13-8ccebd3ae450"/>

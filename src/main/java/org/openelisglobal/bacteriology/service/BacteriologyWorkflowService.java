@@ -116,6 +116,9 @@ public interface BacteriologyWorkflowService {
         private Map<String, String> microscopyResultsMap = new HashMap<>();
         private Map<String, String> cultureResultsMap = new HashMap<>();
 
+        // Biologist's interpretation note (loaded from observation_history)
+        private String sampleInterpretation;
+
         public List<BacteriologyResultGroup> getMacroscopyGroups() {
             return macroscopyGroups;
         }
@@ -202,6 +205,14 @@ public interface BacteriologyWorkflowService {
 
         public void setCultureResultsMap(Map<String, String> cultureResultsMap) {
             this.cultureResultsMap = cultureResultsMap;
+        }
+
+        public String getSampleInterpretation() {
+            return sampleInterpretation;
+        }
+
+        public void setSampleInterpretation(String sampleInterpretation) {
+            this.sampleInterpretation = sampleInterpretation;
         }
     }
 

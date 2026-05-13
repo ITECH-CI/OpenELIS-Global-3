@@ -433,6 +433,16 @@ const AddOrder = (props) => {
     });
   }
 
+  function handleOrderType(e) {
+    setOrderFormValues({
+      ...orderFormValues,
+      sampleOrderItems: {
+        ...orderFormValues.sampleOrderItems,
+        orderType: e.target.value,
+      },
+    });
+  }
+
   function fetchGeneratedAccessionNo(res) {
     if (res.status) {
       if (isModifyOrder) {
@@ -595,8 +605,11 @@ const AddOrder = (props) => {
                   id={"orderType"}
                   name="orderType"
                   labelText={intl.formatMessage({ id: "sample.order.type" })}
+                  value={orderFormValues.sampleOrderItems.orderType || ""}
+                  onChange={handleOrderType}
                   required
                 >
+                  <SelectItem value="" text="" />
                   <SelectItem
                     value="IN"
                     text={intl.formatMessage({ id: "sample.order.type.in" })}
