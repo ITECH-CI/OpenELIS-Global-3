@@ -108,6 +108,7 @@ public final class ClinicalPatientData {
 
     // Bacteriology layout fields
     private String bacterioRowType; // TEST_PAIR | TEST_SINGLE | ORGANISM | ANTIBIOGRAM_HEADER | ANTIBIOGRAM_ROW
+                                    // | FLORA_HEADER | FLORA_ROW
     private String testNameLeft;
     private String resultLeft;
     private String testNameRight;
@@ -115,6 +116,11 @@ public final class ClinicalPatientData {
     private String abgInterpretation;
     private String abgDiameter;
     private String abgMic;
+    // Per-flora details rendered as a small table under a "Nombre de flore" test row
+    private String floraNumber;
+    private String floraGramType;
+    private String floraGroupingMode;
+    private String floraOtherCharacteristic;
 
     public ClinicalPatientData() {
     }
@@ -203,6 +209,10 @@ public final class ClinicalPatientData {
         abgInterpretation = data.getAbgInterpretation();
         abgDiameter = data.getAbgDiameter();
         abgMic = data.getAbgMic();
+        floraNumber = data.getFloraNumber();
+        floraGramType = data.getFloraGramType();
+        floraGroupingMode = data.getFloraGroupingMode();
+        floraOtherCharacteristic = data.getFloraOtherCharacteristic();
     }
 
     public String getReferralRefRange() {
@@ -970,5 +980,37 @@ public final class ClinicalPatientData {
 
     public void setAbgMic(String abgMic) {
         this.abgMic = abgMic;
+    }
+
+    public String getFloraNumber() {
+        return floraNumber;
+    }
+
+    public void setFloraNumber(String floraNumber) {
+        this.floraNumber = floraNumber;
+    }
+
+    public String getFloraGramType() {
+        return floraGramType;
+    }
+
+    public void setFloraGramType(String floraGramType) {
+        this.floraGramType = floraGramType;
+    }
+
+    public String getFloraGroupingMode() {
+        return floraGroupingMode;
+    }
+
+    public void setFloraGroupingMode(String floraGroupingMode) {
+        this.floraGroupingMode = floraGroupingMode;
+    }
+
+    public String getFloraOtherCharacteristic() {
+        return floraOtherCharacteristic;
+    }
+
+    public void setFloraOtherCharacteristic(String floraOtherCharacteristic) {
+        this.floraOtherCharacteristic = floraOtherCharacteristic;
     }
 }

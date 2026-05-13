@@ -226,7 +226,10 @@ public class BacterioPatientReport extends PatientReport implements IReportCreat
                     // Flora-count tests (e.g. "Nombre de flore") store their value in
                     // bacteriology_flora, not in the result table — so the standard
                     // pipeline left resultsData.result at "En cours". If the analysis is
-                    // biologically validated (Finalized), replace it by the actual count.
+                    // biologically validated (Finalized), replace it by the actual count
+                    // AND inject FLORA_HEADER + FLORA_ROW rows just after it so the JRXML
+                    // renders the per-flora details as a small 4-column table.
+                    org.openelisglobal.bacteriology.valueholder.BacteriologyFlora finalizedFlora = null;
                     if (Boolean.TRUE.equals(test.getIsFloraCountTest())) {
                         String finalizedStatusId = SpringContext.getBean(IStatusService.class)
                                 .getStatusID(AnalysisStatus.Finalized);
@@ -241,6 +244,7 @@ public class BacterioPatientReport extends PatientReport implements IReportCreat
                                 if (flora != null && flora.getFloraCount() != null
                                         && !flora.getFloraCount().trim().isEmpty()) {
                                     resultsData.setResult(flora.getFloraCount());
+                                    finalizedFlora = flora;
                                 }
                             } catch (NumberFormatException nfe) {
                                 // ids non-numeric — keep the in-progress placeholder.
@@ -250,6 +254,37 @@ public class BacterioPatientReport extends PatientReport implements IReportCreat
 
                     reportItems.add(resultsData);
                     currentSampleReportItems.add(resultsData);
+
+                    // Emit FLORA_HEADER + one FLORA_ROW per identified flora, right after
+                    // the parent "Nombre de flore" row.
+                    if (finalizedFlora != null && finalizedFlora.getDetails() != null
+                            && !finalizedFlora.getDetails().isEmpty()) {
+                        ClinicalPatientData headerRow = new ClinicalPatientData(resultsData);
+                        headerRow.setBacterioRowType("FLORA_HEADER");
+                        headerRow.setSeparator(false);
+                        reportItems.add(headerRow);
+                        currentSampleReportItems.add(headerRow);
+
+                        DictionaryService dictSvc = SpringContext.getBean(DictionaryService.class);
+                        List<org.openelisglobal.bacteriology.valueholder.BacteriologyFloraDetail> sorted = new ArrayList<>(
+                                finalizedFlora.getDetails());
+                        sorted.sort(Comparator.comparing(
+                                d -> d.getFloraNumber() != null ? d.getFloraNumber() : Integer.MAX_VALUE));
+                        for (org.openelisglobal.bacteriology.valueholder.BacteriologyFloraDetail detail : sorted) {
+                            ClinicalPatientData floraRow = new ClinicalPatientData(resultsData);
+                            floraRow.setBacterioRowType("FLORA_ROW");
+                            floraRow.setSeparator(false);
+                            floraRow.setFloraNumber(detail.getFloraNumber() != null
+                                    ? String.valueOf(detail.getFloraNumber())
+                                    : "");
+                            floraRow.setFloraGramType(resolveDictLabel(dictSvc, detail.getGramTypeDictId()));
+                            floraRow.setFloraGroupingMode(resolveDictLabel(dictSvc, detail.getGroupingModeDictId()));
+                            floraRow.setFloraOtherCharacteristic(
+                                    resolveDictLabel(dictSvc, detail.getOtherCharacteristicDictId()));
+                            reportItems.add(floraRow);
+                            currentSampleReportItems.add(floraRow);
+                        }
+                    }
 
                     // For culture tests, add organisms and antibiograms
                     if (parts.mainSection != null && parts.mainSection.toUpperCase().contains("CULTURE")) {
@@ -981,5 +1016,29 @@ public class BacterioPatientReport extends PatientReport implements IReportCreat
     @Override
     protected boolean useReportingDescription() {
         return true;
+    }
+
+    /**
+     * Resolve a dictionary id to its localized label, returning an empty string
+     * when the id is missing or the entry can't be loaded. Used to flatten the
+     * dictionary FKs on each BacteriologyFloraDetail into display strings.
+     */
+    private String resolveDictLabel(DictionaryService dictSvc, Integer dictId) {
+        if (dictId == null || dictSvc == null) {
+            return "";
+        }
+        try {
+            Dictionary dict = dictSvc.getDataForId(String.valueOf(dictId));
+            if (dict == null) {
+                return "";
+            }
+            String label = dict.getLocalizedName();
+            if (label == null || label.trim().isEmpty()) {
+                label = dict.getDictEntry();
+            }
+            return label == null ? "" : label;
+        } catch (Exception e) {
+            return "";
+        }
     }
 }
