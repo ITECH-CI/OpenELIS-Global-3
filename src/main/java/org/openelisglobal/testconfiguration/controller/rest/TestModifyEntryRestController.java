@@ -447,10 +447,7 @@ public class TestModifyEntryRestController extends BaseController {
             @RequestBody @Valid TestModifyEntryForm form, BindingResult result) {
         formValidator.validate(form, result);
         if (result.hasErrors()) {
-            // saveErrors(result);
             setupDisplayItems(form);
-            // return findForward(FWD_FAIL_INSERT, form);
-            // return form;
         }
         String currentUserId = getSysUserId(request);
         String changeList = form.getJsonWad();
@@ -474,23 +471,24 @@ public class TestModifyEntryRestController extends BaseController {
             testModifyService.updateTestSets(testSets, testAddParams, nameLocalization, reportingNameLocalization,
                     currentUserId);
         } catch (HibernateException e) {
-            LogEvent.logDebug(e);
+            LogEvent.logError("TestModifyEntryRestController", "postTestModifyEntry",
+                    "HibernateException: " + e.getMessage());
+            LogEvent.logError(e);
             result.reject("error.hibernate.exception");
             setupDisplayItems(form);
-            // return findForward(FWD_FAIL_INSERT, form);
             return form;
         } catch (Exception e) {
-            LogEvent.logDebug(e);
+            LogEvent.logError("TestModifyEntryRestController", "postTestModifyEntry",
+                    "Exception: " + e.getClass().getSimpleName() + ": " + e.getMessage());
+            LogEvent.logError(e);
             result.reject("error.exception");
             setupDisplayItems(form);
-            // return findForward(FWD_FAIL_INSERT, form);
             return form;
         }
 
         testService.refreshTestNames();
         SpringContext.getBean(TypeOfSampleService.class).clearCache();
 
-        // return findForward(FWD_SUCCESS_INSERT, form);
         return form;
     }
 

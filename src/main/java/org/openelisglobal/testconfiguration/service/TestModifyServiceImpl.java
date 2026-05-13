@@ -180,7 +180,11 @@ public class TestModifyServiceImpl implements TestModifyService {
         if (test != null) {
             test.setSysUserId(userId);
             test.setLoinc(loinc);
-            test.setUnitOfMeasure(unitOfMeasureService.getUnitOfMeasureById(uomId));
+            if (uomId != null && !uomId.isBlank()) {
+                test.setUnitOfMeasure(unitOfMeasureService.getUnitOfMeasureById(uomId));
+            } else {
+                test.setUnitOfMeasure(null);
+            }
             test.setNotifyResults(notifyResults);
             test.setInLabOnly(inLabOnly);
             test.setAntimicrobialResistance(antimicrobialResistance);
