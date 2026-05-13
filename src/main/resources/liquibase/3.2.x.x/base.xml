@@ -77,6 +77,8 @@
         file="add_flora_count_to_sang_hemoculture.xml" />
     <include relativeToChangelogFile="true"
         file="add_tests_to_ecb_crachat_panel.xml" />
+    <include relativeToChangelogFile="true"
+        file="add_culture_urethrales_to_ecb_pu_panel.xml" />
 
 
 </databaseChangeLog>
