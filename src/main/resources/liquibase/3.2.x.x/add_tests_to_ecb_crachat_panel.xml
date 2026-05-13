@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+    <changeSet id="add-tests-to-ecb-crachat-panel" author="pkomena">
+        <comment>Ajouter Hématies, Leucocytes (Etat frais Quantitatif) et 'Nombre de flore' au panel ECB-Crachat</comment>
+        <sql dbms="postgresql"><![CDATA[
+            INSERT INTO clinlims.panel_item (id, panel_id, lastupdated, test_id)
+            SELECT nextval('panel_item_seq'), p.id, now(), t.id
+            FROM clinlims.panel p
+            JOIN clinlims.test t
+              ON t.name IN (
+                  'Microscopie - Etat frais Quantitatif - Hématies',
+                  'Microscopie - Etat frais Quantitatif - Leucocytes',
+                  'Microscopie - Frottis Coloration Gram - Bactéries - Nombre de flore'
+              )
+            WHERE p.name = 'ECB-Crachat'
+              AND NOT EXISTS (
+                  SELECT 1 FROM clinlims.panel_item pi
+                  WHERE pi.panel_id = p.id AND pi.test_id = t.id
+              );
+        ]]></sql>
+    </changeSet>
+
+</databaseChangeLog>
