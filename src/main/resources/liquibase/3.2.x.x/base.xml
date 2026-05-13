@@ -71,6 +71,8 @@
         file="replace_flora_type_test_modalities.xml" />
     <include relativeToChangelogFile="true"
         file="create_bacteriology_flora_sequences.xml" />
+    <include relativeToChangelogFile="true"
+        file="dedup_test_result_duplicates.xml" />
 
 
 </databaseChangeLog>

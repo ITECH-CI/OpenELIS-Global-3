@@ -260,9 +260,24 @@ const BacteriologyResultEntry = ({
         // After the main save succeeds, persist flora data per flora-count test.
         // The flora REST endpoint is separate (BacteriologyFloraRestController) so we
         // fire one POST per (analysisId, floraCountTestId) entry collected by FloraList.
+        // IMPORTANT: target the analysisId of THIS flora-count test, not the page's
+        // primary analysisId — otherwise the row is stored against an unrelated
+        // analysis (e.g. Macroscopie - Turbidité) and never round-trips back.
         const floraEntries = Object.entries(floraData || {});
         floraEntries.forEach(([testId, data]) => {
           if (!testId || isNaN(parseInt(testId))) {
+            return;
+          }
+          const floraTest = testResults.find(
+            (t) => String(t.testId) === String(testId) && t.analysisId,
+          );
+          const floraAnalysisId = floraTest?.analysisId;
+          if (!floraAnalysisId) {
+            console.warn(
+              "[BacteriologyResultEntry] No matching analysisId for flora test",
+              testId,
+              "- skipping save",
+            );
             return;
           }
           const payload = {
@@ -285,7 +300,7 @@ const BacteriologyResultEntry = ({
             })),
           };
           postToOpenElisServerJsonResponse(
-            `${API_ENDPOINTS.FLORA_BY_ANALYSIS}/${analysisId}/test/${testId}`,
+            `${API_ENDPOINTS.FLORA_BY_ANALYSIS}/${floraAnalysisId}/test/${testId}`,
             JSON.stringify(payload),
             () => {},
             (err) => {

@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+     http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+    <!--
+        Supprimer les doublons (test_id, value) dans clinlims.test_result. Ils causent
+        des warnings React "two children with the same key" sur les dropdowns
+        Carbon Select (la prop key={option.id} se retrouve dupliquée). Constatés sur
+        Macroscopie - Turbidité (id 499) et Macroscopie - Aspect (id 500) avec deux
+        entrées dict "Clair" (561).
+
+        On garde la ligne dont l'id est le plus petit (la plus ancienne) et on
+        supprime les autres. Les result existants qui pointent encore vers une
+        ligne à supprimer sont re-rattachés à la ligne gardée. Si jamais aucun
+        doublon n'existe, le DELETE et l'UPDATE sont des no-ops.
+    -->
+
+    <changeSet author="pkomena" id="dedup-test-result-1">
+        <comment>Re-rattacher result.test_result_id sur l'id min de chaque (test_id, value) puis supprimer les doublons</comment>
+        <sql dbms="postgresql"><![CDATA[
+            -- 1) Re-route result rows that reference a duplicate row to the kept (min id) row.
+            WITH dup_groups AS (
+                SELECT test_id, value, MIN(id) AS keep_id
+                FROM clinlims.test_result
+                GROUP BY test_id, value
+                HAVING COUNT(*) > 1
+            )
+            UPDATE clinlims.result r
+            SET test_result_id = dg.keep_id
+            FROM clinlims.test_result tr
+            JOIN dup_groups dg ON dg.test_id = tr.test_id AND dg.value = tr.value
+            WHERE r.test_result_id = tr.id
+              AND tr.id <> dg.keep_id;
+
+            -- 2) Delete the duplicate rows (all but the min id per (test_id, value)).
+            DELETE FROM clinlims.test_result tr
+            USING (
+                SELECT test_id, value, MIN(id) AS keep_id
+                FROM clinlims.test_result
+                GROUP BY test_id, value
+                HAVING COUNT(*) > 1
+            ) dg
+            WHERE tr.test_id = dg.test_id
+              AND tr.value = dg.value
+              AND tr.id <> dg.keep_id;
+        ]]></sql>
+    </changeSet>
+
+</databaseChangeLog>

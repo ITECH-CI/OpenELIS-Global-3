@@ -44,6 +44,9 @@ public class BacteriologyFloraRestController extends ControllerUtills {
     @Autowired
     private BacteriologyFloraService bacteriologyFloraService;
 
+    @Autowired
+    private org.openelisglobal.analysis.service.AnalysisService analysisService;
+
     /**
      * Get all flora data for a specific analysis
      *
@@ -53,9 +56,28 @@ public class BacteriologyFloraRestController extends ControllerUtills {
     @GetMapping("/analysis/{analysisId}")
     public ResponseEntity<List<FloraDataDTO>> getFloraByAnalysisId(@PathVariable Integer analysisId) {
         try {
-            List<BacteriologyFlora> floraList = bacteriologyFloraService.getByAnalysisId(analysisId);
+            // Return flora data for ALL analyses of the same sample item, not only
+            // the one matching analysisId. The flora-count test (e.g. id 557) is
+            // saved against its own analysisId; the page caller may pass any analysis
+            // of the sample (e.g. the primary one), so widen the lookup to the sample
+            // item so callers find every saved flora row consistently.
+            List<BacteriologyFlora> floraList = new ArrayList<>();
+            org.openelisglobal.analysis.valueholder.Analysis primary = analysisService
+                    .get(String.valueOf(analysisId));
+            if (primary != null && primary.getSampleItem() != null) {
+                List<org.openelisglobal.analysis.valueholder.Analysis> siblings = analysisService
+                        .getAnalysesBySampleItem(primary.getSampleItem());
+                for (org.openelisglobal.analysis.valueholder.Analysis a : siblings) {
+                    try {
+                        floraList.addAll(bacteriologyFloraService.getByAnalysisId(Integer.parseInt(a.getId())));
+                    } catch (NumberFormatException ignored) {
+                        // skip non-numeric analysis ids
+                    }
+                }
+            } else {
+                floraList.addAll(bacteriologyFloraService.getByAnalysisId(analysisId));
+            }
             List<FloraDataDTO> floraDTOs = new ArrayList<>();
-
             for (BacteriologyFlora flora : floraList) {
                 floraDTOs.add(convertToDTO(flora));
             }
