@@ -781,6 +781,8 @@ export function SearchResults(props) {
   const [acceptAsIs, setAcceptAsIs] = useState([]);
   const [referalOrganizations, setReferalOrganizations] = useState([]);
   const [methods, setMethods] = useState([]);
+  // testId (string) -> [methodId (string), ...] active mappings
+  const [methodsByTest, setMethodsByTest] = useState({});
   const [referralReasons, setReferralReasons] = useState([]);
   const [rejectReasons, setRejectReasons] = useState([]);
   const [rejectedItems, setRejectedItems] = useState({});
@@ -800,6 +802,9 @@ export function SearchResults(props) {
       loadReferalOrganizations,
     );
     getFromOpenElisServer("/rest/displayList/METHODS", loadMethods);
+    getFromOpenElisServer("/rest/method-test-map/all", (res) => {
+      if (res && typeof res === "object") setMethodsByTest(res);
+    });
     getFromOpenElisServer(
       "/rest/displayList/REFERRAL_REASONS",
       loadReferalReasons,
@@ -1341,13 +1346,22 @@ export function SearchResults(props) {
             value={data.testMethod}
           >
             <SelectItem text="" value="" />
-            {methods.map((method, method_index) => (
-              <SelectItem
-                text={method.value}
-                value={method.id}
-                key={method_index}
-              />
-            ))}
+            {(() => {
+              const allowed = methodsByTest[String(data.testId)];
+              const filtered =
+                allowed && allowed.length > 0
+                  ? methods.filter((m) =>
+                      allowed.includes(String(m.id)),
+                    )
+                  : methods;
+              return filtered.map((method, method_index) => (
+                <SelectItem
+                  text={method.value}
+                  value={method.id}
+                  key={method_index}
+                />
+              ));
+            })()}
           </Select>
         </Column>
         <Column lg={1}></Column>

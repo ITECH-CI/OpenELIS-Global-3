@@ -353,6 +353,24 @@ function TestManagementConfigMenu() {
                   </UnorderedList>
                 </ClickableTile>
                 <br />
+                <ClickableTile
+                  href="/admin#MethodTestMapping"
+                  id="MethodTestMapping"
+                >
+                  <FormattedMessage
+                    id="configuration.methodTestMapping"
+                    defaultMessage="Assigner des méthodes aux tests"
+                  />
+                  <UnorderedList nested>
+                    <ListItem>
+                      <FormattedMessage
+                        id="configuration.methodTestMapping.explain"
+                        defaultMessage="Définir, pour chaque test, la liste des méthodes utilisables (ou inversement)."
+                      />
+                    </ListItem>
+                  </UnorderedList>
+                </ClickableTile>
+                <br />
                 <ClickableTile href="#reflex" id="reflex">
                   <FormattedMessage id="sidenav.label.admin.testmgt.reflex" />
                 </ClickableTile>

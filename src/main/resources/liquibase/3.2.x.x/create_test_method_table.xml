@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+    <!--
+        Generic many-to-many mapping between a test and its allowable methods.
+        Distinct from tb_method_test which is specific to the TB module.
+    -->
+    <changeSet id="create-test-method-table" author="pkomena">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists schemaName="clinlims" tableName="test_method"/>
+            </not>
+        </preConditions>
+        <sql dbms="postgresql"><![CDATA[
+            CREATE SEQUENCE IF NOT EXISTS clinlims.test_method_seq START 1;
+
+            CREATE TABLE clinlims.test_method (
+                id          INTEGER PRIMARY KEY DEFAULT nextval('clinlims.test_method_seq'),
+                test_id     NUMERIC(10) NOT NULL REFERENCES clinlims.test(id),
+                method_id   NUMERIC(10) NOT NULL REFERENCES clinlims.method(id),
+                is_active   VARCHAR(2) NOT NULL DEFAULT 'Y',
+                lastupdated TIMESTAMP WITHOUT TIME ZONE DEFAULT now()
+            );
+
+            CREATE UNIQUE INDEX test_method_test_id_method_id_uk
+                ON clinlims.test_method (test_id, method_id);
+        ]]></sql>
+    </changeSet>
+
+</databaseChangeLog>

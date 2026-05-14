@@ -67,6 +67,7 @@ import ResultSelectListAdd from "./testManagementConfigMenu/ResultSelectListAdd.
 import TestAdd from "./testManagementConfigMenu/TestAdd.js";
 import TestModifyEntry from "./testManagementConfigMenu/TestModifyEntry.js";
 import ConditionalTestConfig from "./testManagementConfigMenu/ConditionalTestConfig.js";
+import MethodTestMapping from "./testManagementConfigMenu/MethodTestMapping.js";
 import TestOrderability from "./testManagementConfigMenu/TestOrderability.js";
 import MethodManagement from "./testManagementConfigMenu/MethodManagement.js";
 import MethodCreate from "./testManagementConfigMenu/MethodCreate.js";
@@ -424,6 +425,9 @@ function Admin() {
       </PathRoute>
       <PathRoute path="#ConditionalTestConfig">
         <ConditionalTestConfig />
+      </PathRoute>
+      <PathRoute path="#MethodTestMapping">
+        <MethodTestMapping />
       </PathRoute>
       <PathRoute path="#TestOrderability">
         <TestOrderability />
