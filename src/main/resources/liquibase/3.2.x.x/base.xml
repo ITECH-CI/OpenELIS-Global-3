@@ -83,6 +83,8 @@
         file="resync_all_sequences.xml" />
     <include relativeToChangelogFile="true"
         file="create_test_method_table.xml" />
+    <include relativeToChangelogFile="true"
+        file="add_absence_to_gram_bacteries.xml" />
 
 
 </databaseChangeLog>

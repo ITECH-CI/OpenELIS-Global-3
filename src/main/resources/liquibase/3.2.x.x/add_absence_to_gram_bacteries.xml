@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+    <!--
+        Ajoute la modalité "Absence" (dictionary id 744) au test
+        "Microscopie - Frottis Coloration Gram - Bactéries" (533) pour
+        permettre de signaler qu'aucune bactérie n'est observée.
+    -->
+    <changeSet id="add-absence-to-gram-bacteries-test" author="pkomena">
+        <sql dbms="postgresql"><![CDATA[
+            INSERT INTO clinlims.test_result
+                (id, test_id, tst_rslt_type, value, sort_order, is_active, lastupdated)
+            SELECT nextval('clinlims.test_result_seq'),
+                   t.id, 'D', d.id, '5', 't', now()
+            FROM clinlims.test t
+            JOIN clinlims.dictionary d ON d.dict_entry = 'Absence'
+            WHERE t.name = 'Microscopie - Frottis Coloration Gram - Bactéries'
+              AND NOT EXISTS (
+                  SELECT 1 FROM clinlims.test_result tr
+                  WHERE tr.test_id = t.id
+                    AND tr.value = d.id::text
+                    AND tr.tst_rslt_type = 'D'
+              );
+        ]]></sql>
+    </changeSet>
+
+</databaseChangeLog>
