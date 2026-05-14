@@ -1,5 +1,6 @@
 package org.openelisglobal.sample.form;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Pattern;
 import java.io.Serializable;
@@ -77,11 +78,13 @@ public class ProjectData implements Serializable {
     // ARV
     private String doctor;
 
+    @JsonProperty("ARVcenterName")
     @Pattern(regexp = ValidationHelper.ID_REGEX)
     private String ARVcenterName;
 
     private List ARVCenters;
 
+    @JsonProperty("ARVcenterCode")
     @Pattern(regexp = ValidationHelper.ID_REGEX)
     private String ARVcenterCode;
 
@@ -89,9 +92,11 @@ public class ProjectData implements Serializable {
     private List EIDSites;
     private List<Organization> EIDSitesByName;
 
+    @JsonProperty("EIDSiteName")
     @Pattern(regexp = ValidationHelper.ID_REGEX)
     private String EIDsiteName;
 
+    @JsonProperty("EIDsiteCode")
     @Pattern(regexp = ValidationHelper.ID_REGEX)
     private String EIDsiteCode;
 
@@ -117,6 +122,7 @@ public class ProjectData implements Serializable {
     // IND - Indeterminate Results
     private List INDSites;
 
+    @JsonProperty("INDsiteName")
     @Pattern(regexp = ValidationHelper.ID_REGEX)
     private String INDsiteName;
 

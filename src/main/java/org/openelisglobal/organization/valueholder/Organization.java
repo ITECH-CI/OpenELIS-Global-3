@@ -138,6 +138,7 @@ public class Organization extends EnumValueItemImpl implements SimpleBaseEntity<
         return orgMltOrgMltId;
     }
 
+    @JsonIgnore
     public Organization getOrganization() {
         return (Organization) organization.getValue();
     }

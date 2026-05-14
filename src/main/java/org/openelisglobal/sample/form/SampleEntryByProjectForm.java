@@ -1,5 +1,6 @@
 package org.openelisglobal.sample.form;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
@@ -24,6 +25,7 @@ import org.openelisglobal.validation.annotations.ValidAccessionNumber;
 import org.openelisglobal.validation.annotations.ValidDate;
 import org.openelisglobal.validation.annotations.ValidTime;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class SampleEntryByProjectForm extends BaseForm implements IAccessionerForm {
 
     private static final long serialVersionUID = 1L;

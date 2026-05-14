@@ -14,6 +14,9 @@
 package org.openelisglobal.dictionary.valueholder;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+
+import ca.uhn.hl7v2.model.v251.datatype.ST;
+
 import java.util.Comparator;
 import org.openelisglobal.common.action.IActionConstants;
 import org.openelisglobal.common.util.StringUtil;
@@ -52,6 +55,8 @@ public class Dictionary extends BaseObject<String> {
 
     private ValueHolder localizedDictionaryName;
 
+    private String nameKey;
+
     public Integer getSortOrder() {
         return sortOrder;
     }
@@ -67,6 +72,15 @@ public class Dictionary extends BaseObject<String> {
     public void setLocalAbbreviation(String localAbbreviation) {
         this.localAbbreviation = localAbbreviation;
     }
+
+    public String getNameKey() {
+        return nameKey;
+    }
+
+    public void setNameKey(String nameKey) {
+        this.nameKey = nameKey;
+    }
+
 
     public Dictionary() {
         super();
