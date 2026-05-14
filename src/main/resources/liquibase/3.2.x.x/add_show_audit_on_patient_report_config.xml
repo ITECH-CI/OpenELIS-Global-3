@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+     http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+    <property name="now" value="now()" dbms="postgresql" />
+
+    <changeSet author="pkomena" id="add-show-audit-on-patient-report-site-info">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">SELECT count(*) FROM
+                clinlims.site_information WHERE name =
+                'showAuditOnPatientReport'</sqlCheck>
+        </preConditions>
+        <comment>Ajouter le paramètre pour activer/désactiver l'affichage des traces d'audit (rapport corrigé, tests annulés) sur le rapport patient routine</comment>
+        <insert schemaName="clinlims" tableName="site_information">
+            <column name="id" valueSequenceNext="site_information_seq" />
+            <column name="name" value="showAuditOnPatientReport" />
+            <column name="lastupdated" valueComputed="${now}" />
+            <column name="description"
+                value="Afficher les traces d'audit (rapport corrigé, tests annulés) sur le rapport patient routine" />
+            <column name="value" value="false" />
+            <column name="encrypted" value="false" />
+            <column name="domain_id"
+                valueComputed="(SELECT id FROM site_information_domain WHERE name = 'resultConfiguration' LIMIT 1)" />
+            <column name="value_type" value="boolean" />
+            <column name="instruction_key"
+                value="siteInfo.instruction.showAuditOnReport" />
+            <column name="group" value="0" />
+            <column name="description_key"
+                value="siteInfo.description.showAuditOnReport" />
+        </insert>
+    </changeSet>
+
+</databaseChangeLog>

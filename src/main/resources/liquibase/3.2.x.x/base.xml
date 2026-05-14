@@ -85,6 +85,8 @@
         file="create_test_method_table.xml" />
     <include relativeToChangelogFile="true"
         file="add_absence_to_gram_bacteries.xml" />
+    <include relativeToChangelogFile="true"
+        file="add_show_audit_on_patient_report_config.xml" />
 
 
 </databaseChangeLog>

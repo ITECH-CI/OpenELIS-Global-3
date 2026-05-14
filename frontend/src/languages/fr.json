@@ -1106,7 +1106,7 @@
   "nonconform.nce.preventive.action": "action préventive",
   "nonconform.nce.concurrent.control.action": "action de contrôle concurrent",
   "nonconform.nce.turnaround.time": "Délai d'Exécution",
-  "provider.browse.title": "Gestion des prescripteur",
+  "provider.browse.title": "Gestion des prescripteurs",
   "provider.select": "Sélectionner un prescripteur",
   "provider.search": "Rechercher un prescripteur",
   "provider.search.placeholder": "Rechercher par Nom de prescripteur...",
