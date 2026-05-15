@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+     http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+    <!--
+        Defaults d'environnement pour la 3.2.3.13 :
+        - National ID required -> false
+        - default language locale -> fr-FR
+        - 'Accession number prefix' et 'TrainingInstallation' reclassés
+          dans le domaine 'siteIdentity'
+    -->
+
+    <changeSet id="site-info-national-id-required-false" author="pkomena">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="1">
+                SELECT count(*) FROM clinlims.site_information
+                WHERE name = 'National ID required' AND value &lt;&gt; 'false'
+            </sqlCheck>
+        </preConditions>
+        <sql dbms="postgresql"><![CDATA[
+            UPDATE clinlims.site_information
+            SET value = 'false', lastupdated = now()
+            WHERE name = 'National ID required';
+        ]]></sql>
+    </changeSet>
+
+    <changeSet id="site-info-default-locale-fr-FR" author="pkomena">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="1">
+                SELECT count(*) FROM clinlims.site_information
+                WHERE name = 'default language locale' AND value &lt;&gt; 'fr-FR'
+            </sqlCheck>
+        </preConditions>
+        <sql dbms="postgresql"><![CDATA[
+            UPDATE clinlims.site_information
+            SET value = 'fr-FR', lastupdated = now()
+            WHERE name = 'default language locale';
+        ]]></sql>
+    </changeSet>
+
+    <changeSet id="site-info-accession-prefix-to-siteIdentity" author="pkomena">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="1">
+                SELECT count(*) FROM clinlims.site_information
+                WHERE name = 'Accession number prefix'
+                  AND domain_id IS DISTINCT FROM
+                      (SELECT id FROM clinlims.site_information_domain WHERE name = 'siteIdentity' LIMIT 1)
+            </sqlCheck>
+        </preConditions>
+        <sql dbms="postgresql"><![CDATA[
+            UPDATE clinlims.site_information
+            SET domain_id = (SELECT id FROM clinlims.site_information_domain
+                              WHERE name = 'siteIdentity' LIMIT 1),
+                lastupdated = now()
+            WHERE name = 'Accession number prefix';
+        ]]></sql>
+    </changeSet>
+
+    <changeSet id="site-info-trainingInstallation-to-siteIdentity" author="pkomena">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="1">
+                SELECT count(*) FROM clinlims.site_information
+                WHERE name = 'TrainingInstallation'
+                  AND domain_id IS DISTINCT FROM
+                      (SELECT id FROM clinlims.site_information_domain WHERE name = 'siteIdentity' LIMIT 1)
+            </sqlCheck>
+        </preConditions>
+        <sql dbms="postgresql"><![CDATA[
+            UPDATE clinlims.site_information
+            SET domain_id = (SELECT id FROM clinlims.site_information_domain
+                              WHERE name = 'siteIdentity' LIMIT 1),
+                lastupdated = now()
+            WHERE name = 'TrainingInstallation';
+        ]]></sql>
+    </changeSet>
+
+</databaseChangeLog>

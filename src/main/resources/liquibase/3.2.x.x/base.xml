@@ -87,6 +87,8 @@
         file="add_absence_to_gram_bacteries.xml" />
     <include relativeToChangelogFile="true"
         file="add_show_audit_on_patient_report_config.xml" />
+    <include relativeToChangelogFile="true"
+        file="site_information_defaults_3_2_3_13.xml" />
 
 
 </databaseChangeLog>
