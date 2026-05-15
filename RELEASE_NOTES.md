@@ -1,6 +1,6 @@
 # Release Notes
 
-## 3.2.3.13 — depuis la version 3.2.2 (CILNSP / fork Pkom)
+## 3.3.0.0 — depuis la version 3.2.2 (CILNSP / fork Pkom)
 
 Cette note regroupe les évolutions livrées dans la branche `develop` depuis
 le dernier déploiement stable (basé sur la version 3.2.2 / `3.2.3.12`).
