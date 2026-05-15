@@ -4,6 +4,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.constraints.Pattern;
 import java.lang.reflect.InvocationTargetException;
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -26,26 +28,34 @@ import org.openelisglobal.common.services.SampleOrderService;
 import org.openelisglobal.common.util.ConfigurationProperties;
 import org.openelisglobal.common.util.ConfigurationProperties.Property;
 import org.openelisglobal.common.util.DateUtil;
+import org.openelisglobal.common.util.IdValuePair;
 import org.openelisglobal.common.validator.BaseErrors;
 import org.openelisglobal.dataexchange.fhir.FhirUtil;
 import org.openelisglobal.dataexchange.fhir.service.FhirTransformService;
 import org.openelisglobal.dataexchange.order.valueholder.ElectronicOrder;
 import org.openelisglobal.dataexchange.service.order.ElectronicOrderService;
+import org.openelisglobal.dictionary.ObservationHistoryList;
+import org.openelisglobal.dictionary.valueholder.Dictionary;
 import org.openelisglobal.internationalization.MessageUtil;
 import org.openelisglobal.notifications.dao.NotificationDAO;
 import org.openelisglobal.notifications.entity.Notification;
 import org.openelisglobal.organization.service.OrganizationService;
+import org.openelisglobal.organization.util.OrganizationTypeList;
 import org.openelisglobal.organization.valueholder.Organization;
 import org.openelisglobal.patient.action.IPatientUpdate;
 import org.openelisglobal.patient.action.IPatientUpdate.PatientUpdateStatus;
 import org.openelisglobal.patient.action.bean.PatientManagementInfo;
 import org.openelisglobal.patient.action.bean.PatientSearch;
+import org.openelisglobal.patient.saving.ISampleEntry;
+import org.openelisglobal.patient.saving.ISampleEntryAfterPatientEntry;
+import org.openelisglobal.patient.saving.ISampleSecondEntry;
 import org.openelisglobal.provider.service.ProviderService;
 import org.openelisglobal.provider.valueholder.Provider;
 import org.openelisglobal.sample.action.util.SamplePatientUpdateData;
 import org.openelisglobal.sample.bean.SampleOrderItem;
 import org.openelisglobal.sample.controller.BaseSampleEntryController;
 import org.openelisglobal.sample.event.SamplePatientUpdateDataCreatedEvent;
+import org.openelisglobal.sample.form.SampleEntryByProjectForm;
 import org.openelisglobal.sample.form.SamplePatientEntryForm;
 import org.openelisglobal.sample.service.PatientManagementUpdate;
 import org.openelisglobal.sample.service.SamplePatientEntryService;
@@ -63,6 +73,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.annotation.Validated;
@@ -153,7 +164,74 @@ public class SamplePatientEntryRestController extends BaseSampleEntryController 
             "patientRoutineBacteriology.currentAntibiotherapy", "patientRoutineBacteriology.currentAntibiotherapyList",
             "patientRoutineBacteriology.currentAntibiotherapyDuration",
             "patientRoutineBacteriology.recentHospitalization",
-            "patientRoutineBacteriology.recentHospitalizationCount", };
+            "patientRoutineBacteriology.recentHospitalizationCount", 
+        
+            /* Charge virale Fields */
+            // common 
+            "currentDate", "domain", "project",
+            "patientLastUpdated", "personLastUpdated", "patientUpdateStatus", "patientPK", "patientFhirUuid",
+            "samplePK", "observations.projectFormName",
+            "receivedDateForDisplay", "receivedTimeForDisplay",
+            "interviewDate", "interviewTime",
+            "subjectNumber", "siteSubjectNumber", "upidCode", "labNo",
+            "gender", "birthDateForDisplay",
+            "electronicOrder.externalId",
+            // ARV site
+            "ProjectData.ARVcenterName", "ProjectData.ARVcenterCode",
+            // common observations
+            "observations.nameOfDoctor", "observations.nameOfSampler", "observations.nameOfRequestor",
+            "observations.underInvestigation", "ProjectData.underInvestigationNote",
+            // dry-tube tests (InitialARV / RTN / IND / SPE)
+            "ProjectData.dryTubeTaken",
+            "ProjectData.serologyHIVTest", "ProjectData.glycemiaTest", "ProjectData.creatinineTest",
+            "ProjectData.transaminaseTest", "ProjectData.transaminaseALTLTest", "ProjectData.transaminaseASTLTest",
+            "ProjectData.murexTest", "ProjectData.genscreenTest", "ProjectData.vironostikaTest",
+            "ProjectData.innoliaTest",
+            // EDTA-tube tests
+            "ProjectData.edtaTubeTaken",
+            "ProjectData.nfsTest", "ProjectData.cd4cd8Test",
+            "ProjectData.gbTest", "ProjectData.lymphTest", "ProjectData.monoTest",
+            "ProjectData.eoTest", "ProjectData.basoTest", "ProjectData.grTest",
+            "ProjectData.hbTest", "ProjectData.hctTest", "ProjectData.vgmTest",
+            "ProjectData.tcmhTest", "ProjectData.ccmhTest", "ProjectData.plqTest",
+            "ProjectData.cd4CountTest", "ProjectData.cd3CountTest",
+            // VL-tube tests
+            "ProjectData.dbsvlTaken", "ProjectData.pscvlTaken",
+            "ProjectData.viralLoadTest", "ProjectData.genotypingTest",
+            // serum
+            "ProjectData.serumTaken",
+            // EID / DBS
+            "ProjectData.dbsTaken",
+            "ProjectData.dnaPCR",
+            "ProjectData.EIDSiteName", "ProjectData.EIDsiteCode",
+            // Indeterminate
+            "ProjectData.INDsiteName", "ProjectData.address", "ProjectData.phoneNumber",
+            "ProjectData.faxNumber", "ProjectData.email",
+            // HPV
+            "ProjectData.preservCytTaken", "ProjectData.plasmaTaken",
+            "ProjectData.asanteTest", "ProjectData.hpvTest",
+            "ProjectData.abbottOrRocheAnalysis", "ProjectData.geneXpertAnalysis",
+            // ARV observations (InitialARV / FollowUp / VL)
+            "observations.hivStatus",
+            "observations.currentARVTreatment", "observations.arvTreatmentInitDate",
+            "observations.arvTreatmentRegime", "observations.currentARVTreatmentINNsList*",
+            "observations.vlReasonForRequest", "observations.vlOtherReasonForRequest",
+            "observations.initcd4Count", "observations.initcd4Percent", "observations.initcd4Date",
+            "observations.demandcd4Count", "observations.demandcd4Percent", "observations.demandcd4Date",
+            "observations.vlBenefit", "observations.priorVLValue", "observations.priorVLDate",
+            "observations.vlPregnancy", "observations.vlSuckle",
+            // EID observations
+            "observations.whichPCR", "observations.reasonForSecondPCRTest",
+            "observations.eidInfantPTME", "observations.eidTypeOfClinic", "observations.eidTypeOfClinicOther",
+            "observations.eidHowChildFed", "observations.eidStoppedBreastfeeding",
+            "observations.eidInfantSymptomatic", "observations.eidInfantsARV",
+            "observations.eidInfantCotrimoxazole", "observations.eidMothersHIVStatus", "observations.eidMothersARV",
+            // Indeterminate observations
+            "observations.indFirstTestDate", "observations.indFirstTestName", "observations.indFirstTestResult",
+            "observations.indSecondTestDate", "observations.indSecondTestName", "observations.indSecondTestResult",
+            "observations.indSiteFinalResult",
+            // Special Request / HPV observations
+            "observations.reasonForRequest", "observations.hpvSamplingMethod"};
 
     @Autowired
     private SamplePatientEntryFormValidator formValidator;
@@ -386,6 +464,150 @@ public class SamplePatientEntryRestController extends BaseSampleEntryController 
 
         return (form);
     }
+
+
+        /**
+     * POST /rest/SampleEntryByProjectSudyViralLoad
+     * Enregistre le formulaire de saisie charge virale.
+     * Utilise les beans ISampleSecondEntry, ISampleEntry, ISampleEntryAfterPatientEntry
+     */
+    @PostMapping(value = "SampleEntryByProjectSudyViralLoad",
+            consumes = MediaType.APPLICATION_JSON_VALUE,
+            produces = MediaType.APPLICATION_JSON_VALUE)
+    @ResponseBody
+    public ResponseEntity<SampleEntryByProjectForm> saveForm(HttpServletRequest request,
+            @RequestBody SampleEntryByProjectForm form,
+            BindingResult result) {
+
+        // Tentative via ISampleSecondEntry (re-saisie)
+        try {
+            ISampleSecondEntry sampleSecondEntry = SpringContext.getBean(ISampleSecondEntry.class);
+            sampleSecondEntry.setFieldsFromForm(form);
+            sampleSecondEntry.setSysUserId(getSysUserId(request));
+            sampleSecondEntry.setRequest(request);
+            if (sampleSecondEntry.canAccession()) {
+                String forward = handleSave(request, sampleSecondEntry, form);
+                if (forward != null) {
+                    populateDisplayLists(form);
+                    if (FWD_SUCCESS_INSERT.equals(forward)) {
+                        return ResponseEntity.ok(form);
+                    } else {
+                        return ResponseEntity.badRequest().body(form);
+                    }
+                }
+            }
+        } catch (Exception e) { // NOSONAR — fallthrough strategy pattern
+            LogEvent.logError(this.getClass().getSimpleName(), "saveForm (ISampleSecondEntry)", e.getMessage());
+        }
+
+        // Tentative via ISampleEntry (nouvelle saisie)
+        try {
+            ISampleEntry sampleEntry = SpringContext.getBean(ISampleEntry.class);
+            sampleEntry.setFieldsFromForm(form);
+            sampleEntry.setSysUserId(getSysUserId(request));
+            sampleEntry.setRequest(request);
+            if (sampleEntry.canAccession()) {
+                String forward = handleSave(request, sampleEntry, form);
+                if (forward != null) {
+                    populateDisplayLists(form);
+                    if (FWD_SUCCESS_INSERT.equals(forward)) {
+                        return ResponseEntity.ok(form);
+                    } else {
+                        return ResponseEntity.badRequest().body(form);
+                    }
+                }
+            }
+        } catch (Exception e) { // NOSONAR — fallthrough strategy pattern
+            LogEvent.logError(this.getClass().getSimpleName(), "saveForm (ISampleEntry)", e.getMessage());
+        }
+
+        // Tentative via ISampleEntryAfterPatientEntry
+        try {
+            ISampleEntryAfterPatientEntry sampleEntryAfterPatientEntry = SpringContext
+                    .getBean(ISampleEntryAfterPatientEntry.class);
+            sampleEntryAfterPatientEntry.setFieldsFromForm(form);
+            sampleEntryAfterPatientEntry.setSysUserId(getSysUserId(request));
+            sampleEntryAfterPatientEntry.setRequest(request);
+            if (sampleEntryAfterPatientEntry.canAccession()) {
+                String forward = handleSave(request, sampleEntryAfterPatientEntry, form);
+                if (forward != null) {
+                    populateDisplayLists(form);
+                    if (FWD_SUCCESS_INSERT.equals(forward)) {
+                        return ResponseEntity.ok(form);
+                    } else {
+                        return ResponseEntity.badRequest().body(form);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            LogEvent.logError(this.getClass().getSimpleName(), "saveForm (ISampleEntryAfterPatientEntry)",
+                    e.getMessage());
+        }
+
+        LogEvent.logError(this.getClass().getSimpleName(), "saveForm",
+                "Unable to save SampleEntryByProject form — aucun accessioner n'a pu traiter la demande");
+        populateDisplayLists(form);
+        return ResponseEntity.internalServerError().body(form);
+    }
+
+    /**
+     * Populate toutes les listes déroulantes nécessaires au formulaire VL.
+     */
+    private void populateDisplayLists(SampleEntryByProjectForm form) {
+        // Genres
+        Map<String, List<Dictionary>> formListsMapOfLists = new HashMap<>();
+        List<Dictionary> listOfDictionary = new ArrayList<>();
+        List<IdValuePair> genders = DisplayListService.getInstance().getList(ListType.GENDERS);
+        for (IdValuePair i : genders) {
+            Dictionary dictionary = new Dictionary();
+            dictionary.setId(i.getId());
+            dictionary.setDictEntry(i.getValue());
+            listOfDictionary.add(dictionary);
+        }
+        formListsMapOfLists.put("GENDERS", listOfDictionary);
+        form.setFormLists(formListsMapOfLists);
+
+        // Listes d'observations (dictionnaires)
+        Map<String, List<Dictionary>> observationHistoryMapOfLists = new HashMap<>();
+        observationHistoryMapOfLists.put("YES_NO", ObservationHistoryList.YES_NO.getList());
+        observationHistoryMapOfLists.put("YES_NO_UNKNOWN", ObservationHistoryList.YES_NO_UNKNOWN.getList());
+        observationHistoryMapOfLists.put("HIV_STATUSES", ObservationHistoryList.HIV_STATUSES.getList());
+        observationHistoryMapOfLists.put("HIV_TYPES", ObservationHistoryList.HIV_TYPES.getList());
+        observationHistoryMapOfLists.put("ARV_REGIME", ObservationHistoryList.ARV_REGIME.getList());
+        observationHistoryMapOfLists.put("ARV_REASON_FOR_VL_DEMAND",
+                ObservationHistoryList.ARV_REASON_FOR_VL_DEMAND.getList());
+        // EID lists
+        observationHistoryMapOfLists.put("EID_WHICH_PCR", ObservationHistoryList.EID_WHICH_PCR.getList());
+        observationHistoryMapOfLists.put("EID_SECOND_PCR_REASON",
+                ObservationHistoryList.EID_SECOND_PCR_REASON.getList());
+        observationHistoryMapOfLists.put("EID_TYPE_OF_CLINIC", ObservationHistoryList.EID_TYPE_OF_CLINIC.getList());
+        observationHistoryMapOfLists.put("EID_HOW_CHILD_FED", ObservationHistoryList.EID_HOW_CHILD_FED.getList());
+        observationHistoryMapOfLists.put("EID_STOPPED_BREASTFEEDING",
+                ObservationHistoryList.EID_STOPPED_BREASTFEEDING.getList());
+        observationHistoryMapOfLists.put("EID_INFANT_PROPHYLAXIS_ARV",
+                ObservationHistoryList.EID_INFANT_PROPHYLAXIS_ARV.getList());
+        observationHistoryMapOfLists.put("EID_MOTHERS_HIV_STATUS",
+                ObservationHistoryList.EID_MOTHERS_HIV_STATUS.getList());
+        observationHistoryMapOfLists.put("EID_MOTHERS_ARV_TREATMENT",
+                ObservationHistoryList.EID_MOTHERS_ARV_TREATMENT.getList());
+        observationHistoryMapOfLists.put("EID_INFANT_COTRIMOXAZOLE",
+                ObservationHistoryList.EID_INFANT_COTRIMOXAZOLE.getList());
+        // HPV list
+        observationHistoryMapOfLists.put("HPV_SAMPLING_METHOD", ObservationHistoryList.HPV_SAMPLING_METHOD.getList());
+        // Special Request list
+        observationHistoryMapOfLists.put("SPECIAL_REQUEST_REASONS",
+                ObservationHistoryList.SPECIAL_REQUEST_REASONS.getList());
+        form.setDictionaryLists(observationHistoryMapOfLists);
+
+        // Listes d'organisations (sites ARV + EID)
+        Map<String, List<Organization>> organizationTypeMapOfLists = new HashMap<>();
+        organizationTypeMapOfLists.put("ARV_ORGS", OrganizationTypeList.ARV_ORGS.getList());
+        organizationTypeMapOfLists.put("ARV_ORGS_BY_NAME", OrganizationTypeList.ARV_ORGS_BY_NAME.getList());
+        organizationTypeMapOfLists.put("EID_ORGS", OrganizationTypeList.EID_ORGS.getList());
+        organizationTypeMapOfLists.put("EID_ORGS_BY_NAME", OrganizationTypeList.EID_ORGS_BY_NAME.getList());
+        form.setOrganizationTypeLists(organizationTypeMapOfLists);
+    }
+
 
     private void setupForm(SamplePatientEntryForm form, HttpServletRequest request, String externalOrderNumber)
             throws LIMSRuntimeException, IllegalAccessException, InvocationTargetException, NoSuchMethodException {

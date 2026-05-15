@@ -16,6 +16,7 @@ import org.openelisglobal.common.form.BaseForm;
 import org.openelisglobal.common.log.LogEvent;
 import org.openelisglobal.common.services.DisplayListService;
 import org.openelisglobal.common.util.ConfigurationProperties;
+import org.openelisglobal.common.util.IdValueNameKey;
 import org.openelisglobal.common.util.IdValuePair;
 import org.openelisglobal.common.util.StringUtil;
 import org.openelisglobal.common.validator.BaseErrors;
@@ -360,28 +361,23 @@ public class DictionaryRestController extends BaseController {
      * @return list of dictionary entries
      */
     @GetMapping("/dictionary/category/{categoryName}")
-    public ResponseEntity<List<IdValuePair>> getDictionaryByCategory(@PathVariable String categoryName) {
+    public ResponseEntity<List<IdValueNameKey>> getDictionaryByCategory(@PathVariable String categoryName) {
         try {
-            // Find category by name
             DictionaryCategory category = dictionaryCategoryService.getDictionaryCategoryByName(categoryName);
 
             if (category == null) {
                 return ResponseEntity.notFound().build();
             }
 
-            // Get all active dictionaries for this category
             List<Dictionary> dictionaries = dictionaryService.getDictionaryEntriesByCategoryId(category.getId());
-
-            // Convert to IdValuePair (standard format for dropdowns) and filter active only
-            List<IdValuePair> activeDictionaries = new ArrayList<>();
+            List<IdValueNameKey> result = new ArrayList<>();
+            
             for (Dictionary dict : dictionaries) {
                 if ("Y".equals(dict.getIsActive())) {
-                    IdValuePair pair = new IdValuePair(dict.getId(), dict.getDictEntry());
-                    activeDictionaries.add(pair);
+                    result.add(new IdValueNameKey(dict.getId(), dict.getDictEntry(), dict.getNameKey()));
                 }
             }
-
-            return ResponseEntity.ok(activeDictionaries);
+            return ResponseEntity.ok(result);
         } catch (Exception e) {
             LogEvent.logError(e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
