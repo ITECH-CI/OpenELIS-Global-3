@@ -1,10 +1,11 @@
-import { ArrowLeft, ArrowRight, Copy } from "@carbon/icons-react";
+import { ArrowLeft, ArrowRight, Copy, ErrorFilled } from "@carbon/icons-react";
 import {
   Button,
   Checkbox,
   Column,
   Form,
   Grid,
+  InlineLoading,
   Link,
   Loading,
   Pagination,
@@ -47,6 +48,7 @@ function ResultSearchPage() {
   const [resultForm, setResultForm] = useState(originalResultForm);
   const [searchBy, setSearchBy] = useState({ type: "", doRange: false });
   const [param, setParam] = useState("&accessionNumber=");
+  const [searchUrl, setSearchUrl] = useState("");
 
   const setResults = (resultForm) => {
     setOriginalResultForm(resultForm);
@@ -59,12 +61,14 @@ function ResultSearchPage() {
         setParam={setParam}
         setSearchBy={setSearchBy}
         setResults={setResults}
+        setSearchUrl={setSearchUrl}
       />
       <SearchResults
         extraParams={param}
         searchBy={searchBy}
         results={resultForm}
         setResultForm={setResultForm}
+        searchUrl={searchUrl}
         refreshOnSubmit={true}
       />
     </>
@@ -199,6 +203,7 @@ export function SearchResultForm(props) {
       "&finished=" +
       false;
     setUrl(searchEndPoint);
+    props.setSearchUrl?.(searchEndPoint);
     props.setSearchBy?.(searchBy);
     switch (searchBy.type) {
       case "unit":
@@ -778,6 +783,9 @@ export function SearchResults(props) {
 
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(100);
+  const [labNoFilter, setLabNoFilter] = useState("");
+  const [filteredResults, setFilteredResults] = useState(null);
+  const [isFilterLoading, setIsFilterLoading] = useState(false);
   const [acceptAsIs, setAcceptAsIs] = useState([]);
   const [referalOrganizations, setReferalOrganizations] = useState([]);
   const [methods, setMethods] = useState([]);
@@ -882,6 +890,42 @@ export function SearchResults(props) {
       setValidationState(newValidationState);
     }
   }, [props.results]);
+
+  useEffect(() => {
+    setLabNoFilter("");
+    setFilteredResults(null);
+    setPage(1);
+  }, [props.results]);
+
+  useEffect(() => {
+    if (labNoFilter === "") {
+      setFilteredResults(null);
+      setIsFilterLoading(false);
+      return;
+    }
+    if (!props.searchUrl) return;
+    setIsFilterLoading(true);
+    const timer = setTimeout(() => {
+      const url = props.searchUrl.replace(
+        /labNumber=[^&]*/,
+        "labNumber=" + encodeURIComponent(labNoFilter),
+      );
+      getFromOpenElisServer(url, (results) => {
+        if (results?.testResult) {
+          var i = 0;
+          results.testResult.forEach((item) => (item.id = "" + i++));
+          setFilteredResults(results);
+        } else {
+          setFilteredResults({ testResult: [] });
+        }
+        setIsFilterLoading(false);
+      });
+    }, 400);
+    return () => {
+      clearTimeout(timer);
+      setIsFilterLoading(false);
+    };
+  }, [labNoFilter, props.searchUrl]);
 
   const loadReferalOrganizations = (values) => {
     if (componentMounted.current) {
@@ -1787,40 +1831,68 @@ export function SearchResults(props) {
             }}
           />
         ) : (
-          <Formik
-            initialValues={SearchResultFormValues}
-            //validationSchema={}
-            onSubmit
-            onChange
-          >
-            {({
-              // values,
-              // errors,
-              // touched,
-              handleChange,
-              //handleBlur,
-              // handleSubmit,
-            }) => (
-              <Form
-                onChange={handleChange}
-                //onBlur={handleBlur}
-              >
-                <DataTable
-                  data={props.results?.testResult?.slice(
-                    (page - 1) * pageSize,
-                    page * pageSize,
+          <>
+            <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "8px", width: "100%" }}>
+              <div style={{ width: "250px" }}>
+                <div style={{ position: "relative" }}>
+                  <TextInput
+                    id="labNoFilter"
+                    labelText=""
+                    placeholder={intl.formatMessage({ id: "search.label.accession" })}
+                    value={labNoFilter}
+                    onChange={(e) => setLabNoFilter(e.target.value)}
+                  />
+                  {isFilterLoading && (
+                    <div style={{ position: "absolute", right: "8px", top: "50%", transform: "translateY(-50%)", display: "flex", alignItems: "center" }}>
+                      <Loading small withOverlay={false} active />
+                    </div>
                   )}
-                  columns={columns}
-                  isSortable
-                  expandableRows
-                  expandableRowsComponent={renderReferral}
-                ></DataTable>
-                <Pagination
-                  onChange={handlePageChange}
-                  page={page}
-                  pageSize={pageSize}
-                  pageSizes={[10, 20, 30, 50, 100]}
-                  totalItems={props.results?.testResult?.length}
+                </div>
+                {isFilterLoading && (
+                  <InlineLoading description="Recherche en cours..." status="active" style={{ marginTop: "4px" }} />
+                )}
+                {!isFilterLoading && filteredResults !== null && filteredResults.testResult?.length === 0 && (
+                  <div style={{ display: "flex", alignItems: "center", gap: "4px", marginTop: "4px", color: "#da1e28" }}>
+                    <ErrorFilled size={16} />
+                    <span style={{ fontSize: "12px" }}>Aucun résultat trouvé</span>
+                  </div>
+                )}
+              </div>
+            </div>
+            <Formik
+              initialValues={SearchResultFormValues}
+              //validationSchema={}
+              onSubmit
+              onChange
+            >
+              {({
+                // values,
+                // errors,
+                // touched,
+                handleChange,
+                //handleBlur,
+                // handleSubmit,
+              }) => (
+                <Form
+                  onChange={handleChange}
+                  //onBlur={handleBlur}
+                >
+                  <DataTable
+                    data={(filteredResults ?? props.results)?.testResult?.slice(
+                      (page - 1) * pageSize,
+                      page * pageSize,
+                    )}
+                    columns={columns}
+                    isSortable
+                    expandableRows
+                    expandableRowsComponent={renderReferral}
+                  ></DataTable>
+                  <Pagination
+                    onChange={handlePageChange}
+                    page={page}
+                    pageSize={pageSize}
+                    pageSizes={[10, 20, 30, 50, 100]}
+                    totalItems={(filteredResults ?? props.results)?.testResult?.length}
                   forwardText={intl.formatMessage({ id: "pagination.forward" })}
                   backwardText={intl.formatMessage({
                     id: "pagination.backward",
@@ -1869,6 +1941,7 @@ export function SearchResults(props) {
               </Form>
             )}
           </Formik>
+          </>
         )}
       </>
     </>

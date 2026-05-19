@@ -79,6 +79,8 @@
         file="add_tests_to_ecb_crachat_panel.xml" />
     <include relativeToChangelogFile="true"
         file="add_culture_urethrales_to_ecb_pu_panel.xml" />
+    <include relativeToChangelogFile="true"
+        file="add_arv_treatment_regime_dictionary.xml" />
 
 
 </databaseChangeLog>

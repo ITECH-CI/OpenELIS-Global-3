@@ -74,14 +74,16 @@ const CustomDatePicker = (props) => {
             : ""
         }
         minDate={
-          props.disallowPastDate
-            ? format(
-                new Date(),
-                configurationProperties.DEFAULT_DATE_LOCALE == "fr-FR"
-                  ? "dd/MM/yyyy"
-                  : "MM/dd/yyyy",
-              )
-            : ""
+          props.minDate
+            ? props.minDate
+            : props.disallowPastDate
+              ? format(
+                  new Date(),
+                  configurationProperties.DEFAULT_DATE_LOCALE == "fr-FR"
+                    ? "dd/MM/yyyy"
+                    : "MM/dd/yyyy",
+                )
+              : ""
         }
       >
         <DatePickerInput

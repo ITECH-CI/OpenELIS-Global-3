@@ -251,6 +251,7 @@ const ViralLoadEntry = () => {
     HIV_STATUSES: [],
     HIV_TYPES: [],
     ARV_REGIME: [],
+    ARV_REGIMEN_LIST: [],
     ARV_REASON_FOR_VL_DEMAND: [],
     EID_WHICH_PCR: [],
     EID_SECOND_PCR_REASON: [],
@@ -272,6 +273,8 @@ const ViralLoadEntry = () => {
   const [savedLabNo, setSavedLabNo] = useState("");
   const [labNoError, setLabNoError] = useState("");
   const [labNoValid, setLabNoValid] = useState(false);
+  const [patientLookupStatus, setPatientLookupStatus] = useState("idle"); // "idle" | "searching" | "found" | "notfound"
+  const [innManualMode, setInnManualMode] = useState(false);
 
   // ─── Chargement initial ──────────────────────────────────────────────────────
   useEffect(() => {
@@ -351,6 +354,10 @@ const ViralLoadEntry = () => {
       if (!componentMounted.current) return;
       if (Array.isArray(data)) setDictionaryLists((prev) => ({ ...prev, HPV_SAMPLING_METHOD: data }));
     });
+    getFromOpenElisServer("/rest/dictionary/category/ARV%20Treatment%20Regime%20List", (data) => {
+      if (!componentMounted.current) return;
+      if (Array.isArray(data)) setDictionaryLists((prev) => ({ ...prev, ARV_REGIMEN_LIST: data }));
+    });
 
     return () => { componentMounted.current = false; };
   }, []);
@@ -405,7 +412,30 @@ const ViralLoadEntry = () => {
       };
     });
 
+  const lookupPatient = () => {
+    const code = (form.siteSubjectNumber || "").trim();
+    if (!code) { setPatientLookupStatus("idle"); return; }
+    setPatientLookupStatus("searching");
+    getFromOpenElisServer(
+      "/rest/patient-search-results?subjectNumber=" +
+        encodeURIComponent(code) +
+        "&suppressExternalSearch=true",
+      (data) => {
+        const results = data && data.patientSearchResults ? data.patientSearchResults : [];
+        if (results.length > 0) {
+          const p = results[0];
+          setPatientLookupStatus("found");
+          if (p.birthdate) set("birthDateForDisplay", p.dob);
+          if (p.gender) set("gender", p.gender);
+        } else {
+          setPatientLookupStatus("notfound");
+        }
+      },
+    );
+  };
+
   const handleStudyChange = (studyId) => {
+    setPatientLookupStatus("idle");
     setForm((prev) => ({
       ...prev,
       project: studyId,
@@ -422,7 +452,7 @@ const ViralLoadEntry = () => {
         hpvTest: studyId === "HPV_Id",
 
          //EID default values
-        eid_dnaPCR : studyId === "EID_Id",
+        dnaPCR : studyId === "EID_Id",
         dbsTaken : studyId === "EID_Id",
 
         //ARV INIT default values
@@ -448,6 +478,12 @@ const ViralLoadEntry = () => {
       (d) =>
         d.id === form.observations.currentARVTreatment &&
         d.displayKey?.toLowerCase().includes("answer.yes"),
+    ),
+  );
+
+  const isSecondPCR = Boolean(
+    (dictionaryLists.EID_WHICH_PCR || []).find(
+      (d) => d.id === form.observations.whichPCR && d.displayKey === "EID.secondPCR",
     ),
   );
 
@@ -500,6 +536,30 @@ const ViralLoadEntry = () => {
     req(form.receivedDateForDisplay, "Date de Réception");
     req(form.interviewDate, "Date de Prélèvements");
 
+    // La date de réception doit être strictement postérieure (jour calendaire) à la date de prélèvement
+    if (form.interviewDate && form.receivedDateForDisplay) {
+      const parseDate = (dateStr) => {
+        const parts = dateStr.split("/");
+        if (parts.length !== 3) return null;
+        const isFr = configurationProperties.DEFAULT_DATE_LOCALE === "fr-FR";
+        const [a, b, y] = parts.map(Number);
+        const [d, m] = isFr ? [a, b] : [b, a];
+        return new Date(y, m - 1, d);
+      };
+      const datePrelevement = parseDate(form.interviewDate);
+      const dateReception = parseDate(form.receivedDateForDisplay);
+      console.log({datePrelevement: datePrelevement.getTime(), dateReception: dateReception.getTime()})
+      if (datePrelevement && dateReception && dateReception < datePrelevement) {
+        errors.push(
+          intl.formatMessage({
+            id: "error.date.reception.must.be.after.collection",
+            defaultMessage:
+              "La date de réception doit être strictement superieur ou egale à la date de prélèvement.",
+          }),
+        );
+      }
+    }
+
     switch (study) {
       case "InitialARV_Id":
       case "FollowUpARV_Id":
@@ -536,6 +596,7 @@ const ViralLoadEntry = () => {
       case "VL_Id":
         req(form.gender, "Sexe");
         req(form.birthDateForDisplay, "Date de Naissance");
+        req(form.observations.hivStatus, "Type VIH");
         break;
       case "Recency_Id":
         req(form.projectData.ARVcenterCode, "Code du Centre");
@@ -621,6 +682,20 @@ const ViralLoadEntry = () => {
     defaultMessage: "-- Sélectionner --",
   });
 
+  // Retourne la date du lendemain au format dd/MM/yyyy (ou MM/dd/yyyy)
+  const nextDay = (dateStr) => {
+    if (!dateStr) return "";
+    const isFr = configurationProperties.DEFAULT_DATE_LOCALE === "fr-FR";
+    const parts = dateStr.split("/");
+    if (parts.length !== 3) return "";
+    const [a, b, y] = parts.map(Number);
+    const [d, m] = isFr ? [a, b] : [b, a];
+    const dt = new Date(y, m - 1, d + 1);
+    const dd = String(dt.getDate()).padStart(2, "0");
+    const mm = String(dt.getMonth() + 1).padStart(2, "0");
+    return isFr ? `${dd}/${mm}/${dt.getFullYear()}` : `${mm}/${dd}/${dt.getFullYear()}`;
+  };
+
   const fldReceivedDate = () => (
     <Row
       required
@@ -634,7 +709,7 @@ const ViralLoadEntry = () => {
         labelText=""
         autofillDate
         value={form.receivedDateForDisplay}
-        disallowFutureDate
+        minDate={form.interviewDate}
         onChange={(d) => set("receivedDateForDisplay", d)}
       />
     </Row>
@@ -754,6 +829,7 @@ const ViralLoadEntry = () => {
         labelText=""
         value={form.birthDateForDisplay}
         disallowFutureDate
+        updateStateValue
         onChange={(d) => set("birthDateForDisplay", d)}
       />
     </Row>
@@ -846,7 +922,7 @@ const ViralLoadEntry = () => {
       />
     </Row>
   );
-  const fldSiteSubjectNumber = (required = false) => (
+  const fldSiteSubjectNumber = (required = false, withLookup = false) => (
     <Row
       optional={!required}
       required={required}
@@ -855,36 +931,52 @@ const ViralLoadEntry = () => {
         defaultMessage: "Site Sujet No.",
       })}
     >
-      <TextInput
-        id="f_siteSubjectNumber"
-        hideLabel
-        labelText=""
-        size="sm"
-        maxLength={17}
-        placeholder="00000/AA/AA/00000"
-        style={{ maxWidth: "220px" }}
-        value={form.siteSubjectNumber}
-        onChange={(e) => {
-          const raw = e.target.value.replace(/\//g, "").toUpperCase();
-          let validated = "";
-          for (let i = 0; i < raw.length && i < 14; i++) {
-            if (i < 5 || i >= 9) {
-              if (/\d/.test(raw[i])) validated += raw[i];
-            } else {
-              if (/[A-Z0-9]/.test(raw[i])) validated += raw[i];
+      <div style={{ position: "relative", display: "inline-block" }}>
+        <TextInput
+          id="f_siteSubjectNumber"
+          hideLabel
+          labelText=""
+          size="sm"
+          maxLength={17}
+          placeholder="00000/AA/AA/00000"
+          style={{ maxWidth: "220px" }}
+          value={form.siteSubjectNumber}
+          onChange={(e) => {
+            const raw = e.target.value.replace(/\//g, "").toUpperCase();
+            let validated = "";
+            for (let i = 0; i < raw.length && i < 14; i++) {
+              if (i < 5 || i >= 9) {
+                if (/\d/.test(raw[i])) validated += raw[i];
+              } else {
+                if (/[A-Z0-9]/.test(raw[i])) validated += raw[i];
+              }
             }
-          }
-          let formatted = validated;
-          if (validated.length > 9) {
-            formatted = validated.slice(0, 5) + "/" + validated.slice(5, 7) + "/" + validated.slice(7, 9) + "/" + validated.slice(9);
-          } else if (validated.length > 7) {
-            formatted = validated.slice(0, 5) + "/" + validated.slice(5, 7) + "/" + validated.slice(7);
-          } else if (validated.length > 5) {
-            formatted = validated.slice(0, 5) + "/" + validated.slice(5);
-          }
-          set("siteSubjectNumber", formatted);
-        }}
-      />
+            let formatted = validated;
+            if (validated.length > 9) {
+              formatted = validated.slice(0, 5) + "/" + validated.slice(5, 7) + "/" + validated.slice(7, 9) + "/" + validated.slice(9);
+            } else if (validated.length > 7) {
+              formatted = validated.slice(0, 5) + "/" + validated.slice(5, 7) + "/" + validated.slice(7);
+            } else if (validated.length > 5) {
+              formatted = validated.slice(0, 5) + "/" + validated.slice(5);
+            }
+            set("siteSubjectNumber", formatted);
+            if (withLookup && patientLookupStatus !== "idle") setPatientLookupStatus("idle");
+          }}
+          onBlur={() => { if (withLookup) lookupPatient(); }}
+        />
+        {withLookup && patientLookupStatus === "searching" && (
+          <span style={{ position: "absolute", left: "calc(100% + 6px)", top: "50%", transform: "translateY(-50%)", fontSize: "12px", color: "#6f6f6f", fontStyle: "italic", whiteSpace: "nowrap" }}>Recherche…</span>
+        )}
+        {withLookup && patientLookupStatus === "found" && (
+          <div style={{ position: "absolute", left: "calc(100% + 6px)", top: "50%", transform: "translateY(-50%)", display: "flex", alignItems: "center", gap: "4px", color: "#24a148", whiteSpace: "nowrap" }}>
+            <CheckmarkFilled size={16} />
+            <span style={{ fontSize: "12px", fontWeight: "600" }}>Patient trouvé</span>
+          </div>
+        )}
+        {withLookup && patientLookupStatus === "notfound" && (
+          <span style={{ position: "absolute", left: "calc(100% + 6px)", top: "50%", transform: "translateY(-50%)", fontSize: "12px", color: "#da1e28", fontWeight: "600", whiteSpace: "nowrap" }}>Patient non trouvé</span>
+        )}
+      </div>
     </Row>
   );
   const fldLabNo = (prefixKey, required = true) => {
@@ -1069,7 +1161,7 @@ const ViralLoadEntry = () => {
         })}
       >
         <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-          <div style={{ flex: "1 1 auto", maxWidth: "280px" }}>
+          <div style={{ flex: "1 1 auto"}}>
             <AutoComplete
               id="f_centerName"
               name="f_centerName"
@@ -1196,8 +1288,9 @@ const ViralLoadEntry = () => {
     </Row>
   );
 
-  const fldHivStatus = (listKey = "HIV_STATUSES") => (
+  const fldHivStatus = (listKey = "HIV_STATUSES", required = false) => (
     <Row
+      required={required}
       label={intl.formatMessage({
         id: "patient.project.hivStatus",
         defaultMessage: "Type/Statut VIH",
@@ -1216,7 +1309,6 @@ const ViralLoadEntry = () => {
           <SelectItem key={d.id} value={d.id}
             text={intl.formatMessage({ id: d.displayKey, defaultMessage: d.value })} />
         ))}
-
       </Select>
     </Row>
   );
@@ -1380,12 +1472,12 @@ const ViralLoadEntry = () => {
       </div>
       {fldARVCenter()}
       {fldNameOfDoctor()}
-      {fldReceivedDate()}
-      {fldReceivedTime()}
       {fldInterviewDate()}
       {fldInterviewTime()}
+      {fldReceivedDate()}
+      {fldReceivedTime()}
       {fldSubjectNumber(7)}
-      {fldSiteSubjectNumber(false, 18)}
+      {fldSiteSubjectNumber(false)}
       {fldLabNo(LAB_PREFIXES.InitialARV_Id)}
       {fldGender()}
       {fldBirthDate()}
@@ -1409,12 +1501,12 @@ const ViralLoadEntry = () => {
       </div>
       {fldARVCenter()}
       {fldNameOfDoctor()}
-      {fldReceivedDate()}
-      {fldReceivedTime()}
       {fldInterviewDate()}
       {fldInterviewTime()}
+      {fldReceivedDate()}
+      {fldReceivedTime()}
       {fldSubjectNumber(7)}
-      {fldSiteSubjectNumber(false, 18)}
+      {fldSiteSubjectNumber(false)}
       {fldLabNo(LAB_PREFIXES.FollowUpARV_Id)}
       {fldGender()}
       {fldBirthDate()}
@@ -1437,10 +1529,10 @@ const ViralLoadEntry = () => {
           defaultMessage="RTN"
         />
       </div>
-      {fldReceivedDate()}
-      {fldReceivedTime()}
       {fldInterviewDate()}
       {fldInterviewTime()}
+      {fldReceivedDate()}
+      {fldReceivedTime()}
       {fldBirthDate()}
       {fldAge(true, false)}
       {fldGender()}
@@ -1502,10 +1594,10 @@ const ViralLoadEntry = () => {
           defaultMessage="EID"
         />
       </div>
-      {fldReceivedDate()}
-      {fldReceivedTime()}
       {fldInterviewDate()}
       {fldInterviewTime()}
+      {fldReceivedDate()}
+      {fldReceivedTime()}
       {fldEIDSite()}
       <Row
         optional
@@ -1527,7 +1619,7 @@ const ViralLoadEntry = () => {
           />
         </div>
       </Row>
-      {fldSiteSubjectNumber(false, 18)}
+      {fldSiteSubjectNumber(false)}
       {fldLabNo(LAB_PREFIXES.EID_Id)}
       <Row
         label={intl.formatMessage({
@@ -1536,7 +1628,7 @@ const ViralLoadEntry = () => {
         })}
       >
         <Select
-          id="eid_whichPCR"
+          id="eid_reasonPCR"
           hideLabel
           labelText=""
           value={form.observations.whichPCR}
@@ -1560,6 +1652,7 @@ const ViralLoadEntry = () => {
           id="eid_reasonPCR"
           hideLabel
           labelText=""
+          disabled={!isSecondPCR}
           value={form.observations.reasonForSecondPCRTest}
           onChange={(e) => setObs("reasonForSecondPCRTest", e.target.value)}
           style={{ maxWidth: "280px" }}
@@ -1883,10 +1976,10 @@ const ViralLoadEntry = () => {
           defaultMessage="Indeterminate"
         />
       </div>
-      {fldReceivedDate()}
-      {fldReceivedTime()}
       {fldInterviewDate()}
       {fldInterviewTime()}
+      {fldReceivedDate()}
+      {fldReceivedTime()}
       <Row
         required
         label={intl.formatMessage({
@@ -1977,7 +2070,7 @@ const ViralLoadEntry = () => {
         />
       </Row>
       {fldSubjectNumber(7)}
-      {fldSiteSubjectNumber(false, 18)}
+      {fldSiteSubjectNumber(false)}
       {fldLabNo(LAB_PREFIXES.Indeterminate_Id)}
       {fldGender()}
       {fldBirthDate()}
@@ -2159,12 +2252,12 @@ const ViralLoadEntry = () => {
           defaultMessage="Requête Spéciale"
         />
       </div>
-      {fldReceivedDate()}
-      {fldReceivedTime()}
       {fldInterviewDate()}
       {fldInterviewTime()}
+      {fldReceivedDate()}
+      {fldReceivedTime()}
       {fldSubjectNumber(7)}
-      {fldSiteSubjectNumber(false, 18)}
+      {fldSiteSubjectNumber(false)}
       {fldBirthDate()}
       {fldAge()}
       {fldGender()}
@@ -2356,12 +2449,12 @@ const ViralLoadEntry = () => {
       {fldARVCenter()}
       {fldNameOfDoctor()}
       {fldNameOfSampler()}
-      {fldReceivedDate()}
-      {fldReceivedTime()}
       {fldInterviewDate()}
       {fldInterviewTime()}
+      {fldReceivedDate()}
+      {fldReceivedTime()}
       {fldSubjectNumber(7)}
-      {fldSiteSubjectNumber(false, 18)}
+      {fldSiteSubjectNumber(false, true)}
       {fldLabNo(LAB_PREFIXES.VL_Id)}
       {fldBirthDate()}
       {fldAge(true, false)}
@@ -2412,7 +2505,7 @@ const ViralLoadEntry = () => {
           </Row>
         </>
       )}
-      {fldHivStatus("HIV_TYPES")}
+      {fldHivStatus("HIV_TYPES", true)}
       <Row
         label={intl.formatMessage({
           id: "sample.entry.project.arv.treatment",
@@ -2471,6 +2564,53 @@ const ViralLoadEntry = () => {
               ))}
             </Select>
           </Row>
+          <Row
+            label={intl.formatMessage({
+              id: "sample.entry.project.arv.treatment.therap.regime",
+              defaultMessage: "Régime thérapeutique",
+            })}
+          >
+            <div style={{ maxWidth: "500px", display: "flex", gap: "8px", alignItems: "center" }}>
+              <div style={{ flex: 1, opacity: innManualMode ? 0.4 : 1, pointerEvents: innManualMode ? "none" : "auto" }}>
+                <AutoComplete
+                  id="vl_arvRegimenList"
+                  allowFreeText={false}
+                  suggestions={(dictionaryLists.ARV_REGIMEN_LIST || []).map((d) => ({
+                    id: d.value,
+                    value: d.value,
+                  }))}
+                  onSelect={(val) => {
+                    const parts = (val || "").split(" ").filter(Boolean);
+                    setForm((prev) => {
+                      const list = ["", "", "", ""];
+                      parts.forEach((p, i) => { if (i < 4) list[i] = p; });
+                      return {
+                        ...prev,
+                        observations: { ...prev.observations, currentARVTreatmentINNsList: list },
+                      };
+                    });
+                  }}
+                />
+              </div>
+              <Checkbox
+                id="vl_inn_manual_mode"
+                labelText={intl.formatMessage({
+                  id: "sample.entry.project.arv.inn.other",
+                  defaultMessage: "Autre",
+                })}
+                checked={innManualMode}
+                onChange={(_, { checked }) => {
+                  setInnManualMode(checked);
+                  if (!checked) {
+                    setForm((prev) => ({
+                      ...prev,
+                      observations: { ...prev.observations, currentARVTreatmentINNsList: ["", "", "", ""] },
+                    }));
+                  }
+                }}
+              />
+            </div>
+          </Row>
           {[0, 1, 2, 3].map((i) => (
             <Row key={i} label={`ARV INN ${i + 1}`}>
               <TextInput
@@ -2478,6 +2618,7 @@ const ViralLoadEntry = () => {
                 hideLabel
                 labelText=""
                 size="sm"
+                disabled={!innManualMode}
                 style={{ maxWidth: "200px" }}
                 value={form.observations.currentARVTreatmentINNsList[i] || ""}
                 onChange={(e) => setINN(i, e.target.value)}
@@ -2657,14 +2798,25 @@ const ViralLoadEntry = () => {
               defaultMessage: "Laboratoire CV antérieure",
             })}
           >
-            <TextInput
+            <AutoComplete
               id="vl_priorLab"
-              hideLabel
-              labelText=""
-              size="sm"
-              style={{ maxWidth: "200px" }}
+              name="vl_priorLab"
+              label=""
               value={form.observations.priorVLLab}
-              onChange={(e) => setObs("priorVLLab", e.target.value)}
+              suggestions={arvOrgsByName.map((o) => ({
+                id: o.id,
+                value: o.organizationName || o.value,
+              }))}
+              onChange={(e) => {
+                const val = e?.currentTarget?.value ?? e?.target?.value ?? "";
+                setObs("priorVLLab", val);
+              }}
+              onSelect={(id) => {
+                const org = arvOrgsByName.find((o) => o.id === id);
+                if (org) {
+                  setObs("priorVLLab", org.organizationName || org.value);
+                }
+              }}
             />
           </Row>
           <Row
@@ -3211,14 +3363,20 @@ const ViralLoadEntry = () => {
       <PageBreadCrumb breadcrumbs={breadcrumbs} />
 
       {/* ── Sélection de l'étude ───────────────────────────────────────────── */}
-      {!showSuccess && <div style={{ ...S.row, background: "#f4f4f4", marginBottom: "4px" }}>
-        <div style={{ ...S.label, fontWeight: "bold" }}>
-          <FormattedMessage
-            id="sample.entry.project.form"
-            defaultMessage="Formulaire d'étude"
-          />
+      {!showSuccess && <div style={{ ...S.row, background: "#f4f4f4", marginBottom: "4px", position: "sticky", top: 0, zIndex: 100, boxShadow: "0 2px 6px rgba(0,0,0,0.12)" }}>
+        <div style={{ ...S.label }}>
+          <div style={{ fontSize: "11px", color: "#888", marginBottom: "2px" }}>
+            <FormattedMessage id="sample.entry.project.form" defaultMessage="Formulaire d'étude" />
+          </div>
+          {form.project ? (
+            <div style={{ fontSize: "15px", fontWeight: "800", color: "#295785", letterSpacing: "0.01em" }}>
+              {studyForms.find((s) => s.value === form.project)?.label}
+            </div>
+          ) : (
+            <div style={{ fontSize: "13px", color: "#aaa", fontStyle: "italic" }}>— non sélectionné —</div>
+          )}
         </div>
-        <div style={S.inputWrap}>
+        <div style={{ ...S.inputWrap, display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
           <Select
             id="studyForms"
             hideLabel
@@ -3238,6 +3396,27 @@ const ViralLoadEntry = () => {
               <SelectItem key={s.value} value={s.value} text={s.label} />
             ))}
           </Select>
+          {form.project && (() => {
+            const selected = studyForms.find((s) => s.value === form.project);
+            return selected ? (
+              <div style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "6px",
+                background: "#0f62fe",
+                color: "#fff",
+                padding: "4px 12px",
+                borderRadius: "16px",
+                fontWeight: "bold",
+                fontSize: "13px",
+                boxShadow: "0 2px 6px rgba(15,98,254,0.4)",
+                letterSpacing: "0.02em",
+              }}>
+                <CheckmarkFilled size={16} />
+                {selected.label}
+              </div>
+            ) : null;
+          })()}
         </div>
       </div>}
 
