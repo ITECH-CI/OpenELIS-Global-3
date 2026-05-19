@@ -121,6 +121,18 @@ public final class ClinicalPatientData {
     private String floraGramType;
     private String floraGroupingMode;
     private String floraOtherCharacteristic;
+    // Identifies the parent culture analysis a row belongs to (for the Culture section).
+    // Used by the report layout to group root TEST, "Nombre de germes", organisms and
+    // their antibiograms together for the same culture. Not displayed.
+    private String cultureKey;
+
+    public String getCultureKey() {
+        return cultureKey;
+    }
+
+    public void setCultureKey(String cultureKey) {
+        this.cultureKey = cultureKey;
+    }
 
     public ClinicalPatientData() {
     }
@@ -213,6 +225,7 @@ public final class ClinicalPatientData {
         floraGramType = data.getFloraGramType();
         floraGroupingMode = data.getFloraGroupingMode();
         floraOtherCharacteristic = data.getFloraOtherCharacteristic();
+        cultureKey = data.getCultureKey();
     }
 
     public String getReferralRefRange() {

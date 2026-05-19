@@ -235,9 +235,14 @@ public abstract class ConfigurationProperties {
         SI_UNIT_CONVERSION_IN_REPORTS("siUnitConversionInReports", "text"), // If true, SI values are displayed in
                                                                             // reports
         SI_UNIT_CONVERSION_IN_UI("siUnitConversionInUI", "text"), // If true, SI values are displayed in the UI
-        SHOW_SAMPLE_QUANTITY_AND_UOM("showSampleQuantityAndUom", "text"); // If true, sample quantity and unit of
+        SHOW_SAMPLE_QUANTITY_AND_UOM("showSampleQuantityAndUom", "text"), // If true, sample quantity and unit of
                                                                           // measure fields are displayed in
                                                                           // /SamplePatientEntry sample addition section
+        SHOW_AUDIT_ON_PATIENT_REPORT("showAuditOnPatientReport", "text"); // If true (Y), the routine patient report
+                                                                          // shows the "Corrected report" banner and
+                                                                          // canceled tests with status "canceled".
+                                                                          // Default N: corrections + canceled tests
+                                                                          // are hidden from the printed report.
 
         // visible on
         // the ui

@@ -581,6 +581,26 @@ public abstract class PatientReport extends Report {
         Test test = analysisService.getTest(currentAnalysis);
         NoteService noteService = SpringContext.getBean(NoteService.class);
         String note = noteService.getNotesAsString(currentAnalysis, true, true, "<br/>", FILTER, true);
+        // When the showAuditOnPatientReport site config is disabled, strip the
+        // automatic "Résultat corrigé" note added by LogbookResultsRestController
+        // so it doesn't pollute the final printed report.
+        if (note != null
+                && !ConfigurationProperties.getInstance().isPropertyValueEqual(
+                        ConfigurationProperties.Property.SHOW_AUDIT_ON_PATIENT_REPORT, "true")) {
+            String correctedLabel = MessageUtil.getMessage("note.corrected.result");
+            if (correctedLabel != null && !correctedLabel.isBlank()) {
+                // Remove any segment that ends with "Résultat corrigé" (with or without
+                // a leading timestamp like "14/05/2026 11:41 : "), and clean up the
+                // surrounding <br/> separators inserted by getNotesAsString.
+                String pattern = "(?:^|<br/>)[^<]*?" + java.util.regex.Pattern.quote(correctedLabel) + "\\s*";
+                note = note.replaceAll(pattern, "");
+                note = note.replaceFirst("^(<br/>)+", "");
+                note = note.replaceFirst("(<br/>)+$", "");
+                if (note.isBlank()) {
+                    note = null;
+                }
+            }
+        }
         if (note != null) {
             data.setNote(note);
         }
@@ -873,9 +893,16 @@ public abstract class PatientReport extends Report {
 
     private void setCorrectedStatus(Result result, ClinicalPatientData data) {
         if (currentAnalysis.isCorrectedSincePatientReport() && !GenericValidator.isBlankOrNull(result.getValue())) {
-            data.setCorrectedResult(true);
+            // Only surface the "Corrected report" banner on the printed report when the
+            // showAuditOnPatientReport site config is explicitly enabled.
+            boolean showAudit = ConfigurationProperties.getInstance().isPropertyValueEqual(
+                    ConfigurationProperties.Property.SHOW_AUDIT_ON_PATIENT_REPORT, "true");
+            if (showAudit) {
+                data.setCorrectedResult(true);
+                sampleCorrectedMap.put(convertToAlphaNumericDisplay(currentSample), true);
+            }
             data.setContactInfo(currentContactInfo);
-            sampleCorrectedMap.put(convertToAlphaNumericDisplay(currentSample), true);
+            // Always clear the per-analysis flag so we don't re-flag on subsequent reprints
             currentAnalysis.setCorrectedSincePatientReport(false);
             updatedAnalysis.add(currentAnalysis);
         }

@@ -335,6 +335,42 @@ function TestManagementConfigMenu() {
                   </UnorderedList>
                 </ClickableTile>
                 <br />
+                <ClickableTile
+                  href="/admin#ConditionalTestConfig"
+                  id="ConditionalTestConfig"
+                >
+                  <FormattedMessage
+                    id="configuration.conditional.test"
+                    defaultMessage="Test conditionnel (parent → enfant)"
+                  />
+                  <UnorderedList nested>
+                    <ListItem>
+                      <FormattedMessage
+                        id="configuration.conditional.test.explain"
+                        defaultMessage="Configurer l'affichage d'un test enfant selon le résultat d'un test parent."
+                      />
+                    </ListItem>
+                  </UnorderedList>
+                </ClickableTile>
+                <br />
+                <ClickableTile
+                  href="/admin#MethodTestMapping"
+                  id="MethodTestMapping"
+                >
+                  <FormattedMessage
+                    id="configuration.methodTestMapping"
+                    defaultMessage="Assigner des méthodes aux tests"
+                  />
+                  <UnorderedList nested>
+                    <ListItem>
+                      <FormattedMessage
+                        id="configuration.methodTestMapping.explain"
+                        defaultMessage="Définir, pour chaque test, la liste des méthodes utilisables (ou inversement)."
+                      />
+                    </ListItem>
+                  </UnorderedList>
+                </ClickableTile>
+                <br />
                 <ClickableTile href="#reflex" id="reflex">
                   <FormattedMessage id="sidenav.label.admin.testmgt.reflex" />
                 </ClickableTile>

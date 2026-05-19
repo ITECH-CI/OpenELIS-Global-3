@@ -315,8 +315,12 @@ public class BacterioPatientReport extends PatientReport implements IReportCreat
                         }
                     }
 
-                    // For culture tests, add organisms and antibiograms
+                    // For culture tests, add organisms and antibiograms.
+                    // Tag the root culture TEST row with the analysis id (cultureKey) so
+                    // reorderCultureSection can group organisms/antibiograms with their
+                    // parent culture.
                     if (parts.mainSection != null && parts.mainSection.toUpperCase().contains("CULTURE")) {
+                        resultsData.setCultureKey(analysis.getId());
                         addOrganismsAndAntibiograms(analysis, parts.mainSection, resultsData, reportItems,
                                 currentSampleReportItems);
                     }
@@ -386,6 +390,7 @@ public class BacterioPatientReport extends PatientReport implements IReportCreat
             organismData.setSampleId(analysis.getSampleItem() != null ? analysis.getSampleItem().getId() : null);
             organismData.setPanelName(null);
             organismData.setBacterioRowType("ORGANISM");
+            organismData.setCultureKey(analysis.getId());
 
             // Resolve organism name
             String organismName = organism.getOrganismNameText();
@@ -447,6 +452,7 @@ public class BacterioPatientReport extends PatientReport implements IReportCreat
                 antibiogramHeader.setSampleType(analysis.getSampleTypeName());
                 antibiogramHeader.setSampleId(analysis.getSampleItem() != null ? analysis.getSampleItem().getId() : null);
                 antibiogramHeader.setBacterioRowType("ANTIBIOGRAM_HEADER");
+                antibiogramHeader.setCultureKey(analysis.getId());
 
                 reportItems.add(antibiogramHeader);
                 currentSampleReportItems.add(antibiogramHeader);
@@ -464,6 +470,7 @@ public class BacterioPatientReport extends PatientReport implements IReportCreat
                     abgData.setSampleType(analysis.getSampleTypeName());
                     abgData.setSampleId(analysis.getSampleItem() != null ? analysis.getSampleItem().getId() : null);
                     abgData.setBacterioRowType("ANTIBIOGRAM_ROW");
+                    abgData.setCultureKey(analysis.getId());
 
                     // Resolve antibiotic name
                     String antibioticName = abg.getAntibioticNameText();
@@ -877,59 +884,123 @@ public class BacterioPatientReport extends PatientReport implements IReportCreat
         String culture = MessageUtil.getMessage("bacteriology.section.culture");
 
         List<ClinicalPatientData> nonCulture = new ArrayList<>();
-        List<ClinicalPatientData> cultureTests = new ArrayList<>();
-        List<ClinicalPatientData> cultureOrganisms = new ArrayList<>();
+        List<ClinicalPatientData> cultureRows = new ArrayList<>();
         ClinicalPatientData firstCultureTemplate = null;
 
         for (ClinicalPatientData item : items) {
             if (culture.equals(item.getTestSection())) {
-                String type = item.getBacterioRowType();
-                if ("TEST".equals(type) || type == null) {
-                    cultureTests.add(item);
-                    if (firstCultureTemplate == null) {
-                        firstCultureTemplate = item;
-                    }
-                } else {
-                    cultureOrganisms.add(item);
+                cultureRows.add(item);
+                if (firstCultureTemplate == null) {
+                    firstCultureTemplate = item;
                 }
             } else {
                 nonCulture.add(item);
             }
         }
 
-        if (cultureTests.isEmpty() && cultureOrganisms.isEmpty()) {
+        if (cultureRows.isEmpty()) {
             return items;
         }
 
-        int organismCount = 0;
-        for (ClinicalPatientData item : cultureOrganisms) {
-            if ("ORGANISM".equals(item.getBacterioRowType())) {
-                organismCount++;
+        String inProgressMsg = MessageUtil.getMessage("report.test.status.inProgress");
+
+        // Group culture rows by cultureKey while preserving the order in which the
+        // root TEST rows appeared. Rows with no cultureKey (untagged) are kept in a
+        // dedicated "" group at the end.
+        java.util.LinkedHashMap<String, List<ClinicalPatientData>> rootByKey = new java.util.LinkedHashMap<>();
+        java.util.LinkedHashMap<String, List<ClinicalPatientData>> organismsByKey = new java.util.LinkedHashMap<>();
+        java.util.LinkedHashMap<String, ClinicalPatientData> firstRootByKey = new java.util.LinkedHashMap<>();
+        List<ClinicalPatientData> untaggedTests = new ArrayList<>();
+
+        for (ClinicalPatientData item : cultureRows) {
+            String type = item.getBacterioRowType();
+            String key = item.getCultureKey();
+            boolean isRoot = "TEST".equals(type) || type == null;
+            if (isRoot) {
+                if (key == null || key.isEmpty()) {
+                    untaggedTests.add(item);
+                    continue;
+                }
+                rootByKey.computeIfAbsent(key, k -> new ArrayList<>()).add(item);
+                firstRootByKey.putIfAbsent(key, item);
+            } else {
+                if (key == null || key.isEmpty()) {
+                    // Defensive: organisms without a cultureKey go to the trailing group
+                    organismsByKey.computeIfAbsent("", k -> new ArrayList<>()).add(item);
+                } else {
+                    organismsByKey.computeIfAbsent(key, k -> new ArrayList<>()).add(item);
+                }
             }
         }
 
-        if (firstCultureTemplate != null) {
-            ClinicalPatientData countRow = new ClinicalPatientData(firstCultureTemplate);
+        // Build the ordered culture output: for each culture key in TEST-appearance
+        // order, emit: [root TEST rows] -> [Nombre de germes] -> [organisms+antibiograms]
+        List<ClinicalPatientData> orderedCulture = new ArrayList<>();
+        java.util.Set<String> emittedKeys = new java.util.LinkedHashSet<>();
+        boolean firstCultureBlock = true;
+
+        for (java.util.Map.Entry<String, List<ClinicalPatientData>> entry : rootByKey.entrySet()) {
+            String key = entry.getKey();
+            List<ClinicalPatientData> tests = entry.getValue();
+            ClinicalPatientData template = firstRootByKey.get(key);
+            List<ClinicalPatientData> organisms = organismsByKey.getOrDefault(key, java.util.Collections.emptyList());
+            int organismCount = 0;
+            for (ClinicalPatientData o : organisms) {
+                if ("ORGANISM".equals(o.getBacterioRowType())) {
+                    organismCount++;
+                }
+            }
+
+            // Insert a vertical spacer before each subsequent culture block so the
+            // root culture TEST row doesn't touch the previous antibiogram table.
+            if (!firstCultureBlock) {
+                ClinicalPatientData spacer = new ClinicalPatientData(template);
+                spacer.setTestSection(culture);
+                spacer.setPanelName(null);
+                spacer.setBacterioRowType("CULTURE_SEPARATOR");
+                spacer.setIsBacterioParentTest(false);
+                spacer.setParentMarker(false);
+                spacer.setTestName("");
+                spacer.setResult("");
+                spacer.setSeparator(false);
+                spacer.setCultureKey(key);
+                orderedCulture.add(spacer);
+            }
+            firstCultureBlock = false;
+
+            orderedCulture.addAll(tests);
+
+            // "Nombre de germes" row for this culture
+            ClinicalPatientData countRow = new ClinicalPatientData(template);
             countRow.setTestSection(culture);
             countRow.setPanelName(null);
             countRow.setBacterioRowType("TEST");
             countRow.setIsBacterioParentTest(false);
             countRow.setParentMarker(false);
             countRow.setTestName("Nombre de germes");
-            // If the culture root test is not biologically validated yet (its result is the
-            // "in progress" placeholder set by setEmptyResult), the germ count is not
-            // meaningful — display "En cours" instead of the raw number.
-            String inProgressMsg = MessageUtil.getMessage("report.test.status.inProgress");
-            boolean cultureInProgress = inProgressMsg != null
-                    && inProgressMsg.equals(firstCultureTemplate.getResult());
+            boolean cultureInProgress = inProgressMsg != null && inProgressMsg.equals(template.getResult());
             countRow.setResult(cultureInProgress ? inProgressMsg : String.valueOf(organismCount));
             countRow.setSeparator(false);
-            cultureTests.add(countRow);
+            countRow.setCultureKey(key);
+            orderedCulture.add(countRow);
+
+            orderedCulture.addAll(organisms);
+            emittedKeys.add(key);
         }
 
-        // Append a LEGEND row at the very end of the culture section so the JRXML can
-        // render the S/I/R legend once after all antibiograms.
-        if (!cultureOrganisms.isEmpty() && firstCultureTemplate != null) {
+        // Tail group for any untagged rows (root tests without a cultureKey)
+        if (!untaggedTests.isEmpty()) {
+            orderedCulture.addAll(untaggedTests);
+        }
+        // Any organisms whose cultureKey didn't match a root TEST (defensive)
+        for (java.util.Map.Entry<String, List<ClinicalPatientData>> entry : organismsByKey.entrySet()) {
+            if (emittedKeys.contains(entry.getKey())) continue;
+            orderedCulture.addAll(entry.getValue());
+        }
+
+        // Append a single LEGEND row at the very end so the JRXML renders S/I/R once.
+        boolean hasAnyOrganisms = organismsByKey.values().stream().anyMatch(l -> !l.isEmpty());
+        if (hasAnyOrganisms && firstCultureTemplate != null) {
             ClinicalPatientData legendRow = new ClinicalPatientData(firstCultureTemplate);
             legendRow.setTestSection(culture);
             legendRow.setPanelName(null);
@@ -939,13 +1010,12 @@ public class BacterioPatientReport extends PatientReport implements IReportCreat
             legendRow.setTestName("");
             legendRow.setResult("");
             legendRow.setSeparator(false);
-            cultureOrganisms.add(legendRow);
+            orderedCulture.add(legendRow);
         }
 
         List<ClinicalPatientData> result = new ArrayList<>(items.size() + 2);
         result.addAll(nonCulture);
-        result.addAll(cultureTests);
-        result.addAll(cultureOrganisms);
+        result.addAll(orderedCulture);
         return result;
     }
 

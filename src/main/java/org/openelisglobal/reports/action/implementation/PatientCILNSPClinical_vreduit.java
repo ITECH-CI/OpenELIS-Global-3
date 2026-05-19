@@ -138,7 +138,17 @@ public class PatientCILNSPClinical_vreduit extends PatientReport implements IRep
                 Constants.ROLE_REPORTS);
         List<ClinicalPatientData> currentSampleReportItems = new ArrayList<>(filteredAnalysisList.size());
         currentConclusion = null;
+        // Skip canceled analyses entirely unless the showAuditOnPatientReport site
+        // config is enabled.
+        boolean showAudit = ConfigurationProperties.getInstance().isPropertyValueEqual(
+                Property.SHOW_AUDIT_ON_PATIENT_REPORT, "true");
+        String canceledStatusId = SpringContext.getBean(IStatusService.class)
+                .getStatusID(AnalysisStatus.Canceled);
         for (Analysis analysis : filteredAnalysisList) {
+            if (!showAudit && canceledStatusId != null
+                    && canceledStatusId.equals(analysis.getStatusId())) {
+                continue;
+            }
             if (!analysis.getTest().isInLabOnly()) {
                 boolean hasParentResult = analysis.getParentResult() != null;
                 sampleSet.add(analysis.getSampleItem());

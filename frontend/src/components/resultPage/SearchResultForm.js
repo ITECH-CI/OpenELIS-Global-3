@@ -1,11 +1,10 @@
-import { ArrowLeft, ArrowRight, Copy, ErrorFilled } from "@carbon/icons-react";
+import { ArrowLeft, ArrowRight, Copy } from "@carbon/icons-react";
 import {
   Button,
   Checkbox,
   Column,
   Form,
   Grid,
-  InlineLoading,
   Link,
   Loading,
   Pagination,
@@ -48,7 +47,6 @@ function ResultSearchPage() {
   const [resultForm, setResultForm] = useState(originalResultForm);
   const [searchBy, setSearchBy] = useState({ type: "", doRange: false });
   const [param, setParam] = useState("&accessionNumber=");
-  const [searchUrl, setSearchUrl] = useState("");
 
   const setResults = (resultForm) => {
     setOriginalResultForm(resultForm);
@@ -61,14 +59,12 @@ function ResultSearchPage() {
         setParam={setParam}
         setSearchBy={setSearchBy}
         setResults={setResults}
-        setSearchUrl={setSearchUrl}
       />
       <SearchResults
         extraParams={param}
         searchBy={searchBy}
         results={resultForm}
         setResultForm={setResultForm}
-        searchUrl={searchUrl}
         refreshOnSubmit={true}
       />
     </>
@@ -203,7 +199,6 @@ export function SearchResultForm(props) {
       "&finished=" +
       false;
     setUrl(searchEndPoint);
-    props.setSearchUrl?.(searchEndPoint);
     props.setSearchBy?.(searchBy);
     switch (searchBy.type) {
       case "unit":
@@ -783,12 +778,11 @@ export function SearchResults(props) {
 
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(100);
-  const [labNoFilter, setLabNoFilter] = useState("");
-  const [filteredResults, setFilteredResults] = useState(null);
-  const [isFilterLoading, setIsFilterLoading] = useState(false);
   const [acceptAsIs, setAcceptAsIs] = useState([]);
   const [referalOrganizations, setReferalOrganizations] = useState([]);
   const [methods, setMethods] = useState([]);
+  // testId (string) -> [methodId (string), ...] active mappings
+  const [methodsByTest, setMethodsByTest] = useState({});
   const [referralReasons, setReferralReasons] = useState([]);
   const [rejectReasons, setRejectReasons] = useState([]);
   const [rejectedItems, setRejectedItems] = useState({});
@@ -808,6 +802,9 @@ export function SearchResults(props) {
       loadReferalOrganizations,
     );
     getFromOpenElisServer("/rest/displayList/METHODS", loadMethods);
+    getFromOpenElisServer("/rest/method-test-map/all", (res) => {
+      if (res && typeof res === "object") setMethodsByTest(res);
+    });
     getFromOpenElisServer(
       "/rest/displayList/REFERRAL_REASONS",
       loadReferalReasons,
@@ -890,42 +887,6 @@ export function SearchResults(props) {
       setValidationState(newValidationState);
     }
   }, [props.results]);
-
-  useEffect(() => {
-    setLabNoFilter("");
-    setFilteredResults(null);
-    setPage(1);
-  }, [props.results]);
-
-  useEffect(() => {
-    if (labNoFilter === "") {
-      setFilteredResults(null);
-      setIsFilterLoading(false);
-      return;
-    }
-    if (!props.searchUrl) return;
-    setIsFilterLoading(true);
-    const timer = setTimeout(() => {
-      const url = props.searchUrl.replace(
-        /labNumber=[^&]*/,
-        "labNumber=" + encodeURIComponent(labNoFilter),
-      );
-      getFromOpenElisServer(url, (results) => {
-        if (results?.testResult) {
-          var i = 0;
-          results.testResult.forEach((item) => (item.id = "" + i++));
-          setFilteredResults(results);
-        } else {
-          setFilteredResults({ testResult: [] });
-        }
-        setIsFilterLoading(false);
-      });
-    }, 400);
-    return () => {
-      clearTimeout(timer);
-      setIsFilterLoading(false);
-    };
-  }, [labNoFilter, props.searchUrl]);
 
   const loadReferalOrganizations = (values) => {
     if (componentMounted.current) {
@@ -1385,13 +1346,22 @@ export function SearchResults(props) {
             value={data.testMethod}
           >
             <SelectItem text="" value="" />
-            {methods.map((method, method_index) => (
-              <SelectItem
-                text={method.value}
-                value={method.id}
-                key={method_index}
-              />
-            ))}
+            {(() => {
+              const allowed = methodsByTest[String(data.testId)];
+              const filtered =
+                allowed && allowed.length > 0
+                  ? methods.filter((m) =>
+                      allowed.includes(String(m.id)),
+                    )
+                  : methods;
+              return filtered.map((method, method_index) => (
+                <SelectItem
+                  text={method.value}
+                  value={method.id}
+                  key={method_index}
+                />
+              ));
+            })()}
           </Select>
         </Column>
         <Column lg={1}></Column>
@@ -1831,68 +1801,109 @@ export function SearchResults(props) {
             }}
           />
         ) : (
-          <>
-            <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "8px", width: "100%" }}>
-              <div style={{ width: "250px" }}>
-                <div style={{ position: "relative" }}>
-                  <TextInput
-                    id="labNoFilter"
-                    labelText=""
-                    placeholder={intl.formatMessage({ id: "search.label.accession" })}
-                    value={labNoFilter}
-                    onChange={(e) => setLabNoFilter(e.target.value)}
-                  />
-                  {isFilterLoading && (
-                    <div style={{ position: "absolute", right: "8px", top: "50%", transform: "translateY(-50%)", display: "flex", alignItems: "center" }}>
-                      <Loading small withOverlay={false} active />
-                    </div>
-                  )}
-                </div>
-                {isFilterLoading && (
-                  <InlineLoading description="Recherche en cours..." status="active" style={{ marginTop: "4px" }} />
-                )}
-                {!isFilterLoading && filteredResults !== null && filteredResults.testResult?.length === 0 && (
-                  <div style={{ display: "flex", alignItems: "center", gap: "4px", marginTop: "4px", color: "#da1e28" }}>
-                    <ErrorFilled size={16} />
-                    <span style={{ fontSize: "12px" }}>Aucun résultat trouvé</span>
-                  </div>
-                )}
-              </div>
-            </div>
-            <Formik
-              initialValues={SearchResultFormValues}
-              //validationSchema={}
-              onSubmit
-              onChange
-            >
-              {({
-                // values,
-                // errors,
-                // touched,
-                handleChange,
-                //handleBlur,
-                // handleSubmit,
-              }) => (
-                <Form
-                  onChange={handleChange}
-                  //onBlur={handleBlur}
-                >
-                  <DataTable
-                    data={(filteredResults ?? props.results)?.testResult?.slice(
-                      (page - 1) * pageSize,
-                      page * pageSize,
-                    )}
-                    columns={columns}
-                    isSortable
-                    expandableRows
-                    expandableRowsComponent={renderReferral}
-                  ></DataTable>
-                  <Pagination
-                    onChange={handlePageChange}
-                    page={page}
-                    pageSize={pageSize}
-                    pageSizes={[10, 20, 30, 50, 100]}
-                    totalItems={(filteredResults ?? props.results)?.testResult?.length}
+          <Formik
+            initialValues={SearchResultFormValues}
+            //validationSchema={}
+            onSubmit
+            onChange
+          >
+            {({
+              // values,
+              // errors,
+              // touched,
+              handleChange,
+              //handleBlur,
+              // handleSubmit,
+            }) => (
+              <Form
+                onChange={handleChange}
+                //onBlur={handleBlur}
+              >
+                <DataTable
+                  data={(() => {
+                    const all = props.results?.testResult || [];
+                    // Hide conditional child rows whose parent (same sample item)
+                    // has not yet received the triggering result.
+                    const visible = all.filter((row) => {
+                      if (!row.parentTestId) return true;
+                      const parent = all.find(
+                        (p) =>
+                          String(p.testId) === String(row.parentTestId) &&
+                          p.accessionNumber === row.accessionNumber &&
+                          String(p.sequenceNumber) === String(row.sequenceNumber),
+                      );
+                      if (!parent) return true;
+                      const expected = parent.parentTriggerValue;
+                      if (!expected) return true;
+                      const current = parent.resultValue;
+                      return current != null && String(current) === String(expected);
+                    });
+                    // Reorder so each visible conditional child appears
+                    // immediately AFTER its parent row.
+                    const ordered = [];
+                    const placedIds = new Set();
+                    const childrenByParent = new Map();
+                    visible.forEach((row) => {
+                      if (row.parentTestId) {
+                        const parent = visible.find(
+                          (p) =>
+                            String(p.testId) === String(row.parentTestId) &&
+                            p.accessionNumber === row.accessionNumber &&
+                            String(p.sequenceNumber) === String(row.sequenceNumber),
+                        );
+                        if (parent) {
+                          const key = parent.id;
+                          if (!childrenByParent.has(key)) {
+                            childrenByParent.set(key, []);
+                          }
+                          childrenByParent.get(key).push(row);
+                          return;
+                        }
+                      }
+                    });
+                    visible.forEach((row) => {
+                      if (placedIds.has(row.id)) return;
+                      if (row.parentTestId) {
+                        // Children are inserted after their parent below; if a child has
+                        // no parent in the visible set (edge case), append it as-is.
+                        const hasParent = visible.some(
+                          (p) =>
+                            String(p.testId) === String(row.parentTestId) &&
+                            p.accessionNumber === row.accessionNumber &&
+                            String(p.sequenceNumber) === String(row.sequenceNumber),
+                        );
+                        if (hasParent) return;
+                      }
+                      ordered.push(row);
+                      placedIds.add(row.id);
+                      const kids = childrenByParent.get(row.id) || [];
+                      kids.forEach((kid) => {
+                        if (!placedIds.has(kid.id)) {
+                          ordered.push(kid);
+                          placedIds.add(kid.id);
+                        }
+                      });
+                    });
+                    // Append orphan children (no matching parent in visible set)
+                    visible.forEach((row) => {
+                      if (!placedIds.has(row.id)) {
+                        ordered.push(row);
+                        placedIds.add(row.id);
+                      }
+                    });
+                    return ordered.slice((page - 1) * pageSize, page * pageSize);
+                  })()}
+                  columns={columns}
+                  isSortable
+                  expandableRows
+                  expandableRowsComponent={renderReferral}
+                ></DataTable>
+                <Pagination
+                  onChange={handlePageChange}
+                  page={page}
+                  pageSize={pageSize}
+                  pageSizes={[10, 20, 30, 50, 100]}
+                  totalItems={props.results?.testResult?.length}
                   forwardText={intl.formatMessage({ id: "pagination.forward" })}
                   backwardText={intl.formatMessage({
                     id: "pagination.backward",
@@ -1941,7 +1952,6 @@ export function SearchResults(props) {
               </Form>
             )}
           </Formik>
-          </>
         )}
       </>
     </>

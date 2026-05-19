@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+    <!--
+        Resynchronise toutes les séquences `<table>_seq` du schéma `clinlims`
+        sur MAX(table.id)+1.
+
+        Pourquoi: certaines migrations historiques ont fait des INSERT manuels
+        en utilisant des IDs explicites (ou nextval() puis INSERT séparé) sans
+        avancer la séquence côté valeur courante. Conséquence: Hibernate
+        appelle nextval() et obtient une valeur déjà utilisée -> violation de
+        PK (ex: system_module_seq, system_role_module_seq lors d'un
+        MethodCreate). Cette migration sécurise les autres environnements.
+
+        Marqué runAlways=true pour s'exécuter à chaque déploiement (idempotent,
+        ne fait que régler les compteurs).
+    -->
+    <changeSet id="resync-all-sequences" author="pkomena" runAlways="true">
+        <comment>Resync clinlims.*_seq sequences on MAX(id)+1 to avoid PK collisions</comment>
+        <sql dbms="postgresql" splitStatements="false"><![CDATA[
+DO $$
+DECLARE
+    rec   RECORD;
+    max_id BIGINT;
+    sql_stmt TEXT;
+BEGIN
+    FOR rec IN
+        SELECT s.sequence_name,
+               replace(s.sequence_name, '_seq', '') AS table_name
+        FROM information_schema.sequences s
+        WHERE s.sequence_schema = 'clinlims'
+          AND s.sequence_name LIKE '%\_seq' ESCAPE '\'
+    LOOP
+        -- Skip sequences whose target table doesn't exist or has no `id` column
+        IF NOT EXISTS (
+            SELECT 1 FROM information_schema.columns c
+            WHERE c.table_schema = 'clinlims'
+              AND c.table_name = rec.table_name
+              AND c.column_name = 'id'
+        ) THEN
+            CONTINUE;
+        END IF;
+
+        sql_stmt := format(
+            'SELECT COALESCE(MAX(id::bigint), 0) FROM clinlims.%I',
+            rec.table_name
+        );
+        EXECUTE sql_stmt INTO max_id;
+
+        -- setval to MAX(id)+1; if table empty, set to 1 with is_called=false so next nextval() = 1
+        IF max_id = 0 THEN
+            PERFORM setval(format('clinlims.%I', rec.sequence_name), 1, false);
+        ELSE
+            PERFORM setval(format('clinlims.%I', rec.sequence_name), max_id + 1, false);
+        END IF;
+    END LOOP;
+END $$;
+        ]]></sql>
+    </changeSet>
+
+</databaseChangeLog>
