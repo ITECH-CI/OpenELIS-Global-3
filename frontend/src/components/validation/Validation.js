@@ -299,11 +299,6 @@ const Validation = (props) => {
     const bacteriologySamples = new Map(); // accessionNumber -> { analysisId, results }
     const standardResults = [];
 
-    console.log(
-      "[Validation] Total results to process:",
-      props.results.resultList.length,
-    );
-
     props.results.resultList.forEach((result) => {
       if (isBacteriologyResult(result)) {
         const key = result.accessionNumber;

@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+    <changeSet id="add_arv_treatment_regime_category" author="adiakite">
+        <comment>Add ARV Treatment Regime dictionary category if not present</comment>
+        <sql>
+            INSERT INTO clinlims.dictionary_category (id, name, description, lastupdated)
+            SELECT nextval('clinlims.dictionary_category_seq'), 'ARV Treatment Regime List', 'Liste des régimes ARV', now()
+            WHERE NOT EXISTS (SELECT 1 FROM clinlims.dictionary_category WHERE name = 'ARV Treatment Regime List');
+        </sql>
+    </changeSet>
+
+    <changeSet id="add_arv_treatment_regime_entries" author="adiakite">
+        <comment>Add ARV Treatment Regime dictionary entries</comment>
+        <sql>
+            WITH category AS (
+                SELECT id FROM clinlims.dictionary_category WHERE name = 'ARV Treatment Regime List' LIMIT 1
+            )
+            INSERT INTO clinlims.dictionary (id, is_active, dict_entry, lastupdated, dictionary_category_id, display_key, sort_order)
+            SELECT
+                nextval('clinlims.dictionary_seq'),
+                'Y',
+                entry,
+                now(),
+                (SELECT id FROM category),
+                'dictionary.arv.regime.' || lower(replace(replace(replace(replace(entry, ' ', '_'), '/', '_'), '.', ''), '-', '_')),
+                sort_ord
+            FROM (VALUES
+                ('ABC 3TC EFV', 1),
+                ('ABC 3TC IDV/r', 2),
+                ('ABC 3TC LPV/r', 3),
+                ('ABC 3TC NVP', 4),
+                ('ABC 3TC SQV/r', 5),
+                ('ABC DDI EFV', 6),
+                ('ABC DDI IDV/r', 7),
+                ('ABC DDI LPV/r', 8),
+                ('ABC DDI SQV/r', 9),
+                ('AZT 3TC DDI', 10),
+                ('AZT 3TC IDV', 11),
+                ('AZT 3TC IDV/r', 12),
+                ('AZT 3TC NFV', 13),
+                ('AZT 3TC NVP', 14),
+                ('AZT 3TC SQV', 15),
+                ('AZT 3TC SQV/r', 16),
+                ('AZT 3TC TDF', 17),
+                ('AZT ABC DDI', 18),
+                ('AZT DDI EFV', 19),
+                ('AZT DDI IDV/r', 20),
+                ('AZT DDI LPV/r', 21),
+                ('AZT DDI SQV/r', 22),
+                ('AZT TDF FTC', 23),
+                ('DDI 3TC EFV', 24),
+                ('DDI 3TC IDV/r', 25),
+                ('DDI 3TC LPV/r', 26),
+                ('DDI 3TC NVP', 27),
+                ('DDI 3TC SQV/r', 28),
+                ('TDF 3TC EFV', 29),
+                ('TDF 3TC IDV/r', 30),
+                ('TDF 3TC LPV/r', 31),
+                ('TDF 3TC NVP', 32),
+                ('TDF 3TC SQV/r', 33),
+                ('TDF DDI IDV/r', 34),
+                ('TDF DDI LPV/r', 35),
+                ('TDF FTC ABC', 36),
+                ('TDF FTC LPV/r', 37),
+                ('TDF FTC NVP', 38),
+                ('RLT', 39),
+                ('AZT 3TC ABC', 40),
+                ('AZT 3TC EFV', 41),
+                ('TDF 3TC RLT LPV/r', 42),
+                ('TDF RLT ATZ/r', 43),
+                ('TDF 3TC EFV DRV RLT/r', 44),
+                ('TDF DRV RLT/r', 45),
+                ('TDF 3TC DRV RLT/r', 46),
+                ('TDF 3TC DRV/r', 47),
+                ('DRV RLT/r EFV', 48),
+                ('AZT 3TC DRV/r', 49),
+                ('AZT 3TC DRV RLT/r', 50),
+                ('ABC 3TC DRV/r', 51),
+                ('ABC 3TC DRV RLT/r', 52),
+                ('TDF ABC 3TC ATZ/r', 53),
+                ('TDF 3TC EFV LPV/r', 54),
+                ('TDF 3TC EFV ATZ/r', 55),
+                ('LPV/r SQV/r', 56),
+                ('AZT 3TC LPV/r', 57),
+                ('D4T 3TC ABC', 58),
+                ('D4T 3TC EFV', 59),
+                ('D4T 3TC IDV/r', 60),
+                ('D4T 3TC IDV', 61),
+                ('D4T 3TC LPV/r', 62),
+                ('D4T 3TC NFV', 63),
+                ('D4T 3TC NVP', 64),
+                ('D4T 3TC SQV/r', 65),
+                ('D4T 3TC SQV', 66),
+                ('D4T 3TC DDI', 67),
+                ('D4T DDI EFV', 68),
+                ('D4T DDI IDV/r', 69),
+                ('D4T DDI LPV/r', 70),
+                ('TDF FTC EFV', 71),
+                ('AZT ABC LPV/r', 72),
+                ('LPV/r 3TC EFV', 73),
+                ('AZT 3TC RLT', 74),
+                ('AZT 3TC LPV/r/r', 75),
+                ('AZT 3TC NVP TDF', 76),
+                ('AZT 3TC ATZ/r', 77),
+                ('AZT 3TC TDF ATZ/r', 78),
+                ('AZT 3TC TDF SQV/r', 79),
+                ('ATZ/RTV EFV', 80),
+                ('ATZ/r LPV/r', 81),
+                ('EFV LPV/r', 82),
+                ('LPV/r', 83),
+                ('AZT 3TC NVP LPV/r', 84),
+                ('AZT 3TC TDF LPV/r', 85),
+                ('AZT 3TC TDF LPV/r/r', 86),
+                ('AZT 3TC ABC LPV/r', 87),
+                ('TDF LPV/r EFV', 88),
+                ('TDF 3TC LPV/r/r', 89),
+                ('TDF LPV/RTV EFV', 90),
+                ('TDF 3TC EFV AZT 3TC', 91),
+                ('ABC 3TC ATZ/r', 92),
+                ('TDF 3TC ATZ/r', 93),
+                ('AZT FTC LPV/r', 94),
+                ('TDF ABC LPV/r', 95),
+                ('AZT 3TC ATV/r', 96),
+                ('TDF 3TC ATV/r', 97),
+                ('TDF FTC ATV/r', 98),
+                ('TDF 3TC DTG', 99),
+                ('AZT 3TC DTG', 100),
+                ('ABC 3TC DTG', 101),
+                ('DDI 3TC DTG', 102),
+                ('TDF FTC DTG', 103),
+                ('TDF 3TC DTG DTG', 104),
+                ('ATZ-r 3TC DTG', 105),
+                ('TDF 3TC ABC', 106),
+                ('ABC 3TC AZT', 107),
+                ('ABC 3TC ATV/r', 108),
+                ('AZT 3TC LPV/r/RTV', 109),
+                ('TDF 3TC LPV/r/RTV', 110)
+            ) AS data(entry, sort_ord)
+            WHERE NOT EXISTS (
+                SELECT 1 FROM clinlims.dictionary d
+                JOIN category c ON d.dictionary_category_id = c.id
+                WHERE d.dict_entry = data.entry
+            );
+        </sql>
+    </changeSet>
+
+</databaseChangeLog>

@@ -5,6 +5,7 @@ import {
   Form,
   FormLabel,
   Heading,
+  InlineLoading,
   Row,
   Section,
   Stack,
@@ -24,7 +25,7 @@ import { NotificationContext } from "../layout/Layout";
 import { NotificationKinds } from "../common/CustomNotification";
 import { format } from "date-fns";
 import CustomDatePicker from "../common/CustomDatePicker";
-import { ArrowLeft, ArrowRight } from "@carbon/react/icons";
+import { ArrowLeft, ArrowRight, ErrorFilled } from "@carbon/react/icons";
 
 const SearchForm = (props) => {
   const { setNotificationVisible, addNotification } =
@@ -43,6 +44,10 @@ const SearchForm = (props) => {
   );
   const [testDate, setTestDate] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [labNoFilter, setLabNoFilter] = useState("");
+  const [isFilterLoading, setIsFilterLoading] = useState(false);
+  const [noFilterResult, setNoFilterResult] = useState(false);
+  const [mainNoResults, setMainNoResults] = useState(false);
   const [nextPage, setNextPage] = useState(null);
   const [previousPage, setPreviousPage] = useState(null);
   const [pagination, setPagination] = useState(false);
@@ -73,6 +78,7 @@ const SearchForm = (props) => {
         }
       }
       if (data?.resultList?.length > 0) {
+        setMainNoResults(false);
         const newResultsList = data.resultList.map((data, id) => {
           let tempData = { ...data };
           tempData.id = id;
@@ -84,17 +90,11 @@ const SearchForm = (props) => {
         }));
       } else {
         setIsLoading(false);
+        setMainNoResults(true);
         setSearchResults((prevState) => ({
           ...prevState,
           resultList: [],
         }));
-
-        addNotification({
-          kind: NotificationKinds.warning,
-          title: intl.formatMessage({ id: "notification.title" }),
-          message: intl.formatMessage({ id: "validation.search.noresult" }),
-        });
-        setNotificationVisible(true);
       }
     }
   };
@@ -103,7 +103,45 @@ const SearchForm = (props) => {
     props.setResults(searchResults);
   }, [searchResults]);
 
+  useEffect(() => {
+    if (labNoFilter === "") {
+      if (searchResults) props.setResults(searchResults);
+      setNoFilterResult(false);
+      setIsFilterLoading(false);
+      return;
+    }
+    setIsFilterLoading(true);
+    setNoFilterResult(false);
+    const timer = setTimeout(() => {
+      const encodedLabNo = encodeURIComponent(labNoFilter);
+      const filterUrl = url
+        ? url.replace(/accessionNumber=[^&]*/, "accessionNumber=" + encodedLabNo)
+        : "/rest/AccessionValidation?accessionNumber=" + encodedLabNo + "&unitType=&date=&doRange=" + doRange;
+      getFromOpenElisServer(filterUrl, (data) => {
+        if (data?.resultList?.length > 0) {
+          const newResultsList = data.resultList.map((item, id) => ({
+            ...item,
+            id,
+          }));
+          props.setResults({ ...data, resultList: newResultsList });
+          setNoFilterResult(false);
+        } else {
+          props.setResults({ resultList: [] });
+          setNoFilterResult(true);
+        }
+        setIsFilterLoading(false);
+      });
+    }, 400);
+    return () => {
+      clearTimeout(timer);
+      setIsFilterLoading(false);
+    };
+  }, [labNoFilter, url]);
+
   const handleSubmit = (values) => {
+    setLabNoFilter("");
+    setNoFilterResult(false);
+    setMainNoResults(false);
     setNextPage(null);
     setPreviousPage(null);
     setPagination(false);
@@ -369,11 +407,46 @@ const SearchForm = (props) => {
                   })}
               </Select>
             </Column>
-            <Column lg={10} />
+            <Column lg={4} />
+            <Column lg={6} md={8} sm={4}>
+              <div>
+                <div style={{ position: "relative" }}>
+                  <TextInput
+                    id="labNoFilterValidation"
+                    labelText={intl.formatMessage({ id: "search.label.accession" })}
+                    placeholder={intl.formatMessage({ id: "search.label.accession" })}
+                    value={labNoFilter}
+                    onChange={(e) => setLabNoFilter(e.target.value)}
+                  />
+                  {isFilterLoading && (
+                    <div style={{ position: "absolute", right: "8px", top: "50%", transform: "translateY(-50%)", display: "flex", alignItems: "center" }}>
+                      <Loading small withOverlay={false} active />
+                    </div>
+                  )}
+                </div>
+                {isFilterLoading && (
+                  <InlineLoading description="Recherche en cours..." status="active" style={{ marginTop: "4px" }} />
+                )}
+                {!isFilterLoading && noFilterResult && (
+                  <div style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "6px", padding: "8px 12px", backgroundColor: "#fff1f1", border: "1px solid #da1e28", borderRadius: "4px", color: "#da1e28" }}>
+                    <ErrorFilled size={20} />
+                    <span style={{ fontSize: "14px", fontWeight: "500" }}>Aucun résultat pour ce Lab No</span>
+                  </div>
+                )}
+              </div>
+            </Column>
           </Grid>
         </>
       )}
 
+      {mainNoResults && (
+        <div style={{ display: "flex", alignItems: "center", gap: "8px", margin: "12px 0", padding: "12px 16px", backgroundColor: "#fff1f1", border: "1px solid #da1e28", borderRadius: "4px", color: "#da1e28" }}>
+          <ErrorFilled size={20} />
+          <span style={{ fontSize: "14px", fontWeight: "500" }}>
+            {intl.formatMessage({ id: "validation.search.noresult" })}
+          </span>
+        </div>
+      )}
       <>
         {pagination && (
           <Grid>

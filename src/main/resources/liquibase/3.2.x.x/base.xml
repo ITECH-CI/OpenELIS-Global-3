@@ -80,6 +80,8 @@
     <include relativeToChangelogFile="true"
         file="add_culture_urethrales_to_ecb_pu_panel.xml" />
     <include relativeToChangelogFile="true"
+        file="add_arv_treatment_regime_dictionary.xml" />
+    <include relativeToChangelogFile="true"
         file="resync_all_sequences.xml" />
     <include relativeToChangelogFile="true"
         file="create_test_method_table.xml" />
