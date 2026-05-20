@@ -24,6 +24,7 @@ import {
   postToOpenElisServer,
 } from "../utils/Utils";
 import BacteriologyValidation from "../bacteriology/BacteriologyValidation";
+import "../Style.css";
 
 const Validation = (props) => {
   const componentMounted = useRef(false);
@@ -742,10 +743,25 @@ const Validation = (props) => {
                       <h6 style={{ marginBottom: "10px", fontWeight: "bold" }}>
                         <FormattedMessage id="validation.sampleInterpretation.label" />
                       </h6>
-                      {getUniqueSamples().map((sample) => (
+                      {getUniqueSamples().map((sample) => {
+                        const isSearched =
+                          props.searchedAccessionNumber &&
+                          sample.accessionNumber &&
+                          sample.accessionNumber.split("-")[0] ===
+                            props.searchedAccessionNumber.split("-")[0];
+                        return (
                         <div
                           key={sample.sampleId}
-                          style={{ marginBottom: "15px" }}
+                          style={{
+                            marginBottom: "15px",
+                            padding: "10px",
+                            borderRadius: "4px",
+                            ...(isSearched && {
+                              backgroundColor: "#fff3cd",
+                              borderLeft: "4px solid #f0ad4e",
+                              animation: "labno-pulse 1.6s ease-in-out 3",
+                            }),
+                          }}
                         >
                           <label
                             style={{
@@ -780,7 +796,8 @@ const Validation = (props) => {
                             style={{ width: "100%" }}
                           />
                         </div>
-                      ))}
+                        );
+                      })}
                     </Column>
                   </Grid>
                 )}
@@ -795,11 +812,27 @@ const Validation = (props) => {
                     )}
                     columns={columns}
                     isSortable
+                    conditionalRowStyles={
+                      props.searchedAccessionNumber
+                        ? [
+                            {
+                              when: (row) =>
+                                row.accessionNumber &&
+                                row.accessionNumber.split("-")[0] ===
+                                  props.searchedAccessionNumber.split("-")[0],
+                              style: {
+                                backgroundColor: "#fff3cd",
+                                borderLeft: "4px solid #f0ad4e",
+                                animation: "labno-pulse 1.6s ease-in-out 3",
+                              },
+                            },
+                          ]
+                        : []
+                    }
                     customStyles={{
                       cells: {
                         style: {
                           "&:nth-child(5)": {
-                            // Target the result column (5th column)
                             paddingLeft: "0px",
                             paddingRight: "0px",
                           },

@@ -106,9 +106,13 @@ const SearchForm = (props) => {
   useEffect(() => {
     if (labNoFilter === "") {
       if (searchResults) props.setResults(searchResults);
+      if (props.setSearchedAccessionNumber) props.setSearchedAccessionNumber("");
       setNoFilterResult(false);
       setIsFilterLoading(false);
       return;
+    }
+    if (props.setSearchedAccessionNumber) {
+      props.setSearchedAccessionNumber(labNoFilter.split("-")[0]);
     }
     setIsFilterLoading(true);
     setNoFilterResult(false);
@@ -149,6 +153,9 @@ const SearchForm = (props) => {
     var accessionNumber = values.accessionNumber
       ? values.accessionNumber.split("-")[0]
       : "";
+    if (props.setSearchedAccessionNumber) {
+      props.setSearchedAccessionNumber(accessionNumber);
+    }
     var unitType = values.unitType ? values.unitType : "";
     var defaultDate = values.defaultDate ? values.defaultDate : "";
     var date = testDate ? testDate : defaultDate;

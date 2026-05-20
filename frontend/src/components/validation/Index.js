@@ -13,6 +13,7 @@ const Index = () => {
   const { notificationVisible } = useContext(NotificationContext);
   const [results, setResults] = useState({ resultList: [] });
   const [params, setParams] = useState("");
+  const [searchedAccessionNumber, setSearchedAccessionNumber] = useState("");
   return (
     <>
       <PageBreadCrumb breadcrumbs={breadcrumbs} />
@@ -29,8 +30,16 @@ const Index = () => {
       </Grid>
       <div className="orderLegendBody">
         {notificationVisible === true ? <AlertDialog /> : ""}
-        <SearchForm setParams={setParams} setResults={setResults} />
-        <Validation params={params} results={results} />
+        <SearchForm
+          setParams={setParams}
+          setResults={setResults}
+          setSearchedAccessionNumber={setSearchedAccessionNumber}
+        />
+        <Validation
+          params={params}
+          results={results}
+          searchedAccessionNumber={searchedAccessionNumber}
+        />
       </div>
     </>
   );

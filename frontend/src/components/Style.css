@@ -668,3 +668,10 @@ button {
 .result-invalid {
   border: 2px solid red !important;
 }
+
+/* Searched lab number row highlight with pulse animation */
+@keyframes labno-pulse {
+  0%   { background-color: #fff3cd; }
+  50%  { background-color: #ffe082; }
+  100% { background-color: #fff3cd; }
+}
