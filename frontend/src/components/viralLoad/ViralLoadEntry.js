@@ -264,6 +264,7 @@ const ViralLoadEntry = () => {
     EID_INFANT_COTRIMOXAZOLE: [],
     HPV_SAMPLING_METHOD: [],
     SPECIAL_REQUEST_REASONS: [],
+    REFERRING_SITES: [],
   });
   const [arvOrgsByName, setArvOrgsByName] = useState([]);
   const [eidOrgsByCode, setEidOrgsByCode] = useState([]);
@@ -293,6 +294,9 @@ const ViralLoadEntry = () => {
         }
         if (data.patientProperties) {
           setGenders(data.patientProperties.genders || []);
+        }
+        if (data.referralOrganizations) {
+          setDictionaryLists((prev) => ({ ...prev, REFERRING_SITES: data.referralOrganizations }));
         }
       }
       setLoading(false);
@@ -358,6 +362,9 @@ const ViralLoadEntry = () => {
       if (!componentMounted.current) return;
       if (Array.isArray(data)) setDictionaryLists((prev) => ({ ...prev, ARV_REGIMEN_LIST: data }));
     });
+
+
+
 
     return () => { componentMounted.current = false; };
   }, []);
@@ -1477,7 +1484,7 @@ const ViralLoadEntry = () => {
       {fldReceivedDate()}
       {fldReceivedTime()}
       {fldSubjectNumber(7)}
-      {fldSiteSubjectNumber(false)}
+      {fldSiteSubjectNumber(false, true)}
       {fldLabNo(LAB_PREFIXES.InitialARV_Id)}
       {fldGender()}
       {fldBirthDate()}
@@ -1506,7 +1513,7 @@ const ViralLoadEntry = () => {
       {fldReceivedDate()}
       {fldReceivedTime()}
       {fldSubjectNumber(7)}
-      {fldSiteSubjectNumber(false)}
+      {fldSiteSubjectNumber(false, true)}
       {fldLabNo(LAB_PREFIXES.FollowUpARV_Id)}
       {fldGender()}
       {fldBirthDate()}
@@ -1619,7 +1626,7 @@ const ViralLoadEntry = () => {
           />
         </div>
       </Row>
-      {fldSiteSubjectNumber(false)}
+      {fldSiteSubjectNumber(false, true)}
       {fldLabNo(LAB_PREFIXES.EID_Id)}
       <Row
         label={intl.formatMessage({
@@ -2070,7 +2077,7 @@ const ViralLoadEntry = () => {
         />
       </Row>
       {fldSubjectNumber(7)}
-      {fldSiteSubjectNumber(false)}
+      {fldSiteSubjectNumber(false, true)}
       {fldLabNo(LAB_PREFIXES.Indeterminate_Id)}
       {fldGender()}
       {fldBirthDate()}
@@ -2257,7 +2264,7 @@ const ViralLoadEntry = () => {
       {fldReceivedDate()}
       {fldReceivedTime()}
       {fldSubjectNumber(7)}
-      {fldSiteSubjectNumber(false)}
+      {fldSiteSubjectNumber(false, true)}
       {fldBirthDate()}
       {fldAge()}
       {fldGender()}
@@ -2803,7 +2810,7 @@ const ViralLoadEntry = () => {
               name="vl_priorLab"
               label=""
               value={form.observations.priorVLLab}
-              suggestions={arvOrgsByName.map((o) => ({
+              suggestions={dictionaryLists.REFERRING_SITES.map((o) => ({
                 id: o.id,
                 value: o.organizationName || o.value,
               }))}
@@ -2812,7 +2819,7 @@ const ViralLoadEntry = () => {
                 setObs("priorVLLab", val);
               }}
               onSelect={(id) => {
-                const org = arvOrgsByName.find((o) => o.id === id);
+                const org = dictionaryLists.REFERRING_SITES.find((o) => o.id === id);
                 if (org) {
                   setObs("priorVLLab", org.organizationName || org.value);
                 }
