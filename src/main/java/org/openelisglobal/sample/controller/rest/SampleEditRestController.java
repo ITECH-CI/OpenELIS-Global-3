@@ -123,7 +123,7 @@ public class SampleEditRestController extends BaseSampleEntryController {
     @Autowired
     private ObservationHistoryTypeService observationHistoryTypeService;
 
-    @GetMapping(value = "SampleEdit-test", produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = "SampleEdit", produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
     public SampleEditForm showSampleEdit(HttpServletRequest request,
             @RequestParam(required = false) String accessionNumber, @RequestParam(required = false) String patientId)

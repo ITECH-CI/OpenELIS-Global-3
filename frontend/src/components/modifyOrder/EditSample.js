@@ -85,7 +85,11 @@ const normalizeDictionaryOptions = (items, fallback) => {
 
 const buildSelectedItems = (values, options) =>
   (values || [])
-    .map((val) => options.find((opt) => opt.id === val || opt.value === val))
+    .map((val) =>
+      options.find(
+        (opt) => String(opt.id) === String(val) || opt.value === String(val),
+      ),
+    )
     .filter(Boolean);
 
 const renderSelectedTags = (selectedItems, keyPrefix) => {
