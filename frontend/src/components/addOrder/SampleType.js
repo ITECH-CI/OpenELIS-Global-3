@@ -2,9 +2,13 @@ import {
   Checkbox,
   Column,
   ComboBox,
+  FilterableMultiSelect,
   FormGroup,
+  Grid,
   Layer,
   Loading,
+  RadioButton,
+  RadioButtonGroup,
   Search,
   Select,
   SelectItem,
@@ -26,6 +30,80 @@ import { sampleTypeTestsStructure } from "../data/SampleEntryTestsForTypeProvide
 import { ConfigurationContext, NotificationContext } from "../layout/Layout";
 import { getFromOpenElisServer } from "../utils/Utils";
 
+const ANTIBIOTHERAPY_CATEGORY = "THERAPEUTIC_ANTIBIOTICS";
+const CLINICAL_INFO_CATEGORY = "CLINICAL_INFOS";
+const INVASIVE_GESTURES_CATEGORY = "INVASIVE_GESTURES";
+const INDWELLING_DEVICE_CATEGORY = "INDWELLING_DEVICES";
+
+const OTHER_MATCHER = (opt) =>
+  opt &&
+  typeof opt.value === "string" &&
+  opt.value.toLowerCase().startsWith("autre");
+
+const CLINICAL_INFO_FALLBACK = [
+  "Toux",
+  "Fièvre",
+  "Diarrhée",
+  "Brûlure mictionnelle",
+  "Ictère",
+  "Ecoulement urétrale",
+  "Bilan de fertilité",
+  "Leucorrhées",
+  "Pus",
+  "Prurit",
+  "Douleur abdominale",
+  "Infection vaginale",
+  "Autres",
+].map((value) => ({ id: value, value }));
+
+const INVASIVE_GESTURES_FALLBACK = [
+  "cathétérisme",
+  "sondage urinaire",
+  "drain",
+  "Intervention Chirurgicale",
+].map((value) => ({ id: value, value }));
+
+const INDWELLING_DEVICE_FALLBACK = [
+  "Cathéter veineux",
+  "Prothèse",
+  "Sonde Urinaire",
+  "matériel de chirurgie",
+].map((value) => ({ id: value, value }));
+
+const normalizeDictionaryOptions = (items, fallback) => {
+  const mapped = (Array.isArray(items) ? items : [])
+    .map((item) => ({
+      id: item.id || item.value,
+      value: item.value || item.name || "",
+    }))
+    .filter((item) => item.value);
+  return mapped.length > 0 ? mapped : fallback;
+};
+
+const buildSelectedItems = (values, options) =>
+  (values || [])
+    .map((val) => options.find((opt) => opt.id === val || opt.value === val))
+    .filter(Boolean);
+
+const renderSelectedTags = (selectedItems, keyPrefix) => {
+  if (!selectedItems || selectedItems.length === 0) return null;
+  return (
+    <div className="selected-tags">
+      {selectedItems.map((item, idx) => (
+        <Tag key={`${keyPrefix}-${item.id || item.value || idx}`} type="gray">
+          {item.value}
+        </Tag>
+      ))}
+    </div>
+  );
+};
+
+const isOtherSelected = (selectedValues, options) =>
+  (selectedValues || []).some((val) => {
+    const opt = options.find((o) => o.id === val || o.value === val);
+    return OTHER_MATCHER(opt);
+  });
+
 const SampleType = (props) => {
   const { userSessionDetails } = useContext(UserSessionDetailsContext);
   const { configurationProperties } = useContext(ConfigurationContext);
@@ -43,6 +121,8 @@ const SampleType = (props) => {
     sample,
     isTb,
     isBacterio = false,
+    orderFormValues,
+    setOrderFormValues,
   } = props;
 
   const [sampleTypes, setSampleTypes] = useState([]);
@@ -133,6 +213,10 @@ const SampleType = (props) => {
   const [microscopieTBId, setMicroscopieTBId] = useState("");
   const [followupLine1Id, setFollowupLine1Id] = useState("");
   const [followupLine2Id, setFollowupLine2Id] = useState("");
+  const [clinicalInfoOptions, setClinicalInfoOptions] = useState([]);
+  const [antibiotherapyOptions, setAntibiotherapyOptions] = useState([]);
+  const [invasiveGesturesOptions, setInvasiveGesturesOptions] = useState([]);
+  const [indwellingDeviceOptions, setIndwellingDeviceOptions] = useState([]);
 
   // const item = data.find(item => item.value === "Diagnostic");
 
@@ -809,6 +893,45 @@ const SampleType = (props) => {
     };
   }, []);
 
+  const setBacterioField = (field, value) => {
+    setOrderFormValues({
+      ...orderFormValues,
+      patientRoutineBacterioInfo: {
+        ...orderFormValues.patientRoutineBacterioInfo,
+        [field]: value,
+      },
+    });
+  };
+
+  useEffect(() => {
+    if (!isBacterio) return;
+    getFromOpenElisServer(
+      `/rest/displayList/${encodeURIComponent(CLINICAL_INFO_CATEGORY)}`,
+      (res) =>
+        setClinicalInfoOptions(
+          normalizeDictionaryOptions(res, CLINICAL_INFO_FALLBACK),
+        ),
+    );
+    getFromOpenElisServer(
+      `/rest/displayList/${encodeURIComponent(ANTIBIOTHERAPY_CATEGORY)}`,
+      (res) => setAntibiotherapyOptions(normalizeDictionaryOptions(res, [])),
+    );
+    getFromOpenElisServer(
+      `/rest/displayList/${encodeURIComponent(INVASIVE_GESTURES_CATEGORY)}`,
+      (res) =>
+        setInvasiveGesturesOptions(
+          normalizeDictionaryOptions(res, INVASIVE_GESTURES_FALLBACK),
+        ),
+    );
+    getFromOpenElisServer(
+      `/rest/displayList/${encodeURIComponent(INDWELLING_DEVICE_CATEGORY)}`,
+      (res) =>
+        setIndwellingDeviceOptions(
+          normalizeDictionaryOptions(res, INDWELLING_DEVICE_FALLBACK),
+        ),
+    );
+  }, [isBacterio]);
+
   return (
     <>
       {loading && <Loading />}
@@ -1368,6 +1491,419 @@ const SampleType = (props) => {
             })}
         </div>
 
+        {isBacterio && orderFormValues && (
+          <div className="orderLegendBody" style={{ marginTop: "1rem" }}>
+            <Grid>
+              <Column lg={8} md={4} sm={4}>
+                <RadioButtonGroup
+                  legendText={intl.formatMessage({
+                    id: "patient.hospitalization.current",
+                    defaultMessage: "Hospitalisation en cours",
+                  })}
+                  valueSelected={
+                    orderFormValues.patientRoutineBacterioInfo
+                      ?.currentHospitalization
+                      ? "true"
+                      : "false"
+                  }
+                  name="currentHospitalization"
+                  onChange={(val) => {
+                    const boolVal = val === "true";
+                    setBacterioField("currentHospitalization", boolVal);
+                    if (!boolVal) setBacterioField("roomNumber", "");
+                  }}
+                >
+                  <RadioButton id="currentHospYes" value="true" labelText="Oui" />
+                  <RadioButton id="currentHospNo" value="false" labelText="Non" />
+                </RadioButtonGroup>
+              </Column>
+              <Column lg={8} md={4} sm={4}>
+                {orderFormValues.patientRoutineBacterioInfo
+                  ?.currentHospitalization && (
+                  <TextInput
+                    name="roomNumber"
+                    value={
+                      orderFormValues.patientRoutineBacterioInfo?.roomNumber ||
+                      ""
+                    }
+                    labelText={intl.formatMessage({
+                      id: "patient.room.number",
+                      defaultMessage: "Numéro de chambre",
+                    })}
+                    id="roomNumber"
+                    onChange={(e) =>
+                      setBacterioField("roomNumber", e.target.value)
+                    }
+                    placeholder={intl.formatMessage({
+                      id: "patient.room.number",
+                      defaultMessage: "Numéro de chambre",
+                    })}
+                  />
+                )}
+              </Column>
+              <Column lg={16} md={8} sm={4}>
+                <br />
+              </Column>
+              <Column lg={8} md={4} sm={4}>
+                <FilterableMultiSelect
+                  id="clinicalInformation"
+                  titleText={intl.formatMessage({
+                    id: "patient.clinical.info",
+                    defaultMessage: "Renseignements cliniques",
+                  })}
+                  items={clinicalInfoOptions}
+                  itemToString={(item) => (item ? item.value : "")}
+                  selectedItems={buildSelectedItems(
+                    orderFormValues.patientRoutineBacterioInfo
+                      ?.clinicalInformations,
+                    clinicalInfoOptions,
+                  )}
+                  onChange={(changes) =>
+                    setBacterioField(
+                      "clinicalInformations",
+                      changes.selectedItems.map((item) => item.id || item.value),
+                    )
+                  }
+                  selectionFeedback="top-after-reopen"
+                />
+                {renderSelectedTags(
+                  buildSelectedItems(
+                    orderFormValues.patientRoutineBacterioInfo
+                      ?.clinicalInformations,
+                    clinicalInfoOptions,
+                  ),
+                  "clinicalInformationTags",
+                )}
+              </Column>
+              <Column lg={8} md={4} sm={4}>
+                {isOtherSelected(
+                  orderFormValues.patientRoutineBacterioInfo
+                    ?.clinicalInformations,
+                  clinicalInfoOptions,
+                ) && (
+                  <TextInput
+                    name="clinicalInformationOther"
+                    value={
+                      orderFormValues.patientRoutineBacterioInfo
+                        ?.clinicalInformationOther || ""
+                    }
+                    labelText={intl.formatMessage({
+                      id: "patient.clinical.info.other",
+                      defaultMessage: "Autres renseignements cliniques",
+                    })}
+                    id="clinicalInformationOther"
+                    onChange={(e) =>
+                      setBacterioField(
+                        "clinicalInformationOther",
+                        e.target.value,
+                      )
+                    }
+                    placeholder={intl.formatMessage({
+                      id: "patient.clinical.info.other.placeholder",
+                      defaultMessage: "Préciser",
+                    })}
+                  />
+                )}
+              </Column>
+              <Column lg={16} md={8} sm={4}>
+                <br />
+              </Column>
+              <Column lg={8} md={4} sm={4}>
+                <RadioButtonGroup
+                  legendText={intl.formatMessage({
+                    id: "patient.antibiotherapy.recent",
+                    defaultMessage: "Antibiothérapie dans les 3 derniers mois",
+                  })}
+                  valueSelected={
+                    orderFormValues.patientRoutineBacterioInfo
+                      ?.recentAntibiotherapy
+                      ? "true"
+                      : "false"
+                  }
+                  name="recentAntibiotherapy"
+                  onChange={(val) => {
+                    const boolVal = val === "true";
+                    setBacterioField("recentAntibiotherapy", boolVal);
+                    if (!boolVal)
+                      setBacterioField("recentAntibiotherapyList", []);
+                  }}
+                >
+                  <RadioButton id="recentAtbYes" value="true" labelText="Oui" />
+                  <RadioButton id="recentAtbNo" value="false" labelText="Non" />
+                </RadioButtonGroup>
+              </Column>
+              <Column lg={8} md={4} sm={4}>
+                {orderFormValues.patientRoutineBacterioInfo
+                  ?.recentAntibiotherapy && (
+                  <>
+                    <FilterableMultiSelect
+                      id="recentAntibiotherapyList"
+                      titleText={intl.formatMessage({
+                        id: "patient.antibiotherapy.label",
+                        defaultMessage: "Antibiothérapie",
+                      })}
+                      items={antibiotherapyOptions}
+                      itemToString={(item) => (item ? item.value : "")}
+                      selectedItems={buildSelectedItems(
+                        orderFormValues.patientRoutineBacterioInfo
+                          ?.recentAntibiotherapyList,
+                        antibiotherapyOptions,
+                      )}
+                      onChange={(changes) =>
+                        setBacterioField(
+                          "recentAntibiotherapyList",
+                          changes.selectedItems.map(
+                            (item) => item.id || item.value,
+                          ),
+                        )
+                      }
+                      selectionFeedback="top-after-reopen"
+                    />
+                    {renderSelectedTags(
+                      buildSelectedItems(
+                        orderFormValues.patientRoutineBacterioInfo
+                          ?.recentAntibiotherapyList,
+                        antibiotherapyOptions,
+                      ),
+                      "recentAntibiotherapyListTags",
+                    )}
+                  </>
+                )}
+              </Column>
+              <Column lg={16} md={8} sm={4}>
+                <br />
+              </Column>
+              <Column lg={8} md={4} sm={4}>
+                <RadioButtonGroup
+                  legendText={intl.formatMessage({
+                    id: "patient.antibiotherapy.current",
+                    defaultMessage: "Antibiothérapie en cours",
+                  })}
+                  valueSelected={
+                    orderFormValues.patientRoutineBacterioInfo
+                      ?.currentAntibiotherapy
+                      ? "true"
+                      : "false"
+                  }
+                  name="currentAntibiotherapy"
+                  onChange={(val) => {
+                    const boolVal = val === "true";
+                    setBacterioField("currentAntibiotherapy", boolVal);
+                    if (!boolVal) {
+                      setBacterioField("currentAntibiotherapyList", []);
+                      setBacterioField("currentAntibiotherapyDuration", "");
+                    }
+                  }}
+                >
+                  <RadioButton
+                    id="currentAtbYes"
+                    value="true"
+                    labelText="Oui"
+                  />
+                  <RadioButton
+                    id="currentAtbNo"
+                    value="false"
+                    labelText="Non"
+                  />
+                </RadioButtonGroup>
+              </Column>
+              <Column lg={8} md={4} sm={4}>
+                {orderFormValues.patientRoutineBacterioInfo
+                  ?.currentAntibiotherapy && (
+                  <>
+                    <FilterableMultiSelect
+                      id="currentAntibiotherapyList"
+                      titleText={intl.formatMessage({
+                        id: "patient.antibiotherapy.label",
+                        defaultMessage: "Antibiothérapie",
+                      })}
+                      items={antibiotherapyOptions}
+                      itemToString={(item) => (item ? item.value : "")}
+                      selectedItems={buildSelectedItems(
+                        orderFormValues.patientRoutineBacterioInfo
+                          ?.currentAntibiotherapyList,
+                        antibiotherapyOptions,
+                      )}
+                      onChange={(changes) =>
+                        setBacterioField(
+                          "currentAntibiotherapyList",
+                          changes.selectedItems.map(
+                            (item) => item.id || item.value,
+                          ),
+                        )
+                      }
+                      selectionFeedback="top-after-reopen"
+                    />
+                    {renderSelectedTags(
+                      buildSelectedItems(
+                        orderFormValues.patientRoutineBacterioInfo
+                          ?.currentAntibiotherapyList,
+                        antibiotherapyOptions,
+                      ),
+                      "currentAntibiotherapyListTags",
+                    )}
+                    <TextInput
+                      name="currentAntibiotherapyDuration"
+                      value={
+                        orderFormValues.patientRoutineBacterioInfo
+                          ?.currentAntibiotherapyDuration || ""
+                      }
+                      labelText={intl.formatMessage({
+                        id: "patient.antibiotherapy.duration",
+                        defaultMessage: "Durée du traitement (jours)",
+                      })}
+                      id="currentAntibiotherapyDuration"
+                      type="number"
+                      min="0"
+                      onChange={(e) =>
+                        setBacterioField(
+                          "currentAntibiotherapyDuration",
+                          e.target.value,
+                        )
+                      }
+                      placeholder={intl.formatMessage({
+                        id: "patient.antibiotherapy.duration.placeholder",
+                        defaultMessage: "Durée du traitement",
+                      })}
+                    />
+                  </>
+                )}
+              </Column>
+              <Column lg={16} md={8} sm={4}>
+                <br />
+              </Column>
+              <Column lg={8} md={4} sm={4}>
+                <RadioButtonGroup
+                  legendText={intl.formatMessage({
+                    id: "patient.hospitalization.recent",
+                    defaultMessage:
+                      "Antécédent hospitalisation dans les 3 derniers mois",
+                  })}
+                  valueSelected={
+                    orderFormValues.patientRoutineBacterioInfo
+                      ?.recentHospitalization
+                      ? "true"
+                      : "false"
+                  }
+                  name="recentHospitalization"
+                  onChange={(val) => {
+                    const boolVal = val === "true";
+                    setBacterioField("recentHospitalization", boolVal);
+                    if (!boolVal)
+                      setBacterioField("recentHospitalizationCount", "");
+                  }}
+                >
+                  <RadioButton
+                    id="recentHospYes"
+                    value="true"
+                    labelText="Oui"
+                  />
+                  <RadioButton
+                    id="recentHospNo"
+                    value="false"
+                    labelText="Non"
+                  />
+                </RadioButtonGroup>
+              </Column>
+              <Column lg={8} md={4} sm={4}>
+                {orderFormValues.patientRoutineBacterioInfo
+                  ?.recentHospitalization && (
+                  <TextInput
+                    name="recentHospitalizationCount"
+                    value={
+                      orderFormValues.patientRoutineBacterioInfo
+                        ?.recentHospitalizationCount || ""
+                    }
+                    labelText={intl.formatMessage({
+                      id: "patient.hospitalization.recent.count",
+                      defaultMessage: "Nombre d'hospitalisations",
+                    })}
+                    id="recentHospitalizationCount"
+                    type="number"
+                    min="0"
+                    onChange={(e) =>
+                      setBacterioField(
+                        "recentHospitalizationCount",
+                        e.target.value,
+                      )
+                    }
+                    placeholder={intl.formatMessage({
+                      id: "patient.hospitalization.recent.count",
+                      defaultMessage: "Nombre d'hospitalisations",
+                    })}
+                  />
+                )}
+              </Column>
+              <Column lg={16} md={8} sm={4}>
+                <br />
+              </Column>
+              <Column lg={8} md={4} sm={4}>
+                <FilterableMultiSelect
+                  id="recentInvasiveGestures"
+                  titleText={intl.formatMessage({
+                    id: "patient.invasive.gestures",
+                    defaultMessage:
+                      "Antécédents des gestes invasifs (<30 jours)",
+                  })}
+                  items={invasiveGesturesOptions}
+                  itemToString={(item) => (item ? item.value : "")}
+                  selectedItems={buildSelectedItems(
+                    orderFormValues.patientRoutineBacterioInfo
+                      ?.recentInvasiveGestures,
+                    invasiveGesturesOptions,
+                  )}
+                  onChange={(changes) =>
+                    setBacterioField(
+                      "recentInvasiveGestures",
+                      changes.selectedItems.map((item) => item.id || item.value),
+                    )
+                  }
+                  selectionFeedback="top-after-reopen"
+                />
+                {renderSelectedTags(
+                  buildSelectedItems(
+                    orderFormValues.patientRoutineBacterioInfo
+                      ?.recentInvasiveGestures,
+                    invasiveGesturesOptions,
+                  ),
+                  "recentInvasiveGesturesTags",
+                )}
+              </Column>
+              <Column lg={8} md={4} sm={4}>
+                <FilterableMultiSelect
+                  id="indwellingDevice"
+                  titleText={intl.formatMessage({
+                    id: "patient.indwelling.device",
+                    defaultMessage: "Dispositif à demeure",
+                  })}
+                  items={indwellingDeviceOptions}
+                  itemToString={(item) => (item ? item.value : "")}
+                  selectedItems={buildSelectedItems(
+                    orderFormValues.patientRoutineBacterioInfo?.indwellingDevice,
+                    indwellingDeviceOptions,
+                  )}
+                  onChange={(changes) =>
+                    setBacterioField(
+                      "indwellingDevice",
+                      changes.selectedItems.map((item) => item.id || item.value),
+                    )
+                  }
+                  selectionFeedback="top-after-reopen"
+                />
+                {renderSelectedTags(
+                  buildSelectedItems(
+                    orderFormValues.patientRoutineBacterioInfo?.indwellingDevice,
+                    indwellingDeviceOptions,
+                  ),
+                  "indwellingDeviceTags",
+                )}
+              </Column>
+              <Column lg={16} md={8} sm={4}>
+                <br />
+              </Column>
+            </Grid>
+          </div>
+        )}
         <div className="requestTestReferral">
           <Checkbox
             id={`useReferral_` + index}

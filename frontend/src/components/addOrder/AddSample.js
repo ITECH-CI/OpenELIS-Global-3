@@ -4,8 +4,17 @@ import { useEffect, useRef, useState } from "react";
 import { FormattedMessage } from "react-intl";
 import { getFromOpenElisServer } from "../utils/Utils";
 import SampleType from "./SampleType";
+
 const AddSample = (props) => {
-  const { samples, setSamples, error, isTb, isBacterio = false } = props;
+  const {
+    samples,
+    setSamples,
+    error,
+    isTb,
+    isBacterio = false,
+    orderFormValues,
+    setOrderFormValues,
+  } = props;
   const componentMounted = useRef(false);
 
   const [rejectSampleReasons, setRejectSampleReasons] = useState([]);
@@ -120,7 +129,6 @@ const AddSample = (props) => {
           {samples.map((sample, i) => {
             return (
               <div className="sampleType" key={i}>
-                {/* <div>{JSON.stringify(orderFormValues)}</div>*/}
                 <h4>
                   <FormattedMessage id="label.button.sample" /> {i + 1}
                   <span className="requiredlabel">*</span>
@@ -136,6 +144,8 @@ const AddSample = (props) => {
                   isTb={isTb}
                   showTBSection={isTb}
                   isBacterio={isBacterio}
+                  orderFormValues={orderFormValues}
+                  setOrderFormValues={setOrderFormValues}
                   setSample={(newSample) => {
                     let newSamples = [...samples];
                     newSamples[i] = newSample;

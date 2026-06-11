@@ -852,6 +852,8 @@ const Index = () => {
                   orderFormValues.sampleOrderItems.programCode ===
                   BACTERIOLOGY_PROGRAM_CODE
                 }
+                orderFormValues={orderFormValues}
+                setOrderFormValues={setOrderFormValues}
               />
             )}
             {page === orderPageNumber && (
