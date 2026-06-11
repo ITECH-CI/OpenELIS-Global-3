@@ -6,8 +6,10 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import org.apache.commons.validator.GenericValidator;
 import org.hibernate.StaleObjectStateException;
@@ -26,6 +28,11 @@ import org.openelisglobal.common.services.StatusService.AnalysisStatus;
 import org.openelisglobal.common.services.StatusService.SampleStatus;
 import org.openelisglobal.common.util.DateUtil;
 import org.openelisglobal.internationalization.MessageUtil;
+import org.openelisglobal.observationhistory.service.ObservationHistoryService;
+import org.openelisglobal.observationhistory.valueholder.ObservationHistory;
+import org.openelisglobal.observationhistorytype.service.ObservationHistoryTypeService;
+import org.openelisglobal.observationhistorytype.valueholder.ObservationHistoryType;
+import org.openelisglobal.patient.action.bean.PatientRoutineBacterioInfo;
 import org.openelisglobal.patient.action.bean.PatientSearch;
 import org.openelisglobal.patient.service.PatientService;
 import org.openelisglobal.patient.valueholder.Patient;
@@ -111,6 +118,10 @@ public class SampleEditRestController extends BaseSampleEntryController {
     private SampleEditService sampleEditService;
     @Autowired
     private UserService userService;
+    @Autowired
+    private ObservationHistoryService observationHistoryService;
+    @Autowired
+    private ObservationHistoryTypeService observationHistoryTypeService;
 
     @GetMapping(value = "SampleEdit", produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
@@ -158,6 +169,7 @@ public class SampleEditRestController extends BaseSampleEntryController {
                 }
                 form.setMaxAccessionNumber(maxAccessionNumber);
                 form.setIsConfirmationSample(sampleService.isConfirmationSample(sample));
+                form.setPatientRoutineBacterioInfo(loadBacterioInfo(sample.getId()));
             } else {
                 form.setNoSampleFound(Boolean.TRUE);
             }
@@ -429,6 +441,164 @@ public class SampleEditRestController extends BaseSampleEntryController {
 
         return !GenericValidator.isBlankOrNull(newAccessionNumber)
                 && !newAccessionNumber.equals(form.getAccessionNumber());
+    }
+
+    private PatientRoutineBacterioInfo loadBacterioInfo(String sampleId) {
+        List<ObservationHistory> allObs = observationHistoryService.getObservationHistoriesBySampleId(sampleId);
+        if (allObs == null || allObs.isEmpty()) {
+            return null;
+        }
+
+        Map<String, List<ObservationHistory>> byTypeId = new HashMap<>();
+        for (ObservationHistory obs : allObs) {
+            byTypeId.computeIfAbsent(obs.getObservationHistoryTypeId(), k -> new ArrayList<>()).add(obs);
+        }
+
+        // Use BacterioTypeExamens as the primary gate: always saved for any bacterio order
+        ObservationHistoryType bacterioOrderType = observationHistoryTypeService.getByName("BacterioTypeExamens");
+        if (bacterioOrderType == null || !byTypeId.containsKey(bacterioOrderType.getId())) {
+            return null;
+        }
+
+        PatientRoutineBacterioInfo info = new PatientRoutineBacterioInfo();
+        ObservationHistoryType oht;
+        List<ObservationHistory> obs;
+
+        oht = observationHistoryTypeService.getByName("currentHospitalization");
+        if (oht != null) {
+            obs = byTypeId.get(oht.getId());
+            if (obs != null && !obs.isEmpty()) {
+                info.setCurrentHospitalization(Boolean.parseBoolean(obs.get(0).getValue()));
+            }
+        }
+
+        oht = observationHistoryTypeService.getByName("roomNumber");
+        if (oht != null) {
+            obs = byTypeId.get(oht.getId());
+            if (obs != null && !obs.isEmpty()) {
+                info.setRoomNumber(obs.get(0).getValue());
+            }
+        }
+
+        oht = observationHistoryTypeService.getByName("CLINICAL_INFOS");
+        if (oht != null) {
+            obs = byTypeId.get(oht.getId());
+            if (obs != null) {
+                List<Integer> ids = new ArrayList<>();
+                for (ObservationHistory o : obs) {
+                    if (!GenericValidator.isBlankOrNull(o.getValue())) {
+                        ids.add(Integer.parseInt(o.getValue()));
+                    }
+                }
+                info.setClinicalInformations(ids);
+            }
+        }
+
+        oht = observationHistoryTypeService.getByName("CLINICAL_INFOS_OTHER");
+        if (oht != null) {
+            obs = byTypeId.get(oht.getId());
+            if (obs != null && !obs.isEmpty()) {
+                info.setClinicalInformationOther(obs.get(0).getValue());
+            }
+        }
+
+        oht = observationHistoryTypeService.getByName("PREV3M_ATB");
+        if (oht != null) {
+            obs = byTypeId.get(oht.getId());
+            if (obs != null && !obs.isEmpty()) {
+                info.setRecentAntibiotherapy(Boolean.parseBoolean(obs.get(0).getValue()));
+            }
+        }
+
+        oht = observationHistoryTypeService.getByName("PREV3M_ATB_LIST");
+        if (oht != null) {
+            obs = byTypeId.get(oht.getId());
+            if (obs != null) {
+                List<Integer> ids = new ArrayList<>();
+                for (ObservationHistory o : obs) {
+                    if (!GenericValidator.isBlankOrNull(o.getValue())) {
+                        ids.add(Integer.parseInt(o.getValue()));
+                    }
+                }
+                info.setRecentAntibiotherapyList(ids);
+            }
+        }
+
+        oht = observationHistoryTypeService.getByName("CURR_ATB");
+        if (oht != null) {
+            obs = byTypeId.get(oht.getId());
+            if (obs != null && !obs.isEmpty()) {
+                info.setCurrentAntibiotherapy(Boolean.parseBoolean(obs.get(0).getValue()));
+            }
+        }
+
+        oht = observationHistoryTypeService.getByName("CURR_ATB_LIST");
+        if (oht != null) {
+            obs = byTypeId.get(oht.getId());
+            if (obs != null) {
+                List<Integer> ids = new ArrayList<>();
+                for (ObservationHistory o : obs) {
+                    if (!GenericValidator.isBlankOrNull(o.getValue())) {
+                        ids.add(Integer.parseInt(o.getValue()));
+                    }
+                }
+                info.setCurrentAntibiotherapyList(ids);
+            }
+        }
+
+        oht = observationHistoryTypeService.getByName("CURR_ATB_DUR");
+        if (oht != null) {
+            obs = byTypeId.get(oht.getId());
+            if (obs != null && !obs.isEmpty() && !GenericValidator.isBlankOrNull(obs.get(0).getValue())) {
+                info.setCurrentAntibiotherapyDuration(Integer.parseInt(obs.get(0).getValue()));
+            }
+        }
+
+        oht = observationHistoryTypeService.getByName("HOSP_3M");
+        if (oht != null) {
+            obs = byTypeId.get(oht.getId());
+            if (obs != null && !obs.isEmpty()) {
+                info.setRecentHospitalization(Boolean.parseBoolean(obs.get(0).getValue()));
+            }
+        }
+
+        oht = observationHistoryTypeService.getByName("HOSP_3M_COUNT");
+        if (oht != null) {
+            obs = byTypeId.get(oht.getId());
+            if (obs != null && !obs.isEmpty() && !GenericValidator.isBlankOrNull(obs.get(0).getValue())) {
+                info.setRecentHospitalizationCount(Integer.parseInt(obs.get(0).getValue()));
+            }
+        }
+
+        oht = observationHistoryTypeService.getByName("INVASIVE_GESTURE");
+        if (oht != null) {
+            obs = byTypeId.get(oht.getId());
+            if (obs != null) {
+                List<Integer> ids = new ArrayList<>();
+                for (ObservationHistory o : obs) {
+                    if (!GenericValidator.isBlankOrNull(o.getValue())) {
+                        ids.add(Integer.parseInt(o.getValue()));
+                    }
+                }
+                info.setRecentInvasiveGestures(ids);
+            }
+        }
+
+        oht = observationHistoryTypeService.getByName("INDWELLING_DEVICES");
+        if (oht != null) {
+            obs = byTypeId.get(oht.getId());
+            if (obs != null) {
+                List<Integer> ids = new ArrayList<>();
+                for (ObservationHistory o : obs) {
+                    if (!GenericValidator.isBlankOrNull(o.getValue())) {
+                        ids.add(Integer.parseInt(o.getValue()));
+                    }
+                }
+                info.setIndwellingDevice(ids);
+            }
+        }
+
+        return info;
     }
 
     private static class SampleEditItemComparator implements Comparator<SampleEditItem> {

@@ -10,6 +10,7 @@ import org.openelisglobal.common.util.ConfigurationProperties.Property;
 import org.openelisglobal.common.util.IdValuePair;
 import org.openelisglobal.common.util.validator.CustomDateValidator.DateRelation;
 import org.openelisglobal.common.validator.ValidationHelper;
+import org.openelisglobal.patient.action.bean.PatientRoutineBacterioInfo;
 import org.openelisglobal.patient.action.bean.PatientSearch;
 import org.openelisglobal.sample.bean.SampleEditItem;
 import org.openelisglobal.sample.bean.SampleOrderItem;
@@ -110,6 +111,9 @@ public class SampleEditForm extends BaseForm {
 
     // in validator
     private int maxAccessionLength = editableAccession + nonEditableAccession;
+
+    @Valid
+    private PatientRoutineBacterioInfo patientRoutineBacterioInfo;
 
     private boolean customNotificationLogic;
     private List<String> patientEmailNotificationTestIds;
@@ -391,5 +395,13 @@ public class SampleEditForm extends BaseForm {
 
     public void setRejectReasonList(List<IdValuePair> rejectReasonList) {
         this.rejectReasonList = rejectReasonList;
+    }
+
+    public PatientRoutineBacterioInfo getPatientRoutineBacterioInfo() {
+        return patientRoutineBacterioInfo;
+    }
+
+    public void setPatientRoutineBacterioInfo(PatientRoutineBacterioInfo patientRoutineBacterioInfo) {
+        this.patientRoutineBacterioInfo = patientRoutineBacterioInfo;
     }
 }

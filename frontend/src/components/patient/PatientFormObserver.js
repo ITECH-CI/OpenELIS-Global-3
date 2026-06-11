@@ -43,8 +43,8 @@ const PatientFormObserver = (props) => {
       patientUpdateStatus: formAction,
       patientProperties: patientProps,
       patientRoutineBacterioInfo: {
-        ...orderFormValues.patientRoutineBacterioInfo,
         ...patientRoutineBacterioInfo,
+        ...orderFormValues.patientRoutineBacterioInfo,
       },
     });
   }, [values]);
