@@ -28,6 +28,35 @@ public interface BacteriologyWorkflowService {
         private String displayValue;
         private String unitOfMeasure;
         private String resultType;
+        // Conditional / flora wiring exposed to the frontend so it can group
+        // child tests under their parent and avoid rendering them as primary.
+        private String parentTestId;
+        private String parentTriggerValue;
+        private Boolean isFloraCountTest;
+
+        public String getParentTestId() {
+            return parentTestId;
+        }
+
+        public void setParentTestId(String parentTestId) {
+            this.parentTestId = parentTestId;
+        }
+
+        public String getParentTriggerValue() {
+            return parentTriggerValue;
+        }
+
+        public void setParentTriggerValue(String parentTriggerValue) {
+            this.parentTriggerValue = parentTriggerValue;
+        }
+
+        public Boolean getIsFloraCountTest() {
+            return isFloraCountTest;
+        }
+
+        public void setIsFloraCountTest(Boolean isFloraCountTest) {
+            this.isFloraCountTest = isFloraCountTest;
+        }
 
         public String getAnalysisId() {
             return analysisId;

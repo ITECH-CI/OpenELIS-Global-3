@@ -235,6 +235,12 @@ public class BacteriologyResultController extends BaseController {
                 testResultBean.setTestDescription(testDescription);
                 testResultBean.setValue(value);
                 testResultBean.setResultType(result.getResultType());
+                // Propagate parent/child + flora flags so the frontend can group
+                // child tests under their flora-count or conditional parent and
+                // avoid rendering them as primary cells.
+                testResultBean.setParentTestId(test.getParentTestId());
+                testResultBean.setParentTriggerValue(test.getParentTriggerValue());
+                testResultBean.setIsFloraCountTest(Boolean.TRUE.equals(test.getIsFloraCountTest()));
 
                 // Get unit of measure if available
                 String uom = resultService.getUOM(result);

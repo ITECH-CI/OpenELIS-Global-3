@@ -12,6 +12,12 @@ import { ORGANISM_TYPES } from "../BacteriologyConstants";
 import AntibiogramTable from "./AntibiogramTable";
 import SearchableSelect from "./SearchableSelect";
 
+// When the user selects "Levure" (yeast), we constrain the organism picker
+// to the single yeast we currently track (Candida albicans). Until a yeast/
+// bacteria flag is attached to the dictionary entries we keep this id hard-coded.
+const CANDIDA_ALBICANS_DICT_ID = 3245;
+const CANDIDA_ALBICANS_NAME_LOWERCASE = "candida albicans";
+
 const OrganismIdentification = ({
   accessionNumber,
   organismNumber,
@@ -61,6 +67,35 @@ const OrganismIdentification = ({
   const isBacteria = organism.organismType === ORGANISM_TYPES.BACTERIA;
   const isYeast = organism.organismType === ORGANISM_TYPES.YEAST;
   const showAntibiogram = isBacteria;
+
+  // When yeast is selected, restrict the picker to Candida albicans and
+  // pre-select it. Auto-clear any bacteria-only fields that may have been set
+  // before the switch (gramType, groupingMode).
+  const displayedOrganismNames = isYeast
+    ? (organismNames || []).filter((o) => {
+        const dictId = parseInt(o?.id);
+        const name = String(o?.value || o?.name || "").toLowerCase();
+        return (
+          dictId === CANDIDA_ALBICANS_DICT_ID
+          || name.includes(CANDIDA_ALBICANS_NAME_LOWERCASE)
+        );
+      })
+    : organismNames;
+
+  useEffect(() => {
+    if (!isYeast) return;
+    const expected = CANDIDA_ALBICANS_DICT_ID;
+    if (organism.organismNameDictId !== expected) {
+      onChange({
+        ...organism,
+        organismNameDictId: expected,
+        organismNameText: "",
+        gramType: "",
+        groupingMode: "",
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isYeast]);
 
   // For Neisseria gonorrhoeae: skip identification and show antibiogram directly
   if (skipOrganismIdentification) {
@@ -115,7 +150,7 @@ const OrganismIdentification = ({
             <SearchableSelect
               id={`organismName_${idPrefix}_${organismNumber}`}
               labelText="Nom de l'organisme (recherchez ou sélectionnez)"
-              items={organismNames}
+              items={displayedOrganismNames}
               selectedValue={organism.organismNameDictId}
               onChange={(value) =>
                 handleFieldChange(
@@ -124,8 +159,12 @@ const OrganismIdentification = ({
                 )
               }
               returnType="id"
-              disabled={disabled || loading}
-              placeholder="Rechercher un organisme..."
+              disabled={disabled || loading || isYeast}
+              placeholder={
+                isYeast
+                  ? "Candida albicans"
+                  : "Rechercher un organisme..."
+              }
             />
 
             {/* "Ou saisir un nom libre" hidden from the result-entry/modification
@@ -134,38 +173,10 @@ const OrganismIdentification = ({
                 data model and still rendered in reports/validation. */}
           </Column>
 
-          {isBacteria && (
-            <>
-              <Column lg={4} md={4} sm={4}>
-                <SearchableSelect
-                  id={`gramType_${idPrefix}_${organismNumber}`}
-                  labelText="Type de Gram"
-                  items={gramTypes}
-                  selectedValue={organism.gramType}
-                  onChange={(value) => handleFieldChange("gramType", value)}
-                  disabled={disabled || loading}
-                  placeholder="Rechercher..."
-                />
-              </Column>
-
-              <Column lg={4} md={4} sm={4}>
-                <SearchableSelect
-                  id={`groupingMode_${idPrefix}_${organismNumber}`}
-                  labelText="Mode de regroupement"
-                  items={groupingModes}
-                  selectedValue={organism.groupingMode}
-                  onChange={(value) => handleFieldChange("groupingMode", value)}
-                  disabled={disabled || loading}
-                  placeholder="Rechercher..."
-                />
-              </Column>
-
-              {/* Capsule presence removed - not needed in result entry */}
-              {/* "Autres caractéristiques" hidden from the result-entry/modification
-                  screen on request — kept in the data model so any value previously
-                  saved is preserved and still rendered in reports/validation. */}
-            </>
-          )}
+          {/* "Type de Gram" et "Mode de regroupement" sont masqués ici : ces
+              informations sont déjà saisies dans la zone "Nombre de flore"
+              (FloraList) pour chaque flore. Les champs sont conservés dans
+              le data model côté backend pour les rapports/validation. */}
 
           {/* Show info message for yeast */}
           {isYeast && (
