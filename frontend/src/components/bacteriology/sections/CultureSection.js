@@ -202,6 +202,8 @@ const CultureSection = ({
                         handleOrganismsChange(testId, newOrganisms)
                       }
                       disabled={disabled}
+                      cultureTestName={cultureTest.testName}
+                      cultureTestId={testId}
                     />
                   </div>
                 </Column>

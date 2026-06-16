@@ -12,11 +12,13 @@ import { ORGANISM_TYPES } from "../BacteriologyConstants";
 import AntibiogramTable from "./AntibiogramTable";
 import SearchableSelect from "./SearchableSelect";
 
-// When the user selects "Levure" (yeast), we constrain the organism picker
-// to the single yeast we currently track (Candida albicans). Until a yeast/
-// bacteria flag is attached to the dictionary entries we keep this id hard-coded.
+// When the user selects "Levure" (yeast) on a Sécrétions vaginales culture,
+// we constrain the organism picker to the single yeast we currently track
+// (Candida albicans) and pre-select it. For other cultures with yeast the
+// picker stays free (full dictionary).
 const CANDIDA_ALBICANS_DICT_ID = 3245;
 const CANDIDA_ALBICANS_NAME_LOWERCASE = "candida albicans";
+const VAGINAL_CULTURE_TEST_NAME = "Culture - Sécrétions vaginales";
 
 const OrganismIdentification = ({
   accessionNumber,
@@ -25,16 +27,25 @@ const OrganismIdentification = ({
   onChange,
   disabled = false,
   skipOrganismIdentification = false,
+  cultureTestName = "",
+  cultureTestId = "",
 }) => {
   const [organismNames, setOrganismNames] = useState([]);
   const [gramTypes, setGramTypes] = useState([]);
   const [groupingModes, setGroupingModes] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Use accessionNumber as prefix for unique IDs
-  const idPrefix = accessionNumber
+  // Build a unique id prefix that distinguishes (a) the order (accessionNumber)
+  // and (b) the culture inside that order (cultureTestId). Without the latter
+  // the radio buttons and selects of two parallel cultures share the same DOM
+  // ids and clicks on one toggle the other.
+  const accessionToken = accessionNumber
     ? accessionNumber.replace(/[^a-zA-Z0-9]/g, "_")
     : "org";
+  const cultureToken = cultureTestId
+    ? String(cultureTestId).replace(/[^a-zA-Z0-9]/g, "_")
+    : "c";
+  const idPrefix = `${accessionToken}_${cultureToken}`;
 
   useEffect(() => {
     // Load organism names from dictionary category "Bacteria"
@@ -68,10 +79,20 @@ const OrganismIdentification = ({
   const isYeast = organism.organismType === ORGANISM_TYPES.YEAST;
   const showAntibiogram = isBacteria;
 
-  // When yeast is selected, restrict the picker to Candida albicans and
-  // pre-select it. Auto-clear any bacteria-only fields that may have been set
-  // before the switch (gramType, groupingMode).
-  const displayedOrganismNames = isYeast
+  // Special handling for the "Culture - Sécrétions vaginales" culture: when
+  // the user picks 'Levure' the picker is restricted to Candida albicans and
+  // auto-filled. For any other culture the picker stays free.
+  // Tolerant match because the testName may be suffixed by the sample type
+  // (e.g. "Culture - Sécrétions vaginales (Sécrétion vaginale)") when
+  // augmentTestNameWithType is enabled.
+  const normalizedCultureName = (cultureTestName || "").toLowerCase();
+  const isVaginalCulture =
+    normalizedCultureName.includes(VAGINAL_CULTURE_TEST_NAME.toLowerCase())
+    || normalizedCultureName.includes("sécrétions vaginales")
+    || normalizedCultureName.includes("secretions vaginales");
+  const shouldForceCandidaAlbicans = isYeast && isVaginalCulture;
+
+  const displayedOrganismNames = shouldForceCandidaAlbicans
     ? (organismNames || []).filter((o) => {
         const dictId = parseInt(o?.id);
         const name = String(o?.value || o?.name || "").toLowerCase();
@@ -83,7 +104,7 @@ const OrganismIdentification = ({
     : organismNames;
 
   useEffect(() => {
-    if (!isYeast) return;
+    if (!shouldForceCandidaAlbicans) return;
     const expected = CANDIDA_ALBICANS_DICT_ID;
     if (organism.organismNameDictId !== expected) {
       onChange({
@@ -95,7 +116,7 @@ const OrganismIdentification = ({
       });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isYeast]);
+  }, [shouldForceCandidaAlbicans]);
 
   // For Neisseria gonorrhoeae: skip identification and show antibiogram directly
   if (skipOrganismIdentification) {
@@ -159,9 +180,9 @@ const OrganismIdentification = ({
                 )
               }
               returnType="id"
-              disabled={disabled || loading || isYeast}
+              disabled={disabled || loading || shouldForceCandidaAlbicans}
               placeholder={
-                isYeast
+                shouldForceCandidaAlbicans
                   ? "Candida albicans"
                   : "Rechercher un organisme..."
               }

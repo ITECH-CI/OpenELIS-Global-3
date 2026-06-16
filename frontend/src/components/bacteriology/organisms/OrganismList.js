@@ -11,6 +11,8 @@ const OrganismList = ({
   onChange,
   disabled = false,
   skipOrganismIdentification = false,
+  cultureTestName = "",
+  cultureTestId = "",
 }) => {
   // For Neisseria cultures: auto-create a single organism if none exists
   React.useEffect(() => {
@@ -129,6 +131,8 @@ const OrganismList = ({
                 onChange={(updated) => handleOrganismChange(index, updated)}
                 disabled={disabled}
                 skipOrganismIdentification={skipOrganismIdentification}
+                cultureTestName={cultureTestName}
+                cultureTestId={cultureTestId}
               />
             </div>
           ))
