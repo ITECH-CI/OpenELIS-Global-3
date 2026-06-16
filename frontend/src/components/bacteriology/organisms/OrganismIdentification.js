@@ -88,14 +88,18 @@ const OrganismIdentification = ({
   // Special handling for the "Culture - Sécrétions vaginales" culture: when
   // the user picks 'Levure' the picker is restricted to Candida albicans and
   // auto-filled. For any other culture the picker stays free.
-  // Tolerant match because the testName may be suffixed by the sample type
-  // (e.g. "Culture - Sécrétions vaginales (Sécrétion vaginale)") when
-  // augmentTestNameWithType is enabled.
-  const normalizedCultureName = (cultureTestName || "").toLowerCase();
-  const isVaginalCulture =
-    normalizedCultureName.includes(VAGINAL_CULTURE_TEST_NAME.toLowerCase())
-    || normalizedCultureName.includes("sécrétions vaginales")
-    || normalizedCultureName.includes("secretions vaginales");
+  //
+  // Match the TEST name strictly at the start of the string. The frontend may
+  // suffix the test name with the sample type (e.g.
+  // "Culture - Col(Sécrétions vaginales) - Résultat"), so a substring match on
+  // "sécrétions vaginales" wrongly triggered for Col too. The actual
+  // "Culture - Sécrétions vaginales" test always begins with that literal.
+  const normalizedCultureName = (cultureTestName || "")
+    .toLowerCase()
+    .trimStart();
+  const isVaginalCulture = normalizedCultureName.startsWith(
+    VAGINAL_CULTURE_TEST_NAME.toLowerCase(),
+  );
   const shouldForceCandidaAlbicans = isYeast && isVaginalCulture;
 
   // Picker source : Yeasts quand Levure, sinon Bacteria. Pour le cas particulier

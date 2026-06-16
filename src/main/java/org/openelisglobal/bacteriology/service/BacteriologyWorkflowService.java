@@ -27,6 +27,10 @@ public interface BacteriologyWorkflowService {
         private String value;
         private String displayValue;
         private String unitOfMeasure;
+        // Per-result UoM override id (from result.uom_id). Null when the
+        // result inherits the test's default UoM. Used by the frontend to
+        // pre-select the right entry in the unit picker on reload.
+        private String uomId;
         private String resultType;
         // Conditional / flora wiring exposed to the frontend so it can group
         // child tests under their parent and avoid rendering them as primary.
@@ -114,6 +118,14 @@ public interface BacteriologyWorkflowService {
             this.unitOfMeasure = unitOfMeasure;
         }
 
+        public String getUomId() {
+            return uomId;
+        }
+
+        public void setUomId(String uomId) {
+            this.uomId = uomId;
+        }
+
         public String getResultType() {
             return resultType;
         }
@@ -144,6 +156,11 @@ public interface BacteriologyWorkflowService {
         private Map<String, String> macroscopyResultsMap = new HashMap<>();
         private Map<String, String> microscopyResultsMap = new HashMap<>();
         private Map<String, String> cultureResultsMap = new HashMap<>();
+
+        // Per-result UoM overrides for microscopy (testId -> uom_id). Only
+        // populated for results that have a non-null result.uom_id; the
+        // frontend uses it to pre-select the unit picker.
+        private Map<String, String> microscopyUomsMap = new HashMap<>();
 
         // Biologist's interpretation note (loaded from observation_history)
         private String sampleInterpretation;
@@ -234,6 +251,14 @@ public interface BacteriologyWorkflowService {
 
         public void setCultureResultsMap(Map<String, String> cultureResultsMap) {
             this.cultureResultsMap = cultureResultsMap;
+        }
+
+        public Map<String, String> getMicroscopyUomsMap() {
+            return microscopyUomsMap;
+        }
+
+        public void setMicroscopyUomsMap(Map<String, String> microscopyUomsMap) {
+            this.microscopyUomsMap = microscopyUomsMap;
         }
 
         public String getSampleInterpretation() {

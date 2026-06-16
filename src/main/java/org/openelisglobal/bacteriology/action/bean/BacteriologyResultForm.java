@@ -26,6 +26,11 @@ public class BacteriologyResultForm {
     // Microscopy results - map of test ID to result value (dictionary ID or text)
     private Map<String, String> microscopyResults = new HashMap<>();
 
+    // Optional per-result UoM override for microscopy tests with a selectable
+    // unit (e.g. "Etat frais Quantitatif"). Key = testId, value = uom_id. When
+    // a test is absent from the map, the test's default UoM applies.
+    private Map<String, String> microscopyUoms = new HashMap<>();
+
     // Culture result - positive or negative (dictionary ID) - DEPRECATED, use
     // cultures instead
     private String cultureResult;
@@ -102,6 +107,14 @@ public class BacteriologyResultForm {
 
     public void setMicroscopyResults(Map<String, String> microscopyResults) {
         this.microscopyResults = microscopyResults;
+    }
+
+    public Map<String, String> getMicroscopyUoms() {
+        return microscopyUoms;
+    }
+
+    public void setMicroscopyUoms(Map<String, String> microscopyUoms) {
+        this.microscopyUoms = microscopyUoms;
     }
 
     public String getCultureResult() {

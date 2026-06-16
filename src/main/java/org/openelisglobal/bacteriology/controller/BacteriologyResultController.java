@@ -83,6 +83,9 @@ public class BacteriologyResultController extends BaseController {
     @Autowired
     private org.openelisglobal.sample.service.SampleService sampleService;
 
+    @Autowired
+    private org.openelisglobal.unitofmeasure.service.UnitOfMeasureService unitOfMeasureService;
+
     /**
      * Get all antibiotics from dictionary
      */
@@ -211,6 +214,10 @@ public class BacteriologyResultController extends BaseController {
             java.util.Map<String, String> microscopyResultsMap = new java.util.HashMap<>();
             java.util.Map<String, String> cultureResultsMap = new java.util.HashMap<>();
 
+            // Per-result UoM overrides for microscopy (testId -> uom_id). Lets
+            // the frontend restore the unit picker selection on reload.
+            java.util.Map<String, String> microscopyUomsMap = new java.util.HashMap<>();
+
             for (org.openelisglobal.result.valueholder.Result result : results) {
                 org.openelisglobal.testresult.valueholder.TestResult testResult = result.getTestResult();
                 if (testResult == null || testResult.getTest() == null) {
@@ -242,10 +249,27 @@ public class BacteriologyResultController extends BaseController {
                 testResultBean.setParentTriggerValue(test.getParentTriggerValue());
                 testResultBean.setIsFloraCountTest(Boolean.TRUE.equals(test.getIsFloraCountTest()));
 
-                // Get unit of measure if available
-                String uom = resultService.getUOM(result);
-                if (uom != null && !uom.trim().isEmpty()) {
-                    testResultBean.setUnitOfMeasure(uom);
+                // Get unit of measure if available. Prefer the per-result
+                // override (result.uom_id) when set; otherwise fall back to
+                // the test's default UoM exposed by resultService.getUOM().
+                String overrideUomId = result.getUomId();
+                if (overrideUomId != null && !overrideUomId.trim().isEmpty()) {
+                    testResultBean.setUomId(overrideUomId);
+                    String overrideName = result.getUomName();
+                    if (overrideName != null && !overrideName.trim().isEmpty()) {
+                        testResultBean.setUnitOfMeasure(overrideName);
+                    } else {
+                        // Fallback to default if the FK row vanished
+                        String uom = resultService.getUOM(result);
+                        if (uom != null && !uom.trim().isEmpty()) {
+                            testResultBean.setUnitOfMeasure(uom);
+                        }
+                    }
+                } else {
+                    String uom = resultService.getUOM(result);
+                    if (uom != null && !uom.trim().isEmpty()) {
+                        testResultBean.setUnitOfMeasure(uom);
+                    }
                 }
 
                 // Resolve dictionary value if this is a dictionary result
@@ -272,6 +296,9 @@ public class BacteriologyResultController extends BaseController {
                     } else if (lowerName.contains("microscopie")) {
                         microscopyMap.put(testId, testResultBean);
                         microscopyResultsMap.put(testId, value);
+                        if (testResultBean.getUomId() != null) {
+                            microscopyUomsMap.put(testId, testResultBean.getUomId());
+                        }
                     } else if (lowerName.contains("culture") || test.getIsCultureTest()) {
                         cultureMap.put(testId, testResultBean);
                         cultureResultsMap.put(testId, value);
@@ -411,6 +438,7 @@ public class BacteriologyResultController extends BaseController {
             resultData.setMacroscopyResultsMap(macroscopyResultsMap);
             resultData.setMicroscopyResultsMap(microscopyResultsMap);
             resultData.setCultureResultsMap(cultureResultsMap);
+            resultData.setMicroscopyUomsMap(microscopyUomsMap);
 
         } catch (Exception e) {
             LogEvent.logError("BacteriologyResultController", "loadTestResults",
@@ -571,13 +599,16 @@ public class BacteriologyResultController extends BaseController {
                         primaryAnalysis.getSampleItem(), testId, form.getSysUserId());
                 if (analysis != null) {
                     testIdToAnalysisIdMap.put(testId, Integer.parseInt(analysis.getId()));
-                    saveOrUpdateResult(analysis, testId, value, form.getSysUserId());
+                    saveOrUpdateResult(analysis, testId, value, null, form.getSysUserId());
                 }
             }
         }
 
         // Save microscopy results
         if (form.getMicroscopyResults() != null && !form.getMicroscopyResults().isEmpty()) {
+            Map<String, String> microscopyUoms = form.getMicroscopyUoms() != null
+                    ? form.getMicroscopyUoms()
+                    : new HashMap<>();
             for (Map.Entry<String, String> entry : form.getMicroscopyResults().entrySet()) {
                 String testId = entry.getKey();
                 String value = entry.getValue();
@@ -592,7 +623,8 @@ public class BacteriologyResultController extends BaseController {
                         primaryAnalysis.getSampleItem(), testId, form.getSysUserId());
                 if (analysis != null) {
                     testIdToAnalysisIdMap.put(testId, Integer.parseInt(analysis.getId()));
-                    saveOrUpdateResult(analysis, testId, value, form.getSysUserId());
+                    String uomId = microscopyUoms.get(testId);
+                    saveOrUpdateResult(analysis, testId, value, uomId, form.getSysUserId());
                 }
             }
         }
@@ -619,7 +651,7 @@ public class BacteriologyResultController extends BaseController {
                         primaryAnalysis.getSampleItem(), testId, form.getSysUserId());
                 if (analysis != null) {
                     testIdToAnalysisIdMap.put(testId, Integer.parseInt(analysis.getId()));
-                    saveOrUpdateResult(analysis, testId, cultureResult, form.getSysUserId());
+                    saveOrUpdateResult(analysis, testId, cultureResult, null, form.getSysUserId());
                 }
             }
         }
@@ -713,8 +745,19 @@ public class BacteriologyResultController extends BaseController {
      * Save or update a single result
      */
     private void saveOrUpdateResult(org.openelisglobal.analysis.valueholder.Analysis analysis, String testId,
-            String value, String sysUserId) {
+            String value, String uomId, String sysUserId) {
         try {
+            // Resolve the optional per-result UoM override once (or null if none/invalid).
+            org.openelisglobal.unitofmeasure.valueholder.UnitOfMeasure overrideUom = null;
+            if (uomId != null && !uomId.trim().isEmpty()) {
+                try {
+                    overrideUom = unitOfMeasureService.get(uomId.trim());
+                } catch (Exception ex) {
+                    LogEvent.logWarn("BacteriologyResultController", "saveOrUpdateResult",
+                            "Unknown uomId=" + uomId + " for testId=" + testId + " — ignoring override");
+                }
+            }
+
             // Find existing result for this analysis
             List<org.openelisglobal.result.valueholder.Result> existingResults = resultService
                     .getResultsByAnalysis(analysis);
@@ -774,6 +817,9 @@ public class BacteriologyResultController extends BaseController {
                     newResult.setTestResult(matchedTestResult);
                 }
 
+                // Optional per-result UoM override (null = use test default)
+                newResult.setUom(overrideUom);
+
                 resultService.insert(newResult);
             } else if (resultsForThisTest.size() == 1) {
                 // Single existing result - update it
@@ -800,6 +846,14 @@ public class BacteriologyResultController extends BaseController {
                         // Numeric, text, or other - use first test result
                         existingResult.setTestResult(firstTr);
                     }
+                }
+
+                // Only touch the per-result UoM when the caller passed a uomId:
+                // a non-empty value sets/replaces the override, an empty value
+                // explicitly clears it; null means "don't touch" (e.g. saves
+                // coming from a UI that doesn't expose the picker).
+                if (uomId != null) {
+                    existingResult.setUom(overrideUom);
                 }
 
                 resultService.update(existingResult);
@@ -833,6 +887,10 @@ public class BacteriologyResultController extends BaseController {
                         // Numeric, text, or other - use first test result
                         resultToKeep.setTestResult(firstTr);
                     }
+                }
+
+                if (uomId != null) {
+                    resultToKeep.setUom(overrideUom);
                 }
 
                 resultService.update(resultToKeep);

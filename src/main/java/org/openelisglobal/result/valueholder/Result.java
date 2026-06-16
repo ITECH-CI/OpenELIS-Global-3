@@ -54,6 +54,11 @@ public class Result extends EnumValueItemImpl {
 
     private Event resultEvent;
 
+    // Per-result UoM override. Lets a single result row carry its own unit
+    // (e.g. mm³ vs num/champ for "Etat frais Quantitatif") instead of inheriting
+    // the test's default UoM. Nullable: when null, the test default applies.
+    private UnitOfMeasure uom;
+
     // SI unit conversion fields
     private String valueSi;
     private UnitOfMeasure uomSi;
@@ -232,6 +237,47 @@ public class Result extends EnumValueItemImpl {
 
     public void setVirralloadLowLimit(Integer virralloadLowLimit) {
         this.virralloadLowLimit = virralloadLowLimit;
+    }
+
+    @JsonIgnore
+    public UnitOfMeasure getUom() {
+        return uom;
+    }
+
+    public void setUom(UnitOfMeasure uom) {
+        this.uom = uom;
+    }
+
+    /**
+     * Resolves the per-result UoM id (FK uom_id). Returns null when no override
+     * is set; callers should then fall back to the test's default UoM.
+     */
+    public String getUomId() {
+        if (uom == null) {
+            return null;
+        }
+        if (!Hibernate.isInitialized(uom)) {
+            try {
+                Hibernate.initialize(uom);
+            } catch (Exception e) {
+                return null;
+            }
+        }
+        return uom.getId();
+    }
+
+    public String getUomName() {
+        if (uom == null) {
+            return null;
+        }
+        if (!Hibernate.isInitialized(uom)) {
+            try {
+                Hibernate.initialize(uom);
+            } catch (Exception e) {
+                return null;
+            }
+        }
+        return uom.getUnitOfMeasureName();
     }
 
     public String getValueSi() {

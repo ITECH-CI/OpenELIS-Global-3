@@ -60,6 +60,13 @@
             <column name="parent_id" precision="10" scale="0" />
         </many-to-one>
 
+        <!-- Per-result UoM override (nullable, FK -> unit_of_measure) -->
+        <many-to-one name="uom"
+            class="org.openelisglobal.unitofmeasure.valueholder.UnitOfMeasure"
+            fetch="select">
+            <column name="uom_id" precision="10" scale="0" />
+        </many-to-one>
+
         <!-- SI Unit Conversion fields -->
         <property name="valueSi" type="java.lang.String">
             <column name="value_si" length="200" />

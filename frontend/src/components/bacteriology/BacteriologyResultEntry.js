@@ -26,6 +26,9 @@ const BacteriologyResultEntry = ({
 
   const [macroscopyResults, setMacroscopyResults] = useState({});
   const [microscopyResults, setMicroscopyResults] = useState({});
+  // Per-result UoM override for microscopy tests with a selectable unit
+  // (testId -> uom_id). Restored from backend on load, sent back on save.
+  const [microscopyUoms, setMicroscopyUoms] = useState({});
   const [floraData, setFloraData] = useState({});
   // Map of testId -> { cultureResult, organisms }
   const [cultures, setCultures] = useState({});
@@ -55,6 +58,12 @@ const BacteriologyResultEntry = ({
         // Load microscopy results from Map (testId -> value)
         if (data && data.microscopyResultsMap) {
           setMicroscopyResults(data.microscopyResultsMap);
+        }
+
+        // Restore per-result UoM picker selection (testId -> uom_id) for
+        // microscopy tests that override the test's default unit.
+        if (data && data.microscopyUomsMap) {
+          setMicroscopyUoms(data.microscopyUomsMap);
         }
 
         // Load culture results and organisms
@@ -230,6 +239,7 @@ const BacteriologyResultEntry = ({
       sysUserId: parseInt(sysUserId),
       macroscopyResults,
       microscopyResults,
+      microscopyUoms,
       floraData,
       // For backward compatibility, use first culture's result or empty
       cultureResult: Object.values(validCultures)[0]?.cultureResult || "",
@@ -377,8 +387,10 @@ const BacteriologyResultEntry = ({
           accessionNumber={accessionNumber}
           testResults={testResults}
           microscopyResults={microscopyResults}
+          microscopyUoms={microscopyUoms}
           floraData={floraData}
           onChange={setMicroscopyResults}
+          onUomChange={setMicroscopyUoms}
           onFloraChange={setFloraData}
           disabled={disabled || saving}
         />
