@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+    <!--
+        Rattache le test 'Microscopie - Frottis Coloration Gram - Bactéries -
+        Nombre de flore' directement aux types d'échantillon Pus et
+        Matériels (Prothèse, Sonde, Stérilet), via sampletype_test. Ainsi le
+        test est disponible à la saisie même sans cocher de panel.
+        Idempotent (NOT EXISTS).
+    -->
+
+    <changeSet id="add-nombre-de-flore-to-pus-materiel-sampletypes" author="pkomena">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="2">
+                SELECT count(*) FROM clinlims.type_of_sample
+                WHERE description IN ('Pus', 'Matériels (Prothèse, Sonde, Stérilet)')
+            </sqlCheck>
+        </preConditions>
+        <comment>
+            sampletype_test : Pus + Matériels -> Microscopie Gram Bactéries Nombre de flore
+        </comment>
+        <sql dbms="postgresql"><![CDATA[
+            INSERT INTO clinlims.sampletype_test (id, sample_type_id, test_id)
+            SELECT
+                nextval('clinlims.sample_type_test_seq'),
+                tos.id,
+                t.id
+            FROM clinlims.type_of_sample tos
+            CROSS JOIN clinlims.test t
+            WHERE tos.description IN ('Pus', 'Matériels (Prothèse, Sonde, Stérilet)')
+              AND t.name = 'Microscopie - Frottis Coloration Gram - Bactéries - Nombre de flore'
+              AND NOT EXISTS (
+                  SELECT 1 FROM clinlims.sampletype_test st
+                  WHERE st.sample_type_id = tos.id AND st.test_id = t.id
+              );
+        ]]></sql>
+    </changeSet>
+
+</databaseChangeLog>

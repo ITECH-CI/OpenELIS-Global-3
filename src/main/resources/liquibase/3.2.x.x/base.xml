@@ -101,6 +101,14 @@
         file="rename_secretion_cervical_to_cervicale.xml" />
     <include relativeToChangelogFile="true"
         file="add_yeasts_dictionary_and_uom_per_result.xml" />
+    <include relativeToChangelogFile="true"
+        file="add_gram_giemsa_tests_to_ecb_crachat_panel.xml" />
+    <include relativeToChangelogFile="true"
+        file="add_glucose_proteine_to_chimie_lcr_panel.xml" />
+    <include relativeToChangelogFile="true"
+        file="add_micro_tests_to_ecb_panels.xml" />
+    <include relativeToChangelogFile="true"
+        file="add_nombre_de_flore_to_pus_materiel_sampletypes.xml" />
 
 
 </databaseChangeLog>

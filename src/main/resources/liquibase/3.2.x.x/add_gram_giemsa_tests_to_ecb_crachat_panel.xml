@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+    <changeSet id="add-gram-giemsa-tests-to-ecb-crachat-panel" author="pkomena">
+        <comment>
+            Ajouter au panel ECB-Crachat :
+            - Microscopie - Frottis Coloration Gram - Polynucléaires
+            - Microscopie - Frottis Coloration Giemsa - Polynucléaires
+            - Microscopie - Frottis Coloration Giemsa - Lymphocytes
+        </comment>
+        <sql dbms="postgresql"><![CDATA[
+            INSERT INTO clinlims.panel_item (id, panel_id, lastupdated, test_id)
+            SELECT nextval('panel_item_seq'), p.id, now(), t.id
+            FROM clinlims.panel p
+            JOIN clinlims.test t
+              ON t.name IN (
+                  'Microscopie - Frottis Coloration Gram - Polynucléaires',
+                  'Microscopie - Frottis Coloration Giemsa - Polynucléaires',
+                  'Microscopie - Frottis Coloration Giemsa - Lymphocytes'
+              )
+            WHERE p.name = 'ECB-Crachat'
+              AND NOT EXISTS (
+                  SELECT 1 FROM clinlims.panel_item pi
+                  WHERE pi.panel_id = p.id AND pi.test_id = t.id
+              );
+        ]]></sql>
+    </changeSet>
+
+</databaseChangeLog>
