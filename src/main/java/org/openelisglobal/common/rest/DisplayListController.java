@@ -396,6 +396,8 @@ public class DisplayListController extends BaseRestController {
         configs.put("LAST_NAME_REGEX", LAST_NAME_REGEX);
         configs.put(Property.SHOW_SAMPLE_QUANTITY_AND_UOM.toString(),
                 ConfigurationProperties.getInstance().getPropertyValue(Property.SHOW_SAMPLE_QUANTITY_AND_UOM));
+        configs.put(Property.SEROLOGY_CONTROL.toString(),
+                ConfigurationProperties.getInstance().getPropertyValue(Property.SEROLOGY_CONTROL));
         return configs;
     }
 

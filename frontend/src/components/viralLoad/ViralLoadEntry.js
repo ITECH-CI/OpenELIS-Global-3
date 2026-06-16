@@ -241,6 +241,7 @@ const ViralLoadEntry = () => {
   const { configurationProperties } = useContext(ConfigurationContext);
   const { notificationVisible, addNotification, setNotificationVisible } =
     useContext(NotificationContext);
+  const serologyControlEnabled = configurationProperties.SEROLOGY_CONTROL === "true";
 
   const [form, setForm] = useState(EMPTY_FORM);
   const [genders, setGenders] = useState([]);
@@ -276,6 +277,12 @@ const ViralLoadEntry = () => {
   const [labNoValid, setLabNoValid] = useState(false);
   const [patientLookupStatus, setPatientLookupStatus] = useState("idle"); // "idle" | "searching" | "found" | "notfound"
   const [innManualMode, setInnManualMode] = useState(false);
+  const [serologyStatus, setSerologyStatus] = useState("idle"); // "idle" | "searching" | "found" | "notfound"
+  const [vlPatientSearchDone, setVlPatientSearchDone] = useState(false);
+  // Champs de recherche VL (non soumis au backend, servent uniquement à
+  // pré-remplir les champs du formulaire après la recherche du patient).
+  const [vlSearchSubjectNumber, setVlSearchSubjectNumber] = useState("");
+  const [vlSearchSiteSubjectNumber, setVlSearchSiteSubjectNumber] = useState("");
 
   // ─── Chargement initial ──────────────────────────────────────────────────────
   useEffect(() => {
@@ -441,8 +448,94 @@ const ViralLoadEntry = () => {
     );
   };
 
+  // ─── Sérologie VIH existante (Charge Virale) ─────────────────────────────────
+  // Mapping résultat sérologie (dictionnaire "HIVResult") -> entrée du
+  // dictionnaire "HIV Status" affiché dans le select Type VIH du formulaire VL.
+  const SEROLOGY_TO_HIV_STATUS_KEY = {
+    HIV1: "HIVStatus.HIV_1",
+    HIV2: "HIVStatus.HIV_2",
+    HIVD: "HIVStatus.HIVDual",
+  };
+
+  const applyHivStatusFromSerology = (serologyResult) => {
+    const targetKey = SEROLOGY_TO_HIV_STATUS_KEY[serologyResult];
+    if (!targetKey) return false;
+    const match = (dictionaryLists.HIV_TYPES || []).find((d) => d.displayKey === targetKey);
+    if (match) {
+      setObs("hivStatus", match.id);
+      return true;
+    }
+    return false;
+  };
+
+  const searchVLSerology = (subjectNo, siteSubjectNo) => {
+    if (!serologyControlEnabled) return;
+    setSerologyStatus("searching");
+    getFromOpenElisServer(
+      "/rest/serology-result-by-patient?subjectNumber=" +
+        encodeURIComponent(subjectNo) +
+        "&siteSubjectNumber=" +
+        encodeURIComponent(siteSubjectNo),
+      (data) => {
+        const validResults = ["HIV1", "HIV2", "HIVD"];
+        const found = Boolean(data?.serologyResult && validResults.includes(data.serologyResult));
+        if (found && applyHivStatusFromSerology(data.serologyResult)) {
+          setSerologyStatus("found");
+          setPD("serologyHIVTest", false);
+        } else {
+          setSerologyStatus("notfound");
+          setObs("hivStatus", "");
+          setPD("serologyHIVTest", true);
+          setPD("dryTubeTaken", true);
+        }
+      },
+    );
+  };
+
+  // ─── Recherche patient (Charge Virale) ───────────────────────────────────────
+  // Avant l'affichage du formulaire VL : on saisit Sujet No./Site Sujet No. et on
+  // recherche. Si le patient est trouvé, le formulaire apparaît pré-rempli
+  // (date de naissance, sexe). Sinon il apparaît vide pour une nouvelle saisie.
+  const searchVLPatient = () => {
+    const subjectNo = (vlSearchSubjectNumber || "").trim();
+    const siteSubjectNo = (vlSearchSiteSubjectNumber || "").trim();
+    if (!subjectNo && !siteSubjectNo) {
+      setPatientLookupStatus("idle");
+      return;
+    }
+    setPatientLookupStatus("searching");
+    setVlPatientSearchDone(false);
+    // Pré-remplit les champs du formulaire (soumis au backend) avec les valeurs
+    // saisies dans la recherche ; le formulaire les affiche, modifiables.
+    set("subjectNumber", subjectNo);
+    set("siteSubjectNumber", siteSubjectNo);
+    const searchParam = siteSubjectNo
+      ? "subjectNumber=" + encodeURIComponent(siteSubjectNo)
+      : "nationalID=" + encodeURIComponent(subjectNo);
+    getFromOpenElisServer(
+      "/rest/patient-search-results?" + searchParam + "&suppressExternalSearch=true",
+      (data) => {
+        const results = data && data.patientSearchResults ? data.patientSearchResults : [];
+        if (results.length > 0) {
+          const p = results[0];
+          setPatientLookupStatus("found");
+          if (p.birthdate) set("birthDateForDisplay", p.dob);
+          if (p.gender) set("gender", p.gender);
+        } else {
+          setPatientLookupStatus("notfound");
+        }
+        setVlPatientSearchDone(true);
+      },
+    );
+    if (serologyControlEnabled) searchVLSerology(subjectNo, siteSubjectNo);
+  };
+
   const handleStudyChange = (studyId) => {
     setPatientLookupStatus("idle");
+    setSerologyStatus("idle");
+    setVlPatientSearchDone(false);
+    setVlSearchSubjectNumber("");
+    setVlSearchSiteSubjectNumber("");
     setForm((prev) => ({
       ...prev,
       project: studyId,
@@ -603,7 +696,19 @@ const ViralLoadEntry = () => {
       case "VL_Id":
         req(form.gender, "Sexe");
         req(form.birthDateForDisplay, "Date de Naissance");
-        req(form.observations.hivStatus, "Type VIH");
+        if (serologyControlEnabled && serologyStatus === "notfound") {
+          if (!form.projectData.serologyHIVTest) {
+            errors.push(
+              intl.formatMessage({
+                id: "error.serology.test.required",
+                defaultMessage:
+                  "Un test de sérologie VIH est requis car aucun résultat existant n'a été trouvé.",
+              }),
+            );
+          }
+        } else {
+          req(form.observations.hivStatus, "Type VIH");
+        }
         break;
       case "Recency_Id":
         req(form.projectData.ARVcenterCode, "Code du Centre");
@@ -646,6 +751,10 @@ const ViralLoadEntry = () => {
         if (res.status === 200) {
           setSavedLabNo(labNoToSave);
           setShowSuccess(true);
+          setSerologyStatus("idle");
+          setVlPatientSearchDone(false);
+          setVlSearchSubjectNumber("");
+          setVlSearchSiteSubjectNumber("");
           setForm({
             ...EMPTY_FORM,
             currentDate: configurationProperties.currentDateAsText || "",
@@ -670,6 +779,10 @@ const ViralLoadEntry = () => {
   };
 
   const handleReset = () => {
+    setSerologyStatus("idle");
+    setVlPatientSearchDone(false);
+    setVlSearchSubjectNumber("");
+    setVlSearchSiteSubjectNumber("");
     setForm({
       ...EMPTY_FORM,
       project: form.project,
@@ -909,7 +1022,7 @@ const ViralLoadEntry = () => {
       </Row>
     );
   };
-  const fldSubjectNumber = (maxLength = 7) => (
+  const fldSubjectNumber = (maxLength = 7, onBlurExtra) => (
     <Row
       optional
       label={intl.formatMessage({
@@ -926,6 +1039,7 @@ const ViralLoadEntry = () => {
         style={{ maxWidth: "160px" }}
         value={form.subjectNumber}
         onChange={(e) => set("subjectNumber", e.target.value)}
+        onBlur={() => { if (onBlurExtra) onBlurExtra(); }}
       />
     </Row>
   );
@@ -2453,6 +2567,87 @@ const ViralLoadEntry = () => {
           defaultMessage="ARV - Charge Virale"
         />
       </div>
+      <Row
+        optional
+        label={intl.formatMessage({
+          id: "sample.entry.project.subjectNumber",
+          defaultMessage: "Sujet No.",
+        })}
+      >
+        <TextInput
+          id="vl_search_subjectNumber"
+          hideLabel
+          labelText=""
+          size="sm"
+          maxLength={7}
+          style={{ maxWidth: "160px" }}
+          value={vlSearchSubjectNumber}
+          onChange={(e) => setVlSearchSubjectNumber(e.target.value)}
+        />
+      </Row>
+      <Row
+        optional
+        label={intl.formatMessage({
+          id: "patient.site.subject.number",
+          defaultMessage: "Site Sujet No.",
+        })}
+      >
+        <TextInput
+          id="vl_search_siteSubjectNumber"
+          hideLabel
+          labelText=""
+          size="sm"
+          maxLength={17}
+          placeholder="00000/AA/AA/00000"
+          style={{ maxWidth: "220px" }}
+          value={vlSearchSiteSubjectNumber}
+          onChange={(e) => {
+            const raw = e.target.value.replace(/\//g, "").toUpperCase();
+            let validated = "";
+            for (let i = 0; i < raw.length && i < 14; i++) {
+              if (i < 5 || i >= 9) {
+                if (/\d/.test(raw[i])) validated += raw[i];
+              } else {
+                if (/[A-Z0-9]/.test(raw[i])) validated += raw[i];
+              }
+            }
+            let formatted = validated;
+            if (validated.length > 9) {
+              formatted = validated.slice(0, 5) + "/" + validated.slice(5, 7) + "/" + validated.slice(7, 9) + "/" + validated.slice(9);
+            } else if (validated.length > 7) {
+              formatted = validated.slice(0, 5) + "/" + validated.slice(5, 7) + "/" + validated.slice(7);
+            } else if (validated.length > 5) {
+              formatted = validated.slice(0, 5) + "/" + validated.slice(5);
+            }
+            setVlSearchSiteSubjectNumber(formatted);
+          }}
+        />
+      </Row>
+      <Row label="">
+        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+          <Button size="sm" kind="tertiary" onClick={searchVLPatient}>
+            <FormattedMessage id="label.button.search" defaultMessage="Rechercher" />
+          </Button>
+          {patientLookupStatus === "searching" && (
+            <span style={{ fontSize: "12px", color: "#6f6f6f", fontStyle: "italic" }}>
+              <FormattedMessage id="label.searching" defaultMessage="Recherche…" />
+            </span>
+          )}
+          {patientLookupStatus === "found" && (
+            <span style={{ display: "flex", alignItems: "center", gap: "4px", color: "#24a148", fontSize: "12px", fontWeight: "600" }}>
+              <CheckmarkFilled size={16} />
+              <FormattedMessage id="sample.entry.project.patientSearch.found" defaultMessage="Patient trouvé" />
+            </span>
+          )}
+          {patientLookupStatus === "notfound" && (
+            <span style={{ fontSize: "12px", color: "#da1e28", fontWeight: "600" }}>
+              <FormattedMessage id="sample.entry.project.patientSearch.notFound" defaultMessage="Patient non trouvé" />
+            </span>
+          )}
+        </div>
+      </Row>
+      {vlPatientSearchDone && (
+        <>
       {fldARVCenter()}
       {fldNameOfDoctor()}
       {fldNameOfSampler()}
@@ -2461,7 +2656,7 @@ const ViralLoadEntry = () => {
       {fldReceivedDate()}
       {fldReceivedTime()}
       {fldSubjectNumber(7)}
-      {fldSiteSubjectNumber(false, true)}
+      {fldSiteSubjectNumber(false, false)}
       {fldLabNo(LAB_PREFIXES.VL_Id)}
       {fldBirthDate()}
       {fldAge(true, false)}
@@ -2512,7 +2707,56 @@ const ViralLoadEntry = () => {
           </Row>
         </>
       )}
-      {fldHivStatus("HIV_TYPES", true)}
+      {serologyControlEnabled ? (
+        <Row
+          required
+          label={intl.formatMessage({
+            id: "patient.project.hivType",
+            defaultMessage: "Type VIH",
+          })}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <Select
+              id="f_hivStatus"
+              hideLabel
+              labelText=""
+              disabled={serologyStatus === "found"}
+              value={form.observations.hivStatus}
+              onChange={(e) => setObs("hivStatus", e.target.value)}
+              style={{ maxWidth: "240px" }}
+            >
+              <SelectItem value="" text={placeholder} />
+              {(dictionaryLists.HIV_TYPES || []).map((d) => (
+                <SelectItem key={d.id} value={d.id}
+                  text={intl.formatMessage({ id: d.displayKey, defaultMessage: d.value })} />
+              ))}
+            </Select>
+            {serologyStatus === "searching" && (
+              <span style={{ fontSize: "12px", color: "#6f6f6f", fontStyle: "italic" }}>
+                <FormattedMessage id="label.searching" defaultMessage="Recherche sérologie…" />
+              </span>
+            )}
+            {serologyStatus === "found" && (
+              <span style={{ fontSize: "12px", color: "#24a148", fontWeight: "600" }}>
+                <FormattedMessage
+                  id="sample.entry.project.serology.found"
+                  defaultMessage="Sérologie existante détectée"
+                />
+              </span>
+            )}
+            {serologyStatus === "notfound" && (
+              <span style={{ fontSize: "12px", color: "#da1e28", fontWeight: "600" }}>
+                <FormattedMessage
+                  id="sample.entry.project.serology.notfound"
+                  defaultMessage="Aucune sérologie existante : test sérologie requis"
+                />
+              </span>
+            )}
+          </div>
+        </Row>
+      ) : (
+        fldHivStatus("HIV_TYPES", true)
+      )}
       <Row
         label={intl.formatMessage({
           id: "sample.entry.project.arv.treatment",
@@ -2865,6 +3109,43 @@ const ViralLoadEntry = () => {
           defaultMessage="Échantillons"
         />
       </div>
+      {serologyControlEnabled && serologyStatus === "notfound" && (
+        <>
+          <div style={S.row}>
+            <div style={S.label}>
+              <FormattedMessage
+                id="sample.entry.project.ARV.dryTubeTaken"
+                defaultMessage="Tube Sec"
+              />
+            </div>
+            <div style={S.inputWrap}>
+              <Checkbox
+                id="vl_dryTubeTaken"
+                labelText=""
+                checked={form.projectData.dryTubeTaken}
+                onChange={(_, { checked }) => setPD("dryTubeTaken", checked)}
+              />
+            </div>
+          </div>
+          <div style={S.row}>
+            <div style={S.label}>
+              <span style={S.asterisk}>*</span>
+              <FormattedMessage
+                id="sample.entry.project.serologyHIVTest"
+                defaultMessage="Sérologie VIH"
+              />
+            </div>
+            <div style={S.inputWrap}>
+              <Checkbox
+                id="vl_serologyHIVTest"
+                labelText=""
+                checked={form.projectData.serologyHIVTest}
+                onChange={(_, { checked }) => setPD("serologyHIVTest", checked)}
+              />
+            </div>
+          </div>
+        </>
+      )}
       <div style={S.row}>
         <div style={S.label}>
           <FormattedMessage
@@ -2934,6 +3215,8 @@ const ViralLoadEntry = () => {
           />
         </div>
       </div>
+        </>
+      )}
     </div>
   );
 

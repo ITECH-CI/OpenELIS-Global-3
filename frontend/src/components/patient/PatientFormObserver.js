@@ -1,7 +1,7 @@
 import { useFormikContext } from "formik";
 import { useEffect } from "react";
 
-const bacterioFields = [
+export const bacterioFields = [
   "currentHospitalization",
   "roomNumber",
   "clinicalInformations",
