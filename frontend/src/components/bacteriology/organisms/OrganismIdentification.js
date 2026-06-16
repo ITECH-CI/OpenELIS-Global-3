@@ -31,6 +31,7 @@ const OrganismIdentification = ({
   cultureTestId = "",
 }) => {
   const [organismNames, setOrganismNames] = useState([]);
+  const [yeastNames, setYeastNames] = useState([]);
   const [gramTypes, setGramTypes] = useState([]);
   const [groupingModes, setGroupingModes] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -50,7 +51,12 @@ const OrganismIdentification = ({
   useEffect(() => {
     // Load organism names from dictionary category "Bacteria"
     getFromOpenElisServer("/rest/dictionary/category/Bacteria", (data) => {
-      setOrganismNames(data);
+      setOrganismNames(data || []);
+    });
+
+    // Load yeast names from dictionary category "Yeasts"
+    getFromOpenElisServer("/rest/dictionary/category/Yeasts", (data) => {
+      setYeastNames(data || []);
     });
 
     // Load gram types from dictionary
@@ -92,8 +98,12 @@ const OrganismIdentification = ({
     || normalizedCultureName.includes("secretions vaginales");
   const shouldForceCandidaAlbicans = isYeast && isVaginalCulture;
 
+  // Picker source : Yeasts quand Levure, sinon Bacteria. Pour le cas particulier
+  // 'Culture - Sécrétions vaginales' + Levure, on force Candida albicans (le
+  // picker se réduit à une seule entrée et est figé).
+  const baseOrganismList = isYeast ? yeastNames : organismNames;
   const displayedOrganismNames = shouldForceCandidaAlbicans
-    ? (organismNames || []).filter((o) => {
+    ? (baseOrganismList || []).filter((o) => {
         const dictId = parseInt(o?.id);
         const name = String(o?.value || o?.name || "").toLowerCase();
         return (
@@ -101,7 +111,7 @@ const OrganismIdentification = ({
           || name.includes(CANDIDA_ALBICANS_NAME_LOWERCASE)
         );
       })
-    : organismNames;
+    : baseOrganismList;
 
   useEffect(() => {
     if (!shouldForceCandidaAlbicans) return;

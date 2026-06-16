@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+    <!--
+        1) Nouvelle catégorie de dictionnaire 'Yeasts' pour proposer des
+           levures à la saisie bacterio (séparées de 'Bacteria').
+        2) Seed des espèces les plus fréquentes + bascule de Candida albicans
+           déjà existante dans cette nouvelle catégorie.
+        3) Ajout de result.uom_id (nullable, FK -> unit_of_measure) pour
+           permettre à un résultat de surcharger l'unité par défaut du test
+           (mm³ vs num/champ pour les comptages microscopiques).
+    -->
+
+    <changeSet id="create-yeasts-dictionary-category" author="pkomena">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">
+                SELECT count(*) FROM clinlims.dictionary_category WHERE name = 'Yeasts'
+            </sqlCheck>
+        </preConditions>
+        <sql dbms="postgresql"><![CDATA[
+            INSERT INTO clinlims.dictionary_category
+                (id, name, description, lastupdated)
+            VALUES (
+                nextval('clinlims.dictionary_category_seq'),
+                'Yeasts',
+                'Levures (Yeasts)',
+                now()
+            );
+        ]]></sql>
+    </changeSet>
+
+    <changeSet id="seed-yeasts-dictionary-entries" author="pkomena">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="1">
+                SELECT count(*) FROM clinlims.dictionary_category WHERE name = 'Yeasts'
+            </sqlCheck>
+        </preConditions>
+        <sql dbms="postgresql"><![CDATA[
+            -- Bascule de Candida albicans (déjà présent) vers la catégorie Yeasts
+            UPDATE clinlims.dictionary
+            SET dictionary_category_id =
+                  (SELECT id FROM clinlims.dictionary_category WHERE name = 'Yeasts' LIMIT 1),
+                lastupdated = now()
+            WHERE dict_entry = 'Candida albicans';
+
+            -- Seed des autres levures fréquentes (idempotent grâce au NOT EXISTS)
+            INSERT INTO clinlims.dictionary
+                (id, is_active, dict_entry, dictionary_category_id, lastupdated)
+            SELECT nextval('clinlims.dictionary_seq'), 'Y', v.entry,
+                   (SELECT id FROM clinlims.dictionary_category WHERE name = 'Yeasts' LIMIT 1),
+                   now()
+            FROM (VALUES
+                ('Candida glabrata'),
+                ('Candida tropicalis'),
+                ('Candida parapsilosis'),
+                ('Candida krusei'),
+                ('Saccharomyces cerevisiae')
+            ) AS v(entry)
+            WHERE NOT EXISTS (
+                SELECT 1 FROM clinlims.dictionary d WHERE d.dict_entry = v.entry
+            );
+        ]]></sql>
+    </changeSet>
+
+    <changeSet id="add-uom-id-to-result" author="pkomena">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists schemaName="clinlims" tableName="result" columnName="uom_id"/>
+            </not>
+        </preConditions>
+        <sql dbms="postgresql"><![CDATA[
+            ALTER TABLE clinlims.result
+            ADD COLUMN uom_id NUMERIC NULL
+                REFERENCES clinlims.unit_of_measure(id);
+
+            CREATE INDEX IF NOT EXISTS idx_result_uom_id ON clinlims.result(uom_id);
+        ]]></sql>
+    </changeSet>
+
+</databaseChangeLog>

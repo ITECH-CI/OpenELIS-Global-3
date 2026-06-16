@@ -95,6 +95,12 @@
         file="add_serology_control_site_info.xml" />
     <include relativeToChangelogFile="true"
         file="add_leucorrhees_to_ecb_panels.xml" />
+    <include relativeToChangelogFile="true"
+        file="update_uom_to_num_champ_for_bacterio_tests.xml" />
+    <include relativeToChangelogFile="true"
+        file="rename_secretion_cervical_to_cervicale.xml" />
+    <include relativeToChangelogFile="true"
+        file="add_yeasts_dictionary_and_uom_per_result.xml" />
 
 
 </databaseChangeLog>

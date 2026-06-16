@@ -1,21 +1,44 @@
-import { Column, Grid, Section } from "@carbon/react";
-import { useMemo } from "react";
+import { Column, Grid, Section, Select, SelectItem } from "@carbon/react";
+import { useMemo, useState } from "react";
 import { FormattedMessage } from "react-intl";
 import BacteriologyResultField from "../common/BacteriologyResultField";
 import ConditionalTestGroup from "../ConditionalTestGroup";
 import FloraList from "../FloraList";
 
+// Whitelist of tests for which the user may switch the unit of measure
+// between mm³ and num/champ at result entry time (Etat frais Quantitatif).
+const UOM_SELECTABLE_TEST_IDS = new Set(["486", "487", "567", "568"]);
+const UOM_OPTIONS = [
+  { id: "7", value: "mm3", label: "mm³" },
+  { id: "165", value: "num/champ", label: "num/champ" },
+];
+
 const MicroscopySection = ({
   accessionNumber,
   testResults = [],
   microscopyResults = {},
+  microscopyUoms = {},
   floraData = {},
   onChange,
+  onUomChange,
   onFloraChange,
   disabled = false,
 }) => {
   const handleFieldChange = (testId, value) => {
     onChange({ ...microscopyResults, [testId]: value });
+  };
+
+  // Local fallback if the parent doesn't yet handle UoM state (Phase 1).
+  const [localUoms, setLocalUoms] = useState({});
+  const effectiveUoms =
+    Object.keys(microscopyUoms || {}).length > 0 ? microscopyUoms : localUoms;
+
+  const handleUomChange = (testId, uomId) => {
+    if (onUomChange) {
+      onUomChange({ ...(microscopyUoms || {}), [testId]: uomId });
+    } else {
+      setLocalUoms((prev) => ({ ...prev, [testId]: uomId }));
+    }
   };
 
   // IMPORTANT: both callbacks below MUST use the functional updater form because
@@ -168,6 +191,36 @@ const MicroscopySection = ({
               const isMultiSelect = test.resultType === "M";
               const uniqueKey = `${test.analysisId}-${test.testId}`;
               const cleanedName = cleanTestName(test.testName);
+              const uomSelectable = UOM_SELECTABLE_TEST_IDS.has(
+                String(test.testId),
+              );
+              const selectedUomId =
+                effectiveUoms[test.testId] != null
+                  ? String(effectiveUoms[test.testId])
+                  : "";
+              const labelWithUom =
+                !uomSelectable && test.unitsOfMeasure
+                  ? `${cleanedName} (${test.unitsOfMeasure})`
+                  : cleanedName;
+
+              const field = (
+                <BacteriologyResultField
+                  id={`micro_${test.testId}`}
+                  label={labelWithUom}
+                  type={
+                    isDictionary || isMultiSelect
+                      ? "select"
+                      : test.resultType === "N"
+                        ? "number"
+                        : "text"
+                  }
+                  value={microscopyResults[test.testId] ?? ""}
+                  onChange={(value) => handleFieldChange(test.testId, value)}
+                  options={test.dictionaryResults || []}
+                  disabled={disabled}
+                  required={false}
+                />
+              );
 
               return (
                 <Column
@@ -177,26 +230,39 @@ const MicroscopySection = ({
                   sm={4}
                   style={{ marginBottom: "1.5rem" }}
                 >
-                  <BacteriologyResultField
-                    id={`micro_${test.testId}`}
-                    label={
-                      test.unitsOfMeasure
-                        ? `${cleanedName} (${test.unitsOfMeasure})`
-                        : cleanedName
-                    }
-                    type={
-                      isDictionary || isMultiSelect
-                        ? "select"
-                        : test.resultType === "N"
-                          ? "number"
-                          : "text"
-                    }
-                    value={microscopyResults[test.testId] ?? ""}
-                    onChange={(value) => handleFieldChange(test.testId, value)}
-                    options={test.dictionaryResults || []}
-                    disabled={disabled}
-                    required={false}
-                  />
+                  {uomSelectable ? (
+                    <div
+                      style={{
+                        display: "flex",
+                        gap: "0.5rem",
+                        alignItems: "flex-end",
+                      }}
+                    >
+                      <div style={{ flex: 2 }}>{field}</div>
+                      <div style={{ flex: 1, minWidth: "9rem" }}>
+                        <Select
+                          id={`micro_uom_${test.testId}`}
+                          labelText="Unité"
+                          value={selectedUomId}
+                          onChange={(e) =>
+                            handleUomChange(test.testId, e.target.value)
+                          }
+                          disabled={disabled}
+                        >
+                          <SelectItem value="" text="Choisir..." />
+                          {UOM_OPTIONS.map((opt) => (
+                            <SelectItem
+                              key={opt.id}
+                              value={opt.id}
+                              text={opt.label}
+                            />
+                          ))}
+                        </Select>
+                      </div>
+                    </div>
+                  ) : (
+                    field
+                  )}
                 </Column>
               );
             })}

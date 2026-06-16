@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+    <!--
+        Bascule de l'unité '/champ' vers 'num/champ' pour les tests de
+        microscopie qui dénombrent des cellules par champ.
+        Le test 'Sécrétion cervical' (sans 'e') a été renommé en
+        'Sécrétion cervicale' par une migration ultérieure ; on cible
+        ici les deux orthographes pour rester indépendant de l'ordre
+        d'exécution.
+    -->
+    <changeSet id="bacterio-tests-uom-num-champ" author="pkomena">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="1">
+                SELECT count(*) FROM clinlims.unit_of_measure
+                WHERE name = 'num/champ'
+            </sqlCheck>
+        </preConditions>
+        <sql dbms="postgresql"><![CDATA[
+            UPDATE clinlims.test
+            SET uom_id = (SELECT id FROM clinlims.unit_of_measure WHERE name = 'num/champ' LIMIT 1),
+                lastupdated = now()
+            WHERE name IN (
+                'Microscopie - Frottis Coloration Gram - Bactéries - Sécrétion vaginale - Polynucléaires',
+                'Microscopie - Frottis Coloration Gram - Bactéries - Sécrétion vaginale - Lactobacillus',
+                'Microscopie - Frottis Coloration Gram - Bactéries - Sécrétion vaginale - Mobiluncus',
+                'Microscopie - Frottis Coloration Gram - Bactéries - Sécrétion vaginale - Gardnerella vaginalis',
+                'Microscopie - Frottis Coloration Gram - Bactéries - Sécrétion cervical - Polynucléaires',
+                'Microscopie - Frottis Coloration Gram - Bactéries - Sécrétion cervicale - Polynucléaires'
+            );
+        ]]></sql>
+    </changeSet>
+
+</databaseChangeLog>
