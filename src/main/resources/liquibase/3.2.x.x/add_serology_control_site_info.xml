@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+     http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+    <property name="now" value="now()" dbms="postgresql" />
+
+    <changeSet author="pkomena" id="add-serology-control-site-info-1">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">SELECT count(*) FROM
+                clinlims.site_information WHERE name =
+                'serology control'</sqlCheck>
+        </preConditions>
+        <comment>Ajouter le paramètre pour activer/désactiver le contrôle de sérologie VIH existante à la saisie d'échantillon Charge Virale</comment>
+        <insert schemaName="clinlims" tableName="site_information">
+            <column name="id" valueSequenceNext="site_information_seq" />
+            <column name="name" value="serology control" />
+            <column name="lastupdated" valueComputed="${now}" />
+            <column name="description"
+                value="Activer la vérification de sérologie VIH existante (avec auto-remplissage du type VIH) lors de la saisie d'échantillons Charge Virale" />
+            <column name="value" value="false" />
+            <column name="encrypted" value="false" />
+            <column name="domain_id"
+                valueComputed="(SELECT id FROM site_information_domain WHERE name = 'sampleEntryConfig' LIMIT 1)" />
+            <column name="value_type" value="boolean" />
+            <column name="instruction_key"
+                value="instructions.sampleEntry.serologyControl" />
+            <column name="group" value="0" />
+            <column name="description_key"
+                value="siteInfo.serology.control" />
+        </insert>
+    </changeSet>
+
+</databaseChangeLog>

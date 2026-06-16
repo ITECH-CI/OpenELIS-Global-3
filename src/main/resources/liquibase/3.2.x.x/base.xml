@@ -91,6 +91,8 @@
         file="add_show_audit_on_patient_report_config.xml" />
     <include relativeToChangelogFile="true"
         file="site_information_defaults_3_2_3_13.xml" />
+    <include relativeToChangelogFile="true"
+        file="add_serology_control_site_info.xml" />
 
 
 </databaseChangeLog>

@@ -13,6 +13,10 @@ import java.util.*;
 import org.apache.commons.validator.GenericValidator;
 import org.hl7.fhir.instance.model.api.IBaseBundle;
 import org.hl7.fhir.r4.model.*;
+import org.openelisglobal.analysis.service.AnalysisService;
+import org.openelisglobal.analysis.valueholder.Analysis;
+import org.openelisglobal.analyte.service.AnalyteService;
+import org.openelisglobal.analyte.valueholder.Analyte;
 import org.openelisglobal.common.log.LogEvent;
 import org.openelisglobal.common.provider.query.PatientSearchResults;
 import org.openelisglobal.common.provider.query.PatientSearchResultsForm;
@@ -21,17 +25,22 @@ import org.openelisglobal.common.provider.query.workerObjects.PatientSearchLocal
 import org.openelisglobal.common.provider.query.workerObjects.PatientSearchWorker;
 import org.openelisglobal.common.rest.BaseRestController;
 import org.openelisglobal.common.rest.util.PatientSearchResultsPaging;
+import org.openelisglobal.common.services.StatusService;
 import org.openelisglobal.common.util.ConfigurationProperties;
 import org.openelisglobal.common.util.ConfigurationProperties.Property;
 import org.openelisglobal.dataexchange.fhir.FhirConfig;
 import org.openelisglobal.dataexchange.fhir.FhirUtil;
 import org.openelisglobal.dataexchange.fhir.service.FhirTransformService;
+import org.openelisglobal.dictionary.service.DictionaryService;
+import org.openelisglobal.dictionary.valueholder.Dictionary;
 import org.openelisglobal.internationalization.MessageUtil;
 import org.openelisglobal.observationhistory.service.ObservationHistoryService;
 import org.openelisglobal.observationhistory.service.ObservationHistoryServiceImpl.ObservationType;
 import org.openelisglobal.patient.service.PatientService;
 import org.openelisglobal.patient.valueholder.Patient;
 import org.openelisglobal.person.service.PersonService;
+import org.openelisglobal.result.service.ResultService;
+import org.openelisglobal.result.valueholder.Result;
 import org.openelisglobal.sample.service.SampleService;
 import org.openelisglobal.sample.valueholder.Sample;
 import org.openelisglobal.samplehuman.service.SampleHumanService;
@@ -65,6 +74,17 @@ public class PatientSearchRestController extends BaseRestController {
     SampleHumanService sampleHumanService;
     @Autowired
     SearchResultsService searchResultsService;
+    @Autowired
+    AnalysisService analysisService;
+    @Autowired
+    ResultService resultService;
+    @Autowired
+    DictionaryService dictionaryService;
+    @Autowired
+    AnalyteService analyteService;
+
+    private static final String CONCLUSION_ANALYTE_NAME = "Conclusion";
+    private static final String HIV_RESULT_CATEGORY = "HIVResult";
 
     StringOrListParam targetSystemsParam;
 
@@ -122,6 +142,178 @@ public class PatientSearchRestController extends BaseRestController {
             paging.page(request, form, requestedPageNumber);
         }
         return form;
+    }
+
+    /**
+     * Searches for a finalized serology HIV type result for a patient identified
+     * by subjectNumber (national ID) or siteSubjectNumber (external ID). Because
+     * the same physical patient may have multiple patient entries (one per
+     * program), this searches ALL matching patient records for a "Conclusion"
+     * result in the HIVResult dictionary category.
+     */
+    @GetMapping(value = "serology-result-by-patient", produces = MediaType.APPLICATION_JSON_VALUE)
+    @ResponseBody
+    public Map<String, Object> getSerologyResultByPatient(@RequestParam(required = false) String subjectNumber,
+            @RequestParam(required = false) String siteSubjectNumber) {
+        Map<String, Object> response = new HashMap<>();
+        List<Patient> patients = findAllMatchingPatients(subjectNumber, siteSubjectNumber);
+
+        if (patients.isEmpty()) {
+            response.put("patientFound", false);
+            return response;
+        }
+
+        Patient firstPatient = patients.get(0);
+        response.put("patientFound", true);
+        response.put("patientPK", firstPatient.getId());
+        response.put("subjectNumber", firstPatient.getNationalId());
+        response.put("siteSubjectNumber", firstPatient.getExternalId());
+
+        String hivType = null;
+        for (Patient patient : patients) {
+            hivType = findConclusionHivResult(patient);
+            if (hivType != null) {
+                break;
+            }
+        }
+        response.put("serologyResult", hivType);
+        return response;
+    }
+
+    /**
+     * Find ALL patient records matching the given subjectNumber or
+     * siteSubjectNumber, including other records sharing the same national/
+     * external id (the same physical patient may have one entry per program).
+     */
+    private List<Patient> findAllMatchingPatients(String subjectNumber, String siteSubjectNumber) {
+        Set<String> seenIds = new HashSet<>();
+        List<Patient> allPatients = new ArrayList<>();
+
+        if (!GenericValidator.isBlankOrNull(subjectNumber)) {
+            List<Patient> byNationalId = patientService.getPatientsByNationalId(subjectNumber.trim());
+            if (byNationalId != null) {
+                for (Patient p : byNationalId) {
+                    if (seenIds.add(p.getId())) {
+                        allPatients.add(p);
+                    }
+                }
+            }
+        }
+
+        if (!GenericValidator.isBlankOrNull(siteSubjectNumber)) {
+            Patient byExternalId = patientService.getPatientByExternalId(siteSubjectNumber.trim());
+            if (byExternalId != null && seenIds.add(byExternalId.getId())) {
+                allPatients.add(byExternalId);
+            }
+            List<Patient> byNationalId2 = patientService.getPatientsByNationalId(siteSubjectNumber.trim());
+            if (byNationalId2 != null) {
+                for (Patient p : byNationalId2) {
+                    if (seenIds.add(p.getId())) {
+                        allPatients.add(p);
+                    }
+                }
+            }
+        }
+
+        // Cross-search: for each patient found, also look for other patients
+        // sharing the same nationalId or externalId
+        List<Patient> additionalPatients = new ArrayList<>();
+        for (Patient p : allPatients) {
+            if (!GenericValidator.isBlankOrNull(p.getNationalId())) {
+                List<Patient> related = patientService.getPatientsByNationalId(p.getNationalId());
+                if (related != null) {
+                    for (Patient r : related) {
+                        if (seenIds.add(r.getId())) {
+                            additionalPatients.add(r);
+                        }
+                    }
+                }
+            }
+            if (!GenericValidator.isBlankOrNull(p.getExternalId())) {
+                Patient byExt = patientService.getPatientByExternalId(p.getExternalId());
+                if (byExt != null && seenIds.add(byExt.getId())) {
+                    additionalPatients.add(byExt);
+                }
+            }
+        }
+        allPatients.addAll(additionalPatients);
+
+        return allPatients;
+    }
+
+    /**
+     * Search all finalized analyses for this patient to find an HIV type result.
+     * Strategy: 1. First look for a result with the "Conclusion" analyte in
+     * HIVResult category. 2. Fallback: look for any Dictionary result in the
+     * HIVResult category.
+     */
+    private String findConclusionHivResult(Patient patient) {
+        String finalizedStatusId = StatusService.getInstance().getStatusID(StatusService.AnalysisStatus.Finalized);
+
+        Analyte searchAnalyte = new Analyte();
+        searchAnalyte.setAnalyteName(CONCLUSION_ANALYTE_NAME);
+        Analyte conclusionAnalyte = analyteService.getAnalyteByName(searchAnalyte, false);
+        String conclusionAnalyteId = conclusionAnalyte != null ? conclusionAnalyte.getId() : null;
+
+        List<Sample> samples = sampleHumanService.getSamplesForPatient(patient.getId());
+        String fallbackHivEntry = null;
+
+        for (int i = samples.size() - 1; i >= 0; i--) {
+            Sample sample = samples.get(i);
+            List<Analysis> analyses = analysisService.getAnalysesBySampleId(sample.getId());
+
+            for (Analysis analysis : analyses) {
+                if (!finalizedStatusId.equals(analysis.getStatusId())) {
+                    continue;
+                }
+
+                List<Result> results = resultService.getResultsByAnalysis(analysis);
+                if (results == null || results.isEmpty()) {
+                    continue;
+                }
+
+                for (Result r : results) {
+                    // Strategy 1: Conclusion analyte match (priority)
+                    if (conclusionAnalyteId != null && r.getAnalyte() != null
+                            && conclusionAnalyteId.equals(r.getAnalyte().getId())) {
+                        String hivEntry = resolveHivResultDictionaryEntry(r.getValue());
+                        if (hivEntry != null) {
+                            return hivEntry;
+                        }
+                    }
+
+                    // Strategy 2: Any Dictionary result in HIVResult category
+                    if ("D".equals(r.getResultType()) && fallbackHivEntry == null) {
+                        String hivEntry = resolveHivResultDictionaryEntry(r.getValue());
+                        if (hivEntry != null) {
+                            fallbackHivEntry = hivEntry;
+                        }
+                    }
+                }
+            }
+        }
+
+        return fallbackHivEntry;
+    }
+
+    /**
+     * Resolve a dictionary ID to its entry text, but only if it belongs to the
+     * HIVResult category.
+     */
+    private String resolveHivResultDictionaryEntry(String dictionaryId) {
+        if (GenericValidator.isBlankOrNull(dictionaryId)) {
+            return null;
+        }
+        try {
+            Dictionary dict = dictionaryService.getDictionaryById(dictionaryId);
+            if (dict != null && dict.getDictEntry() != null && dict.getDictionaryCategory() != null
+                    && HIV_RESULT_CATEGORY.equals(dict.getDictionaryCategory().getCategoryName())) {
+                return dict.getDictEntry();
+            }
+        } catch (RuntimeException e) {
+            LogEvent.logError(e.getMessage(), e);
+        }
+        return null;
     }
 
     private Patient getPatientForLabNumber(String labNumber) {

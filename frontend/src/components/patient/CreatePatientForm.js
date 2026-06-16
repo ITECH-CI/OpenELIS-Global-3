@@ -35,7 +35,7 @@ import { AlertDialog, NotificationKinds } from "../common/CustomNotification";
 import CreatePatientFormValues from "../formModel/innitialValues/CreatePatientFormValues";
 import CreatePatientValidationSchema from "../formModel/validationSchema/CreatePatientValidationShema";
 import { ConfigurationContext, NotificationContext } from "../layout/Layout";
-import PatientFormObserver from "./PatientFormObserver";
+import PatientFormObserver, { bacterioFields } from "./PatientFormObserver";
 
 function CreatePatientForm(props) {
   const componentMounted = useRef(false);
@@ -420,7 +420,7 @@ function CreatePatientForm(props) {
     setIsSubmitting(true);
 
     const patientProps = { ...values };
-    ["years", "months", "days"].forEach((f) => {
+    [...bacterioFields, "years", "months", "days"].forEach((f) => {
       delete patientProps[f];
       delete patientProps[f + "-input"];
     });
