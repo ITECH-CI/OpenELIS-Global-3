@@ -158,13 +158,13 @@ public class SamplePatientEntryRestController extends BaseSampleEntryController 
             "patientTbInfo.tbSpecimenNature", "patientTbInfo.tbSubjectNumber", "patientTbInfo.selectedTbMethod",
             "patientTbInfo.selectedMethodToRemove", "patientTbInfo.tbSubjectNumberRes",
             // Routine Bacteriology
-            "patientRoutineBacteriology.currentHospitalization", "patientRoutineBacteriology.roomNumber",
-            "patientRoutineBacteriology.clinicalInformations", "patientRoutineBacteriology.clinicalInformationOther",
-            "patientRoutineBacteriology.recentAntibiotherapy", "patientRoutineBacteriology.recentAntibiotherapyList",
-            "patientRoutineBacteriology.currentAntibiotherapy", "patientRoutineBacteriology.currentAntibiotherapyList",
-            "patientRoutineBacteriology.currentAntibiotherapyDuration",
-            "patientRoutineBacteriology.recentHospitalization",
-            "patientRoutineBacteriology.recentHospitalizationCount", 
+            "patientRoutineBacterioInfo.currentHospitalization", "patientRoutineBacterioInfo.roomNumber",
+            "patientRoutineBacterioInfo.clinicalInformations", "patientRoutineBacterioInfo.clinicalInformationOther",
+            "patientRoutineBacterioInfo.recentAntibiotherapy", "patientRoutineBacterioInfo.recentAntibiotherapyList",
+            "patientRoutineBacterioInfo.currentAntibiotherapy", "patientRoutineBacterioInfo.currentAntibiotherapyList",
+            "patientRoutineBacterioInfo.currentAntibiotherapyDuration",
+            "patientRoutineBacterioInfo.recentHospitalization",
+            "patientRoutineBacterioInfo.recentHospitalizationCount", 
         
             /* Charge virale Fields */
             // common 

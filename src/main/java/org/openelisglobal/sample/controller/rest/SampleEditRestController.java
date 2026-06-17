@@ -33,6 +33,7 @@ import org.openelisglobal.observationhistory.valueholder.ObservationHistory;
 import org.openelisglobal.observationhistorytype.service.ObservationHistoryTypeService;
 import org.openelisglobal.observationhistorytype.valueholder.ObservationHistoryType;
 import org.openelisglobal.patient.action.bean.PatientRoutineBacterioInfo;
+import org.openelisglobal.patient.action.bean.PatientTbInfo;
 import org.openelisglobal.patient.action.bean.PatientSearch;
 import org.openelisglobal.patient.service.PatientService;
 import org.openelisglobal.patient.valueholder.Patient;
@@ -170,6 +171,7 @@ public class SampleEditRestController extends BaseSampleEntryController {
                 form.setMaxAccessionNumber(maxAccessionNumber);
                 form.setIsConfirmationSample(sampleService.isConfirmationSample(sample));
                 form.setPatientRoutineBacterioInfo(loadBacterioInfo(sample.getId()));
+                form.setPatientTbInfo(loadTbInfo(sample.getId()));
             } else {
                 form.setNoSampleFound(Boolean.TRUE);
             }
@@ -454,9 +456,27 @@ public class SampleEditRestController extends BaseSampleEntryController {
             byTypeId.computeIfAbsent(obs.getObservationHistoryTypeId(), k -> new ArrayList<>()).add(obs);
         }
 
-        // Use BacterioTypeExamens as the primary gate: always saved for any bacterio order
-        ObservationHistoryType bacterioOrderType = observationHistoryTypeService.getByName("BacterioTypeExamens");
-        if (bacterioOrderType == null || !byTypeId.containsKey(bacterioOrderType.getId())) {
+        // Gate : on retourne null seulement si AUCUN champ bactério n'a jamais
+        // été saisi pour cet échantillon. On testait précédemment uniquement la
+        // présence de "BacterioTypeExamens", mais cette obs n'est créée que si
+        // sampleOrderItems.orderType est non vide à la création. Pour une modif
+        // qui n'expose pas ce champ, replaceBacterioObservations efface
+        // BacterioTypeExamens et le suivant load ne renvoyait plus rien, masquant
+        // toutes les autres infos déjà saisies (renseignements cliniques,
+        // antibiothérapies, etc.).
+        boolean hasAnyBacterioObservation = false;
+        for (String typeName : new String[] {
+                "BacterioTypeExamens", "EPIDEMIO_WEEK", "currentHospitalization", "roomNumber",
+                "CLINICAL_INFOS", "CLINICAL_INFOS_OTHER", "PREV3M_ATB", "PREV3M_ATB_LIST", "CURR_ATB",
+                "CURR_ATB_LIST", "CURR_ATB_DUR", "HOSP_3M", "HOSP_3M_COUNT", "INVASIVE_GESTURE",
+                "INDWELLING_DEVICES" }) {
+            ObservationHistoryType oht0 = observationHistoryTypeService.getByName(typeName);
+            if (oht0 != null && byTypeId.containsKey(oht0.getId())) {
+                hasAnyBacterioObservation = true;
+                break;
+            }
+        }
+        if (!hasAnyBacterioObservation) {
             return null;
         }
 
@@ -595,6 +615,98 @@ public class SampleEditRestController extends BaseSampleEntryController {
                     }
                 }
                 info.setIndwellingDevice(ids);
+            }
+        }
+
+        return info;
+    }
+
+    /**
+     * Charge les observations TB persistées pour cet échantillon et reconstruit
+     * un PatientTbInfo pré-rempli. Symétrique à loadBacterioInfo. Retourne null
+     * si aucun bloc TB n'a été saisi (l'absence de TbOrderReason sert de gate).
+     */
+    private PatientTbInfo loadTbInfo(String sampleId) {
+        List<ObservationHistory> allObs = observationHistoryService.getObservationHistoriesBySampleId(sampleId);
+        if (allObs == null || allObs.isEmpty()) {
+            return null;
+        }
+
+        Map<String, List<ObservationHistory>> byTypeId = new HashMap<>();
+        for (ObservationHistory obs : allObs) {
+            byTypeId.computeIfAbsent(obs.getObservationHistoryTypeId(), k -> new ArrayList<>()).add(obs);
+        }
+
+        ObservationHistoryType tbOrderType = observationHistoryTypeService.getByName("TbOrderReason");
+        if (tbOrderType == null || !byTypeId.containsKey(tbOrderType.getId())) {
+            return null;
+        }
+
+        PatientTbInfo info = new PatientTbInfo();
+        ObservationHistoryType oht;
+        List<ObservationHistory> obs;
+
+        oht = observationHistoryTypeService.getByName("TbOrderReason");
+        if (oht != null) {
+            obs = byTypeId.get(oht.getId());
+            if (obs != null && !obs.isEmpty()) {
+                info.setTbOrderReason(obs.get(0).getValue());
+            }
+        }
+
+        oht = observationHistoryTypeService.getByName("TbDiagnosticReason");
+        if (oht != null) {
+            obs = byTypeId.get(oht.getId());
+            if (obs != null && !obs.isEmpty()) {
+                info.setTbDiagnosticReason(obs.get(0).getValue());
+            }
+        }
+
+        oht = observationHistoryTypeService.getByName("TbFollowupReason");
+        if (oht != null) {
+            obs = byTypeId.get(oht.getId());
+            if (obs != null && !obs.isEmpty()) {
+                info.setTbFollowupReason(obs.get(0).getValue());
+            }
+        }
+
+        oht = observationHistoryTypeService.getByName("TbSampleAspects");
+        if (oht != null) {
+            obs = byTypeId.get(oht.getId());
+            if (obs != null && !obs.isEmpty()) {
+                info.setTbAspect(obs.get(0).getValue());
+            }
+        }
+
+        oht = observationHistoryTypeService.getByName("TbFollowupReasonPeriodLine1");
+        if (oht != null) {
+            obs = byTypeId.get(oht.getId());
+            if (obs != null && !obs.isEmpty()) {
+                info.setTbFollowupPeriodLine1(obs.get(0).getValue());
+            }
+        }
+
+        oht = observationHistoryTypeService.getByName("TbFollowupReasonPeriodLine2");
+        if (oht != null) {
+            obs = byTypeId.get(oht.getId());
+            if (obs != null && !obs.isEmpty()) {
+                info.setTbFollowupPeriodLine2(obs.get(0).getValue());
+            }
+        }
+
+        oht = observationHistoryTypeService.getByName("TbSpecimenNature");
+        if (oht != null) {
+            obs = byTypeId.get(oht.getId());
+            if (obs != null && !obs.isEmpty()) {
+                info.setTbSpecimenNature(obs.get(0).getValue());
+            }
+        }
+
+        oht = observationHistoryTypeService.getByName("TbAnalysisMethod");
+        if (oht != null) {
+            obs = byTypeId.get(oht.getId());
+            if (obs != null && !obs.isEmpty()) {
+                info.setSelectedTbMethod(obs.get(0).getValue());
             }
         }
 

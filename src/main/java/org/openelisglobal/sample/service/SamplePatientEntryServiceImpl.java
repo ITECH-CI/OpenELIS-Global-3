@@ -188,6 +188,85 @@ public class SamplePatientEntryServiceImpl implements SamplePatientEntryService 
         request.getSession().setAttribute("lastPatientId", updateData.getPatientId());
     }
 
+    /**
+     * Liste exhaustive des types d'observation persistés par persistBacterioObservations,
+     * utilisée pour purger l'état précédent avant une réinsertion (flow d'édition).
+     * Doit rester synchronisée avec persistBacterioObservations() — toute nouvelle
+     * observation persistée pour la bactério doit aussi figurer ici, sinon la
+     * modification finit par accumuler des doublons.
+     */
+    private static final String[] BACTERIO_OBSERVATION_TYPE_NAMES = new String[] {
+            "Pregnancy", "BacterioTypeExamens", "EPIDEMIO_WEEK", "currentHospitalization", "roomNumber",
+            "CLINICAL_INFOS", "CLINICAL_INFOS_OTHER", "PREV3M_ATB", "PREV3M_ATB_LIST", "CURR_ATB",
+            "CURR_ATB_LIST", "CURR_ATB_DUR", "HOSP_3M", "HOSP_3M_COUNT", "INVASIVE_GESTURE", "INDWELLING_DEVICES"
+    };
+
+    private static final String[] TB_OBSERVATION_TYPE_NAMES = new String[] {
+            "TbOrderReason", "TbDiagnosticReason", "TbFollowupReason", "TbSampleAspects",
+            "TbFollowupReasonPeriodLine1", "TbFollowupReasonPeriodLine2", "TbSpecimenNature", "TbAnalysisMethod"
+    };
+
+    @Transactional
+    @Override
+    public void replaceBacterioObservations(PatientRoutineBacterioInfo bacterioInfo, PatientManagementInfo patientInfo,
+            SampleOrderItem sampleOrderItems, String sampleId, String patientId, String sysUserId) {
+        // Types qui font partie du formulaire d'ordonnance (orderType IN/OUT,
+        // épidémio week) : seuls la création (qui les saisit) et une modif qui
+        // les ré-envoie explicitement doivent les écraser. Sinon, une modif qui
+        // ne transporte plus ces champs ne doit pas les détruire — sinon on perd
+        // l'orderType à chaque save de modif.
+        List<String> typesToClear = new ArrayList<>();
+        for (String t : BACTERIO_OBSERVATION_TYPE_NAMES) {
+            boolean isOrderField = "BacterioTypeExamens".equals(t) || "EPIDEMIO_WEEK".equals(t);
+            if (isOrderField) {
+                boolean hasReplacement = sampleOrderItems != null
+                        && ("BacterioTypeExamens".equals(t)
+                                ? !GenericValidator.isBlankOrNull(sampleOrderItems.getOrderType())
+                                : !GenericValidator.isBlankOrNull(sampleOrderItems.getEpidemiologicalWeek()));
+                if (!hasReplacement) {
+                    continue; // préserver l'obs existante
+                }
+            }
+            typesToClear.add(t);
+        }
+        deleteObservationsForSampleByTypes(sampleId, typesToClear.toArray(new String[0]));
+        persistBacterioObservations(bacterioInfo, patientInfo, sampleOrderItems, sampleId, patientId, sysUserId);
+    }
+
+    @Transactional
+    @Override
+    public void replaceTbObservations(PatientTbInfo tbInfo, String sampleId, String patientId, String sysUserId) {
+        deleteObservationsForSampleByTypes(sampleId, TB_OBSERVATION_TYPE_NAMES);
+        persistTbObservations(tbInfo, sampleId, patientId, sysUserId);
+    }
+
+    /**
+     * Supprime toutes les ObservationHistory d'un échantillon dont le type figure
+     * dans typeNames. Sans effet pour les types inconnus du référentiel ou les
+     * sample-id sans observation. Volontairement défensive — appelée en édition
+     * avant la réinsertion intégrale du bloc.
+     */
+    private void deleteObservationsForSampleByTypes(String sampleId, String[] typeNames) {
+        if (sampleId == null || sampleId.isEmpty() || typeNames == null || typeNames.length == 0) {
+            return;
+        }
+        // On construit un Sample léger pour la recherche : seul l'id compte côté
+        // DAO (cf. ObservationHistoryDAOImpl.getAll : query par sampleId).
+        org.openelisglobal.sample.valueholder.Sample sampleRef = new org.openelisglobal.sample.valueholder.Sample();
+        sampleRef.setId(sampleId);
+
+        for (String typeName : typeNames) {
+            String typeId = getObservationHistoryTypeId(typeName);
+            if (typeId == null) {
+                continue;
+            }
+            List<ObservationHistory> existing = observationHistoryService.getAll(null, sampleRef, typeId);
+            if (existing != null && !existing.isEmpty()) {
+                observationHistoryService.deleteAll(existing);
+            }
+        }
+    }
+
     private void persistObservations(SamplePatientUpdateData updateData) {
         deleteExistingObservations(updateData);
 

@@ -103,6 +103,8 @@ public class SampleEditServiceImpl implements SampleEditService {
     UserRoleService userRoleService;
     @Autowired
     NoteService noteService;
+    @Autowired
+    SamplePatientEntryService samplePatientEntryService;
 
     @Transactional
     @Override
@@ -290,6 +292,20 @@ public class SampleEditServiceImpl implements SampleEditService {
 
         if (orderArtifacts.getDeletableSampleOrganizationRequester() != null) {
             sampleRequesterService.delete(orderArtifacts.getDeletableSampleOrganizationRequester());
+        }
+
+        // Bactério / TB : écraser intégralement le bloc d'observations existant
+        // pour ce sample et le reconstruire à partir du form. Sans ça, chaque
+        // modification ajoutait N nouvelles lignes observation_history (doublons),
+        // et les multi-sélections cumulaient les anciennes valeurs.
+        if (form.getPatientRoutineBacterioInfo() != null) {
+            samplePatientEntryService.replaceBacterioObservations(form.getPatientRoutineBacterioInfo(),
+                    form.getPatientProperties(), form.getSampleOrderItems(), updatedSample.getId(), patient.getId(),
+                    sysUserId);
+        }
+        if (form.getPatientTbInfo() != null) {
+            samplePatientEntryService.replaceTbObservations(form.getPatientTbInfo(), updatedSample.getId(),
+                    patient.getId(), sysUserId);
         }
 
         request.getSession().setAttribute("lastAccessionNumber", updatedSample.getAccessionNumber());

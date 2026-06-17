@@ -112,8 +112,18 @@ const isOtherSelected = (selectedValues, options) =>
   });
 
 const EditSample = (props) => {
-  const { samples, setSamples, orderFormValues, setOrderFormValues, error } =
-    props;
+  const {
+    samples,
+    setSamples,
+    orderFormValues,
+    setOrderFormValues,
+    error,
+    // isBacterio / isTb passés depuis ModifyOrder pour activer les sections
+    // conditionnelles (bactério ci-dessous + section TB dans SampleType).
+    // EditSample dérive aussi isBacterio en interne via programCode, on garde
+    // la prop pour alignement avec AddSample mais sans la redéfinir.
+    isTb,
+  } = props;
 
   const componentMounted = useRef(false);
 
@@ -135,14 +145,17 @@ const EditSample = (props) => {
     orderFormValues?.sampleOrderItems?.programCode ===
     BACTERIOLOGY_PROGRAM_CODE;
 
+  // IMPORTANT : forme fonctionnelle obligatoire. Cf. commentaire identique
+  // dans SampleType.js — les handlers Oui/Non chaînent deux setBacterioField
+  // (toggle + reset cascade) et la forme objet stale écrasait le premier.
   const setBacterioField = (field, value) => {
-    setOrderFormValues({
-      ...orderFormValues,
+    setOrderFormValues((prev) => ({
+      ...prev,
       patientRoutineBacterioInfo: {
-        ...orderFormValues.patientRoutineBacterioInfo,
+        ...prev.patientRoutineBacterioInfo,
         [field]: value,
       },
-    });
+    }));
   };
 
   useEffect(() => {
@@ -1031,7 +1044,15 @@ const EditSample = (props) => {
           </Grid>
         </div>
       )}
-      <Stack gap={10}>
+      {/*
+        En bactériologie classique, la modification ne doit pas exposer la
+        section "Ajouter Bulletin d'analyse" : une ordonnance n'a qu'un seul
+        échantillon et toutes les infos de prélèvement sont déjà éditées dans
+        la zone supérieure. Pour les autres programmes (chimie, TB, etc.) la
+        section reste affichée pour permettre l'ajout/retrait d'échantillons.
+      */}
+      {!isBacterio && (
+        <Stack gap={10}>
         <div className="orderLegendBody">
           <h3>
             <FormattedMessage id="order.label.add" />
@@ -1050,6 +1071,16 @@ const EditSample = (props) => {
                   rejectSampleReasons={rejectSampleReasons}
                   removeSample={removeSample}
                   sample={sample}
+                  isTb={isTb}
+                  showTBSection={isTb}
+                  isBacterio={isBacterio}
+                  // EditSample affiche déjà son propre bloc bactério au-dessus.
+                  // On masque celui de SampleType pour éviter le conflit DOM des
+                  // RadioButtonGroup (même attribut 'name') qui forçait deux
+                  // clics, et la duplication visuelle des mêmes champs.
+                  hideBacterioSection={true}
+                  orderFormValues={orderFormValues}
+                  setOrderFormValues={setOrderFormValues}
                   setSample={(newSample) => {
                     let newSamples = [...samples];
                     newSamples[i] = newSample;
@@ -1061,6 +1092,11 @@ const EditSample = (props) => {
               </div>
             );
           })}
+          {/*
+            En bactériologie, une ordonnance porte un seul échantillon : on
+            masque le bouton "Ajouter un échantillon" sur la page de modification
+            pour éviter une saisie incohérente avec le flow métier.
+          */}
           <Row>
             <div className="inlineDiv">
               <Button onClick={handleAddNewSample}>
@@ -1072,6 +1108,7 @@ const EditSample = (props) => {
           </Row>
         </div>
       </Stack>
+      )}
     </>
   );
 };

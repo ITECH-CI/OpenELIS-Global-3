@@ -248,6 +248,43 @@ export const ModifyOrderFormValues = {
   patientSearch: null,
   patientEnhancedSearch: null,
   patientClinicalProperties: null,
+  // Bloc bactério : aligné sur OrderEntryFormValues (création). Indispensable
+  // pour que le pré-remplissage des champs multi-sélection (clinicalInformations,
+  // recentAntibiotherapyList, etc.) lors du GET /rest/SampleEdit fonctionne et
+  // que l'utilisateur retrouve les valeurs déjà saisies.
+  patientRoutineBacterioInfo: {
+    currentHospitalization: false,
+    roomNumber: "",
+    clinicalInformations: [],
+    clinicalInformationOther: "",
+    recentAntibiotherapy: false,
+    recentAntibiotherapyList: [],
+    currentAntibiotherapy: false,
+    currentAntibiotherapyList: [],
+    currentAntibiotherapyDuration: "",
+    recentHospitalization: false,
+    recentHospitalizationCount: "",
+    recentInvasiveGestures: [],
+    indwellingDevice: [],
+  },
+  // Bloc TB : symétrique à OrderEntryFormValues.
+  patientTbInfo: {
+    tbOrderReason: "",
+    tbDiagnosticReason: "",
+    tbFollowupReason: "",
+    tbFollowupPeriodLine1: "",
+    tbFollowupPeriodLine2: "",
+    tbAspect: "",
+    tbSpecimenNature: "",
+    tbSubjectNumber: "",
+    selectedTbMethod: "",
+  },
+  // Propriétés patient utilisées par la section bactério (grossesse). Présentes
+  // dans SamplePatientEntryForm via patientProperties — alignées ici pour que
+  // SampleEditForm les reçoive aussi.
+  patientProperties: {
+    pregnant: "",
+  },
   sampleOrderItems: {
     newRequesterName: "",
     orderTypes: null,
@@ -290,10 +327,15 @@ export const ModifyOrderFormValues = {
     testLocationCodeList: null,
     program: "",
     programList: null,
+    // programCode est nécessaire pour activer les sections conditionnelles
+    // bactério / TB sur la page de modification.
+    programCode: "",
     contactTracingIndexName: null,
     contactTracingIndexRecordNumber: null,
     priorityList: null,
     priority: "ROUTINE",
+    // epidemiologicalWeek fait partie du bloc bactério (saisie order).
+    epidemiologicalWeek: "",
     programId: null,
     additionalQuestions: null,
   },

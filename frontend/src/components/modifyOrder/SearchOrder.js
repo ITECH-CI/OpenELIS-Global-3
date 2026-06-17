@@ -62,7 +62,7 @@ function SearchOrder() {
             </Column>
             <Column lg={16} md={8} sm={4}>
               <Button data-cy="submit-button" type="submit">
-                <FormattedMessage id="label.button.submit" />
+                <FormattedMessage id="label.button.search" />
               </Button>
             </Column>
           </Grid>
