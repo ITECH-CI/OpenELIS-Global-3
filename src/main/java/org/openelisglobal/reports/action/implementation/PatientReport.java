@@ -57,6 +57,7 @@ import org.openelisglobal.note.service.NoteService;
 import org.openelisglobal.note.service.NoteServiceImpl.NoteType;
 import org.openelisglobal.observationhistory.service.ObservationHistoryService;
 import org.openelisglobal.observationhistory.service.ObservationHistoryServiceImpl.ObservationType;
+import org.openelisglobal.observationhistory.valueholder.ObservationHistory;
 import org.openelisglobal.organization.service.OrganizationService;
 import org.openelisglobal.organization.valueholder.Organization;
 import org.openelisglobal.patient.action.bean.PatientSearch;
@@ -537,31 +538,56 @@ public abstract class PatientReport extends Report {
     }
 
     /**
-     * Récupère et concatène les renseignements cliniques pour un échantillon
-     * Combine les renseignements cliniques texte libre avec les informations
-     * structurées TB/VIH
+     * Récupère et concatène les renseignements cliniques pour un échantillon.
+     *
+     * Le formulaire de saisie écrit UNE observation par dictionnaire choisi
+     * (champ multi-sélection — cf. SamplePatientEntryServiceImpl.processBacterioInfo,
+     * type CLINICAL_INFOS). getValueForSample() ne ramène que la première via
+     * setMaxResults(1) ; on lit donc explicitement toutes les lignes pour
+     * concaténer les libellés. Le champ libre "Autre" (CLINICAL_INFOS_OTHER)
+     * reste mono-valeur et est appondu en queue.
      */
     protected String getClinicalInformationForSample(Sample sample, Patient patient) {
         StringBuilder clinicalInfo = new StringBuilder();
-
-        // Récupérer le service d'observation
         ObservationHistoryService observationHistoryService = SpringContext.getBean(ObservationHistoryService.class);
 
-        // Récupérer les renseignements cliniques depuis observation_history
-        String clinicalInfos = observationHistoryService.getValueForSample(ObservationType.CLINICAL_INFOS,
-                sampleService.getId(sample));
+        String clinicalInfosTypeId = observationHistoryService.getObservationTypeIdForType(ObservationType.CLINICAL_INFOS);
+        DictionaryService dictionaryService = SpringContext.getBean(DictionaryService.class);
 
-        String clinicalInfosOther = observationHistoryService.getValueForSample(ObservationType.CLINICAL_INFOS_OTHER,
-                sampleService.getId(sample));
-
-        // Concaténer les informations cliniques
-        if (clinicalInfos != null && !clinicalInfos.trim().isEmpty()) {
-            clinicalInfo.append(clinicalInfos.trim());
+        if (clinicalInfosTypeId != null && !clinicalInfosTypeId.isEmpty()) {
+            List<ObservationHistory> observations = observationHistoryService.getAll(null, sample, clinicalInfosTypeId);
+            for (ObservationHistory oh : observations) {
+                String value = oh.getValue();
+                if (GenericValidator.isBlankOrNull(value)) {
+                    continue;
+                }
+                String label;
+                if (ObservationHistory.ValueType.LITERAL.getCode().equals(oh.getValueType())) {
+                    label = value.trim();
+                } else {
+                    // DICTIONARY : on résout l'id en libellé localisé
+                    try {
+                        label = dictionaryService.getDataForId(value).getLocalizedName();
+                    } catch (RuntimeException ignored) {
+                        continue;
+                    }
+                }
+                if (GenericValidator.isBlankOrNull(label)) {
+                    continue;
+                }
+                if (clinicalInfo.length() > 0) {
+                    clinicalInfo.append(", ");
+                }
+                clinicalInfo.append(label.trim());
+            }
         }
 
+        // Champ libre "Autre"
+        String clinicalInfosOther = observationHistoryService.getValueForSample(ObservationType.CLINICAL_INFOS_OTHER,
+                sampleService.getId(sample));
         if (clinicalInfosOther != null && !clinicalInfosOther.trim().isEmpty()) {
             if (clinicalInfo.length() > 0) {
-                clinicalInfo.append(" / ");
+                clinicalInfo.append(", ");
             }
             clinicalInfo.append(clinicalInfosOther.trim());
         }

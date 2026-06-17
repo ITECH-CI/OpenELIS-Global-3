@@ -744,11 +744,12 @@ const BacteriologyValidation = ({
                                       : "N/A")}
                                 </span>
 
-                                <strong>Type Gram:</strong>
-                                <span>{organism.gramType || "N/A"}</span>
-
-                                <strong>Mode de regroupement:</strong>
-                                <span>{organism.groupingMode || "N/A"}</span>
+                                <strong>Type de germe:</strong>
+                                <span>
+                                  {organism.organismType === "YEAST"
+                                    ? "Levure"
+                                    : "Bactérie"}
+                                </span>
 
                                 {organism.capsulePresence && (
                                   <>
@@ -982,11 +983,12 @@ const BacteriologyValidation = ({
                                   : "N/A")}
                             </span>
 
-                            <strong>Type Gram:</strong>
-                            <span>{organism.gramType || "N/A"}</span>
-
-                            <strong>Mode de regroupement:</strong>
-                            <span>{organism.groupingMode || "N/A"}</span>
+                            <strong>Type de germe:</strong>
+                            <span>
+                              {organism.organismType === "YEAST"
+                                ? "Levure"
+                                : "Bactérie"}
+                            </span>
 
                             {organism.capsulePresence && (
                               <>

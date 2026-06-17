@@ -252,6 +252,12 @@ public class BacterioPatientReport extends PatientReport implements IReportCreat
                     }
                     resultsData.setBacterioRowType("TEST");
 
+                    // UoM par résultat : si le résultat porte un override (result.uom_id,
+                    // utilisé par exemple pour "Etat frais Quantitatif" mm³/num-champ), on
+                    // remplace l'UoM par défaut héritée du test. Puis on concatène l'unité
+                    // à la valeur affichée pour que le rapport montre p.ex. "350 mm³".
+                    appendUomToResult(resultsData, analysis);
+
                     // Flora-count tests (e.g. "Nombre de flore") store their value in
                     // bacteriology_flora, not in the result table — so the standard
                     // pipeline left resultsData.result at "En cours". If the analysis is
@@ -403,26 +409,20 @@ public class BacterioPatientReport extends PatientReport implements IReportCreat
                 }
             }
 
-            // Build organism details
+            // 'Type de Gram' et 'Mode de regroupement' sont masqués sur le rapport
+            // (présents dans le formulaire de saisie seulement). On ne garde que
+            // la mention "Capsule présente" comme information annexe sur la ligne
+            // d'organisme.
             StringBuilder organismDetails = new StringBuilder();
-            if (organism.getGramType() != null && !organism.getGramType().isEmpty()) {
-                organismDetails.append(organism.getGramType());
-            }
-            if (organism.getGroupingMode() != null && !organism.getGroupingMode().isEmpty()) {
-                if (organismDetails.length() > 0) {
-                    organismDetails.append(", ");
-                }
-                organismDetails.append(organism.getGroupingMode());
-            }
             if (organism.getCapsulePresence() != null && organism.getCapsulePresence()) {
-                if (organismDetails.length() > 0) {
-                    organismDetails.append(", ");
-                }
                 organismDetails.append("Capsule présente");
             }
 
             organismData.setTestName("Organisme " + organism.getOrganismNumber() + " : " + organismName);
             organismData.setResult(organismDetails.length() > 0 ? organismDetails.toString() : "");
+            // 'BACTERIA' / 'YEAST' (cf. ORGANISM_TYPES côté frontend). Propagé jusqu'à
+            // reorderCultureSection() pour composer "Nombre de germes : X bactérie(s), Y levure(s)".
+            organismData.setOrganismType(organism.getOrganismType());
             organismData.setParentMarker(false);
 
             reportItems.add(organismData);
@@ -945,9 +945,18 @@ public class BacterioPatientReport extends PatientReport implements IReportCreat
             ClinicalPatientData template = firstRootByKey.get(key);
             List<ClinicalPatientData> organisms = organismsByKey.getOrDefault(key, java.util.Collections.emptyList());
             int organismCount = 0;
+            int bacteriaCount = 0;
+            int yeastCount = 0;
             for (ClinicalPatientData o : organisms) {
                 if ("ORGANISM".equals(o.getBacterioRowType())) {
                     organismCount++;
+                    if ("YEAST".equalsIgnoreCase(o.getOrganismType())) {
+                        yeastCount++;
+                    } else {
+                        // tout ce qui n'est pas explicitement YEAST tombe en bactérie
+                        // (couvre BACTERIA et les anciennes saisies sans type explicite)
+                        bacteriaCount++;
+                    }
                 }
             }
 
@@ -979,7 +988,7 @@ public class BacterioPatientReport extends PatientReport implements IReportCreat
             countRow.setParentMarker(false);
             countRow.setTestName("Nombre de germes");
             boolean cultureInProgress = inProgressMsg != null && inProgressMsg.equals(template.getResult());
-            countRow.setResult(cultureInProgress ? inProgressMsg : String.valueOf(organismCount));
+            countRow.setResult(cultureInProgress ? inProgressMsg : formatOrganismCount(organismCount, bacteriaCount, yeastCount));
             countRow.setSeparator(false);
             countRow.setCultureKey(key);
             orderedCulture.add(countRow);
@@ -1125,6 +1134,94 @@ public class BacterioPatientReport extends PatientReport implements IReportCreat
     @Override
     protected boolean useReportingDescription() {
         return true;
+    }
+
+    /**
+     * Concatène l'unité de mesure à la valeur affichée du résultat sur les
+     * lignes TEST. Préfère l'UoM portée par le Result (result.uom_id, utilisée
+     * p.ex. quand l'utilisateur a basculé "Etat frais Quantitatif" entre mm³ et
+     * num/champ), sinon retombe sur l'UoM par défaut du test déjà posée par
+     * PatientReport via setNormalRange().
+     *
+     * Concaténer dans data.result reste compatible avec le JRXML existant
+     * (TEST_PAIR/TEST/Nombre de germes) sans toucher au template ni au bean.
+     */
+    private void appendUomToResult(ClinicalPatientData data, Analysis analysis) {
+        if (data == null || analysis == null) {
+            return;
+        }
+        String value = data.getResult();
+        if (value == null || value.trim().isEmpty()) {
+            return;
+        }
+        // Skip placeholders comme "En cours" / "Échec" pour ne pas tagger "En cours mm³".
+        String trimmed = value.trim();
+        if (!isNumericLike(trimmed)) {
+            return;
+        }
+
+        // Lookup the most recent Result for this analysis; prefer its UoM override.
+        String uom = data.getUom();
+        try {
+            List<Result> results = analysisService.getResults(analysis);
+            if (results != null && !results.isEmpty()) {
+                Result r = results.get(0);
+                String overrideName = r.getUomName();
+                if (overrideName != null && !overrideName.trim().isEmpty()) {
+                    uom = overrideName;
+                }
+            }
+        } catch (RuntimeException ignored) {
+            // Lecture défensive : on retombe sur l'UoM héritée du test.
+        }
+
+        if (uom != null && !uom.trim().isEmpty()) {
+            data.setResult(value + " " + uom.trim());
+            data.setUom(uom);
+        }
+    }
+
+    /**
+     * Heuristique : considérer le résultat comme numérique si une fois trimé il
+     * commence par un chiffre. Couvre "10", "10.5", "10,5", ">100" est exclu —
+     * on évite de coller une unité sur du texte ("Présence", "Absence", etc.).
+     */
+    private boolean isNumericLike(String v) {
+        if (v == null || v.isEmpty()) {
+            return false;
+        }
+        char c = v.charAt(0);
+        return c >= '0' && c <= '9';
+    }
+
+    /**
+     * Formate la ligne "Nombre de germes" en distinguant bactéries et levures.
+     * Exemples :
+     *  - 0 organisme       -> "0"
+     *  - 2 bactéries       -> "2 (2 bactérie(s))"
+     *  - 1 bactérie + 1 levure -> "2 (1 bactérie(s), 1 levure(s))"
+     *  - 1 levure          -> "1 (1 levure(s))"
+     */
+    private String formatOrganismCount(int total, int bacteria, int yeast) {
+        if (total == 0) {
+            return "0";
+        }
+        StringBuilder sb = new StringBuilder();
+        sb.append(total);
+        StringBuilder details = new StringBuilder();
+        if (bacteria > 0) {
+            details.append(bacteria).append(" bactérie(s)");
+        }
+        if (yeast > 0) {
+            if (details.length() > 0) {
+                details.append(", ");
+            }
+            details.append(yeast).append(" levure(s)");
+        }
+        if (details.length() > 0) {
+            sb.append(" (").append(details).append(")");
+        }
+        return sb.toString();
     }
 
     /**

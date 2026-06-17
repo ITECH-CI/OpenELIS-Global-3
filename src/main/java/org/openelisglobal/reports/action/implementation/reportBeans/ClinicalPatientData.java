@@ -126,12 +126,25 @@ public final class ClinicalPatientData {
     // their antibiograms together for the same culture. Not displayed.
     private String cultureKey;
 
+    // Type d'organisme sur les lignes ORGANISM ('BACTERIA' / 'YEAST'). Permet à
+    // reorderCultureSection() de compter séparément bactéries et levures pour
+    // composer la ligne "Nombre de germes : X bactérie(s), Y levure(s)".
+    private String organismType;
+
     public String getCultureKey() {
         return cultureKey;
     }
 
     public void setCultureKey(String cultureKey) {
         this.cultureKey = cultureKey;
+    }
+
+    public String getOrganismType() {
+        return organismType;
+    }
+
+    public void setOrganismType(String organismType) {
+        this.organismType = organismType;
     }
 
     public ClinicalPatientData() {
@@ -226,6 +239,7 @@ public final class ClinicalPatientData {
         floraGroupingMode = data.getFloraGroupingMode();
         floraOtherCharacteristic = data.getFloraOtherCharacteristic();
         cultureKey = data.getCultureKey();
+        organismType = data.getOrganismType();
     }
 
     public String getReferralRefRange() {
