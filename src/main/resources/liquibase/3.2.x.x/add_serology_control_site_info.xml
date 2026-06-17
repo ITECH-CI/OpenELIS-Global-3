@@ -19,7 +19,7 @@
             <column name="name" value="serology control" />
             <column name="lastupdated" valueComputed="${now}" />
             <column name="description"
-                value="Activer la vérification de sérologie VIH existante (avec auto-remplissage du type VIH) lors de la saisie d'échantillons Charge Virale" />
+                value="Activer le contrôle de sérologie VIH existante lors de la saisie d'échantillons Charge Virale" />
             <column name="value" value="false" />
             <column name="encrypted" value="false" />
             <column name="domain_id"

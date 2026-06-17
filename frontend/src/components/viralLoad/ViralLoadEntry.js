@@ -2567,86 +2567,90 @@ const ViralLoadEntry = () => {
           defaultMessage="ARV - Charge Virale"
         />
       </div>
-      <Row
-        optional
-        label={intl.formatMessage({
-          id: "sample.entry.project.subjectNumber",
-          defaultMessage: "Sujet No.",
-        })}
-      >
-        <TextInput
-          id="vl_search_subjectNumber"
-          hideLabel
-          labelText=""
-          size="sm"
-          maxLength={7}
-          style={{ maxWidth: "160px" }}
-          value={vlSearchSubjectNumber}
-          onChange={(e) => setVlSearchSubjectNumber(e.target.value)}
-        />
-      </Row>
-      <Row
-        optional
-        label={intl.formatMessage({
-          id: "patient.site.subject.number",
-          defaultMessage: "Site Sujet No.",
-        })}
-      >
-        <TextInput
-          id="vl_search_siteSubjectNumber"
-          hideLabel
-          labelText=""
-          size="sm"
-          maxLength={17}
-          placeholder="00000/AA/AA/00000"
-          style={{ maxWidth: "220px" }}
-          value={vlSearchSiteSubjectNumber}
-          onChange={(e) => {
-            const raw = e.target.value.replace(/\//g, "").toUpperCase();
-            let validated = "";
-            for (let i = 0; i < raw.length && i < 14; i++) {
-              if (i < 5 || i >= 9) {
-                if (/\d/.test(raw[i])) validated += raw[i];
-              } else {
-                if (/[A-Z0-9]/.test(raw[i])) validated += raw[i];
-              }
-            }
-            let formatted = validated;
-            if (validated.length > 9) {
-              formatted = validated.slice(0, 5) + "/" + validated.slice(5, 7) + "/" + validated.slice(7, 9) + "/" + validated.slice(9);
-            } else if (validated.length > 7) {
-              formatted = validated.slice(0, 5) + "/" + validated.slice(5, 7) + "/" + validated.slice(7);
-            } else if (validated.length > 5) {
-              formatted = validated.slice(0, 5) + "/" + validated.slice(5);
-            }
-            setVlSearchSiteSubjectNumber(formatted);
-          }}
-        />
-      </Row>
-      <Row label="">
-        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-          <Button size="sm" kind="tertiary" onClick={searchVLPatient}>
-            <FormattedMessage id="label.button.search" defaultMessage="Rechercher" />
-          </Button>
-          {patientLookupStatus === "searching" && (
-            <span style={{ fontSize: "12px", color: "#6f6f6f", fontStyle: "italic" }}>
-              <FormattedMessage id="label.searching" defaultMessage="Recherche…" />
-            </span>
-          )}
-          {patientLookupStatus === "found" && (
-            <span style={{ display: "flex", alignItems: "center", gap: "4px", color: "#24a148", fontSize: "12px", fontWeight: "600" }}>
-              <CheckmarkFilled size={16} />
-              <FormattedMessage id="sample.entry.project.patientSearch.found" defaultMessage="Patient trouvé" />
-            </span>
-          )}
-          {patientLookupStatus === "notfound" && (
-            <span style={{ fontSize: "12px", color: "#da1e28", fontWeight: "600" }}>
-              <FormattedMessage id="sample.entry.project.patientSearch.notFound" defaultMessage="Patient non trouvé" />
-            </span>
-          )}
-        </div>
-      </Row>
-      {vlPatientSearchDone && (
+      {serologyControlEnabled && (
+        <>
+          <Row
+            optional
+            label={intl.formatMessage({
+              id: "sample.entry.project.subjectNumber",
+              defaultMessage: "Sujet No.",
+            })}
+          >
+            <TextInput
+              id="vl_search_subjectNumber"
+              hideLabel
+              labelText=""
+              size="sm"
+              maxLength={7}
+              style={{ maxWidth: "160px" }}
+              value={vlSearchSubjectNumber}
+              onChange={(e) => setVlSearchSubjectNumber(e.target.value)}
+            />
+          </Row>
+          <Row
+            optional
+            label={intl.formatMessage({
+              id: "patient.site.subject.number",
+              defaultMessage: "Site Sujet No.",
+            })}
+          >
+            <TextInput
+              id="vl_search_siteSubjectNumber"
+              hideLabel
+              labelText=""
+              size="sm"
+              maxLength={17}
+              placeholder="00000/AA/AA/00000"
+              style={{ maxWidth: "220px" }}
+              value={vlSearchSiteSubjectNumber}
+              onChange={(e) => {
+                const raw = e.target.value.replace(/\//g, "").toUpperCase();
+                let validated = "";
+                for (let i = 0; i < raw.length && i < 14; i++) {
+                  if (i < 5 || i >= 9) {
+                    if (/\d/.test(raw[i])) validated += raw[i];
+                  } else {
+                    if (/[A-Z0-9]/.test(raw[i])) validated += raw[i];
+                  }
+                }
+                let formatted = validated;
+                if (validated.length > 9) {
+                  formatted = validated.slice(0, 5) + "/" + validated.slice(5, 7) + "/" + validated.slice(7, 9) + "/" + validated.slice(9);
+                } else if (validated.length > 7) {
+                  formatted = validated.slice(0, 5) + "/" + validated.slice(5, 7) + "/" + validated.slice(7);
+                } else if (validated.length > 5) {
+                  formatted = validated.slice(0, 5) + "/" + validated.slice(5);
+                }
+                setVlSearchSiteSubjectNumber(formatted);
+              }}
+            />
+          </Row>
+          <Row label="">
+            <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+              <Button size="sm" kind="tertiary" onClick={searchVLPatient}>
+                <FormattedMessage id="label.button.search" defaultMessage="Rechercher" />
+              </Button>
+              {patientLookupStatus === "searching" && (
+                <span style={{ fontSize: "12px", color: "#6f6f6f", fontStyle: "italic" }}>
+                  <FormattedMessage id="label.searching" defaultMessage="Recherche…" />
+                </span>
+              )}
+              {patientLookupStatus === "found" && (
+                <span style={{ display: "flex", alignItems: "center", gap: "4px", color: "#24a148", fontSize: "12px", fontWeight: "600" }}>
+                  <CheckmarkFilled size={16} />
+                  <FormattedMessage id="sample.entry.project.patientSearch.found" defaultMessage="Patient trouvé" />
+                </span>
+              )}
+              {patientLookupStatus === "notfound" && (
+                <span style={{ fontSize: "12px", color: "#da1e28", fontWeight: "600" }}>
+                  <FormattedMessage id="sample.entry.project.patientSearch.notFound" defaultMessage="Patient non trouvé" />
+                </span>
+              )}
+            </div>
+          </Row>
+        </>
+      )}
+      {(!serologyControlEnabled || vlPatientSearchDone) && (
         <>
       {fldARVCenter()}
       {fldNameOfDoctor()}
