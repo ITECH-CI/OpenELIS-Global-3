@@ -15,7 +15,10 @@ import CustomDatePicker from "../common/CustomDatePicker";
 import { AlertDialog, NotificationKinds } from "../common/CustomNotification";
 import PageBreadCrumb from "../common/PageBreadCrumb";
 import { ConfigurationContext, NotificationContext } from "../layout/Layout";
-import { getFromOpenElisServer, postToOpenElisServerFullResponse } from "../utils/Utils";
+import {
+  getFromOpenElisServer,
+  postToOpenElisServerFullResponse,
+} from "../utils/Utils";
 import { studyForms, LAB_PREFIXES } from "../data/ViralLoad";
 import { CheckmarkFilled } from "@carbon/icons-react";
 import config from "../../config.json";
@@ -241,7 +244,8 @@ const ViralLoadEntry = () => {
   const { configurationProperties } = useContext(ConfigurationContext);
   const { notificationVisible, addNotification, setNotificationVisible } =
     useContext(NotificationContext);
-  const serologyControlEnabled = configurationProperties.SEROLOGY_CONTROL === "true";
+  const serologyControlEnabled =
+    configurationProperties.SEROLOGY_CONTROL === "true";
 
   const [form, setForm] = useState(EMPTY_FORM);
   const [genders, setGenders] = useState([]);
@@ -282,7 +286,8 @@ const ViralLoadEntry = () => {
   // Champs de recherche VL (non soumis au backend, servent uniquement à
   // pré-remplir les champs du formulaire après la recherche du patient).
   const [vlSearchSubjectNumber, setVlSearchSubjectNumber] = useState("");
-  const [vlSearchSiteSubjectNumber, setVlSearchSiteSubjectNumber] = useState("");
+  const [vlSearchSiteSubjectNumber, setVlSearchSiteSubjectNumber] =
+    useState("");
 
   // ─── Chargement initial ──────────────────────────────────────────────────────
   useEffect(() => {
@@ -292,10 +297,11 @@ const ViralLoadEntry = () => {
       if (!componentMounted.current) return;
       if (data) {
         if (data.formLists?.GENDERS) setGenders(data.formLists.GENDERS);
-        if (data.dictionaryLists) setDictionaryLists((prev) => ({ ...prev, ...data.dictionaryLists }));
+        if (data.dictionaryLists)
+          setDictionaryLists((prev) => ({ ...prev, ...data.dictionaryLists }));
         if (data.sampleOrderItems) {
           setArvOrgsByName(data.sampleOrderItems.referringSiteList || []);
-         // setArvOrgsByCode(data.organizationTypeLists.ARV_ORGS || []);
+          // setArvOrgsByCode(data.organizationTypeLists.ARV_ORGS || []);
           //setEidOrgsByName(data.organizationTypeLists.EID_ORGS_BY_NAME || []);
           //setEidOrgsByCode(data.organizationTypeLists.EID_ORGS || []);
         }
@@ -303,7 +309,10 @@ const ViralLoadEntry = () => {
           setGenders(data.patientProperties.genders || []);
         }
         if (data.referralOrganizations) {
-          setDictionaryLists((prev) => ({ ...prev, REFERRING_SITES: data.referralOrganizations }));
+          setDictionaryLists((prev) => ({
+            ...prev,
+            REFERRING_SITES: data.referralOrganizations,
+          }));
         }
       }
       setLoading(false);
@@ -311,69 +320,143 @@ const ViralLoadEntry = () => {
 
     getFromOpenElisServer("/rest/dictionary/category/Yes%20No", (data) => {
       if (!componentMounted.current) return;
-      if (Array.isArray(data))setDictionaryLists((prev) => ({ ...prev, YES_NO: data }));
+      if (Array.isArray(data))
+        setDictionaryLists((prev) => ({ ...prev, YES_NO: data }));
     });
     getFromOpenElisServer("/rest/dictionary/category/HIV%20Status", (data) => {
       if (!componentMounted.current) return;
-      if (Array.isArray(data)) setDictionaryLists((prev) => ({ ...prev, HIV_STATUSES: data }));
+      if (Array.isArray(data))
+        setDictionaryLists((prev) => ({ ...prev, HIV_STATUSES: data }));
     });
-    getFromOpenElisServer("/rest/dictionary/category/ARV%20Treatment%20Regime", (data) => {
-      if (!componentMounted.current) return;
-      if (Array.isArray(data)) setDictionaryLists((prev) => ({ ...prev, ARV_REGIME: data }));
-    });
-    getFromOpenElisServer("/rest/dictionary/category/Reason%20for%20Viral%20Load%20Request", (data) => {
-      if (!componentMounted.current) return;
-      if (Array.isArray(data)) setDictionaryLists((prev) => ({ ...prev, ARV_REASON_FOR_VL_DEMAND: data }));
-    });
-     getFromOpenElisServer("/rest/dictionary/category/EID%20Which%20PCR%20Test", (data) => {
-      if (!componentMounted.current) return;
-      if (Array.isArray(data)) setDictionaryLists((prev) => ({ ...prev, EID_WHICH_PCR: data }));
-    });
-    getFromOpenElisServer("/rest/dictionary/category/Reason%20for%20Second%20PCR%20Test", (data) => {
-      if (!componentMounted.current) return;
-      if (Array.isArray(data)) setDictionaryLists((prev) => ({ ...prev, EID_SECOND_PCR_REASON: data }));
-    });
-    getFromOpenElisServer("/rest/dictionary/category/EID%20Type%20of%20Clinic", (data) => {
-      if (!componentMounted.current) return;
-      if (Array.isArray(data)) setDictionaryLists((prev) => ({ ...prev, EID_TYPE_OF_CLINIC: data }));
-    });
-    getFromOpenElisServer("/rest/dictionary/category/EID%20How%20Infant%20Eating", (data) => {
-      if (!componentMounted.current) return;
-      if (Array.isArray(data)) setDictionaryLists((prev) => ({ ...prev, EID_HOW_CHILD_FED: data }));
-    });
-    getFromOpenElisServer("/rest/dictionary/category/EID%20Stopped%20Breastfeeding", (data) => {
-      if (!componentMounted.current) return;
-      if (Array.isArray(data)) setDictionaryLists((prev) => ({ ...prev, EID_STOPPED_BREASTFEEDING: data }));
-    });
-    getFromOpenElisServer("/rest/dictionary/category/EID%20Infant%27s%20ARV%20Prophylaxis", (data) => {
-      if (!componentMounted.current) return;
-      if (Array.isArray(data)) setDictionaryLists((prev) => ({ ...prev, EID_INFANT_PROPHYLAXIS_ARV: data }));
-    });
-    getFromOpenElisServer("/rest/dictionary/category/Yes%20No%20Unknown", (data) => {
-      if (!componentMounted.current) return;
-      if (Array.isArray(data)) setDictionaryLists((prev) => ({ ...prev, YES_NO_UNKNOWN: data }));
-    });
-    getFromOpenElisServer("/rest/dictionary/category/Mother%27s%20HIV%20Status", (data) => {
-      if (!componentMounted.current) return;
-      if (Array.isArray(data)) setDictionaryLists((prev) => ({ ...prev, EID_MOTHERS_HIV_STATUS: data }));
-    });
-    getFromOpenElisServer("/rest/dictionary/category/Mother%27s%20ARV%20Treatment", (data) => {
-      if (!componentMounted.current) return;
-      if (Array.isArray(data)) setDictionaryLists((prev) => ({ ...prev, EID_MOTHERS_ARV_TREATMENT: data }));
-    });
-    getFromOpenElisServer("/rest/dictionary/category/HPV%20Sampling%20Method", (data) => {
-      if (!componentMounted.current) return;
-      if (Array.isArray(data)) setDictionaryLists((prev) => ({ ...prev, HPV_SAMPLING_METHOD: data }));
-    });
-    getFromOpenElisServer("/rest/dictionary/category/ARV%20Treatment%20Regime%20List", (data) => {
-      if (!componentMounted.current) return;
-      if (Array.isArray(data)) setDictionaryLists((prev) => ({ ...prev, ARV_REGIMEN_LIST: data }));
-    });
+    getFromOpenElisServer(
+      "/rest/dictionary/category/ARV%20Treatment%20Regime",
+      (data) => {
+        if (!componentMounted.current) return;
+        if (Array.isArray(data))
+          setDictionaryLists((prev) => ({ ...prev, ARV_REGIME: data }));
+      },
+    );
+    getFromOpenElisServer(
+      "/rest/dictionary/category/Reason%20for%20Viral%20Load%20Request",
+      (data) => {
+        if (!componentMounted.current) return;
+        if (Array.isArray(data))
+          setDictionaryLists((prev) => ({
+            ...prev,
+            ARV_REASON_FOR_VL_DEMAND: data,
+          }));
+      },
+    );
+    getFromOpenElisServer(
+      "/rest/dictionary/category/EID%20Which%20PCR%20Test",
+      (data) => {
+        if (!componentMounted.current) return;
+        if (Array.isArray(data))
+          setDictionaryLists((prev) => ({ ...prev, EID_WHICH_PCR: data }));
+      },
+    );
+    getFromOpenElisServer(
+      "/rest/dictionary/category/Reason%20for%20Second%20PCR%20Test",
+      (data) => {
+        if (!componentMounted.current) return;
+        if (Array.isArray(data))
+          setDictionaryLists((prev) => ({
+            ...prev,
+            EID_SECOND_PCR_REASON: data,
+          }));
+      },
+    );
+    getFromOpenElisServer(
+      "/rest/dictionary/category/EID%20Type%20of%20Clinic",
+      (data) => {
+        if (!componentMounted.current) return;
+        if (Array.isArray(data))
+          setDictionaryLists((prev) => ({ ...prev, EID_TYPE_OF_CLINIC: data }));
+      },
+    );
+    getFromOpenElisServer(
+      "/rest/dictionary/category/EID%20How%20Infant%20Eating",
+      (data) => {
+        if (!componentMounted.current) return;
+        if (Array.isArray(data))
+          setDictionaryLists((prev) => ({ ...prev, EID_HOW_CHILD_FED: data }));
+      },
+    );
+    getFromOpenElisServer(
+      "/rest/dictionary/category/EID%20Stopped%20Breastfeeding",
+      (data) => {
+        if (!componentMounted.current) return;
+        if (Array.isArray(data))
+          setDictionaryLists((prev) => ({
+            ...prev,
+            EID_STOPPED_BREASTFEEDING: data,
+          }));
+      },
+    );
+    getFromOpenElisServer(
+      "/rest/dictionary/category/EID%20Infant%27s%20ARV%20Prophylaxis",
+      (data) => {
+        if (!componentMounted.current) return;
+        if (Array.isArray(data))
+          setDictionaryLists((prev) => ({
+            ...prev,
+            EID_INFANT_PROPHYLAXIS_ARV: data,
+          }));
+      },
+    );
+    getFromOpenElisServer(
+      "/rest/dictionary/category/Yes%20No%20Unknown",
+      (data) => {
+        if (!componentMounted.current) return;
+        if (Array.isArray(data))
+          setDictionaryLists((prev) => ({ ...prev, YES_NO_UNKNOWN: data }));
+      },
+    );
+    getFromOpenElisServer(
+      "/rest/dictionary/category/Mother%27s%20HIV%20Status",
+      (data) => {
+        if (!componentMounted.current) return;
+        if (Array.isArray(data))
+          setDictionaryLists((prev) => ({
+            ...prev,
+            EID_MOTHERS_HIV_STATUS: data,
+          }));
+      },
+    );
+    getFromOpenElisServer(
+      "/rest/dictionary/category/Mother%27s%20ARV%20Treatment",
+      (data) => {
+        if (!componentMounted.current) return;
+        if (Array.isArray(data))
+          setDictionaryLists((prev) => ({
+            ...prev,
+            EID_MOTHERS_ARV_TREATMENT: data,
+          }));
+      },
+    );
+    getFromOpenElisServer(
+      "/rest/dictionary/category/HPV%20Sampling%20Method",
+      (data) => {
+        if (!componentMounted.current) return;
+        if (Array.isArray(data))
+          setDictionaryLists((prev) => ({
+            ...prev,
+            HPV_SAMPLING_METHOD: data,
+          }));
+      },
+    );
+    getFromOpenElisServer(
+      "/rest/dictionary/category/ARV%20Treatment%20Regime%20List",
+      (data) => {
+        if (!componentMounted.current) return;
+        if (Array.isArray(data))
+          setDictionaryLists((prev) => ({ ...prev, ARV_REGIMEN_LIST: data }));
+      },
+    );
 
-
-
-
-    return () => { componentMounted.current = false; };
+    return () => {
+      componentMounted.current = false;
+    };
   }, []);
 
   // ─── Date/heure par défaut ───────────────────────────────────────────────────
@@ -428,14 +511,18 @@ const ViralLoadEntry = () => {
 
   const lookupPatient = () => {
     const code = (form.siteSubjectNumber || "").trim();
-    if (!code) { setPatientLookupStatus("idle"); return; }
+    if (!code) {
+      setPatientLookupStatus("idle");
+      return;
+    }
     setPatientLookupStatus("searching");
     getFromOpenElisServer(
       "/rest/patient-search-results?subjectNumber=" +
         encodeURIComponent(code) +
         "&suppressExternalSearch=true",
       (data) => {
-        const results = data && data.patientSearchResults ? data.patientSearchResults : [];
+        const results =
+          data && data.patientSearchResults ? data.patientSearchResults : [];
         if (results.length > 0) {
           const p = results[0];
           setPatientLookupStatus("found");
@@ -460,7 +547,9 @@ const ViralLoadEntry = () => {
   const applyHivStatusFromSerology = (serologyResult) => {
     const targetKey = SEROLOGY_TO_HIV_STATUS_KEY[serologyResult];
     if (!targetKey) return false;
-    const match = (dictionaryLists.HIV_TYPES || []).find((d) => d.displayKey === targetKey);
+    const match = (dictionaryLists.HIV_TYPES || []).find(
+      (d) => d.displayKey === targetKey,
+    );
     if (match) {
       setObs("hivStatus", match.id);
       return true;
@@ -478,7 +567,9 @@ const ViralLoadEntry = () => {
         encodeURIComponent(siteSubjectNo),
       (data) => {
         const validResults = ["HIV1", "HIV2", "HIVD"];
-        const found = Boolean(data?.serologyResult && validResults.includes(data.serologyResult));
+        const found = Boolean(
+          data?.serologyResult && validResults.includes(data.serologyResult),
+        );
         if (found && applyHivStatusFromSerology(data.serologyResult)) {
           setSerologyStatus("found");
           setPD("serologyHIVTest", false);
@@ -513,9 +604,12 @@ const ViralLoadEntry = () => {
       ? "subjectNumber=" + encodeURIComponent(siteSubjectNo)
       : "nationalID=" + encodeURIComponent(subjectNo);
     getFromOpenElisServer(
-      "/rest/patient-search-results?" + searchParam + "&suppressExternalSearch=true",
+      "/rest/patient-search-results?" +
+        searchParam +
+        "&suppressExternalSearch=true",
       (data) => {
-        const results = data && data.patientSearchResults ? data.patientSearchResults : [];
+        const results =
+          data && data.patientSearchResults ? data.patientSearchResults : [];
         if (results.length > 0) {
           const p = results[0];
           setPatientLookupStatus("found");
@@ -546,23 +640,24 @@ const ViralLoadEntry = () => {
         //Vl default values
         viralLoadTest: studyId === "VL_Id",
 
-         //HPV default values
+        //HPV default values
         preservCytTaken: studyId === "HPV_Id",
         abbottOrRocheAnalysis: studyId === "HPV_Id",
         hpvTest: studyId === "HPV_Id",
 
-         //EID default values
-        dnaPCR : studyId === "EID_Id",
-        dbsTaken : studyId === "EID_Id",
+        //EID default values
+        dnaPCR: studyId === "EID_Id",
+        dbsTaken: studyId === "EID_Id",
 
         //ARV INIT default values
-        dryTubeTaken : studyId === "InitialARV_Id" || studyId === "FollowUpARV_Id",
-        edtaTubeTaken : studyId === "InitialARV_Id",
+        dryTubeTaken:
+          studyId === "InitialARV_Id" || studyId === "FollowUpARV_Id",
+        edtaTubeTaken: studyId === "InitialARV_Id",
         serologyHIVTest: studyId === "InitialARV_Id",
-        creatinineTest:studyId === "InitialARV_Id" || studyId === "FollowUpARV_Id",
+        creatinineTest:
+          studyId === "InitialARV_Id" || studyId === "FollowUpARV_Id",
         nfsTest: studyId === "InitialARV_Id",
-        cd4cd8Test :studyId === "InitialARV_Id",
-
+        cd4cd8Test: studyId === "InitialARV_Id",
       },
     }));
     setLabNoError("");
@@ -583,7 +678,8 @@ const ViralLoadEntry = () => {
 
   const isSecondPCR = Boolean(
     (dictionaryLists.EID_WHICH_PCR || []).find(
-      (d) => d.id === form.observations.whichPCR && d.displayKey === "EID.secondPCR",
+      (d) =>
+        d.id === form.observations.whichPCR && d.displayKey === "EID.secondPCR",
     ),
   );
 
@@ -648,7 +744,6 @@ const ViralLoadEntry = () => {
       };
       const datePrelevement = parseDate(form.interviewDate);
       const dateReception = parseDate(form.receivedDateForDisplay);
-      console.log({datePrelevement: datePrelevement.getTime(), dateReception: dateReception.getTime()})
       if (datePrelevement && dateReception && dateReception < datePrelevement) {
         errors.push(
           intl.formatMessage({
@@ -813,7 +908,9 @@ const ViralLoadEntry = () => {
     const dt = new Date(y, m - 1, d + 1);
     const dd = String(dt.getDate()).padStart(2, "0");
     const mm = String(dt.getMonth() + 1).padStart(2, "0");
-    return isFr ? `${dd}/${mm}/${dt.getFullYear()}` : `${mm}/${dd}/${dt.getFullYear()}`;
+    return isFr
+      ? `${dd}/${mm}/${dt.getFullYear()}`
+      : `${mm}/${dd}/${dt.getFullYear()}`;
   };
 
   const fldReceivedDate = () => (
@@ -867,7 +964,9 @@ const ViralLoadEntry = () => {
         placeholder="HH:MM"
         maxLength={5}
         value={form.receivedTimeForDisplay}
-        onChange={(e) => handleTimeChange("receivedTimeForDisplay", e.target.value)}
+        onChange={(e) =>
+          handleTimeChange("receivedTimeForDisplay", e.target.value)
+        }
         style={S.timeInput}
       />
     </Row>
@@ -972,9 +1071,13 @@ const ViralLoadEntry = () => {
     };
 
     return (
-      <Row label={intl.formatMessage({ id: "patient.age", defaultMessage: "Âge" })}>
+      <Row
+        label={intl.formatMessage({ id: "patient.age", defaultMessage: "Âge" })}
+      >
         <div style={S.inlineGroup}>
-          <span style={{ ...S.inlineLabel, fontSize: "15px", fontWeight: "600" }}>
+          <span
+            style={{ ...S.inlineLabel, fontSize: "15px", fontWeight: "600" }}
+          >
             <FormattedMessage id="label.years" defaultMessage="Ans" />
           </span>
           <TextInput
@@ -1039,7 +1142,9 @@ const ViralLoadEntry = () => {
         style={{ maxWidth: "160px" }}
         value={form.subjectNumber}
         onChange={(e) => set("subjectNumber", e.target.value)}
-        onBlur={() => { if (onBlurExtra) onBlurExtra(); }}
+        onBlur={() => {
+          if (onBlurExtra) onBlurExtra();
+        }}
       />
     </Row>
   );
@@ -1074,28 +1179,83 @@ const ViralLoadEntry = () => {
             }
             let formatted = validated;
             if (validated.length > 9) {
-              formatted = validated.slice(0, 5) + "/" + validated.slice(5, 7) + "/" + validated.slice(7, 9) + "/" + validated.slice(9);
+              formatted =
+                validated.slice(0, 5) +
+                "/" +
+                validated.slice(5, 7) +
+                "/" +
+                validated.slice(7, 9) +
+                "/" +
+                validated.slice(9);
             } else if (validated.length > 7) {
-              formatted = validated.slice(0, 5) + "/" + validated.slice(5, 7) + "/" + validated.slice(7);
+              formatted =
+                validated.slice(0, 5) +
+                "/" +
+                validated.slice(5, 7) +
+                "/" +
+                validated.slice(7);
             } else if (validated.length > 5) {
               formatted = validated.slice(0, 5) + "/" + validated.slice(5);
             }
             set("siteSubjectNumber", formatted);
-            if (withLookup && patientLookupStatus !== "idle") setPatientLookupStatus("idle");
+            if (withLookup && patientLookupStatus !== "idle")
+              setPatientLookupStatus("idle");
           }}
-          onBlur={() => { if (withLookup) lookupPatient(); }}
+          onBlur={() => {
+            if (withLookup) lookupPatient();
+          }}
         />
         {withLookup && patientLookupStatus === "searching" && (
-          <span style={{ position: "absolute", left: "calc(100% + 6px)", top: "50%", transform: "translateY(-50%)", fontSize: "12px", color: "#6f6f6f", fontStyle: "italic", whiteSpace: "nowrap" }}>Recherche…</span>
+          <span
+            style={{
+              position: "absolute",
+              left: "calc(100% + 6px)",
+              top: "50%",
+              transform: "translateY(-50%)",
+              fontSize: "12px",
+              color: "#6f6f6f",
+              fontStyle: "italic",
+              whiteSpace: "nowrap",
+            }}
+          >
+            Recherche…
+          </span>
         )}
         {withLookup && patientLookupStatus === "found" && (
-          <div style={{ position: "absolute", left: "calc(100% + 6px)", top: "50%", transform: "translateY(-50%)", display: "flex", alignItems: "center", gap: "4px", color: "#24a148", whiteSpace: "nowrap" }}>
+          <div
+            style={{
+              position: "absolute",
+              left: "calc(100% + 6px)",
+              top: "50%",
+              transform: "translateY(-50%)",
+              display: "flex",
+              alignItems: "center",
+              gap: "4px",
+              color: "#24a148",
+              whiteSpace: "nowrap",
+            }}
+          >
             <CheckmarkFilled size={16} />
-            <span style={{ fontSize: "12px", fontWeight: "600" }}>Patient trouvé</span>
+            <span style={{ fontSize: "12px", fontWeight: "600" }}>
+              Patient trouvé
+            </span>
           </div>
         )}
         {withLookup && patientLookupStatus === "notfound" && (
-          <span style={{ position: "absolute", left: "calc(100% + 6px)", top: "50%", transform: "translateY(-50%)", fontSize: "12px", color: "#da1e28", fontWeight: "600", whiteSpace: "nowrap" }}>Patient non trouvé</span>
+          <span
+            style={{
+              position: "absolute",
+              left: "calc(100% + 6px)",
+              top: "50%",
+              transform: "translateY(-50%)",
+              fontSize: "12px",
+              color: "#da1e28",
+              fontWeight: "600",
+              whiteSpace: "nowrap",
+            }}
+          >
+            Patient non trouvé
+          </span>
         )}
       </div>
     </Row>
@@ -1144,7 +1304,13 @@ const ViralLoadEntry = () => {
                       encodeURIComponent(resolvedPrefix + displayDigits),
                     (res) => {
                       if (res && res.status === false) {
-                        setLabNoError(res.body || intl.formatMessage({ id: "error.field.required", defaultMessage: "Numéro invalide ou déjà utilisé" }));
+                        setLabNoError(
+                          res.body ||
+                            intl.formatMessage({
+                              id: "error.field.required",
+                              defaultMessage: "Numéro invalide ou déjà utilisé",
+                            }),
+                        );
                         setLabNoValid(false);
                       } else {
                         setLabNoValid(true);
@@ -1249,7 +1415,14 @@ const ViralLoadEntry = () => {
         >
           <SelectItem value="" text={placeholder} />
           {(dictionaryLists.YES_NO || []).map((d) => (
-            <SelectItem key={d.id} value={d.id}  text={intl.formatMessage({ id: d.displayKey, defaultMessage: d.value })} />
+            <SelectItem
+              key={d.id}
+              value={d.id}
+              text={intl.formatMessage({
+                id: d.displayKey,
+                defaultMessage: d.value,
+              })}
+            />
           ))}
         </Select>
       </Row>
@@ -1282,7 +1455,7 @@ const ViralLoadEntry = () => {
         })}
       >
         <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-          <div style={{ flex: "1 1 auto"}}>
+          <div style={{ flex: "1 1 auto" }}>
             <AutoComplete
               id="f_centerName"
               name="f_centerName"
@@ -1326,7 +1499,7 @@ const ViralLoadEntry = () => {
           )}
         </div>
       </Row>
-     {/* <Row
+      {/* <Row
         required
         label={intl.formatMessage({
           id: "patient.project.centerCode",
@@ -1426,9 +1599,15 @@ const ViralLoadEntry = () => {
         style={{ maxWidth: "240px" }}
       >
         <SelectItem value="" text={placeholder} />
-       {(dictionaryLists.HIV_STATUSES || []).map((d) => (
-          <SelectItem key={d.id} value={d.id}
-            text={intl.formatMessage({ id: d.displayKey, defaultMessage: d.value })} />
+        {(dictionaryLists.HIV_STATUSES || []).map((d) => (
+          <SelectItem
+            key={d.id}
+            value={d.id}
+            text={intl.formatMessage({
+              id: d.displayKey,
+              defaultMessage: d.value,
+            })}
+          />
         ))}
       </Select>
     </Row>
@@ -1758,8 +1937,14 @@ const ViralLoadEntry = () => {
         >
           <SelectItem value="" text={placeholder} />
           {(dictionaryLists.EID_WHICH_PCR || []).map((d) => (
-            <SelectItem key={d.id} value={d.id}
-                  text={intl.formatMessage({ id: d.displayKey, defaultMessage: d.value })} />
+            <SelectItem
+              key={d.id}
+              value={d.id}
+              text={intl.formatMessage({
+                id: d.displayKey,
+                defaultMessage: d.value,
+              })}
+            />
           ))}
         </Select>
       </Row>
@@ -1780,8 +1965,14 @@ const ViralLoadEntry = () => {
         >
           <SelectItem value="" text={placeholder} />
           {(dictionaryLists.EID_SECOND_PCR_REASON || []).map((d) => (
-            <SelectItem key={d.id} value={d.id}
-                  text={intl.formatMessage({ id: d.displayKey, defaultMessage: d.value })} />
+            <SelectItem
+              key={d.id}
+              value={d.id}
+              text={intl.formatMessage({
+                id: d.displayKey,
+                defaultMessage: d.value,
+              })}
+            />
           ))}
         </Select>
       </Row>
@@ -1827,8 +2018,14 @@ const ViralLoadEntry = () => {
         >
           <SelectItem value="" text={placeholder} />
           {(dictionaryLists.YES_NO || []).map((d) => (
-           <SelectItem key={d.id} value={d.id}
-                  text={intl.formatMessage({ id: d.displayKey, defaultMessage: d.value })} />
+            <SelectItem
+              key={d.id}
+              value={d.id}
+              text={intl.formatMessage({
+                id: d.displayKey,
+                defaultMessage: d.value,
+              })}
+            />
           ))}
         </Select>
       </Row>
@@ -1848,8 +2045,14 @@ const ViralLoadEntry = () => {
         >
           <SelectItem value="" text={placeholder} />
           {(dictionaryLists.EID_TYPE_OF_CLINIC || []).map((d) => (
-           <SelectItem key={d.id} value={d.id}
-                  text={intl.formatMessage({ id: d.displayKey, defaultMessage: d.value })} />
+            <SelectItem
+              key={d.id}
+              value={d.id}
+              text={intl.formatMessage({
+                id: d.displayKey,
+                defaultMessage: d.value,
+              })}
+            />
           ))}
         </Select>
       </Row>
@@ -1887,8 +2090,14 @@ const ViralLoadEntry = () => {
         >
           <SelectItem value="" text={placeholder} />
           {(dictionaryLists.EID_HOW_CHILD_FED || []).map((d) => (
-           <SelectItem key={d.id} value={d.id}
-                  text={intl.formatMessage({ id: d.displayKey, defaultMessage: d.value })} />
+            <SelectItem
+              key={d.id}
+              value={d.id}
+              text={intl.formatMessage({
+                id: d.displayKey,
+                defaultMessage: d.value,
+              })}
+            />
           ))}
         </Select>
       </Row>
@@ -1908,8 +2117,14 @@ const ViralLoadEntry = () => {
         >
           <SelectItem value="" text={placeholder} />
           {(dictionaryLists.EID_STOPPED_BREASTFEEDING || []).map((d) => (
-           <SelectItem key={d.id} value={d.id}
-                  text={intl.formatMessage({ id: d.displayKey, defaultMessage: d.value })} />
+            <SelectItem
+              key={d.id}
+              value={d.id}
+              text={intl.formatMessage({
+                id: d.displayKey,
+                defaultMessage: d.value,
+              })}
+            />
           ))}
         </Select>
       </Row>
@@ -1929,8 +2144,14 @@ const ViralLoadEntry = () => {
         >
           <SelectItem value="" text={placeholder} />
           {(dictionaryLists.YES_NO || []).map((d) => (
-            <SelectItem key={d.id} value={d.id}
-                  text={intl.formatMessage({ id: d.displayKey, defaultMessage: d.value })} />
+            <SelectItem
+              key={d.id}
+              value={d.id}
+              text={intl.formatMessage({
+                id: d.displayKey,
+                defaultMessage: d.value,
+              })}
+            />
           ))}
         </Select>
       </Row>
@@ -1950,8 +2171,14 @@ const ViralLoadEntry = () => {
         >
           <SelectItem value="" text={placeholder} />
           {(dictionaryLists.EID_INFANT_PROPHYLAXIS_ARV || []).map((d) => (
-             <SelectItem key={d.id} value={d.id}
-                  text={intl.formatMessage({ id: d.displayKey, defaultMessage: d.value })} />
+            <SelectItem
+              key={d.id}
+              value={d.id}
+              text={intl.formatMessage({
+                id: d.displayKey,
+                defaultMessage: d.value,
+              })}
+            />
           ))}
         </Select>
       </Row>
@@ -1971,8 +2198,14 @@ const ViralLoadEntry = () => {
         >
           <SelectItem value="" text={placeholder} />
           {(dictionaryLists.YES_NO_UNKNOWN || []).map((d) => (
-            <SelectItem key={d.id} value={d.id}
-                  text={intl.formatMessage({ id: d.displayKey, defaultMessage: d.value })} />
+            <SelectItem
+              key={d.id}
+              value={d.id}
+              text={intl.formatMessage({
+                id: d.displayKey,
+                defaultMessage: d.value,
+              })}
+            />
           ))}
         </Select>
       </Row>
@@ -1998,8 +2231,14 @@ const ViralLoadEntry = () => {
         >
           <SelectItem value="" text={placeholder} />
           {(dictionaryLists.EID_MOTHERS_HIV_STATUS || []).map((d) => (
-            <SelectItem key={d.id} value={d.id}
-                  text={intl.formatMessage({ id: d.displayKey, defaultMessage: d.value })} />
+            <SelectItem
+              key={d.id}
+              value={d.id}
+              text={intl.formatMessage({
+                id: d.displayKey,
+                defaultMessage: d.value,
+              })}
+            />
           ))}
         </Select>
       </Row>
@@ -2019,8 +2258,14 @@ const ViralLoadEntry = () => {
         >
           <SelectItem value="" text={placeholder} />
           {(dictionaryLists.EID_MOTHERS_ARV_TREATMENT || []).map((d) => (
-            <SelectItem key={d.id} value={d.id}
-                  text={intl.formatMessage({ id: d.displayKey, defaultMessage: d.value })} />
+            <SelectItem
+              key={d.id}
+              value={d.id}
+              text={intl.formatMessage({
+                id: d.displayKey,
+                defaultMessage: d.value,
+              })}
+            />
           ))}
         </Select>
       </Row>
@@ -2615,9 +2860,21 @@ const ViralLoadEntry = () => {
                 }
                 let formatted = validated;
                 if (validated.length > 9) {
-                  formatted = validated.slice(0, 5) + "/" + validated.slice(5, 7) + "/" + validated.slice(7, 9) + "/" + validated.slice(9);
+                  formatted =
+                    validated.slice(0, 5) +
+                    "/" +
+                    validated.slice(5, 7) +
+                    "/" +
+                    validated.slice(7, 9) +
+                    "/" +
+                    validated.slice(9);
                 } else if (validated.length > 7) {
-                  formatted = validated.slice(0, 5) + "/" + validated.slice(5, 7) + "/" + validated.slice(7);
+                  formatted =
+                    validated.slice(0, 5) +
+                    "/" +
+                    validated.slice(5, 7) +
+                    "/" +
+                    validated.slice(7);
                 } else if (validated.length > 5) {
                   formatted = validated.slice(0, 5) + "/" + validated.slice(5);
                 }
@@ -2628,22 +2885,55 @@ const ViralLoadEntry = () => {
           <Row label="">
             <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
               <Button size="sm" kind="tertiary" onClick={searchVLPatient}>
-                <FormattedMessage id="label.button.search" defaultMessage="Rechercher" />
+                <FormattedMessage
+                  id="label.button.search"
+                  defaultMessage="Rechercher"
+                />
               </Button>
               {patientLookupStatus === "searching" && (
-                <span style={{ fontSize: "12px", color: "#6f6f6f", fontStyle: "italic" }}>
-                  <FormattedMessage id="label.searching" defaultMessage="Recherche…" />
+                <span
+                  style={{
+                    fontSize: "12px",
+                    color: "#6f6f6f",
+                    fontStyle: "italic",
+                  }}
+                >
+                  <FormattedMessage
+                    id="label.searching"
+                    defaultMessage="Recherche…"
+                  />
                 </span>
               )}
               {patientLookupStatus === "found" && (
-                <span style={{ display: "flex", alignItems: "center", gap: "4px", color: "#24a148", fontSize: "12px", fontWeight: "600" }}>
+                <span
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "4px",
+                    color: "#24a148",
+                    fontSize: "12px",
+                    fontWeight: "600",
+                  }}
+                >
                   <CheckmarkFilled size={16} />
-                  <FormattedMessage id="sample.entry.project.patientSearch.found" defaultMessage="Patient trouvé" />
+                  <FormattedMessage
+                    id="sample.entry.project.patientSearch.found"
+                    defaultMessage="Patient trouvé"
+                  />
                 </span>
               )}
               {patientLookupStatus === "notfound" && (
-                <span style={{ fontSize: "12px", color: "#da1e28", fontWeight: "600" }}>
-                  <FormattedMessage id="sample.entry.project.patientSearch.notFound" defaultMessage="Patient non trouvé" />
+                <span
+                  style={{
+                    fontSize: "12px",
+                    color: "#da1e28",
+                    fontWeight: "600",
+                  }}
+                >
+                  <FormattedMessage
+                    id="sample.entry.project.patientSearch.notFound"
+                    defaultMessage="Patient non trouvé"
+                  />
                 </span>
               )}
             </div>
@@ -2652,573 +2942,684 @@ const ViralLoadEntry = () => {
       )}
       {(!serologyControlEnabled || vlPatientSearchDone) && (
         <>
-      {fldARVCenter()}
-      {fldNameOfDoctor()}
-      {fldNameOfSampler()}
-      {fldInterviewDate()}
-      {fldInterviewTime()}
-      {fldReceivedDate()}
-      {fldReceivedTime()}
-      {fldSubjectNumber(7)}
-      {fldSiteSubjectNumber(false, false)}
-      {fldLabNo(LAB_PREFIXES.VL_Id)}
-      {fldBirthDate()}
-      {fldAge(true, false)}
-      {fldGender()}
-      {isFemale && (
-        <>
-          <Row
-            label={intl.formatMessage({
-              id: "sample.project.vlPregnancy",
-              defaultMessage: "Grossesse en cours",
-            })}
-          >
-            <Select
-              id="vl_pregnancy"
-              hideLabel
-              labelText=""
-              value={form.observations.vlPregnancy}
-              onChange={(e) => setObs("vlPregnancy", e.target.value)}
-              style={{ maxWidth: "200px" }}
-            >
-              <SelectItem value="" text={placeholder} />
-              {(dictionaryLists.YES_NO || []).map((d) => (
-                <SelectItem key={d.id} value={d.id}
-                  text={intl.formatMessage({ id: d.displayKey, defaultMessage: d.value })} />
-              ))}
-            </Select>
-          </Row>
-          <Row
-            label={intl.formatMessage({
-              id: "sample.project.vlSuckle",
-              defaultMessage: "Allaitement en cours",
-            })}
-          >
-            <Select
-              id="vl_suckle"
-              hideLabel
-              labelText=""
-              value={form.observations.vlSuckle}
-              onChange={(e) => setObs("vlSuckle", e.target.value)}
-              style={{ maxWidth: "200px" }}
-            >
-              <SelectItem value="" text={placeholder} />
-              {(dictionaryLists.YES_NO || []).map((d) => (
-                <SelectItem key={d.id} value={d.id}
-                  text={intl.formatMessage({ id: d.displayKey, defaultMessage: d.value })} />
-              ))}
-            </Select>
-          </Row>
-        </>
-      )}
-      {serologyControlEnabled ? (
-        <Row
-          required
-          label={intl.formatMessage({
-            id: "patient.project.hivType",
-            defaultMessage: "Type VIH",
-          })}
-        >
-          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-            <Select
-              id="f_hivStatus"
-              hideLabel
-              labelText=""
-              disabled={serologyStatus === "found"}
-              value={form.observations.hivStatus}
-              onChange={(e) => setObs("hivStatus", e.target.value)}
-              style={{ maxWidth: "240px" }}
-            >
-              <SelectItem value="" text={placeholder} />
-              {(dictionaryLists.HIV_TYPES || []).map((d) => (
-                <SelectItem key={d.id} value={d.id}
-                  text={intl.formatMessage({ id: d.displayKey, defaultMessage: d.value })} />
-              ))}
-            </Select>
-            {serologyStatus === "searching" && (
-              <span style={{ fontSize: "12px", color: "#6f6f6f", fontStyle: "italic" }}>
-                <FormattedMessage id="label.searching" defaultMessage="Recherche sérologie…" />
-              </span>
-            )}
-            {serologyStatus === "found" && (
-              <span style={{ fontSize: "12px", color: "#24a148", fontWeight: "600" }}>
-                <FormattedMessage
-                  id="sample.entry.project.serology.found"
-                  defaultMessage="Sérologie existante détectée"
-                />
-              </span>
-            )}
-            {serologyStatus === "notfound" && (
-              <span style={{ fontSize: "12px", color: "#da1e28", fontWeight: "600" }}>
-                <FormattedMessage
-                  id="sample.entry.project.serology.notfound"
-                  defaultMessage="Aucune sérologie existante : test sérologie requis"
-                />
-              </span>
-            )}
-          </div>
-        </Row>
-      ) : (
-        fldHivStatus("HIV_TYPES", true)
-      )}
-      <Row
-        label={intl.formatMessage({
-          id: "sample.entry.project.arv.treatment",
-          defaultMessage: "Sous traitement ARV ?",
-        })}
-      >
-        <Select
-          id="vl_arvTreatment"
-          hideLabel
-          labelText=""
-          value={form.observations.currentARVTreatment}
-          onChange={(e) => setObs("currentARVTreatment", e.target.value)}
-          style={{ maxWidth: "200px" }}
-        >
-          <SelectItem value="" text={placeholder} />
-           {(dictionaryLists.YES_NO || []).map((d) => (
-                <SelectItem key={d.id} value={d.id}
-                  text={intl.formatMessage({ id: d.displayKey, defaultMessage: d.value })} />
-              ))}
-        </Select>
-      </Row>
-      {isOnARV && (
-        <>
-          <Row
-            label={intl.formatMessage({
-              id: "sample.entry.project.arv.treatment.initDate",
-              defaultMessage: "Date début traitement ARV",
-            })}
-          >
-            <CustomDatePicker
-              id="vl_arvInitDate"
-              labelText=""
-              value={form.observations.arvTreatmentInitDate}
-              disallowFutureDate
-              onChange={(d) => setObs("arvTreatmentInitDate", d)}
-            />
-          </Row>
-          <Row
-            label={intl.formatMessage({
-              id: "sample.entry.project.arv.treatment.therap.line",
-              defaultMessage: "Ligne thérapeutique",
-            })}
-          >
-            <Select
-              id="vl_arvRegime"
-              hideLabel
-              labelText=""
-              value={form.observations.arvTreatmentRegime}
-              onChange={(e) => setObs("arvTreatmentRegime", e.target.value)}
-              style={{ maxWidth: "240px" }}
-            >
-              <SelectItem value="" text={placeholder} />
-              {(dictionaryLists.ARV_REGIME || []).map((d) => (
-                <SelectItem key={d.id} value={d.id}
-                  text={intl.formatMessage({ id: d.displayKey, defaultMessage: d.value })} />
-              ))}
-            </Select>
-          </Row>
-          <Row
-            label={intl.formatMessage({
-              id: "sample.entry.project.arv.treatment.therap.regime",
-              defaultMessage: "Régime thérapeutique",
-            })}
-          >
-            <div style={{ maxWidth: "500px", display: "flex", gap: "8px", alignItems: "center" }}>
-              <div style={{ flex: 1, opacity: innManualMode ? 0.4 : 1, pointerEvents: innManualMode ? "none" : "auto" }}>
-                <AutoComplete
-                  id="vl_arvRegimenList"
-                  allowFreeText={false}
-                  suggestions={(dictionaryLists.ARV_REGIMEN_LIST || []).map((d) => ({
-                    id: d.value,
-                    value: d.value,
-                  }))}
-                  onSelect={(val) => {
-                    const parts = (val || "").split(" ").filter(Boolean);
-                    setForm((prev) => {
-                      const list = ["", "", "", ""];
-                      parts.forEach((p, i) => { if (i < 4) list[i] = p; });
-                      return {
-                        ...prev,
-                        observations: { ...prev.observations, currentARVTreatmentINNsList: list },
-                      };
-                    });
-                  }}
-                />
-              </div>
-              <Checkbox
-                id="vl_inn_manual_mode"
-                labelText={intl.formatMessage({
-                  id: "sample.entry.project.arv.inn.other",
-                  defaultMessage: "Autre",
+          {fldARVCenter()}
+          {fldNameOfDoctor()}
+          {fldNameOfSampler()}
+          {fldInterviewDate()}
+          {fldInterviewTime()}
+          {fldReceivedDate()}
+          {fldReceivedTime()}
+          {fldSubjectNumber(7)}
+          {fldSiteSubjectNumber(false, false)}
+          {fldLabNo(LAB_PREFIXES.VL_Id)}
+          {fldBirthDate()}
+          {fldAge(true, false)}
+          {fldGender()}
+          {isFemale && (
+            <>
+              <Row
+                label={intl.formatMessage({
+                  id: "sample.project.vlPregnancy",
+                  defaultMessage: "Grossesse en cours",
                 })}
-                checked={innManualMode}
-                onChange={(_, { checked }) => {
-                  setInnManualMode(checked);
-                  if (!checked) {
-                    setForm((prev) => ({
-                      ...prev,
-                      observations: { ...prev.observations, currentARVTreatmentINNsList: ["", "", "", ""] },
-                    }));
-                  }
-                }}
-              />
-            </div>
+              >
+                <Select
+                  id="vl_pregnancy"
+                  hideLabel
+                  labelText=""
+                  value={form.observations.vlPregnancy}
+                  onChange={(e) => setObs("vlPregnancy", e.target.value)}
+                  style={{ maxWidth: "200px" }}
+                >
+                  <SelectItem value="" text={placeholder} />
+                  {(dictionaryLists.YES_NO || []).map((d) => (
+                    <SelectItem
+                      key={d.id}
+                      value={d.id}
+                      text={intl.formatMessage({
+                        id: d.displayKey,
+                        defaultMessage: d.value,
+                      })}
+                    />
+                  ))}
+                </Select>
+              </Row>
+              <Row
+                label={intl.formatMessage({
+                  id: "sample.project.vlSuckle",
+                  defaultMessage: "Allaitement en cours",
+                })}
+              >
+                <Select
+                  id="vl_suckle"
+                  hideLabel
+                  labelText=""
+                  value={form.observations.vlSuckle}
+                  onChange={(e) => setObs("vlSuckle", e.target.value)}
+                  style={{ maxWidth: "200px" }}
+                >
+                  <SelectItem value="" text={placeholder} />
+                  {(dictionaryLists.YES_NO || []).map((d) => (
+                    <SelectItem
+                      key={d.id}
+                      value={d.id}
+                      text={intl.formatMessage({
+                        id: d.displayKey,
+                        defaultMessage: d.value,
+                      })}
+                    />
+                  ))}
+                </Select>
+              </Row>
+            </>
+          )}
+          {serologyControlEnabled ? (
+            <Row
+              required
+              label={intl.formatMessage({
+                id: "patient.project.hivType",
+                defaultMessage: "Type VIH",
+              })}
+            >
+              <div
+                style={{ display: "flex", alignItems: "center", gap: "8px" }}
+              >
+                <Select
+                  id="f_hivStatus"
+                  hideLabel
+                  labelText=""
+                  disabled={serologyStatus === "found"}
+                  value={form.observations.hivStatus}
+                  onChange={(e) => setObs("hivStatus", e.target.value)}
+                  style={{ maxWidth: "240px" }}
+                >
+                  <SelectItem value="" text={placeholder} />
+                  {(dictionaryLists.HIV_TYPES || []).map((d) => (
+                    <SelectItem
+                      key={d.id}
+                      value={d.id}
+                      text={intl.formatMessage({
+                        id: d.displayKey,
+                        defaultMessage: d.value,
+                      })}
+                    />
+                  ))}
+                </Select>
+                {serologyStatus === "searching" && (
+                  <span
+                    style={{
+                      fontSize: "12px",
+                      color: "#6f6f6f",
+                      fontStyle: "italic",
+                    }}
+                  >
+                    <FormattedMessage
+                      id="label.searching"
+                      defaultMessage="Recherche sérologie…"
+                    />
+                  </span>
+                )}
+                {serologyStatus === "found" && (
+                  <span
+                    style={{
+                      fontSize: "12px",
+                      color: "#24a148",
+                      fontWeight: "600",
+                    }}
+                  >
+                    <FormattedMessage
+                      id="sample.entry.project.serology.found"
+                      defaultMessage="Sérologie existante détectée"
+                    />
+                  </span>
+                )}
+                {serologyStatus === "notfound" && (
+                  <span
+                    style={{
+                      fontSize: "12px",
+                      color: "#da1e28",
+                      fontWeight: "600",
+                    }}
+                  >
+                    <FormattedMessage
+                      id="sample.entry.project.serology.notfound"
+                      defaultMessage="Aucune sérologie existante : test sérologie requis"
+                    />
+                  </span>
+                )}
+              </div>
+            </Row>
+          ) : (
+            fldHivStatus("HIV_TYPES", true)
+          )}
+          <Row
+            label={intl.formatMessage({
+              id: "sample.entry.project.arv.treatment",
+              defaultMessage: "Sous traitement ARV ?",
+            })}
+          >
+            <Select
+              id="vl_arvTreatment"
+              hideLabel
+              labelText=""
+              value={form.observations.currentARVTreatment}
+              onChange={(e) => setObs("currentARVTreatment", e.target.value)}
+              style={{ maxWidth: "200px" }}
+            >
+              <SelectItem value="" text={placeholder} />
+              {(dictionaryLists.YES_NO || []).map((d) => (
+                <SelectItem
+                  key={d.id}
+                  value={d.id}
+                  text={intl.formatMessage({
+                    id: d.displayKey,
+                    defaultMessage: d.value,
+                  })}
+                />
+              ))}
+            </Select>
           </Row>
-          {[0, 1, 2, 3].map((i) => (
-            <Row key={i} label={`ARV INN ${i + 1}`}>
+          {isOnARV && (
+            <>
+              <Row
+                label={intl.formatMessage({
+                  id: "sample.entry.project.arv.treatment.initDate",
+                  defaultMessage: "Date début traitement ARV",
+                })}
+              >
+                <CustomDatePicker
+                  id="vl_arvInitDate"
+                  labelText=""
+                  value={form.observations.arvTreatmentInitDate}
+                  disallowFutureDate
+                  onChange={(d) => setObs("arvTreatmentInitDate", d)}
+                />
+              </Row>
+              <Row
+                label={intl.formatMessage({
+                  id: "sample.entry.project.arv.treatment.therap.line",
+                  defaultMessage: "Ligne thérapeutique",
+                })}
+              >
+                <Select
+                  id="vl_arvRegime"
+                  hideLabel
+                  labelText=""
+                  value={form.observations.arvTreatmentRegime}
+                  onChange={(e) => setObs("arvTreatmentRegime", e.target.value)}
+                  style={{ maxWidth: "240px" }}
+                >
+                  <SelectItem value="" text={placeholder} />
+                  {(dictionaryLists.ARV_REGIME || []).map((d) => (
+                    <SelectItem
+                      key={d.id}
+                      value={d.id}
+                      text={intl.formatMessage({
+                        id: d.displayKey,
+                        defaultMessage: d.value,
+                      })}
+                    />
+                  ))}
+                </Select>
+              </Row>
+              <Row
+                label={intl.formatMessage({
+                  id: "sample.entry.project.arv.treatment.therap.regime",
+                  defaultMessage: "Régime thérapeutique",
+                })}
+              >
+                <div
+                  style={{
+                    maxWidth: "500px",
+                    display: "flex",
+                    gap: "8px",
+                    alignItems: "center",
+                  }}
+                >
+                  <div
+                    style={{
+                      flex: 1,
+                      opacity: innManualMode ? 0.4 : 1,
+                      pointerEvents: innManualMode ? "none" : "auto",
+                    }}
+                  >
+                    <AutoComplete
+                      id="vl_arvRegimenList"
+                      allowFreeText={false}
+                      suggestions={(dictionaryLists.ARV_REGIMEN_LIST || []).map(
+                        (d) => ({
+                          id: d.value,
+                          value: d.value,
+                        }),
+                      )}
+                      onSelect={(val) => {
+                        const parts = (val || "").split(" ").filter(Boolean);
+                        setForm((prev) => {
+                          const list = ["", "", "", ""];
+                          parts.forEach((p, i) => {
+                            if (i < 4) list[i] = p;
+                          });
+                          return {
+                            ...prev,
+                            observations: {
+                              ...prev.observations,
+                              currentARVTreatmentINNsList: list,
+                            },
+                          };
+                        });
+                      }}
+                    />
+                  </div>
+                  <Checkbox
+                    id="vl_inn_manual_mode"
+                    labelText={intl.formatMessage({
+                      id: "sample.entry.project.arv.inn.other",
+                      defaultMessage: "Autre",
+                    })}
+                    checked={innManualMode}
+                    onChange={(_, { checked }) => {
+                      setInnManualMode(checked);
+                      if (!checked) {
+                        setForm((prev) => ({
+                          ...prev,
+                          observations: {
+                            ...prev.observations,
+                            currentARVTreatmentINNsList: ["", "", "", ""],
+                          },
+                        }));
+                      }
+                    }}
+                  />
+                </div>
+              </Row>
+              {[0, 1, 2, 3].map((i) => (
+                <Row key={i} label={`ARV INN ${i + 1}`}>
+                  <TextInput
+                    id={`vl_inn_${i}`}
+                    hideLabel
+                    labelText=""
+                    size="sm"
+                    disabled={!innManualMode}
+                    style={{ maxWidth: "200px" }}
+                    value={
+                      form.observations.currentARVTreatmentINNsList[i] || ""
+                    }
+                    onChange={(e) => setINN(i, e.target.value)}
+                  />
+                </Row>
+              ))}
+            </>
+          )}
+          <Row
+            label={intl.formatMessage({
+              id: "sample.entry.project.vl.reason",
+              defaultMessage: "Motif de la demande CV",
+            })}
+          >
+            <Select
+              id="vl_reason"
+              hideLabel
+              labelText=""
+              value={form.observations.vlReasonForRequest}
+              onChange={(e) => setObs("vlReasonForRequest", e.target.value)}
+              style={{ maxWidth: "280px" }}
+            >
+              <SelectItem value="" text={placeholder} />
+              {(dictionaryLists.ARV_REASON_FOR_VL_DEMAND || []).map((d) => (
+                <SelectItem
+                  key={d.displayKey}
+                  value={d.id}
+                  text={intl.formatMessage({
+                    id: d.displayKey,
+                    defaultMessage: d.value,
+                  })}
+                />
+              ))}
+            </Select>
+          </Row>
+          {vlReasonIsOther && (
+            <Row
+              label={intl.formatMessage({
+                id: "sample.entry.project.vl.specify",
+                defaultMessage: "Autre motif (préciser)",
+              })}
+            >
               <TextInput
-                id={`vl_inn_${i}`}
+                id="vl_otherReason"
                 hideLabel
                 labelText=""
                 size="sm"
-                disabled={!innManualMode}
-                style={{ maxWidth: "200px" }}
-                value={form.observations.currentARVTreatmentINNsList[i] || ""}
-                onChange={(e) => setINN(i, e.target.value)}
+                style={{ maxWidth: "360px" }}
+                value={form.observations.vlOtherReasonForRequest}
+                onChange={(e) =>
+                  setObs("vlOtherReasonForRequest", e.target.value)
+                }
               />
             </Row>
-          ))}
-        </>
-      )}
-      <Row
-        label={intl.formatMessage({
-          id: "sample.entry.project.vl.reason",
-          defaultMessage: "Motif de la demande CV",
-        })}
-      >
-        <Select
-          id="vl_reason"
-          hideLabel
-          labelText=""
-          value={form.observations.vlReasonForRequest}
-          onChange={(e) => setObs("vlReasonForRequest", e.target.value)}
-          style={{ maxWidth: "280px" }}
-        >
-          <SelectItem value="" text={placeholder} />
-          {(dictionaryLists.ARV_REASON_FOR_VL_DEMAND || []).map((d) => (
-           <SelectItem key={d.displayKey} value={d.id}
-                  text={intl.formatMessage({ id: d.displayKey, defaultMessage: d.value })} />
-          ))}
-        </Select>
-      </Row>
-      {vlReasonIsOther && (
-        <Row
-          label={intl.formatMessage({
-            id: "sample.entry.project.vl.specify",
-            defaultMessage: "Autre motif (préciser)",
-          })}
-        >
-          <TextInput
-            id="vl_otherReason"
-            hideLabel
-            labelText=""
-            size="sm"
-            style={{ maxWidth: "360px" }}
-            value={form.observations.vlOtherReasonForRequest}
-            onChange={(e) => setObs("vlOtherReasonForRequest", e.target.value)}
-          />
-        </Row>
-      )}
-      <div style={S.subHeader}>
-        <FormattedMessage
-          id="sample.project.cd4init"
-          defaultMessage="A l'initiation du traitement"
-        />
-      </div>
-      <Row
-        label={intl.formatMessage({
-          id: "sample.project.cd4Count",
-          defaultMessage: "Nombre de CD4",
-        })}
-      >
-        <TextInput
-          id="vl_initCD4"
-          hideLabel
-          labelText=""
-          size="sm"
-          style={{ maxWidth: "120px" }}
-          value={form.observations.initcd4Count}
-          onChange={(e) => setObs("initcd4Count", e.target.value.replace(/[^0-9,]/g, ""))}
-        />
-      </Row>
-      <Row
-        label={intl.formatMessage({
-          id: "sample.project.cd4Percent",
-          defaultMessage: "Pourcentage CD4",
-        })}
-      >
-        <TextInput
-          id="vl_initCD4pct"
-          hideLabel
-          labelText=""
-          size="sm"
-          style={{ maxWidth: "120px" }}
-          value={form.observations.initcd4Percent}
-          onChange={(e) => setObs("initcd4Percent", e.target.value.replace(/[^0-9,]/g, ""))}
-        />
-      </Row>
-      <Row
-        label={intl.formatMessage({
-          id: "sample.project.Cd4Date",
-          defaultMessage: "Date",
-        })}
-      >
-        <CustomDatePicker
-          id="vl_initCD4Date"
-          labelText=""
-          value={form.observations.initcd4Date}
-          disallowFutureDate
-          onChange={(d) => setObs("initcd4Date", d)}
-        />
-      </Row>
-      <div style={S.subHeader}>
-        <FormattedMessage
-          id="sample.project.cd4demand"
-          defaultMessage="A la demande de charge virale"
-        />
-      </div>
-      <Row
-        label={intl.formatMessage({
-          id: "sample.project.cd4Count",
-          defaultMessage: "Nombre de CD4",
-        })}
-      >
-        <TextInput
-          id="vl_demCD4"
-          hideLabel
-          labelText=""
-          size="sm"
-          style={{ maxWidth: "120px" }}
-          value={form.observations.demandcd4Count}
-          onChange={(e) => setObs("demandcd4Count", e.target.value.replace(/[^0-9,]/g, ""))}
-        />
-      </Row>
-      <Row
-        label={intl.formatMessage({
-          id: "sample.project.cd4Percent",
-          defaultMessage: "Pourcentage CD4",
-        })}
-      >
-        <TextInput
-          id="vl_demCD4pct"
-          hideLabel
-          labelText=""
-          size="sm"
-          style={{ maxWidth: "120px" }}
-          value={form.observations.demandcd4Percent}
-          onChange={(e) => setObs("demandcd4Percent", e.target.value.replace(/[^0-9,]/g, ""))}
-        />
-      </Row>
-      <Row
-        label={intl.formatMessage({
-          id: "sample.project.Cd4Date",
-          defaultMessage: "Date",
-        })}
-      >
-        <CustomDatePicker
-          id="vl_demCD4Date"
-          labelText=""
-          value={form.observations.demandcd4Date}
-          disallowFutureDate
-          onChange={(d) => setObs("demandcd4Date", d)}
-        />
-      </Row>
-      <Row
-        label={intl.formatMessage({
-          id: "sample.project.priorVLRequest",
-          defaultMessage: "CV antérieure ?",
-        })}
-      >
-        <Select
-          id="vl_benefit"
-          hideLabel
-          labelText=""
-          value={form.observations.vlBenefit}
-          onChange={(e) => setObs("vlBenefit", e.target.value)}
-          style={{ maxWidth: "200px" }}
-        >
-          <SelectItem value="" text={placeholder} />
-          {(dictionaryLists.YES_NO || []).map((d) => (
-            <SelectItem key={d.id} value={d.id}  text={intl.formatMessage({ id: d.displayKey, defaultMessage: d.value })} />
-          ))}
-        </Select>
-      </Row>
-      {hasHadVL && (
-        <>
-          <Row
-            label={intl.formatMessage({
-              id: "sample.project.priorVLLab",
-              defaultMessage: "Laboratoire CV antérieure",
-            })}
-          >
-            <AutoComplete
-              id="vl_priorLab"
-              name="vl_priorLab"
-              label=""
-              value={form.observations.priorVLLab}
-              suggestions={dictionaryLists.REFERRING_SITES.map((o) => ({
-                id: o.id,
-                value: o.organizationName || o.value,
-              }))}
-              onChange={(e) => {
-                const val = e?.currentTarget?.value ?? e?.target?.value ?? "";
-                setObs("priorVLLab", val);
-              }}
-              onSelect={(id) => {
-                const org = dictionaryLists.REFERRING_SITES.find((o) => o.id === id);
-                if (org) {
-                  setObs("priorVLLab", org.organizationName || org.value);
-                }
-              }}
+          )}
+          <div style={S.subHeader}>
+            <FormattedMessage
+              id="sample.project.cd4init"
+              defaultMessage="A l'initiation du traitement"
             />
-          </Row>
+          </div>
           <Row
             label={intl.formatMessage({
-              id: "sample.project.VLValue",
-              defaultMessage: "Valeur CV antérieure",
+              id: "sample.project.cd4Count",
+              defaultMessage: "Nombre de CD4",
             })}
           >
             <TextInput
-              id="vl_priorVal"
+              id="vl_initCD4"
               hideLabel
               labelText=""
               size="sm"
               style={{ maxWidth: "120px" }}
-              value={form.observations.priorVLValue}
-              onChange={(e) => setObs("priorVLValue", e.target.value)}
+              value={form.observations.initcd4Count}
+              onChange={(e) =>
+                setObs("initcd4Count", e.target.value.replace(/[^0-9,]/g, ""))
+              }
             />
           </Row>
           <Row
             label={intl.formatMessage({
-              id: "sample.project.VLDate",
-              defaultMessage: "Date CV antérieure",
+              id: "sample.project.cd4Percent",
+              defaultMessage: "Pourcentage CD4",
+            })}
+          >
+            <TextInput
+              id="vl_initCD4pct"
+              hideLabel
+              labelText=""
+              size="sm"
+              style={{ maxWidth: "120px" }}
+              value={form.observations.initcd4Percent}
+              onChange={(e) =>
+                setObs("initcd4Percent", e.target.value.replace(/[^0-9,]/g, ""))
+              }
+            />
+          </Row>
+          <Row
+            label={intl.formatMessage({
+              id: "sample.project.Cd4Date",
+              defaultMessage: "Date",
             })}
           >
             <CustomDatePicker
-              id="vl_priorDate"
+              id="vl_initCD4Date"
               labelText=""
-              value={form.observations.priorVLDate}
+              value={form.observations.initcd4Date}
               disallowFutureDate
-              onChange={(d) => setObs("priorVLDate", d)}
+              onChange={(d) => setObs("initcd4Date", d)}
             />
           </Row>
-        </>
-      )}
-      {fldUnderInvestigation()}
-      <div style={S.subHeader}>
-        <FormattedMessage
-          id="sample.entry.project.title.specimen"
-          defaultMessage="Échantillons"
-        />
-      </div>
-      {serologyControlEnabled && serologyStatus === "notfound" && (
-        <>
+          <div style={S.subHeader}>
+            <FormattedMessage
+              id="sample.project.cd4demand"
+              defaultMessage="A la demande de charge virale"
+            />
+          </div>
+          <Row
+            label={intl.formatMessage({
+              id: "sample.project.cd4Count",
+              defaultMessage: "Nombre de CD4",
+            })}
+          >
+            <TextInput
+              id="vl_demCD4"
+              hideLabel
+              labelText=""
+              size="sm"
+              style={{ maxWidth: "120px" }}
+              value={form.observations.demandcd4Count}
+              onChange={(e) =>
+                setObs("demandcd4Count", e.target.value.replace(/[^0-9,]/g, ""))
+              }
+            />
+          </Row>
+          <Row
+            label={intl.formatMessage({
+              id: "sample.project.cd4Percent",
+              defaultMessage: "Pourcentage CD4",
+            })}
+          >
+            <TextInput
+              id="vl_demCD4pct"
+              hideLabel
+              labelText=""
+              size="sm"
+              style={{ maxWidth: "120px" }}
+              value={form.observations.demandcd4Percent}
+              onChange={(e) =>
+                setObs(
+                  "demandcd4Percent",
+                  e.target.value.replace(/[^0-9,]/g, ""),
+                )
+              }
+            />
+          </Row>
+          <Row
+            label={intl.formatMessage({
+              id: "sample.project.Cd4Date",
+              defaultMessage: "Date",
+            })}
+          >
+            <CustomDatePicker
+              id="vl_demCD4Date"
+              labelText=""
+              value={form.observations.demandcd4Date}
+              disallowFutureDate
+              onChange={(d) => setObs("demandcd4Date", d)}
+            />
+          </Row>
+          <Row
+            label={intl.formatMessage({
+              id: "sample.project.priorVLRequest",
+              defaultMessage: "CV antérieure ?",
+            })}
+          >
+            <Select
+              id="vl_benefit"
+              hideLabel
+              labelText=""
+              value={form.observations.vlBenefit}
+              onChange={(e) => setObs("vlBenefit", e.target.value)}
+              style={{ maxWidth: "200px" }}
+            >
+              <SelectItem value="" text={placeholder} />
+              {(dictionaryLists.YES_NO || []).map((d) => (
+                <SelectItem
+                  key={d.id}
+                  value={d.id}
+                  text={intl.formatMessage({
+                    id: d.displayKey,
+                    defaultMessage: d.value,
+                  })}
+                />
+              ))}
+            </Select>
+          </Row>
+          {hasHadVL && (
+            <>
+              <Row
+                label={intl.formatMessage({
+                  id: "sample.project.priorVLLab",
+                  defaultMessage: "Laboratoire CV antérieure",
+                })}
+              >
+                <AutoComplete
+                  id="vl_priorLab"
+                  name="vl_priorLab"
+                  label=""
+                  value={form.observations.priorVLLab}
+                  suggestions={dictionaryLists.REFERRING_SITES.map((o) => ({
+                    id: o.id,
+                    value: o.organizationName || o.value,
+                  }))}
+                  onChange={(e) => {
+                    const val =
+                      e?.currentTarget?.value ?? e?.target?.value ?? "";
+                    setObs("priorVLLab", val);
+                  }}
+                  onSelect={(id) => {
+                    const org = dictionaryLists.REFERRING_SITES.find(
+                      (o) => o.id === id,
+                    );
+                    if (org) {
+                      setObs("priorVLLab", org.organizationName || org.value);
+                    }
+                  }}
+                />
+              </Row>
+              <Row
+                label={intl.formatMessage({
+                  id: "sample.project.VLValue",
+                  defaultMessage: "Valeur CV antérieure",
+                })}
+              >
+                <TextInput
+                  id="vl_priorVal"
+                  hideLabel
+                  labelText=""
+                  size="sm"
+                  style={{ maxWidth: "120px" }}
+                  value={form.observations.priorVLValue}
+                  onChange={(e) => setObs("priorVLValue", e.target.value)}
+                />
+              </Row>
+              <Row
+                label={intl.formatMessage({
+                  id: "sample.project.VLDate",
+                  defaultMessage: "Date CV antérieure",
+                })}
+              >
+                <CustomDatePicker
+                  id="vl_priorDate"
+                  labelText=""
+                  value={form.observations.priorVLDate}
+                  disallowFutureDate
+                  onChange={(d) => setObs("priorVLDate", d)}
+                />
+              </Row>
+            </>
+          )}
+          {fldUnderInvestigation()}
+          <div style={S.subHeader}>
+            <FormattedMessage
+              id="sample.entry.project.title.specimen"
+              defaultMessage="Échantillons"
+            />
+          </div>
+          {serologyControlEnabled && serologyStatus === "notfound" && (
+            <>
+              <div style={S.row}>
+                <div style={S.label}>
+                  <FormattedMessage
+                    id="sample.entry.project.ARV.dryTubeTaken"
+                    defaultMessage="Tube Sec"
+                  />
+                </div>
+                <div style={S.inputWrap}>
+                  <Checkbox
+                    id="vl_dryTubeTaken"
+                    labelText=""
+                    checked={form.projectData.dryTubeTaken}
+                    onChange={(_, { checked }) =>
+                      setPD("dryTubeTaken", checked)
+                    }
+                  />
+                </div>
+              </div>
+              <div style={S.row}>
+                <div style={S.label}>
+                  <span style={S.asterisk}>*</span>
+                  <FormattedMessage
+                    id="sample.entry.project.serologyHIVTest"
+                    defaultMessage="Sérologie VIH"
+                  />
+                </div>
+                <div style={S.inputWrap}>
+                  <Checkbox
+                    id="vl_serologyHIVTest"
+                    labelText=""
+                    checked={form.projectData.serologyHIVTest}
+                    onChange={(_, { checked }) =>
+                      setPD("serologyHIVTest", checked)
+                    }
+                  />
+                </div>
+              </div>
+            </>
+          )}
           <div style={S.row}>
             <div style={S.label}>
               <FormattedMessage
-                id="sample.entry.project.ARV.dryTubeTaken"
-                defaultMessage="Tube Sec"
+                id="sample.entry.project.ARV.edtaTubeTaken"
+                defaultMessage="Tube EDTA"
               />
             </div>
             <div style={S.inputWrap}>
               <Checkbox
-                id="vl_dryTubeTaken"
+                id="vl_edta"
                 labelText=""
-                checked={form.projectData.dryTubeTaken}
-                onChange={(_, { checked }) => setPD("dryTubeTaken", checked)}
+                checked={form.projectData.edtaTubeTaken}
+                onChange={(_, { checked }) => setPD("edtaTubeTaken", checked)}
               />
             </div>
           </div>
           <div style={S.row}>
             <div style={S.label}>
-              <span style={S.asterisk}>*</span>
               <FormattedMessage
-                id="sample.entry.project.serologyHIVTest"
-                defaultMessage="Sérologie VIH"
+                id="sample.entry.project.title.dryBloodSpot"
+                defaultMessage="DBS"
               />
             </div>
             <div style={S.inputWrap}>
               <Checkbox
-                id="vl_serologyHIVTest"
+                id="vl_dbs"
                 labelText=""
-                checked={form.projectData.serologyHIVTest}
-                onChange={(_, { checked }) => setPD("serologyHIVTest", checked)}
+                checked={form.projectData.dbsvlTaken}
+                onChange={(_, { checked }) => setPD("dbsvlTaken", checked)}
               />
             </div>
           </div>
-        </>
-      )}
-      <div style={S.row}>
-        <div style={S.label}>
-          <FormattedMessage
-            id="sample.entry.project.ARV.edtaTubeTaken"
-            defaultMessage="Tube EDTA"
-          />
-        </div>
-        <div style={S.inputWrap}>
-          <Checkbox
-            id="vl_edta"
-            labelText=""
-            checked={form.projectData.edtaTubeTaken}
-            onChange={(_, { checked }) => setPD("edtaTubeTaken", checked)}
-          />
-        </div>
-      </div>
-      <div style={S.row}>
-        <div style={S.label}>
-          <FormattedMessage
-            id="sample.entry.project.title.dryBloodSpot"
-            defaultMessage="DBS"
-          />
-        </div>
-        <div style={S.inputWrap}>
-          <Checkbox
-            id="vl_dbs"
-            labelText=""
-            checked={form.projectData.dbsvlTaken}
-            onChange={(_, { checked }) => setPD("dbsvlTaken", checked)}
-          />
-        </div>
-      </div>
-      <div style={S.row}>
-        <div style={S.label}>
-          <FormattedMessage
-            id="sample.entry.project.title.psc"
-            defaultMessage="PSC"
-          />
-        </div>
-        <div style={S.inputWrap}>
-          <Checkbox
-            id="vl_psc"
-            labelText=""
-            checked={form.projectData.pscvlTaken}
-            onChange={(_, { checked }) => setPD("pscvlTaken", checked)}
-          />
-        </div>
-      </div>
-      <div style={S.subHeader}>
-        <FormattedMessage
-          id="sample.entry.project.title.tests"
-          defaultMessage="Tests"
-        />
-      </div>
-      <div style={S.row}>
-        <div style={S.label}>
-          <FormattedMessage
-            id="sample.entry.project.ARV.viralLoadTest"
-            defaultMessage="Charge Virale Plasmatique"
-          />
-        </div>
-        <div style={S.inputWrap}>
-          <Checkbox
-            id="vl_vlTest"
-            labelText=""
-            checked={form.projectData.viralLoadTest}
-          />
-        </div>
-      </div>
+          <div style={S.row}>
+            <div style={S.label}>
+              <FormattedMessage
+                id="sample.entry.project.title.psc"
+                defaultMessage="PSC"
+              />
+            </div>
+            <div style={S.inputWrap}>
+              <Checkbox
+                id="vl_psc"
+                labelText=""
+                checked={form.projectData.pscvlTaken}
+                onChange={(_, { checked }) => setPD("pscvlTaken", checked)}
+              />
+            </div>
+          </div>
+          <div style={S.subHeader}>
+            <FormattedMessage
+              id="sample.entry.project.title.tests"
+              defaultMessage="Tests"
+            />
+          </div>
+          <div style={S.row}>
+            <div style={S.label}>
+              <FormattedMessage
+                id="sample.entry.project.ARV.viralLoadTest"
+                defaultMessage="Charge Virale Plasmatique"
+              />
+            </div>
+            <div style={S.inputWrap}>
+              <Checkbox
+                id="vl_vlTest"
+                labelText=""
+                checked={form.projectData.viralLoadTest}
+              />
+            </div>
+          </div>
         </>
       )}
     </div>
@@ -3458,7 +3859,10 @@ const ViralLoadEntry = () => {
               <RadioButton
                 key={d.id}
                 value={d.id}
-                labelText={intl.formatMessage({ id: d.displayKey, defaultMessage: d.value })}
+                labelText={intl.formatMessage({
+                  id: d.displayKey,
+                  defaultMessage: d.value,
+                })}
                 id={`hpv_sm_${d.id}`}
               />
             ))}
@@ -3557,7 +3961,10 @@ const ViralLoadEntry = () => {
           height="120"
         />
         <h4>
-          <FormattedMessage id="save.success" defaultMessage="Enregistrement réussi" />
+          <FormattedMessage
+            id="save.success"
+            defaultMessage="Enregistrement réussi"
+          />
         </h4>
         {savedLabNo && (
           <div style={{ marginTop: "12px" }}>
@@ -3568,16 +3975,19 @@ const ViralLoadEntry = () => {
                 )
               }
             >
-              <FormattedMessage id="print.barcode" defaultMessage="Imprimer le code-barres" />
+              <FormattedMessage
+                id="print.barcode"
+                defaultMessage="Imprimer le code-barres"
+              />
             </Button>
           </div>
         )}
         <div style={{ marginTop: "12px" }}>
-          <Button
-            kind="tertiary"
-            onClick={() => setShowSuccess(false)}
-          >
-            <FormattedMessage id="label.newentry" defaultMessage="Nouvelle saisie" />
+          <Button kind="tertiary" onClick={() => setShowSuccess(false)}>
+            <FormattedMessage
+              id="label.newentry"
+              defaultMessage="Nouvelle saisie"
+            />
           </Button>
         </div>
       </div>
@@ -3657,65 +4067,108 @@ const ViralLoadEntry = () => {
       <PageBreadCrumb breadcrumbs={breadcrumbs} />
 
       {/* ── Sélection de l'étude ───────────────────────────────────────────── */}
-      {!showSuccess && <div style={{ ...S.row, background: "#f4f4f4", marginBottom: "4px", position: "sticky", top: 0, zIndex: 100, boxShadow: "0 2px 6px rgba(0,0,0,0.12)" }}>
-        <div style={{ ...S.label }}>
-          <div style={{ fontSize: "11px", color: "#888", marginBottom: "2px" }}>
-            <FormattedMessage id="sample.entry.project.form" defaultMessage="Formulaire d'étude" />
-          </div>
-          {form.project ? (
-            <div style={{ fontSize: "15px", fontWeight: "800", color: "#295785", letterSpacing: "0.01em" }}>
-              {studyForms.find((s) => s.value === form.project)?.label}
+      {!showSuccess && (
+        <div
+          style={{
+            ...S.row,
+            background: "#f4f4f4",
+            marginBottom: "4px",
+            position: "sticky",
+            top: 0,
+            zIndex: 100,
+            boxShadow: "0 2px 6px rgba(0,0,0,0.12)",
+          }}
+        >
+          <div style={{ ...S.label }}>
+            <div
+              style={{ fontSize: "11px", color: "#888", marginBottom: "2px" }}
+            >
+              <FormattedMessage
+                id="sample.entry.project.form"
+                defaultMessage="Formulaire d'étude"
+              />
             </div>
-          ) : (
-            <div style={{ fontSize: "13px", color: "#aaa", fontStyle: "italic" }}>— non sélectionné —</div>
-          )}
-        </div>
-        <div style={{ ...S.inputWrap, display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
-          <Select
-            id="studyForms"
-            hideLabel
-            labelText=""
-            value={form.project}
-            onChange={(e) => handleStudyChange(e.target.value)}
-            style={{ maxWidth: "320px" }}
-          >
-            <SelectItem
-              value=""
-              text={intl.formatMessage({
-                id: "label.select",
-                defaultMessage: "-- Sélectionner --",
-              })}
-            />
-            {studyForms.map((s) => (
-              <SelectItem key={s.value} value={s.value} text={s.label} />
-            ))}
-          </Select>
-          {form.project && (() => {
-            const selected = studyForms.find((s) => s.value === form.project);
-            return selected ? (
-              <div style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "6px",
-                background: "#0f62fe",
-                color: "#fff",
-                padding: "4px 12px",
-                borderRadius: "16px",
-                fontWeight: "bold",
-                fontSize: "13px",
-                boxShadow: "0 2px 6px rgba(15,98,254,0.4)",
-                letterSpacing: "0.02em",
-              }}>
-                <CheckmarkFilled size={16} />
-                {selected.label}
+            {form.project ? (
+              <div
+                style={{
+                  fontSize: "15px",
+                  fontWeight: "800",
+                  color: "#295785",
+                  letterSpacing: "0.01em",
+                }}
+              >
+                {studyForms.find((s) => s.value === form.project)?.label}
               </div>
-            ) : null;
-          })()}
+            ) : (
+              <div
+                style={{ fontSize: "13px", color: "#aaa", fontStyle: "italic" }}
+              >
+                — non sélectionné —
+              </div>
+            )}
+          </div>
+          <div
+            style={{
+              ...S.inputWrap,
+              display: "flex",
+              alignItems: "center",
+              gap: "12px",
+              flexWrap: "wrap",
+            }}
+          >
+            <Select
+              id="studyForms"
+              hideLabel
+              labelText=""
+              value={form.project}
+              onChange={(e) => handleStudyChange(e.target.value)}
+              style={{ maxWidth: "320px" }}
+            >
+              <SelectItem
+                value=""
+                text={intl.formatMessage({
+                  id: "label.select",
+                  defaultMessage: "-- Sélectionner --",
+                })}
+              />
+              {studyForms.map((s) => (
+                <SelectItem key={s.value} value={s.value} text={s.label} />
+              ))}
+            </Select>
+            {form.project &&
+              (() => {
+                const selected = studyForms.find(
+                  (s) => s.value === form.project,
+                );
+                return selected ? (
+                  <div
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "6px",
+                      background: "#0f62fe",
+                      color: "#fff",
+                      padding: "4px 12px",
+                      borderRadius: "16px",
+                      fontWeight: "bold",
+                      fontSize: "13px",
+                      boxShadow: "0 2px 6px rgba(15,98,254,0.4)",
+                      letterSpacing: "0.02em",
+                    }}
+                  >
+                    <CheckmarkFilled size={16} />
+                    {selected.label}
+                  </div>
+                ) : null;
+              })()}
+          </div>
         </div>
-      </div>}
+      )}
 
       {/* ── Succès ou formulaire actif ───────────────────────────────────────── */}
-      {showSuccess ? renderSuccessView() : (
+      {showSuccess ? (
+        renderSuccessView()
+      ) : (
         <>
           {renderActiveForm()}
           {form.project && renderButtons()}
