@@ -16,9 +16,30 @@ import SearchableSelect from "./SearchableSelect";
 // we constrain the organism picker to the single yeast we currently track
 // (Candida albicans) and pre-select it. For other cultures with yeast the
 // picker stays free (full dictionary).
-const CANDIDA_ALBICANS_DICT_ID = 3245;
-const CANDIDA_ALBICANS_NAME_LOWERCASE = "candida albicans";
+//
+// Candida albicans is resolved by name from the loaded yeast dictionary
+// rather than a hardcoded dictionary id: the id is instance-specific and
+// breaks on reseed/other deployments. The numeric id is only a last-resort
+// fallback when the name match finds nothing.
+const CANDIDA_ALBICANS_FALLBACK_DICT_ID = 3245;
+const CANDIDA_ALBICANS_NAME_NORMALIZED = "candida albicans";
 const VAGINAL_CULTURE_TEST_NAME = "Culture - Sécrétions vaginales";
+
+// Lowercase + strip accents so the match works regardless of locale/casing.
+const normalizeOrganismName = (value) =>
+  String(value || "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim();
+
+// Find the Candida albicans entry in a loaded organism list by name.
+const findCandidaAlbicans = (list) =>
+  (list || []).find((o) =>
+    normalizeOrganismName(o?.value || o?.name).includes(
+      CANDIDA_ALBICANS_NAME_NORMALIZED,
+    ),
+  );
 
 const OrganismIdentification = ({
   accessionNumber,
@@ -106,20 +127,23 @@ const OrganismIdentification = ({
   // 'Culture - Sécrétions vaginales' + Levure, on force Candida albicans (le
   // picker se réduit à une seule entrée et est figé).
   const baseOrganismList = isYeast ? yeastNames : organismNames;
+  // Resolve the Candida albicans entry (and thus its real dict id) from the
+  // loaded list; fall back to the known id only if the name match fails.
+  const candidaEntry = findCandidaAlbicans(baseOrganismList);
+  const candidaDictId = candidaEntry
+    ? parseInt(candidaEntry.id)
+    : CANDIDA_ALBICANS_FALLBACK_DICT_ID;
   const displayedOrganismNames = shouldForceCandidaAlbicans
-    ? (baseOrganismList || []).filter((o) => {
-        const dictId = parseInt(o?.id);
-        const name = String(o?.value || o?.name || "").toLowerCase();
-        return (
-          dictId === CANDIDA_ALBICANS_DICT_ID ||
-          name.includes(CANDIDA_ALBICANS_NAME_LOWERCASE)
-        );
-      })
+    ? candidaEntry
+      ? [candidaEntry]
+      : (baseOrganismList || []).filter(
+          (o) => parseInt(o?.id) === CANDIDA_ALBICANS_FALLBACK_DICT_ID,
+        )
     : baseOrganismList;
 
   useEffect(() => {
     if (!shouldForceCandidaAlbicans) return;
-    const expected = CANDIDA_ALBICANS_DICT_ID;
+    const expected = candidaDictId;
     if (organism.organismNameDictId !== expected) {
       onChange({
         ...organism,
@@ -130,7 +154,7 @@ const OrganismIdentification = ({
       });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [shouldForceCandidaAlbicans]);
+  }, [shouldForceCandidaAlbicans, candidaDictId]);
 
   // For Neisseria gonorrhoeae: skip identification and show antibiogram directly
   if (skipOrganismIdentification) {
