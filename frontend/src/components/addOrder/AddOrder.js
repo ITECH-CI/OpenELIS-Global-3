@@ -955,11 +955,23 @@ const AddOrder = (props) => {
                 <SelectItem value="" text="" />
                 {paymentOptions &&
                   paymentOptions.map((option) => {
+                    // Backend renvoie option.value = dict_entry brut quand la
+                    // localization Java n'a pas résolu nameKey (rows
+                    // dictionary.name_localization_id à NULL). On force la
+                    // traduction côté front via une clé dérivée du value :
+                    // dictionary.patient.payment.<dict_entry>. Si la clé n'existe
+                    // pas dans le bundle, react-intl retombe sur defaultMessage
+                    // (= la valeur brute du backend), donc pas de régression.
+                    const i18nKey = `dictionary.patient.payment.${option.value}`;
+                    const label = intl.formatMessage({
+                      id: i18nKey,
+                      defaultMessage: option.value,
+                    });
                     return (
                       <SelectItem
                         key={option.id}
                         value={option.id}
-                        text={option.value}
+                        text={label}
                       />
                     );
                   })}

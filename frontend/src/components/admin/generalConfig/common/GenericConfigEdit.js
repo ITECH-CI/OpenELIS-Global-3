@@ -43,6 +43,11 @@ const GenericConfigEdit = ({ menuType, ID }) => {
   const [img, setImg] = useState(null);
   const [file, setFile] = useState(null);
 
+  // Pour le paramètre 'siteId' on remplace la saisie libre (text) par une liste
+  // de sélection des organisations chargée depuis /rest/OrganizationMenu —
+  // l'utilisateur ne connaît pas l'id technique du site.
+  const [organizationItems, setOrganizationItems] = useState([]);
+
   const { notificationVisible, setNotificationVisible, addNotification } =
     useContext(NotificationContext);
 
@@ -50,6 +55,32 @@ const GenericConfigEdit = ({ menuType, ID }) => {
     setIsLoading(true);
     getFromOpenElisServer(`/rest/${menuType}?ID=${ID}`, handleMenuItems);
   }, [menuType, ID]);
+
+  // Charge la liste des organisations quand on édite le paramètre 'siteId'.
+  // On utilise SAMPLE_PATIENT_REFERRING_CLINIC, la même source que la liste des
+  // sites référents du formulaire d'ordonnance (cf. SampleOrderService:112).
+  // /rest/OrganizationMenu est paginé et filtré, donc ramène moins d'entrées
+  // que la liste réelle des cliniques.
+  useEffect(() => {
+    if (FormEntryConfig && FormEntryConfig.paramName === "siteId") {
+      getFromOpenElisServer(
+        "/rest/displayList/SAMPLE_PATIENT_REFERRING_CLINIC",
+        (res) => {
+          if (Array.isArray(res)) {
+            setOrganizationItems(
+              res
+                .filter((org) => org && org.id)
+                .map((org) => ({
+                  id: String(org.id),
+                  value: String(org.id),
+                  label: org.value || String(org.id),
+                })),
+            );
+          }
+        },
+      );
+    }
+  }, [FormEntryConfig]);
 
   const handleMenuItems = (res) => {
     setFormEntryConfig(res);
@@ -337,15 +368,45 @@ const GenericConfigEdit = ({ menuType, ID }) => {
                         <FormattedMessage id="admin.page.configuration.formEntryConfigMenu.value" />
                       </h4>
                     </Column>
-                    {FormEntryConfig.tag !== "localization" && (
-                      <Column lg={8} sm={3}>
-                        <TextInput
-                          id="textInput"
-                          value={textInputValue}
-                          onChange={handleInputChange}
-                        />
-                      </Column>
-                    )}
+                    {FormEntryConfig.tag !== "localization" &&
+                      FormEntryConfig.paramName === "siteId" && (
+                        <Column lg={8} sm={3}>
+                          {/* siteId : on substitue un dropdown des
+                              organisations à la saisie libre pour éviter à
+                              l'utilisateur de connaître l'id technique du site. */}
+                          <Dropdown
+                            id="siteIdDropdown"
+                            titleText=""
+                            label={intl.formatMessage({
+                              id: "label.button.select",
+                            })}
+                            items={organizationItems}
+                            itemToString={(item) => (item ? item.label : "")}
+                            selectedItem={
+                              organizationItems.find(
+                                (item) => item.id === textInputValue,
+                              ) || null
+                            }
+                            onChange={({ selectedItem }) => {
+                              const newValue = selectedItem
+                                ? selectedItem.id
+                                : "";
+                              setTextInputValue(newValue);
+                              updateFormEntryConfig({ value: newValue });
+                            }}
+                          />
+                        </Column>
+                      )}
+                    {FormEntryConfig.tag !== "localization" &&
+                      FormEntryConfig.paramName !== "siteId" && (
+                        <Column lg={8} sm={3}>
+                          <TextInput
+                            id="textInput"
+                            value={textInputValue}
+                            onChange={handleInputChange}
+                          />
+                        </Column>
+                      )}
                   </Grid>
                   {FormEntryConfig.tag === "localization" && (
                     <>

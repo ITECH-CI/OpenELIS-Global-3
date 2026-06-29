@@ -540,18 +540,19 @@ public abstract class PatientReport extends Report {
     /**
      * Récupère et concatène les renseignements cliniques pour un échantillon.
      *
-     * Le formulaire de saisie écrit UNE observation par dictionnaire choisi
-     * (champ multi-sélection — cf. SamplePatientEntryServiceImpl.processBacterioInfo,
-     * type CLINICAL_INFOS). getValueForSample() ne ramène que la première via
+     * Le formulaire de saisie écrit UNE observation par dictionnaire choisi (champ
+     * multi-sélection — cf. SamplePatientEntryServiceImpl.processBacterioInfo, type
+     * CLINICAL_INFOS). getValueForSample() ne ramène que la première via
      * setMaxResults(1) ; on lit donc explicitement toutes les lignes pour
-     * concaténer les libellés. Le champ libre "Autre" (CLINICAL_INFOS_OTHER)
-     * reste mono-valeur et est appondu en queue.
+     * concaténer les libellés. Le champ libre "Autre" (CLINICAL_INFOS_OTHER) reste
+     * mono-valeur et est appondu en queue.
      */
     protected String getClinicalInformationForSample(Sample sample, Patient patient) {
         StringBuilder clinicalInfo = new StringBuilder();
         ObservationHistoryService observationHistoryService = SpringContext.getBean(ObservationHistoryService.class);
 
-        String clinicalInfosTypeId = observationHistoryService.getObservationTypeIdForType(ObservationType.CLINICAL_INFOS);
+        String clinicalInfosTypeId = observationHistoryService
+                .getObservationTypeIdForType(ObservationType.CLINICAL_INFOS);
         DictionaryService dictionaryService = SpringContext.getBean(DictionaryService.class);
 
         if (clinicalInfosTypeId != null && !clinicalInfosTypeId.isEmpty()) {
@@ -565,9 +566,29 @@ public abstract class PatientReport extends Report {
                 if (ObservationHistory.ValueType.LITERAL.getCode().equals(oh.getValueType())) {
                     label = value.trim();
                 } else {
-                    // DICTIONARY : on résout l'id en libellé localisé
+                    // DICTIONARY : pour les renseignements cliniques, les rows
+                    // dictionary.name_localization_id sont nulles ; Dictionary
+                    // .getLocalizedName() retombe alors silencieusement sur
+                    // dict_entry (anglais brut, ex. "Cough"). On résout donc le
+                    // libellé via display_key + MessageUtil avec la locale FR
+                    // (cf. site_information default_language_locale), avec
+                    // fallback explicite sur dict_entry quand la clé est absente
+                    // des resource bundles.
                     try {
-                        label = dictionaryService.getDataForId(value).getLocalizedName();
+                        org.openelisglobal.dictionary.valueholder.Dictionary dict =
+                                dictionaryService.getDataForId(value);
+                        if (dict == null) {
+                            continue;
+                        }
+                        String displayKey = dict.getNameKey();
+                        String dictEntry = dict.getDictEntry();
+                        if (displayKey != null && !displayKey.isEmpty()) {
+                            String resolved = MessageUtil.getMessage(displayKey, null, dictEntry,
+                                    org.springframework.context.i18n.LocaleContextHolder.getLocale());
+                            label = (resolved == null || resolved.equals(displayKey)) ? dictEntry : resolved;
+                        } else {
+                            label = dictEntry;
+                        }
                     } catch (RuntimeException ignored) {
                         continue;
                     }
@@ -610,9 +631,8 @@ public abstract class PatientReport extends Report {
         // When the showAuditOnPatientReport site config is disabled, strip the
         // automatic "Résultat corrigé" note added by LogbookResultsRestController
         // so it doesn't pollute the final printed report.
-        if (note != null
-                && !ConfigurationProperties.getInstance().isPropertyValueEqual(
-                        ConfigurationProperties.Property.SHOW_AUDIT_ON_PATIENT_REPORT, "true")) {
+        if (note != null && !ConfigurationProperties.getInstance()
+                .isPropertyValueEqual(ConfigurationProperties.Property.SHOW_AUDIT_ON_PATIENT_REPORT, "true")) {
             String correctedLabel = MessageUtil.getMessage("note.corrected.result");
             if (correctedLabel != null && !correctedLabel.isBlank()) {
                 // Remove any segment that ends with "Résultat corrigé" (with or without
@@ -921,8 +941,8 @@ public abstract class PatientReport extends Report {
         if (currentAnalysis.isCorrectedSincePatientReport() && !GenericValidator.isBlankOrNull(result.getValue())) {
             // Only surface the "Corrected report" banner on the printed report when the
             // showAuditOnPatientReport site config is explicitly enabled.
-            boolean showAudit = ConfigurationProperties.getInstance().isPropertyValueEqual(
-                    ConfigurationProperties.Property.SHOW_AUDIT_ON_PATIENT_REPORT, "true");
+            boolean showAudit = ConfigurationProperties.getInstance()
+                    .isPropertyValueEqual(ConfigurationProperties.Property.SHOW_AUDIT_ON_PATIENT_REPORT, "true");
             if (showAudit) {
                 data.setCorrectedResult(true);
                 sampleCorrectedMap.put(convertToAlphaNumericDisplay(currentSample), true);

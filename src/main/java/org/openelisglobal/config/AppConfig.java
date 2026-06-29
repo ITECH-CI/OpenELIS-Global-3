@@ -196,4 +196,23 @@ public class AppConfig implements WebMvcConfigurer {
         converters.add(jacksonMessageConverter());
         // super.configureMessageConverters(converters);
     }
+
+    /**
+     * Enregistrement explicite des Converter custom auprès du
+     * FormattingConversionService utilisé par @ModelAttribute / @RequestParam.
+     *
+     * <p>
+     * En Spring MVC traditionnel, un Converter annoté @Component n'est PAS
+     * piqué automatiquement par ce service (contrairement au comportement
+     * Spring Boot autoscan). Sans cet enregistrement, les binders ignoraient
+     * nos converters et retombaient sur Enum.valueOf — ce qui faisait planter
+     * la conversion de la valeur "u=0" envoyée par Firefox via le header HTTP
+     * RFC 9218 "Priority" (impression PDF cassée sur Firefox uniquement).
+     */
+    @Override
+    public void addFormatters(org.springframework.format.FormatterRegistry registry) {
+        registry.addConverter(new org.openelisglobal.common.util.converter.StringToOrderPriorityConverter());
+        registry.addConverter(new org.openelisglobal.common.util.converter.StringToOrderPriorityListConverter());
+        registry.addConverter(new org.openelisglobal.common.util.converter.StringToReceptionTimeListConverter());
+    }
 }

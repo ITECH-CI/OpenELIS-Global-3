@@ -636,7 +636,8 @@ public class ResultsReportProvider extends BaseReportsProvider {
                 }
             }
             reportTest.setTestMessage(testMessage);
-            reportTest.setTestDescription(TestServiceImpl.getLocalizedTestNameWithType(analysis.getTest()));
+            reportTest.setTestDescription(TestServiceImpl.getLocalizedTestNameWithType(analysis.getTest(),
+                    analysis.getSampleItem() != null ? analysis.getSampleItem().getTypeOfSampleId() : null));
             reportTest.setTestId(analysis.getTest().getId());
             reportTest.setAnalysisId(analysis.getId());
 
@@ -663,7 +664,9 @@ public class ResultsReportProvider extends BaseReportsProvider {
             reportTest.setTestMessage("");
             reportTest.setTestId(pendingAnalysis.getTest().getId());
             reportTest.setAnalysisId(pendingAnalysis.getId());
-            reportTest.setTestDescription(TestServiceImpl.getLocalizedTestNameWithType(pendingAnalysis.getTest()));
+            reportTest.setTestDescription(TestServiceImpl.getLocalizedTestNameWithType(pendingAnalysis.getTest(),
+                    pendingAnalysis.getSampleItem() != null ? pendingAnalysis.getSampleItem().getTypeOfSampleId()
+                            : null));
             pendingReportTests.add(reportTest);
         }
         return pendingReportTests;

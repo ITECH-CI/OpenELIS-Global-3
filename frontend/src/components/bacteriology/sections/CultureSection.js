@@ -27,6 +27,17 @@ const CultureSection = ({
     );
   }, [testResults]);
 
+  // Le backend retourne testName "augmenté" du type d'échantillon via
+  // TestServiceImpl.getLocalizedTestNameWithType, qui prend le PREMIER type
+  // associé au test dans sampletype_test — pas celui du sample item courant.
+  // Pour un test "Culture" lié à plusieurs sample types (Urines, Pus, LCR…),
+  // le suffixe est faux (souvent "(Urines)") quand l'échantillon réel est
+  // Pus ou autre. On retire donc le suffixe pour ne garder que le nom de
+  // base ("Culture"), qui est suffisant : le sample type est déjà visible
+  // dans l'en-tête de l'ordre.
+  const cleanTestName = (testName) =>
+    (testName || "").replace(/\s*\([^)]*\)\s*/g, "").trim();
+
   // Only show culture section if at least one culture test was selected in the ordonnance
   if (cultureTests.length === 0) {
     return null;
@@ -130,7 +141,7 @@ const CultureSection = ({
               <Column lg={8} md={4} sm={4}>
                 <Select
                   id={`cultureResult_${idPrefix}_${testId}`}
-                  labelText={`${cultureTest.testName} - Résultat`}
+                  labelText={`${cleanTestName(cultureTest.testName)} - Résultat`}
                   value={cultureResult || ""}
                   onChange={(e) =>
                     handleCultureResultChange(testId, e.target.value)
@@ -154,7 +165,7 @@ const CultureSection = ({
           return (
             <Column lg={8} md={4} sm={4}>
               <RadioButtonGroup
-                legendText={`${cultureTest.testName} - Résultat`}
+                legendText={`${cleanTestName(cultureTest.testName)} - Résultat`}
                 name={`cultureResult_${idPrefix}_${testId}`}
                 valueSelected={cultureResult || ""}
                 onChange={(value) => handleCultureResultChange(testId, value)}

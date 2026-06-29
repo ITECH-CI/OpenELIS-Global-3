@@ -12,6 +12,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Vector;
 import java.util.stream.Collectors;
+import org.apache.commons.validator.GenericValidator;
 import org.openelisglobal.common.action.IActionConstants;
 import org.openelisglobal.common.exception.LIMSDuplicateRecordException;
 import org.openelisglobal.common.exception.LIMSRuntimeException;
@@ -296,6 +297,45 @@ public class TestServiceImpl extends AuditableBaseObjectServiceImpl<Test, String
     public static String getLocalizedTestNameWithType(String testId) {
         String description = entityToMap.get(Entity.TEST_AUGMENTED_NAME).get(testId);
         return description == null ? "" : description;
+    }
+
+    /**
+     * Variant qui prend le sample type de l'échantillon courant pour le suffixe,
+     * au lieu du premier sample type associé au test (cas problématique : un test
+     * "Culture" lié à Urines/Pus/LCR... renvoyait toujours "Culture(Urines)"). Le
+     * sample type passé en paramètre prime, ce qui produit l'augmentation correcte
+     * pour les rapports, l'audit et la saisie de résultats.
+     *
+     * @param test           Le test
+     * @param typeOfSampleId L'id du TypeOfSample du sample item courant (peut être
+     *                       null — dans ce cas on retombe sur l'ancien comportement).
+     * @return Le nom du test, suffixé du sample type quand TEST_NAME_AUGMENTED est
+     *         activé et que le sample type est connu.
+     */
+    public static String getLocalizedTestNameWithType(Test test, String typeOfSampleId) {
+        if (test == null) {
+            return "";
+        }
+        if (GenericValidator.isBlankOrNull(typeOfSampleId)) {
+            return getLocalizedTestNameWithType(test);
+        }
+        String baseName = entityToMap.get(Entity.TEST_NAME).get(test.getId());
+        if (baseName == null) {
+            baseName = test.getName() != null ? test.getName() : test.getDescription();
+        }
+        if (!ConfigurationProperties.getInstance()
+                .isPropertyValueEqual(ConfigurationProperties.Property.TEST_NAME_AUGMENTED, "true")) {
+            return baseName;
+        }
+        if (VARIABLE_TYPE_OF_SAMPLE_ID.equals(typeOfSampleId)) {
+            return baseName;
+        }
+        TypeOfSampleService tosService = SpringContext.getBean(TypeOfSampleService.class);
+        TypeOfSample typeOfSample = tosService.getTypeOfSampleById(typeOfSampleId);
+        if (typeOfSample == null) {
+            return baseName;
+        }
+        return baseName + "(" + typeOfSample.getLocalizedName() + ")";
     }
 
     private static Map<String, String> createTestIdToNameMap() {

@@ -35,8 +35,12 @@ public class StringToReceptionTimeListConverter implements Converter<String, Lis
             return result;
         }
 
-        // Handle common invalid values from browsers
-        if (source.equals("u=0") || source.equals("undefined") || source.equals("null")) {
+        // Neutralise les valeurs du header HTTP RFC 9218 "Priority: u=N[, i]"
+        // (Firefox uniquement) qui fuitent dans le binding form. Cf. note du
+        // converter StringToOrderPriorityListConverter.
+        String trimmedSource = source.trim();
+        if (trimmedSource.startsWith("u=") || "undefined".equals(trimmedSource)
+                || "null".equals(trimmedSource)) {
             return result;
         }
 
