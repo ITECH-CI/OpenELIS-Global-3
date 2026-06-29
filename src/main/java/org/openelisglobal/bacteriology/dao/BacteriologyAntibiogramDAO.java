@@ -12,6 +12,12 @@ public interface BacteriologyAntibiogramDAO extends BaseDAO<BacteriologyAntibiog
     List<BacteriologyAntibiogram> getAntibiogramsByOrganismId(Integer organismId);
 
     /**
+     * Get all active antibiogram results for a set of organisms in a single query
+     * (batch fetch to avoid N+1 when rendering reports).
+     */
+    List<BacteriologyAntibiogram> getAntibiogramsByOrganismIds(List<Integer> organismIds);
+
+    /**
      * Get antibiogram for a specific organism and antibiotic
      */
     BacteriologyAntibiogram getByOrganismAndAntibiotic(Integer organismId, Integer antibioticDictId);

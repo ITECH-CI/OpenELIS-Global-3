@@ -19,8 +19,10 @@ package org.openelisglobal.reports.action.implementation;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import liquibase.repackaged.org.apache.commons.lang3.ObjectUtils;
 import net.sf.jasperreports.engine.JRDataSource;
@@ -69,20 +71,14 @@ public class BacterioPatientReport extends PatientReport implements IReportCreat
 
     static {
         analysisStatusIds = new HashSet<>();
-        analysisStatusIds.add(Integer
-                .parseInt(SpringContext.getBean(IStatusService.class).getStatusID(AnalysisStatus.BiologistRejected)));
-        analysisStatusIds.add(
-                Integer.parseInt(SpringContext.getBean(IStatusService.class).getStatusID(AnalysisStatus.Finalized)));
-        analysisStatusIds.add(Integer.parseInt(
-                SpringContext.getBean(IStatusService.class).getStatusID(AnalysisStatus.NonConforming_depricated)));
-        analysisStatusIds.add(
-                Integer.parseInt(SpringContext.getBean(IStatusService.class).getStatusID(AnalysisStatus.NotStarted)));
-        analysisStatusIds.add(Integer
-                .parseInt(SpringContext.getBean(IStatusService.class).getStatusID(AnalysisStatus.TechnicalAcceptance)));
-        analysisStatusIds.add(
-                Integer.parseInt(SpringContext.getBean(IStatusService.class).getStatusID(AnalysisStatus.Canceled)));
-        analysisStatusIds.add(Integer
-                .parseInt(SpringContext.getBean(IStatusService.class).getStatusID(AnalysisStatus.TechnicalRejected)));
+        IStatusService statusService = SpringContext.getBean(IStatusService.class);
+        analysisStatusIds.add(Integer.parseInt(statusService.getStatusID(AnalysisStatus.BiologistRejected)));
+        analysisStatusIds.add(Integer.parseInt(statusService.getStatusID(AnalysisStatus.Finalized)));
+        analysisStatusIds.add(Integer.parseInt(statusService.getStatusID(AnalysisStatus.NonConforming_depricated)));
+        analysisStatusIds.add(Integer.parseInt(statusService.getStatusID(AnalysisStatus.NotStarted)));
+        analysisStatusIds.add(Integer.parseInt(statusService.getStatusID(AnalysisStatus.TechnicalAcceptance)));
+        analysisStatusIds.add(Integer.parseInt(statusService.getStatusID(AnalysisStatus.Canceled)));
+        analysisStatusIds.add(Integer.parseInt(statusService.getStatusID(AnalysisStatus.TechnicalRejected)));
     }
 
     static final String configName = ConfigurationProperties.getInstance().getPropertyValue(Property.configurationName);
@@ -378,6 +374,21 @@ public class BacterioPatientReport extends PatientReport implements IReportCreat
         // Sort organisms by organism number
         organisms.sort(Comparator.comparing(BacteriologyOrganism::getOrganismNumber));
 
+        // Batch-fetch antibiograms for all organisms of this analysis in a single
+        // query and group them by organism id, instead of one query per organism
+        // (N+1) inside the loop.
+        List<Integer> organismIds = new ArrayList<>();
+        for (BacteriologyOrganism organism : organisms) {
+            organismIds.add(organism.getId());
+        }
+        Map<Integer, List<BacteriologyAntibiogram>> antibiogramsByOrganism = new HashMap<>();
+        List<BacteriologyAntibiogram> allAntibiograms = antibiogramService.getAntibiogramsByOrganismIds(organismIds);
+        if (allAntibiograms != null) {
+            for (BacteriologyAntibiogram abg : allAntibiograms) {
+                antibiogramsByOrganism.computeIfAbsent(abg.getOrganismId(), k -> new ArrayList<>()).add(abg);
+            }
+        }
+
         for (BacteriologyOrganism organism : organisms) {
 
             if (!organism.getIsActive()) {
@@ -426,9 +437,8 @@ public class BacterioPatientReport extends PatientReport implements IReportCreat
             reportItems.add(organismData);
             currentSampleReportItems.add(organismData);
 
-            // Get antibiograms for this organism
-            List<BacteriologyAntibiogram> antibiograms = antibiogramService
-                    .getAntibiogramsByOrganismId(organism.getId());
+            // Get antibiograms for this organism from the pre-grouped batch
+            List<BacteriologyAntibiogram> antibiograms = antibiogramsByOrganism.get(organism.getId());
 
             if (antibiograms != null && !antibiograms.isEmpty()) {
                 // Sort antibiograms alphabetically by antibiotic name

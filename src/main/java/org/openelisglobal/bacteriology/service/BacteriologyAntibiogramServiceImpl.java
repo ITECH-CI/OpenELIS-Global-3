@@ -105,6 +105,17 @@ public class BacteriologyAntibiogramServiceImpl extends BaseObjectServiceImpl<Ba
 
     @Override
     @Transactional(readOnly = true)
+    public List<BacteriologyAntibiogram> getAntibiogramsByOrganismIds(List<Integer> organismIds) {
+        try {
+            return baseObjectDAO.getAntibiogramsByOrganismIds(organismIds);
+        } catch (Exception e) {
+            LogEvent.logError(e);
+            return new ArrayList<>();
+        }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public BacteriologyAntibiogram getByOrganismAndAntibiotic(Integer organismId, Integer antibioticDictId) {
         try {
             return baseObjectDAO.getByOrganismAndAntibiotic(organismId, antibioticDictId);

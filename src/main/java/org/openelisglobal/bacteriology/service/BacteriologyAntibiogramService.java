@@ -14,6 +14,8 @@ public interface BacteriologyAntibiogramService {
 
     List<BacteriologyAntibiogram> getAntibiogramsByOrganismId(Integer organismId);
 
+    List<BacteriologyAntibiogram> getAntibiogramsByOrganismIds(List<Integer> organismIds);
+
     BacteriologyAntibiogram getByOrganismAndAntibiotic(Integer organismId, Integer antibioticDictId);
 
     List<Dictionary> getAllAntibiotics();
