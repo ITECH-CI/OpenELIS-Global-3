@@ -41,6 +41,7 @@ import org.openelisglobal.person.service.PersonService;
 import org.openelisglobal.sample.bean.SampleEditItem;
 import org.openelisglobal.sample.controller.BaseSampleEntryController;
 import org.openelisglobal.sample.form.SampleEditForm;
+import org.openelisglobal.sample.util.BacterioObservationTypes;
 import org.openelisglobal.sample.form.SampleEditForm.SampleEdit;
 import org.openelisglobal.sample.service.SampleEditService;
 import org.openelisglobal.sample.service.SampleService;
@@ -465,10 +466,7 @@ public class SampleEditRestController extends BaseSampleEntryController {
         // toutes les autres infos déjà saisies (renseignements cliniques,
         // antibiothérapies, etc.).
         boolean hasAnyBacterioObservation = false;
-        for (String typeName : new String[] { "BacterioTypeExamens", "EPIDEMIO_WEEK", "currentHospitalization",
-                "roomNumber", "CLINICAL_INFOS", "CLINICAL_INFOS_OTHER", "PREV3M_ATB", "PREV3M_ATB_LIST", "CURR_ATB",
-                "CURR_ATB_LIST", "CURR_ATB_DUR", "HOSP_3M", "HOSP_3M_COUNT", "INVASIVE_GESTURE",
-                "INDWELLING_DEVICES" }) {
+        for (String typeName : BacterioObservationTypes.BACTERIO) {
             ObservationHistoryType oht0 = observationHistoryTypeService.getByName(typeName);
             if (oht0 != null && byTypeId.containsKey(oht0.getId())) {
                 hasAnyBacterioObservation = true;

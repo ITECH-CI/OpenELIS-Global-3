@@ -63,6 +63,7 @@ import org.openelisglobal.requester.valueholder.SampleRequester;
 import org.openelisglobal.sample.action.util.SamplePatientUpdateData;
 import org.openelisglobal.sample.bean.SampleOrderItem;
 import org.openelisglobal.sample.form.SamplePatientEntryForm;
+import org.openelisglobal.sample.util.BacterioObservationTypes;
 import org.openelisglobal.sample.valueholder.SampleAdditionalField;
 import org.openelisglobal.samplehuman.service.SampleHumanService;
 import org.openelisglobal.sampleitem.service.SampleItemService;
@@ -196,14 +197,9 @@ public class SamplePatientEntryServiceImpl implements SamplePatientEntryService 
      * bactério doit aussi figurer ici, sinon la modification finit par accumuler
      * des doublons.
      */
-    private static final String[] BACTERIO_OBSERVATION_TYPE_NAMES = new String[] { "Pregnancy", "BacterioTypeExamens",
-            "EPIDEMIO_WEEK", "currentHospitalization", "roomNumber", "CLINICAL_INFOS", "CLINICAL_INFOS_OTHER",
-            "PREV3M_ATB", "PREV3M_ATB_LIST", "CURR_ATB", "CURR_ATB_LIST", "CURR_ATB_DUR", "HOSP_3M", "HOSP_3M_COUNT",
-            "INVASIVE_GESTURE", "INDWELLING_DEVICES" };
+    private static final String[] BACTERIO_OBSERVATION_TYPE_NAMES = BacterioObservationTypes.bacterioArray();
 
-    private static final String[] TB_OBSERVATION_TYPE_NAMES = new String[] { "TbOrderReason", "TbDiagnosticReason",
-            "TbFollowupReason", "TbSampleAspects", "TbFollowupReasonPeriodLine1", "TbFollowupReasonPeriodLine2",
-            "TbSpecimenNature", "TbAnalysisMethod" };
+    private static final String[] TB_OBSERVATION_TYPE_NAMES = BacterioObservationTypes.tbArray();
 
     @Transactional
     @Override
