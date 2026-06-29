@@ -145,11 +145,11 @@ public class PatientSearchRestController extends BaseRestController {
     }
 
     /**
-     * Searches for a finalized serology HIV type result for a patient identified
-     * by subjectNumber (national ID) or siteSubjectNumber (external ID). Because
-     * the same physical patient may have multiple patient entries (one per
-     * program), this searches ALL matching patient records for a "Conclusion"
-     * result in the HIVResult dictionary category.
+     * Searches for a finalized serology HIV type result for a patient identified by
+     * subjectNumber (national ID) or siteSubjectNumber (external ID). Because the
+     * same physical patient may have multiple patient entries (one per program),
+     * this searches ALL matching patient records for a "Conclusion" result in the
+     * HIVResult dictionary category.
      */
     @GetMapping(value = "serology-result-by-patient", produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody

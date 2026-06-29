@@ -175,9 +175,9 @@ public class SamplePatientEntryServiceImpl implements SamplePatientEntryService 
             SampleOrderItem orderItems = form.getSampleOrderItems();
             if (orderItems != null && !GenericValidator.isBlankOrNull(orderItems.getOrderType())) {
                 List<ObservationHistory> orderTypeObs = new ArrayList<>();
-                addObservationIfTypeExists(orderTypeObs, "BacterioTypeExamens",
-                        updateData.getSample().getId(), updateData.getPatientId(),
-                        updateData.getCurrentUserId(), ValueType.LITERAL, orderItems.getOrderType());
+                addObservationIfTypeExists(orderTypeObs, "BacterioTypeExamens", updateData.getSample().getId(),
+                        updateData.getPatientId(), updateData.getCurrentUserId(), ValueType.LITERAL,
+                        orderItems.getOrderType());
                 for (ObservationHistory obs : orderTypeObs) {
                     observationHistoryService.insert(obs);
                 }
@@ -189,22 +189,21 @@ public class SamplePatientEntryServiceImpl implements SamplePatientEntryService 
     }
 
     /**
-     * Liste exhaustive des types d'observation persistés par persistBacterioObservations,
-     * utilisée pour purger l'état précédent avant une réinsertion (flow d'édition).
-     * Doit rester synchronisée avec persistBacterioObservations() — toute nouvelle
-     * observation persistée pour la bactério doit aussi figurer ici, sinon la
-     * modification finit par accumuler des doublons.
+     * Liste exhaustive des types d'observation persistés par
+     * persistBacterioObservations, utilisée pour purger l'état précédent avant une
+     * réinsertion (flow d'édition). Doit rester synchronisée avec
+     * persistBacterioObservations() — toute nouvelle observation persistée pour la
+     * bactério doit aussi figurer ici, sinon la modification finit par accumuler
+     * des doublons.
      */
-    private static final String[] BACTERIO_OBSERVATION_TYPE_NAMES = new String[] {
-            "Pregnancy", "BacterioTypeExamens", "EPIDEMIO_WEEK", "currentHospitalization", "roomNumber",
-            "CLINICAL_INFOS", "CLINICAL_INFOS_OTHER", "PREV3M_ATB", "PREV3M_ATB_LIST", "CURR_ATB",
-            "CURR_ATB_LIST", "CURR_ATB_DUR", "HOSP_3M", "HOSP_3M_COUNT", "INVASIVE_GESTURE", "INDWELLING_DEVICES"
-    };
+    private static final String[] BACTERIO_OBSERVATION_TYPE_NAMES = new String[] { "Pregnancy", "BacterioTypeExamens",
+            "EPIDEMIO_WEEK", "currentHospitalization", "roomNumber", "CLINICAL_INFOS", "CLINICAL_INFOS_OTHER",
+            "PREV3M_ATB", "PREV3M_ATB_LIST", "CURR_ATB", "CURR_ATB_LIST", "CURR_ATB_DUR", "HOSP_3M", "HOSP_3M_COUNT",
+            "INVASIVE_GESTURE", "INDWELLING_DEVICES" };
 
-    private static final String[] TB_OBSERVATION_TYPE_NAMES = new String[] {
-            "TbOrderReason", "TbDiagnosticReason", "TbFollowupReason", "TbSampleAspects",
-            "TbFollowupReasonPeriodLine1", "TbFollowupReasonPeriodLine2", "TbSpecimenNature", "TbAnalysisMethod"
-    };
+    private static final String[] TB_OBSERVATION_TYPE_NAMES = new String[] { "TbOrderReason", "TbDiagnosticReason",
+            "TbFollowupReason", "TbSampleAspects", "TbFollowupReasonPeriodLine1", "TbFollowupReasonPeriodLine2",
+            "TbSpecimenNature", "TbAnalysisMethod" };
 
     @Transactional
     @Override
@@ -219,10 +218,9 @@ public class SamplePatientEntryServiceImpl implements SamplePatientEntryService 
         for (String t : BACTERIO_OBSERVATION_TYPE_NAMES) {
             boolean isOrderField = "BacterioTypeExamens".equals(t) || "EPIDEMIO_WEEK".equals(t);
             if (isOrderField) {
-                boolean hasReplacement = sampleOrderItems != null
-                        && ("BacterioTypeExamens".equals(t)
-                                ? !GenericValidator.isBlankOrNull(sampleOrderItems.getOrderType())
-                                : !GenericValidator.isBlankOrNull(sampleOrderItems.getEpidemiologicalWeek()));
+                boolean hasReplacement = sampleOrderItems != null && ("BacterioTypeExamens".equals(t)
+                        ? !GenericValidator.isBlankOrNull(sampleOrderItems.getOrderType())
+                        : !GenericValidator.isBlankOrNull(sampleOrderItems.getEpidemiologicalWeek()));
                 if (!hasReplacement) {
                     continue; // préserver l'obs existante
                 }
@@ -286,7 +284,8 @@ public class SamplePatientEntryServiceImpl implements SamplePatientEntryService 
         Patient patient = new Patient();
         patient.setId(updateData.getPatientId());
 
-        List<ObservationHistory> existingObservations = observationHistoryService.getAll(patient, updateData.getSample());
+        List<ObservationHistory> existingObservations = observationHistoryService.getAll(patient,
+                updateData.getSample());
         for (ObservationHistory observation : existingObservations) {
             if (!GenericValidator.isBlankOrNull(observation.getId())) {
                 observationHistoryService.delete(observation.getId(), updateData.getCurrentUserId());

@@ -3,9 +3,9 @@ export const studyForms = [
   { value: "FollowUpARV_Id", label: "ARV - Bilan de Suivi" },
   { value: "VL_Id", label: "ARV - Charge Virale" },
   { value: "EID_Id", label: "EID" },
-    //{ value: "RTN_Id", label: "RTN" },
- // { value: "Indeterminate_Id", label: "Indeterminate" },
- // { value: "Special_Request_Id", label: "Requête Spéciale" },
+  //{ value: "RTN_Id", label: "RTN" },
+  // { value: "Indeterminate_Id", label: "Indeterminate" },
+  // { value: "Special_Request_Id", label: "Requête Spéciale" },
   //{ value: "Recency_Id", label: "Recency" },
   { value: "HPV_Id", label: "HPV Testing" },
 ];

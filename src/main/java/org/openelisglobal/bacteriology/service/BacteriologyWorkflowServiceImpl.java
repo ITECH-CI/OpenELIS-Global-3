@@ -139,7 +139,8 @@ public class BacteriologyWorkflowServiceImpl implements BacteriologyWorkflowServ
 
                     // Save or update organism group
                     BacteriologyResultGroup organismGroup = organismData.getOrganismGroup();
-                    // Only set analysisId if not already set (preserve the correct analysisId from controller)
+                    // Only set analysisId if not already set (preserve the correct analysisId from
+                    // controller)
                     if (organismGroup.getAnalysisId() == null) {
                         organismGroup.setAnalysisId(analysisId);
                     }
@@ -172,7 +173,9 @@ public class BacteriologyWorkflowServiceImpl implements BacteriologyWorkflowServ
 
                         // Find or create antibiogram group for this organism
                         // Use the same analysisId as the organism group
-                        Integer organismAnalysisId = organismGroup.getAnalysisId() != null ? organismGroup.getAnalysisId() : analysisId;
+                        Integer organismAnalysisId = organismGroup.getAnalysisId() != null
+                                ? organismGroup.getAnalysisId()
+                                : analysisId;
                         List<BacteriologyResultGroup> antibiogramGroups = resultGroupService
                                 .getGroupsByAnalysisAndType(organismAnalysisId, "ANTIBIOGRAM");
                         BacteriologyResultGroup antibiogramGroup = null;
@@ -188,7 +191,8 @@ public class BacteriologyWorkflowServiceImpl implements BacteriologyWorkflowServ
                         if (antibiogramGroup == null) {
                             antibiogramGroup = new BacteriologyResultGroup();
                             // Use the same analysisId as the organism group
-                            antibiogramGroup.setAnalysisId(organismGroup.getAnalysisId() != null ? organismGroup.getAnalysisId() : analysisId);
+                            antibiogramGroup.setAnalysisId(
+                                    organismGroup.getAnalysisId() != null ? organismGroup.getAnalysisId() : analysisId);
                             antibiogramGroup.setGroupType("ANTIBIOGRAM");
                             antibiogramGroup.setParentGroupId(organismGroup.getId());
                             antibiogramGroup.setGroupNumber(organism.getOrganismNumber());
@@ -258,7 +262,8 @@ public class BacteriologyWorkflowServiceImpl implements BacteriologyWorkflowServ
             }
 
             // Get ALL analyses for this sample item to collect all bacteriology data
-            // This is necessary because organisms may be linked to different analyses (e.g., specific culture tests)
+            // This is necessary because organisms may be linked to different analyses
+            // (e.g., specific culture tests)
             List<org.openelisglobal.analysis.valueholder.Analysis> allAnalyses = new ArrayList<>();
             if (analysis != null && analysis.getSampleItem() != null) {
                 allAnalyses = analysisService.getAnalysesBySampleItem(analysis.getSampleItem());
@@ -320,8 +325,8 @@ public class BacteriologyWorkflowServiceImpl implements BacteriologyWorkflowServ
                             }
                         } catch (Exception e) {
                             LogEvent.logError("BacteriologyWorkflowServiceImpl", "getBacteriologyResults",
-                                    "Exception resolving organism name for dictId "
-                                            + organism.getOrganismNameDictId() + ": " + e.getMessage());
+                                    "Exception resolving organism name for dictId " + organism.getOrganismNameDictId()
+                                            + ": " + e.getMessage());
                         }
                     }
                     organism.setResolvedOrganismName(displayName);

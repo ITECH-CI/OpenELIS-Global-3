@@ -714,7 +714,8 @@ const EditSample = (props) => {
             </Column>
             <Column lg={8} md={4} sm={4}>
               {isOtherSelected(
-                orderFormValues.patientRoutineBacterioInfo?.clinicalInformations,
+                orderFormValues.patientRoutineBacterioInfo
+                  ?.clinicalInformations,
                 clinicalInfoOptions,
               ) && (
                 <TextInput
@@ -757,7 +758,8 @@ const EditSample = (props) => {
                 onChange={(val) => {
                   const boolVal = val === "true";
                   setBacterioField("recentAntibiotherapy", boolVal);
-                  if (!boolVal) setBacterioField("recentAntibiotherapyList", []);
+                  if (!boolVal)
+                    setBacterioField("recentAntibiotherapyList", []);
                 }}
               >
                 <RadioButton
@@ -982,8 +984,7 @@ const EditSample = (props) => {
                 id="editRecentInvasiveGestures"
                 titleText={intl.formatMessage({
                   id: "patient.invasive.gestures",
-                  defaultMessage:
-                    "Antécédents des gestes invasifs (<30 jours)",
+                  defaultMessage: "Antécédents des gestes invasifs (<30 jours)",
                 })}
                 items={invasiveGesturesOptions}
                 itemToString={(item) => (item ? item.value : "")}
@@ -1053,61 +1054,61 @@ const EditSample = (props) => {
       */}
       {!isBacterio && (
         <Stack gap={10}>
-        <div className="orderLegendBody">
-          <h3>
-            <FormattedMessage id="order.label.add" />
-          </h3>
-          {samples.map((sample, i) => {
-            return (
-              <div className="sampleType" key={i}>
-                <h4>
-                  <FormattedMessage id="label.button.sample" /> {i + 1}
-                </h4>
-                <Link href="#" onClick={(e) => handleRemoveSample(e, sample)}>
-                  {<FormattedMessage id="sample.remove.action" />}
-                </Link>
-                <SampleType
-                  index={i}
-                  rejectSampleReasons={rejectSampleReasons}
-                  removeSample={removeSample}
-                  sample={sample}
-                  isTb={isTb}
-                  showTBSection={isTb}
-                  isBacterio={isBacterio}
-                  // EditSample affiche déjà son propre bloc bactério au-dessus.
-                  // On masque celui de SampleType pour éviter le conflit DOM des
-                  // RadioButtonGroup (même attribut 'name') qui forçait deux
-                  // clics, et la duplication visuelle des mêmes champs.
-                  hideBacterioSection={true}
-                  orderFormValues={orderFormValues}
-                  setOrderFormValues={setOrderFormValues}
-                  setSample={(newSample) => {
-                    let newSamples = [...samples];
-                    newSamples[i] = newSample;
-                    setSamples(newSamples);
-                  }}
-                  sampleTypeObject={sampleTypeObject}
-                  error={error}
-                />
-              </div>
-            );
-          })}
-          {/*
+          <div className="orderLegendBody">
+            <h3>
+              <FormattedMessage id="order.label.add" />
+            </h3>
+            {samples.map((sample, i) => {
+              return (
+                <div className="sampleType" key={i}>
+                  <h4>
+                    <FormattedMessage id="label.button.sample" /> {i + 1}
+                  </h4>
+                  <Link href="#" onClick={(e) => handleRemoveSample(e, sample)}>
+                    {<FormattedMessage id="sample.remove.action" />}
+                  </Link>
+                  <SampleType
+                    index={i}
+                    rejectSampleReasons={rejectSampleReasons}
+                    removeSample={removeSample}
+                    sample={sample}
+                    isTb={isTb}
+                    showTBSection={isTb}
+                    isBacterio={isBacterio}
+                    // EditSample affiche déjà son propre bloc bactério au-dessus.
+                    // On masque celui de SampleType pour éviter le conflit DOM des
+                    // RadioButtonGroup (même attribut 'name') qui forçait deux
+                    // clics, et la duplication visuelle des mêmes champs.
+                    hideBacterioSection={true}
+                    orderFormValues={orderFormValues}
+                    setOrderFormValues={setOrderFormValues}
+                    setSample={(newSample) => {
+                      let newSamples = [...samples];
+                      newSamples[i] = newSample;
+                      setSamples(newSamples);
+                    }}
+                    sampleTypeObject={sampleTypeObject}
+                    error={error}
+                  />
+                </div>
+              );
+            })}
+            {/*
             En bactériologie, une ordonnance porte un seul échantillon : on
             masque le bouton "Ajouter un échantillon" sur la page de modification
             pour éviter une saisie incohérente avec le flow métier.
           */}
-          <Row>
-            <div className="inlineDiv">
-              <Button onClick={handleAddNewSample}>
-                {<FormattedMessage id="sample.add.action" />}
-                &nbsp; &nbsp;
-                <Add size={16} />
-              </Button>
-            </div>
-          </Row>
-        </div>
-      </Stack>
+            <Row>
+              <div className="inlineDiv">
+                <Button onClick={handleAddNewSample}>
+                  {<FormattedMessage id="sample.add.action" />}
+                  &nbsp; &nbsp;
+                  <Add size={16} />
+                </Button>
+              </div>
+            </Row>
+          </div>
+        </Stack>
       )}
     </>
   );

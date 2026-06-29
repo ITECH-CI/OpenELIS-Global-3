@@ -8,7 +8,10 @@ public class BacteriologyValidationForm {
     private String sysUserId;
     private ValidatedItems validated;
     private RejectedItems rejected;
-    /** Biologist's interpretation note for the sample (persisted as observation history). */
+    /**
+     * Biologist's interpretation note for the sample (persisted as observation
+     * history).
+     */
     private String sampleInterpretation;
 
     public Integer getAnalysisId() {

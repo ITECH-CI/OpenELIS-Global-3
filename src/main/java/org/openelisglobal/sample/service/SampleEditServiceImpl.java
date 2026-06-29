@@ -475,10 +475,10 @@ public class SampleEditServiceImpl implements SampleEditService {
     }
 
     /**
-     * Resolve the Analysis to use when an "add" edit item is processed.
-     * Returns null when an active (non-canceled) analysis already exists for the
-     * same (sampleItem, test) pair, so the caller can skip the insert and preserve
-     * the existing result.
+     * Resolve the Analysis to use when an "add" edit item is processed. Returns
+     * null when an active (non-canceled) analysis already exists for the same
+     * (sampleItem, test) pair, so the caller can skip the insert and preserve the
+     * existing result.
      */
     private Analysis newOrExistingAnalysisForAdd(SampleEditItem sampleEditItem) {
         SampleItem sampleItem = sampleItemService.get(sampleEditItem.getSampleItemId());
@@ -486,8 +486,7 @@ public class SampleEditServiceImpl implements SampleEditService {
 
         Analysis canceledMatch = null;
         for (Analysis analysis : existing) {
-            if (analysis.getTest() == null
-                    || !sampleEditItem.getTestId().equals(analysis.getTest().getId())) {
+            if (analysis.getTest() == null || !sampleEditItem.getTestId().equals(analysis.getTest().getId())) {
                 continue;
             }
             if (CANCELED_TEST_STATUS_ID.equals(analysis.getStatusId())) {

@@ -111,8 +111,8 @@ const OrganismIdentification = ({
         const dictId = parseInt(o?.id);
         const name = String(o?.value || o?.name || "").toLowerCase();
         return (
-          dictId === CANDIDA_ALBICANS_DICT_ID
-          || name.includes(CANDIDA_ALBICANS_NAME_LOWERCASE)
+          dictId === CANDIDA_ALBICANS_DICT_ID ||
+          name.includes(CANDIDA_ALBICANS_NAME_LOWERCASE)
         );
       })
     : baseOrganismList;

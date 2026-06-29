@@ -127,10 +127,8 @@ public class BacteriologyResultController extends BaseController {
      */
     @GetMapping(value = "/results/{analysisId}", produces = MediaType.APPLICATION_JSON_VALUE)
     @Transactional(readOnly = true)
-    public ResponseEntity<BacteriologyResultData> getBacteriologyResults(
-            @PathVariable("analysisId") Integer analysisId,
-            @org.springframework.web.bind.annotation.RequestParam(name = "includeFinalized",
-                    required = false, defaultValue = "false") boolean includeFinalized) {
+    public ResponseEntity<BacteriologyResultData> getBacteriologyResults(@PathVariable("analysisId") Integer analysisId,
+            @org.springframework.web.bind.annotation.RequestParam(name = "includeFinalized", required = false, defaultValue = "false") boolean includeFinalized) {
         try {
             // Get bacteriology-specific data (organisms, antibiograms)
             BacteriologyResultData resultData = workflowService.getBacteriologyResults(analysisId);
@@ -398,8 +396,8 @@ public class BacteriologyResultController extends BaseController {
                     sb.append(floraCount);
                     List<org.openelisglobal.bacteriology.valueholder.BacteriologyFloraDetail> sorted = new java.util.ArrayList<>(
                             flora.getDetails());
-                    sorted.sort(java.util.Comparator.comparing(
-                            d -> d.getFloraNumber() != null ? d.getFloraNumber() : Integer.MAX_VALUE));
+                    sorted.sort(java.util.Comparator
+                            .comparing(d -> d.getFloraNumber() != null ? d.getFloraNumber() : Integer.MAX_VALUE));
                     for (org.openelisglobal.bacteriology.valueholder.BacteriologyFloraDetail detail : sorted) {
                         sb.append("\nFlore ");
                         sb.append(detail.getFloraNumber() != null ? detail.getFloraNumber() : "?");
@@ -408,9 +406,12 @@ public class BacteriologyResultController extends BaseController {
                         String grouping = resolveDictLabel(detail.getGroupingModeDictId());
                         String other = resolveDictLabel(detail.getOtherCharacteristicDictId());
                         List<String> parts = new java.util.ArrayList<>();
-                        if (gram != null) parts.add(gram);
-                        if (grouping != null) parts.add(grouping);
-                        if (other != null) parts.add(other);
+                        if (gram != null)
+                            parts.add(gram);
+                        if (grouping != null)
+                            parts.add(grouping);
+                        if (other != null)
+                            parts.add(other);
                         sb.append(parts.isEmpty() ? "-" : String.join(", ", parts));
                     }
                     displayValue = sb.toString();
@@ -448,8 +449,8 @@ public class BacteriologyResultController extends BaseController {
     }
 
     /**
-     * Resolve a dictionary id to its localized label, returning null when the id
-     * is missing or the entry can't be found (so callers can skip the segment).
+     * Resolve a dictionary id to its localized label, returning null when the id is
+     * missing or the entry can't be found (so callers can skip the segment).
      */
     private String resolveDictLabel(Integer dictId) {
         if (dictId == null) {
@@ -566,8 +567,8 @@ public class BacteriologyResultController extends BaseController {
     }
 
     /**
-     * Save test results (macroscopy, microscopy, culture) to result table Returns
-     * a map of testId to analysisId for correct linking of organisms to culture tests
+     * Save test results (macroscopy, microscopy, culture) to result table Returns a
+     * map of testId to analysisId for correct linking of organisms to culture tests
      */
     private Map<String, Integer> saveTestResults(BacteriologyResultForm form) {
         Map<String, Integer> testIdToAnalysisIdMap = new HashMap<>();
@@ -606,8 +607,7 @@ public class BacteriologyResultController extends BaseController {
 
         // Save microscopy results
         if (form.getMicroscopyResults() != null && !form.getMicroscopyResults().isEmpty()) {
-            Map<String, String> microscopyUoms = form.getMicroscopyUoms() != null
-                    ? form.getMicroscopyUoms()
+            Map<String, String> microscopyUoms = form.getMicroscopyUoms() != null ? form.getMicroscopyUoms()
                     : new HashMap<>();
             for (Map.Entry<String, String> entry : form.getMicroscopyResults().entrySet()) {
                 String testId = entry.getKey();
@@ -646,7 +646,8 @@ public class BacteriologyResultController extends BaseController {
                     continue;
                 }
 
-                // Find or create the analysis for this specific test (culture tests may not exist yet)
+                // Find or create the analysis for this specific test (culture tests may not
+                // exist yet)
                 org.openelisglobal.analysis.valueholder.Analysis analysis = findOrCreateAnalysisForTest(
                         primaryAnalysis.getSampleItem(), testId, form.getSysUserId());
                 if (analysis != null) {
@@ -1116,7 +1117,8 @@ public class BacteriologyResultController extends BaseController {
                 }
             }
 
-            // Persist the biologist's interpretation note (if any) as a SAMPLE_INTERPRETATION
+            // Persist the biologist's interpretation note (if any) as a
+            // SAMPLE_INTERPRETATION
             // observation history attached to the sample. The bacterio report's
             // "Remarques générales du laboratoire" cell reads from this same source.
             String interpretationNote = form.getSampleInterpretation();

@@ -249,8 +249,8 @@ public class Result extends EnumValueItemImpl {
     }
 
     /**
-     * Resolves the per-result UoM id (FK uom_id). Returns null when no override
-     * is set; callers should then fall back to the test's default UoM.
+     * Resolves the per-result UoM id (FK uom_id). Returns null when no override is
+     * set; callers should then fall back to the test's default UoM.
      */
     public String getUomId() {
         if (uom == null) {

@@ -750,52 +750,52 @@ const Validation = (props) => {
                           sample.accessionNumber.split("-")[0] ===
                             props.searchedAccessionNumber.split("-")[0];
                         return (
-                        <div
-                          key={sample.sampleId}
-                          style={{
-                            marginBottom: "15px",
-                            padding: "10px",
-                            borderRadius: "4px",
-                            ...(isSearched && {
-                              backgroundColor: "#fff3cd",
-                              borderLeft: "4px solid #f0ad4e",
-                              animation: "labno-pulse 1.6s ease-in-out 3",
-                            }),
-                          }}
-                        >
-                          <label
+                          <div
+                            key={sample.sampleId}
                             style={{
-                              display: "block",
-                              marginBottom: "5px",
-                              fontWeight: "500",
+                              marginBottom: "15px",
+                              padding: "10px",
+                              borderRadius: "4px",
+                              ...(isSearched && {
+                                backgroundColor: "#fff3cd",
+                                borderLeft: "4px solid #f0ad4e",
+                                animation: "labno-pulse 1.6s ease-in-out 3",
+                              }),
                             }}
                           >
-                            {intl.formatMessage({
-                              id: "column.name.sampleInfo",
-                            })}
-                            :{" "}
-                            {configurationProperties.AccessionFormat ===
-                            "ALPHANUM"
-                              ? convertAlphaNumLabNumForDisplay(
-                                  sample.accessionNumber,
-                                )
-                              : sample.accessionNumber}
-                          </label>
-                          <TextArea
-                            id={`interpretation-${sample.sampleId}`}
-                            labelText=""
-                            maxCount={200}
-                            placeholder={intl.formatMessage({
-                              id: "validation.sampleInterpretation.placeholder",
-                            })}
-                            value={sample.sampleInterpretation || ""}
-                            onChange={(e) =>
-                              handleInterpretationChange(e, sample.sampleId)
-                            }
-                            rows={3}
-                            style={{ width: "100%" }}
-                          />
-                        </div>
+                            <label
+                              style={{
+                                display: "block",
+                                marginBottom: "5px",
+                                fontWeight: "500",
+                              }}
+                            >
+                              {intl.formatMessage({
+                                id: "column.name.sampleInfo",
+                              })}
+                              :{" "}
+                              {configurationProperties.AccessionFormat ===
+                              "ALPHANUM"
+                                ? convertAlphaNumLabNumForDisplay(
+                                    sample.accessionNumber,
+                                  )
+                                : sample.accessionNumber}
+                            </label>
+                            <TextArea
+                              id={`interpretation-${sample.sampleId}`}
+                              labelText=""
+                              maxCount={200}
+                              placeholder={intl.formatMessage({
+                                id: "validation.sampleInterpretation.placeholder",
+                              })}
+                              value={sample.sampleInterpretation || ""}
+                              onChange={(e) =>
+                                handleInterpretationChange(e, sample.sampleId)
+                              }
+                              rows={3}
+                              style={{ width: "100%" }}
+                            />
+                          </div>
                         );
                       })}
                     </Column>

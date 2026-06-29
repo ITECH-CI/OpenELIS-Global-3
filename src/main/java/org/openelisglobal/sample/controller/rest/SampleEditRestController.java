@@ -33,8 +33,8 @@ import org.openelisglobal.observationhistory.valueholder.ObservationHistory;
 import org.openelisglobal.observationhistorytype.service.ObservationHistoryTypeService;
 import org.openelisglobal.observationhistorytype.valueholder.ObservationHistoryType;
 import org.openelisglobal.patient.action.bean.PatientRoutineBacterioInfo;
-import org.openelisglobal.patient.action.bean.PatientTbInfo;
 import org.openelisglobal.patient.action.bean.PatientSearch;
+import org.openelisglobal.patient.action.bean.PatientTbInfo;
 import org.openelisglobal.patient.service.PatientService;
 import org.openelisglobal.patient.valueholder.Patient;
 import org.openelisglobal.person.service.PersonService;
@@ -465,9 +465,8 @@ public class SampleEditRestController extends BaseSampleEntryController {
         // toutes les autres infos déjà saisies (renseignements cliniques,
         // antibiothérapies, etc.).
         boolean hasAnyBacterioObservation = false;
-        for (String typeName : new String[] {
-                "BacterioTypeExamens", "EPIDEMIO_WEEK", "currentHospitalization", "roomNumber",
-                "CLINICAL_INFOS", "CLINICAL_INFOS_OTHER", "PREV3M_ATB", "PREV3M_ATB_LIST", "CURR_ATB",
+        for (String typeName : new String[] { "BacterioTypeExamens", "EPIDEMIO_WEEK", "currentHospitalization",
+                "roomNumber", "CLINICAL_INFOS", "CLINICAL_INFOS_OTHER", "PREV3M_ATB", "PREV3M_ATB_LIST", "CURR_ATB",
                 "CURR_ATB_LIST", "CURR_ATB_DUR", "HOSP_3M", "HOSP_3M_COUNT", "INVASIVE_GESTURE",
                 "INDWELLING_DEVICES" }) {
             ObservationHistoryType oht0 = observationHistoryTypeService.getByName(typeName);
@@ -622,9 +621,9 @@ public class SampleEditRestController extends BaseSampleEntryController {
     }
 
     /**
-     * Charge les observations TB persistées pour cet échantillon et reconstruit
-     * un PatientTbInfo pré-rempli. Symétrique à loadBacterioInfo. Retourne null
-     * si aucun bloc TB n'a été saisi (l'absence de TbOrderReason sert de gate).
+     * Charge les observations TB persistées pour cet échantillon et reconstruit un
+     * PatientTbInfo pré-rempli. Symétrique à loadBacterioInfo. Retourne null si
+     * aucun bloc TB n'a été saisi (l'absence de TbOrderReason sert de gate).
      */
     private PatientTbInfo loadTbInfo(String sampleId) {
         List<ObservationHistory> allObs = observationHistoryService.getObservationHistoriesBySampleId(sampleId);

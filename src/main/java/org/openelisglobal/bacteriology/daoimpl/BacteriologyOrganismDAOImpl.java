@@ -41,12 +41,11 @@ public class BacteriologyOrganismDAOImpl extends BaseDAOImpl<BacteriologyOrganis
     @Transactional(readOnly = true)
     public List<BacteriologyOrganism> getOrganismsByAnalysisId(Integer analysisId) {
         try {
-            // Use subquery since there's no direct association between BacteriologyOrganism and BacteriologyResultGroup
-            String hql = "SELECT bo FROM BacteriologyOrganism bo "
-                    + "WHERE bo.resultGroupId IN ("
+            // Use subquery since there's no direct association between BacteriologyOrganism
+            // and BacteriologyResultGroup
+            String hql = "SELECT bo FROM BacteriologyOrganism bo " + "WHERE bo.resultGroupId IN ("
                     + "  SELECT brg.id FROM BacteriologyResultGroup brg WHERE brg.analysisId = :analysisId"
-                    + ") AND bo.isActive = true "
-                    + "ORDER BY bo.organismNumber";
+                    + ") AND bo.isActive = true " + "ORDER BY bo.organismNumber";
             Query<BacteriologyOrganism> query = entityManager.unwrap(Session.class).createQuery(hql,
                     BacteriologyOrganism.class);
             query.setParameter("analysisId", analysisId);

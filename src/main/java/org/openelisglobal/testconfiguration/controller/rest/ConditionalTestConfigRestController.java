@@ -30,9 +30,9 @@ import org.springframework.web.bind.annotation.RestController;
  * Configure parent/child test relationships (e.g. show 'Densité parasitaire'
  * only when 'Goutte Epaisse' result is 'Positif').
  *
- * The mapping is stored on the test table:
- * - parent_trigger_value on the PARENT test (dictionary id of the triggering result)
- * - parent_test_id on the CHILD test (id of the parent test)
+ * The mapping is stored on the test table: - parent_trigger_value on the PARENT
+ * test (dictionary id of the triggering result) - parent_test_id on the CHILD
+ * test (id of the parent test)
  */
 @RestController
 @RequestMapping("/rest/conditional-test")
@@ -93,8 +93,7 @@ public class ConditionalTestConfigRestController extends BaseRestController {
                 }
                 Map<String, String> row = new HashMap<>();
                 row.put("id", d.getId());
-                row.put("label", d.getDictEntry() != null && !d.getDictEntry().isBlank()
-                        ? d.getDictEntry()
+                row.put("label", d.getDictEntry() != null && !d.getDictEntry().isBlank() ? d.getDictEntry()
                         : d.getLocalizedName());
                 out.add(row);
             }
@@ -106,12 +105,10 @@ public class ConditionalTestConfigRestController extends BaseRestController {
     }
 
     /**
-     * Persist a parent/trigger/child mapping.
-     * - sets parent_trigger_value on the parent test
-     * - sets parent_test_id on the child test
+     * Persist a parent/trigger/child mapping. - sets parent_trigger_value on the
+     * parent test - sets parent_test_id on the child test
      */
-    @PostMapping(value = "/mapping", consumes = MediaType.APPLICATION_JSON_VALUE,
-            produces = MediaType.APPLICATION_JSON_VALUE)
+    @PostMapping(value = "/mapping", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     @Transactional
     public ResponseEntity<Map<String, String>> saveMapping(HttpServletRequest request,
             @RequestBody Map<String, String> body) {
@@ -154,10 +151,10 @@ public class ConditionalTestConfigRestController extends BaseRestController {
 
     /**
      * Remove the mapping for a given child test (clear parent_test_id). Optionally
-     * clears parent_trigger_value on the former parent if no other child references it.
+     * clears parent_trigger_value on the former parent if no other child references
+     * it.
      */
-    @PostMapping(value = "/mapping/clear", consumes = MediaType.APPLICATION_JSON_VALUE,
-            produces = MediaType.APPLICATION_JSON_VALUE)
+    @PostMapping(value = "/mapping/clear", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     @Transactional
     public ResponseEntity<Map<String, String>> clearMapping(HttpServletRequest request,
             @RequestBody Map<String, String> body) {

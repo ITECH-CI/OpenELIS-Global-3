@@ -106,7 +106,8 @@ const SearchForm = (props) => {
   useEffect(() => {
     if (labNoFilter === "") {
       if (searchResults) props.setResults(searchResults);
-      if (props.setSearchedAccessionNumber) props.setSearchedAccessionNumber("");
+      if (props.setSearchedAccessionNumber)
+        props.setSearchedAccessionNumber("");
       setNoFilterResult(false);
       setIsFilterLoading(false);
       return;
@@ -119,8 +120,14 @@ const SearchForm = (props) => {
     const timer = setTimeout(() => {
       const encodedLabNo = encodeURIComponent(labNoFilter);
       const filterUrl = url
-        ? url.replace(/accessionNumber=[^&]*/, "accessionNumber=" + encodedLabNo)
-        : "/rest/AccessionValidation?accessionNumber=" + encodedLabNo + "&unitType=&date=&doRange=" + doRange;
+        ? url.replace(
+            /accessionNumber=[^&]*/,
+            "accessionNumber=" + encodedLabNo,
+          )
+        : "/rest/AccessionValidation?accessionNumber=" +
+          encodedLabNo +
+          "&unitType=&date=&doRange=" +
+          doRange;
       getFromOpenElisServer(filterUrl, (data) => {
         if (data?.resultList?.length > 0) {
           const newResultsList = data.resultList.map((item, id) => ({
@@ -420,24 +427,55 @@ const SearchForm = (props) => {
                 <div style={{ position: "relative" }}>
                   <TextInput
                     id="labNoFilterValidation"
-                    labelText={intl.formatMessage({ id: "search.label.accession" })}
-                    placeholder={intl.formatMessage({ id: "search.label.accession" })}
+                    labelText={intl.formatMessage({
+                      id: "search.label.accession",
+                    })}
+                    placeholder={intl.formatMessage({
+                      id: "search.label.accession",
+                    })}
                     value={labNoFilter}
                     onChange={(e) => setLabNoFilter(e.target.value)}
                   />
                   {isFilterLoading && (
-                    <div style={{ position: "absolute", right: "8px", top: "50%", transform: "translateY(-50%)", display: "flex", alignItems: "center" }}>
+                    <div
+                      style={{
+                        position: "absolute",
+                        right: "8px",
+                        top: "50%",
+                        transform: "translateY(-50%)",
+                        display: "flex",
+                        alignItems: "center",
+                      }}
+                    >
                       <Loading small withOverlay={false} active />
                     </div>
                   )}
                 </div>
                 {isFilterLoading && (
-                  <InlineLoading description="Recherche en cours..." status="active" style={{ marginTop: "4px" }} />
+                  <InlineLoading
+                    description="Recherche en cours..."
+                    status="active"
+                    style={{ marginTop: "4px" }}
+                  />
                 )}
                 {!isFilterLoading && noFilterResult && (
-                  <div style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "6px", padding: "8px 12px", backgroundColor: "#fff1f1", border: "1px solid #da1e28", borderRadius: "4px", color: "#da1e28" }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "6px",
+                      marginTop: "6px",
+                      padding: "8px 12px",
+                      backgroundColor: "#fff1f1",
+                      border: "1px solid #da1e28",
+                      borderRadius: "4px",
+                      color: "#da1e28",
+                    }}
+                  >
                     <ErrorFilled size={20} />
-                    <span style={{ fontSize: "14px", fontWeight: "500" }}>Aucun résultat pour ce Lab No</span>
+                    <span style={{ fontSize: "14px", fontWeight: "500" }}>
+                      Aucun résultat pour ce Lab No
+                    </span>
                   </div>
                 )}
               </div>
@@ -447,7 +485,19 @@ const SearchForm = (props) => {
       )}
 
       {mainNoResults && (
-        <div style={{ display: "flex", alignItems: "center", gap: "8px", margin: "12px 0", padding: "12px 16px", backgroundColor: "#fff1f1", border: "1px solid #da1e28", borderRadius: "4px", color: "#da1e28" }}>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "8px",
+            margin: "12px 0",
+            padding: "12px 16px",
+            backgroundColor: "#fff1f1",
+            border: "1px solid #da1e28",
+            borderRadius: "4px",
+            color: "#da1e28",
+          }}
+        >
           <ErrorFilled size={20} />
           <span style={{ fontSize: "14px", fontWeight: "500" }}>
             {intl.formatMessage({ id: "validation.search.noresult" })}

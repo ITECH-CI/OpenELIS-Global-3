@@ -2262,7 +2262,7 @@ INSERT INTO clinlims.result_limits(id, test_id,	test_result_type_id,min_age, max
 <changeSet id="2026020601" author="pkomena">
     <sql>
     <![CDATA[
-        DELETE FROM clinlims.test_result tr WHERE tr.test_id  = 
+        DELETE FROM clinlims.test_result tr WHERE tr.test_id  =
         (SELECT id FROM clinlims.test WHERE name = 'Macroscopie - Gland - Couleur')
     ]]>
     </sql>
@@ -2297,7 +2297,7 @@ INSERT INTO clinlims.result_limits(id, test_id,	test_result_type_id,min_age, max
 <changeSet id="2026020602" author="pkomena">
     <sql>
     <![CDATA[
-        DELETE FROM clinlims.test_result tr WHERE tr.test_id  = 
+        DELETE FROM clinlims.test_result tr WHERE tr.test_id  =
         (SELECT id FROM clinlims.test WHERE name = 'Microscopie - Frottis Coloration Gram - Bactéries - Mode de regroupement')
     ]]>
     </sql>
@@ -2336,7 +2336,7 @@ INSERT INTO clinlims.result_limits(id, test_id,	test_result_type_id,min_age, max
 <changeSet id="2026020603" author="pkomena">
         <sql>
         <![CDATA[
-            DELETE FROM clinlims.sampletype_test WHERE test_id = 
+            DELETE FROM clinlims.sampletype_test WHERE test_id =
             (SELECT id FROM clinlims.test WHERE name = 'Culture - Sécrétions urétrales' LIMIT 1)
             AND sample_type_id IN (
                 SELECT id FROM clinlims.type_of_sample WHERE description IN (
@@ -2348,7 +2348,7 @@ INSERT INTO clinlims.result_limits(id, test_id,	test_result_type_id,min_age, max
         <sql>
         <![CDATA[
             INSERT INTO clinlims.sampletype_test (id, test_id, sample_type_id)
-            SELECT 
+            SELECT
             nextval('sample_type_test_seq'),
             (SELECT id FROM clinlims.test WHERE name = 'Culture' LIMIT 1) AS test_id,
             id AS sample_type_id

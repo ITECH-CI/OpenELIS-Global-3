@@ -163,75 +163,62 @@ public class SamplePatientEntryRestController extends BaseSampleEntryController 
             "patientRoutineBacterioInfo.recentAntibiotherapy", "patientRoutineBacterioInfo.recentAntibiotherapyList",
             "patientRoutineBacterioInfo.currentAntibiotherapy", "patientRoutineBacterioInfo.currentAntibiotherapyList",
             "patientRoutineBacterioInfo.currentAntibiotherapyDuration",
-            "patientRoutineBacterioInfo.recentHospitalization",
-            "patientRoutineBacterioInfo.recentHospitalizationCount", 
-        
+            "patientRoutineBacterioInfo.recentHospitalization", "patientRoutineBacterioInfo.recentHospitalizationCount",
+
             /* Charge virale Fields */
-            // common 
-            "currentDate", "domain", "project",
-            "patientLastUpdated", "personLastUpdated", "patientUpdateStatus", "patientPK", "patientFhirUuid",
-            "samplePK", "observations.projectFormName",
-            "receivedDateForDisplay", "receivedTimeForDisplay",
-            "interviewDate", "interviewTime",
-            "subjectNumber", "siteSubjectNumber", "upidCode", "labNo",
-            "gender", "birthDateForDisplay",
-            "electronicOrder.externalId",
+            // common
+            "currentDate", "domain", "project", "patientLastUpdated", "personLastUpdated", "patientUpdateStatus",
+            "patientPK", "patientFhirUuid", "samplePK", "observations.projectFormName", "receivedDateForDisplay",
+            "receivedTimeForDisplay", "interviewDate", "interviewTime", "subjectNumber", "siteSubjectNumber",
+            "upidCode", "labNo", "gender", "birthDateForDisplay", "electronicOrder.externalId",
             // ARV site
             "ProjectData.ARVcenterName", "ProjectData.ARVcenterCode",
             // common observations
             "observations.nameOfDoctor", "observations.nameOfSampler", "observations.nameOfRequestor",
             "observations.underInvestigation", "ProjectData.underInvestigationNote",
             // dry-tube tests (InitialARV / RTN / IND / SPE)
-            "ProjectData.dryTubeTaken",
-            "ProjectData.serologyHIVTest", "ProjectData.glycemiaTest", "ProjectData.creatinineTest",
-            "ProjectData.transaminaseTest", "ProjectData.transaminaseALTLTest", "ProjectData.transaminaseASTLTest",
-            "ProjectData.murexTest", "ProjectData.genscreenTest", "ProjectData.vironostikaTest",
-            "ProjectData.innoliaTest",
+            "ProjectData.dryTubeTaken", "ProjectData.serologyHIVTest", "ProjectData.glycemiaTest",
+            "ProjectData.creatinineTest", "ProjectData.transaminaseTest", "ProjectData.transaminaseALTLTest",
+            "ProjectData.transaminaseASTLTest", "ProjectData.murexTest", "ProjectData.genscreenTest",
+            "ProjectData.vironostikaTest", "ProjectData.innoliaTest",
             // EDTA-tube tests
-            "ProjectData.edtaTubeTaken",
-            "ProjectData.nfsTest", "ProjectData.cd4cd8Test",
-            "ProjectData.gbTest", "ProjectData.lymphTest", "ProjectData.monoTest",
-            "ProjectData.eoTest", "ProjectData.basoTest", "ProjectData.grTest",
-            "ProjectData.hbTest", "ProjectData.hctTest", "ProjectData.vgmTest",
-            "ProjectData.tcmhTest", "ProjectData.ccmhTest", "ProjectData.plqTest",
-            "ProjectData.cd4CountTest", "ProjectData.cd3CountTest",
+            "ProjectData.edtaTubeTaken", "ProjectData.nfsTest", "ProjectData.cd4cd8Test", "ProjectData.gbTest",
+            "ProjectData.lymphTest", "ProjectData.monoTest", "ProjectData.eoTest", "ProjectData.basoTest",
+            "ProjectData.grTest", "ProjectData.hbTest", "ProjectData.hctTest", "ProjectData.vgmTest",
+            "ProjectData.tcmhTest", "ProjectData.ccmhTest", "ProjectData.plqTest", "ProjectData.cd4CountTest",
+            "ProjectData.cd3CountTest",
             // VL-tube tests
-            "ProjectData.dbsvlTaken", "ProjectData.pscvlTaken",
-            "ProjectData.viralLoadTest", "ProjectData.genotypingTest",
+            "ProjectData.dbsvlTaken", "ProjectData.pscvlTaken", "ProjectData.viralLoadTest",
+            "ProjectData.genotypingTest",
             // serum
             "ProjectData.serumTaken",
             // EID / DBS
-            "ProjectData.dbsTaken",
-            "ProjectData.dnaPCR",
-            "ProjectData.EIDSiteName", "ProjectData.EIDsiteCode",
+            "ProjectData.dbsTaken", "ProjectData.dnaPCR", "ProjectData.EIDSiteName", "ProjectData.EIDsiteCode",
             // Indeterminate
-            "ProjectData.INDsiteName", "ProjectData.address", "ProjectData.phoneNumber",
-            "ProjectData.faxNumber", "ProjectData.email",
+            "ProjectData.INDsiteName", "ProjectData.address", "ProjectData.phoneNumber", "ProjectData.faxNumber",
+            "ProjectData.email",
             // HPV
-            "ProjectData.preservCytTaken", "ProjectData.plasmaTaken",
-            "ProjectData.asanteTest", "ProjectData.hpvTest",
+            "ProjectData.preservCytTaken", "ProjectData.plasmaTaken", "ProjectData.asanteTest", "ProjectData.hpvTest",
             "ProjectData.abbottOrRocheAnalysis", "ProjectData.geneXpertAnalysis",
             // ARV observations (InitialARV / FollowUp / VL)
-            "observations.hivStatus",
-            "observations.currentARVTreatment", "observations.arvTreatmentInitDate",
+            "observations.hivStatus", "observations.currentARVTreatment", "observations.arvTreatmentInitDate",
             "observations.arvTreatmentRegime", "observations.currentARVTreatmentINNsList*",
-            "observations.vlReasonForRequest", "observations.vlOtherReasonForRequest",
-            "observations.initcd4Count", "observations.initcd4Percent", "observations.initcd4Date",
-            "observations.demandcd4Count", "observations.demandcd4Percent", "observations.demandcd4Date",
-            "observations.vlBenefit", "observations.priorVLValue", "observations.priorVLDate",
-            "observations.vlPregnancy", "observations.vlSuckle",
+            "observations.vlReasonForRequest", "observations.vlOtherReasonForRequest", "observations.initcd4Count",
+            "observations.initcd4Percent", "observations.initcd4Date", "observations.demandcd4Count",
+            "observations.demandcd4Percent", "observations.demandcd4Date", "observations.vlBenefit",
+            "observations.priorVLValue", "observations.priorVLDate", "observations.vlPregnancy",
+            "observations.vlSuckle",
             // EID observations
-            "observations.whichPCR", "observations.reasonForSecondPCRTest",
-            "observations.eidInfantPTME", "observations.eidTypeOfClinic", "observations.eidTypeOfClinicOther",
-            "observations.eidHowChildFed", "observations.eidStoppedBreastfeeding",
-            "observations.eidInfantSymptomatic", "observations.eidInfantsARV",
+            "observations.whichPCR", "observations.reasonForSecondPCRTest", "observations.eidInfantPTME",
+            "observations.eidTypeOfClinic", "observations.eidTypeOfClinicOther", "observations.eidHowChildFed",
+            "observations.eidStoppedBreastfeeding", "observations.eidInfantSymptomatic", "observations.eidInfantsARV",
             "observations.eidInfantCotrimoxazole", "observations.eidMothersHIVStatus", "observations.eidMothersARV",
             // Indeterminate observations
             "observations.indFirstTestDate", "observations.indFirstTestName", "observations.indFirstTestResult",
             "observations.indSecondTestDate", "observations.indSecondTestName", "observations.indSecondTestResult",
             "observations.indSiteFinalResult",
             // Special Request / HPV observations
-            "observations.reasonForRequest", "observations.hpvSamplingMethod"};
+            "observations.reasonForRequest", "observations.hpvSamplingMethod" };
 
     @Autowired
     private SamplePatientEntryFormValidator formValidator;
@@ -465,19 +452,15 @@ public class SamplePatientEntryRestController extends BaseSampleEntryController 
         return (form);
     }
 
-
-        /**
-     * POST /rest/SampleEntryByProjectSudyViralLoad
-     * Enregistre le formulaire de saisie charge virale.
-     * Utilise les beans ISampleSecondEntry, ISampleEntry, ISampleEntryAfterPatientEntry
+    /**
+     * POST /rest/SampleEntryByProjectSudyViralLoad Enregistre le formulaire de
+     * saisie charge virale. Utilise les beans ISampleSecondEntry, ISampleEntry,
+     * ISampleEntryAfterPatientEntry
      */
-    @PostMapping(value = "SampleEntryByProjectSudyViralLoad",
-            consumes = MediaType.APPLICATION_JSON_VALUE,
-            produces = MediaType.APPLICATION_JSON_VALUE)
+    @PostMapping(value = "SampleEntryByProjectSudyViralLoad", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
     public ResponseEntity<SampleEntryByProjectForm> saveForm(HttpServletRequest request,
-            @RequestBody SampleEntryByProjectForm form,
-            BindingResult result) {
+            @RequestBody SampleEntryByProjectForm form, BindingResult result) {
 
         // Tentative via ISampleSecondEntry (re-saisie)
         try {
@@ -607,7 +590,6 @@ public class SamplePatientEntryRestController extends BaseSampleEntryController 
         organizationTypeMapOfLists.put("EID_ORGS_BY_NAME", OrganizationTypeList.EID_ORGS_BY_NAME.getList());
         form.setOrganizationTypeLists(organizationTypeMapOfLists);
     }
-
 
     private void setupForm(SamplePatientEntryForm form, HttpServletRequest request, String externalOrderNumber)
             throws LIMSRuntimeException, IllegalAccessException, InvocationTargetException, NoSuchMethodException {

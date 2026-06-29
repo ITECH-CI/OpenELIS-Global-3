@@ -732,8 +732,8 @@ public class ResultsLoadUtility {
 
         // Cross-source dedup by (accessionNumber, testId).
         // A child test may be emitted twice:
-        //   - as a "virtual" item by loadChildTestItems (no analysisId), and
-        //   - as a real item when its own Analysis row exists in DB.
+        // - as a "virtual" item by loadChildTestItems (no analysisId), and
+        // - as a real item when its own Analysis row exists in DB.
         // Keep the real one (it has a non-empty analysisId so it can be saved/edited).
         testList = dedupKeepingRealAnalysis(testList);
 
