@@ -17,8 +17,12 @@ export default function Layout(props) {
   const [notifications, setNotifications] = useState([]);
 
   const addNotification = (notificationBody) => {
-    // Clear previous notifications before adding new one to prevent stacking
-    setNotifications([notificationBody]);
+    // Clear previous notifications before adding new one to prevent stacking.
+    // Stamp a unique id so the toast re-mounts even when the same message is
+    // shown twice in a row (e.g. re-submitting a form still missing a required
+    // field). Without it the toast keeps a stable key, never re-renders after
+    // its first timeout, and the notification silently fails to reappear.
+    setNotifications([{ ...notificationBody, _id: Date.now() + Math.random() }]);
   };
 
   const removeNotification = (index) => {

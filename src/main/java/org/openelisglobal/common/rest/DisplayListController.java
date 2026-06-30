@@ -398,6 +398,14 @@ public class DisplayListController extends BaseRestController {
                 ConfigurationProperties.getInstance().getPropertyValue(Property.SHOW_SAMPLE_QUANTITY_AND_UOM));
         configs.put(Property.SEROLOGY_CONTROL.toString(),
                 ConfigurationProperties.getInstance().getPropertyValue(Property.SEROLOGY_CONTROL));
+        // Patient identifier required flags so the frontend can mirror them
+        // (red asterisk + validation) instead of only failing at backend submit.
+        configs.put(Property.PATIENT_SUBJECT_NUMBER_REQUIRED.toString(),
+                ConfigurationProperties.getInstance().getPropertyValue(Property.PATIENT_SUBJECT_NUMBER_REQUIRED));
+        configs.put(Property.PATIENT_NATIONAL_ID_REQUIRED.toString(),
+                ConfigurationProperties.getInstance().getPropertyValue(Property.PATIENT_NATIONAL_ID_REQUIRED));
+        configs.put(Property.PATIENT_ID_REQUIRED.toString(),
+                ConfigurationProperties.getInstance().getPropertyValue(Property.PATIENT_ID_REQUIRED));
         return configs;
     }
 

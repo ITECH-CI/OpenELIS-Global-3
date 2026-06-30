@@ -18,7 +18,7 @@ export const AlertDialog = () => {
         notifications.map((notificationBody, index) => {
           return (
             <ToastNotification
-              key={index}
+              key={notificationBody._id ?? index}
               title={notificationBody.title}
               timeout={
                 notificationBody.kind !== NotificationKinds.error ? 2000 : 3000

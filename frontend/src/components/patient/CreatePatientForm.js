@@ -6,7 +6,7 @@ import {
   differenceInYears,
 } from "date-fns";
 import format from "date-fns/format";
-import { useContext, useEffect, useRef, useState } from "react";
+import { useContext, useEffect, useMemo, useRef, useState } from "react";
 import { FormattedMessage, injectIntl, useIntl } from "react-intl";
 import { nationalityList } from "../data/countries";
 import "../Style.css";
@@ -33,7 +33,7 @@ import { ErrorMessage, Field, Formik } from "formik";
 import CustomDatePicker from "../common/CustomDatePicker";
 import { AlertDialog, NotificationKinds } from "../common/CustomNotification";
 import CreatePatientFormValues from "../formModel/innitialValues/CreatePatientFormValues";
-import CreatePatientValidationSchema from "../formModel/validationSchema/CreatePatientValidationShema";
+import { buildCreatePatientValidationSchema } from "../formModel/validationSchema/CreatePatientValidationShema";
 import { ConfigurationContext, NotificationContext } from "../layout/Layout";
 import PatientFormObserver, { bacterioFields } from "./PatientFormObserver";
 
@@ -43,6 +43,19 @@ function CreatePatientForm(props) {
   const { notificationVisible, setNotificationVisible, addNotification } =
     useContext(NotificationContext);
   const { configurationProperties } = useContext(ConfigurationContext);
+
+  // Patient identifier required flags mirrored from site_information config.
+  const subjectNumberRequired =
+    String(configurationProperties?.PATIENT_SUBJECT_NUMBER_REQUIRED) === "true";
+  const nationalIdRequired =
+    String(configurationProperties?.PATIENT_NATIONAL_ID_REQUIRED) === "true";
+
+  // Validation schema rebuilt whenever the required flags change so Formik
+  // enforces the same rules the backend already applies.
+  const validationSchema = useMemo(
+    () => buildCreatePatientValidationSchema(configurationProperties),
+    [configurationProperties],
+  );
 
   const intl = useIntl();
 
@@ -493,7 +506,7 @@ function CreatePatientForm(props) {
       <Formik
         initialValues={patientDetails}
         enableReinitialize
-        validationSchema={CreatePatientValidationSchema}
+        validationSchema={validationSchema}
         validateOnChange={false}
         validateOnBlur={true}
         onSubmit={handleSubmit}
@@ -545,9 +558,16 @@ function CreatePatientForm(props) {
                       <TextInput
                         value={values.subjectNumber || ""}
                         name={field.name}
-                        labelText={intl.formatMessage({
-                          id: "patient.subject.number",
-                        })}
+                        labelText={
+                          <>
+                            {intl.formatMessage({
+                              id: "patient.subject.number",
+                            })}
+                            {subjectNumberRequired && (
+                              <span className="requiredlabel">*</span>
+                            )}
+                          </>
+                        }
                         id={field.name}
                         invalid={errors.subjectNumber && touched.subjectNumber}
                         invalidText={errors.subjectNumber}
@@ -579,6 +599,9 @@ function CreatePatientForm(props) {
                           {intl.formatMessage({
                             id: "patient.natioanalid",
                           })}
+                          {nationalIdRequired && (
+                            <span className="requiredlabel">*</span>
+                          )}
                         </>
                       }
                       id={field.name}
