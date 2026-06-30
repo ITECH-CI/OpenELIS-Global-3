@@ -121,6 +121,11 @@ public class SampleDAOImpl extends BaseDAOImpl<Sample, String> implements Sample
     @Override
     @Transactional(readOnly = true)
     public void getSampleByAccessionNumber(Sample sample) throws LIMSRuntimeException {
+        // A null accession matches no sample. Guard against binding a typeless null
+        // (PostgreSQL infers bytea and fails the "varchar = bytea" comparison).
+        if (sample == null || sample.getAccessionNumber() == null) {
+            return;
+        }
         try {
             String sql = "from Sample s where s.accessionNumber = :param";
             Query<Sample> query = entityManager.unwrap(Session.class).createQuery(sql, Sample.class);
@@ -249,6 +254,12 @@ public class SampleDAOImpl extends BaseDAOImpl<Sample, String> implements Sample
     @Override
     @Transactional(readOnly = true)
     public Sample getSampleByAccessionNumber(String accessionNumber) throws LIMSRuntimeException {
+        // A null accession matches no sample. Guard here so we never bind a typeless
+        // null parameter, which PostgreSQL infers as bytea and then fails the
+        // "varchar = bytea" comparison.
+        if (accessionNumber == null) {
+            return null;
+        }
         Sample sample = null;
         try {
             String sql = "from Sample s where accession_number = :param";
