@@ -58,6 +58,7 @@ public class BacteriologyValidationForm {
         private List<String> macroscopy;
         private List<String> microscopy;
         private List<String> culture;
+        private List<String> chemistry;
         private List<String> organisms;
 
         public List<String> getMacroscopy() {
@@ -82,6 +83,14 @@ public class BacteriologyValidationForm {
 
         public void setCulture(List<String> culture) {
             this.culture = culture;
+        }
+
+        public List<String> getChemistry() {
+            return chemistry;
+        }
+
+        public void setChemistry(List<String> chemistry) {
+            this.chemistry = chemistry;
         }
 
         public List<String> getOrganisms() {
@@ -97,6 +106,7 @@ public class BacteriologyValidationForm {
         private List<String> macroscopy;
         private List<String> microscopy;
         private List<String> culture;
+        private List<String> chemistry;
         private List<String> organisms;
 
         public List<String> getMacroscopy() {
@@ -121,6 +131,14 @@ public class BacteriologyValidationForm {
 
         public void setCulture(List<String> culture) {
             this.culture = culture;
+        }
+
+        public List<String> getChemistry() {
+            return chemistry;
+        }
+
+        public void setChemistry(List<String> chemistry) {
+            this.chemistry = chemistry;
         }
 
         public List<String> getOrganisms() {

@@ -49,12 +49,14 @@ const BacteriologyValidation = ({
   const [macroscopyValidation, setMacroscopyValidation] = useState({});
   const [microscopyValidation, setMicroscopyValidation] = useState({});
   const [cultureValidation, setCultureValidation] = useState({});
+  const [chemistryValidation, setChemistryValidation] = useState({});
   const [organismValidation, setOrganismValidation] = useState({});
 
   // Rejection flags
   const [macroscopyRejection, setMacroscopyRejection] = useState({});
   const [microscopyRejection, setMicroscopyRejection] = useState({});
   const [cultureRejection, setCultureRejection] = useState({});
+  const [chemistryRejection, setChemistryRejection] = useState({});
   const [organismRejection, setOrganismRejection] = useState({});
 
   // Notes/interpretation state
@@ -106,6 +108,9 @@ const BacteriologyValidation = ({
       culture: Object.keys(cultureValidation).filter(
         (k) => cultureValidation[k],
       ),
+      chemistry: Object.keys(chemistryValidation).filter(
+        (k) => chemistryValidation[k],
+      ),
     };
 
     // Collect rejected items (no organisms - they are rejected with their culture)
@@ -117,6 +122,9 @@ const BacteriologyValidation = ({
         (k) => microscopyRejection[k],
       ),
       culture: Object.keys(cultureRejection).filter((k) => cultureRejection[k]),
+      chemistry: Object.keys(chemistryRejection).filter(
+        (k) => chemistryRejection[k],
+      ),
     };
 
     const formData = {
@@ -142,10 +150,12 @@ const BacteriologyValidation = ({
         setMacroscopyValidation({});
         setMicroscopyValidation({});
         setCultureValidation({});
+        setChemistryValidation({});
         setOrganismValidation({});
         setMacroscopyRejection({});
         setMicroscopyRejection({});
         setCultureRejection({});
+        setChemistryRejection({});
         setOrganismRejection({});
 
         // Reload data
@@ -173,10 +183,12 @@ const BacteriologyValidation = ({
     setMacroscopyValidation({});
     setMicroscopyValidation({});
     setCultureValidation({});
+    setChemistryValidation({});
     setOrganismValidation({});
     setMacroscopyRejection({});
     setMicroscopyRejection({});
     setCultureRejection({});
+    setChemistryRejection({});
     setOrganismRejection({});
   };
 
@@ -184,6 +196,7 @@ const BacteriologyValidation = ({
     const newMacroValidation = {};
     const newMicroValidation = {};
     const newCultureValidation = {};
+    const newChemistryValidation = {};
 
     // Check all macroscopy
     if (data?.macroscopyResults && Array.isArray(data.macroscopyResults)) {
@@ -206,20 +219,30 @@ const BacteriologyValidation = ({
       });
     }
 
+    // Check all chemistry
+    if (data?.chemistryResults && Array.isArray(data.chemistryResults)) {
+      data.chemistryResults.forEach((testResult) => {
+        newChemistryValidation[testResult.testId] = true;
+      });
+    }
+
     setMacroscopyValidation(newMacroValidation);
     setMicroscopyValidation(newMicroValidation);
     setCultureValidation(newCultureValidation);
+    setChemistryValidation(newChemistryValidation);
 
     // Clear rejections
     setMacroscopyRejection({});
     setMicroscopyRejection({});
     setCultureRejection({});
+    setChemistryRejection({});
   };
 
   const handleRejectAll = () => {
     const newMacroRejection = {};
     const newMicroRejection = {};
     const newCultureRejection = {};
+    const newChemistryRejection = {};
 
     // Check all macroscopy rejections
     if (data?.macroscopyResults && Array.isArray(data.macroscopyResults)) {
@@ -242,14 +265,23 @@ const BacteriologyValidation = ({
       });
     }
 
+    // Check all chemistry rejections
+    if (data?.chemistryResults && Array.isArray(data.chemistryResults)) {
+      data.chemistryResults.forEach((testResult) => {
+        newChemistryRejection[testResult.testId] = true;
+      });
+    }
+
     setMacroscopyRejection(newMacroRejection);
     setMicroscopyRejection(newMicroRejection);
     setCultureRejection(newCultureRejection);
+    setChemistryRejection(newChemistryRejection);
 
     // Clear validations
     setMacroscopyValidation({});
     setMicroscopyValidation({});
     setCultureValidation({});
+    setChemistryValidation({});
   };
 
   if (loading) {
@@ -341,6 +373,7 @@ const BacteriologyValidation = ({
                 (data.macroscopyResults?.length || 0) +
                 (data.microscopyResults?.length || 0) +
                 (data.cultureResults?.length || 0) +
+                (data.chemistryResults?.length || 0) +
                 (data.organisms?.length || 0);
               return `${totalTests} test${totalTests > 1 ? "s" : ""}`;
             })()}
@@ -1108,6 +1141,107 @@ const BacteriologyValidation = ({
               </div>
             );
           })()}
+
+        {/* Chemistry Section (Glucose, Protéine) */}
+        {data.chemistryResults && data.chemistryResults.length > 0 && (
+          <div>
+            <h4>
+              <FormattedMessage
+                id="bacteriology.chemistry.title"
+                defaultMessage="Chimie"
+              />
+            </h4>
+            <TableContainer>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableHeader>
+                      <FormattedMessage id="column.name.testName" />
+                    </TableHeader>
+                    <TableHeader>
+                      <FormattedMessage id="column.name.result" />
+                    </TableHeader>
+                    <TableHeader>
+                      <FormattedMessage id="column.name.save" />
+                    </TableHeader>
+                    <TableHeader>
+                      <FormattedMessage id="column.name.retest" />
+                    </TableHeader>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {data.chemistryResults.map((testResult) => (
+                    <TableRow key={`chem-${testResult.testId}`}>
+                      <TableCell>
+                        {formatTestName(testResult.testName)}
+                        {testResult.testDescription &&
+                          testResult.testDescription !==
+                            testResult.testName && (
+                            <div
+                              style={{ fontSize: "0.875rem", color: "#525252" }}
+                            >
+                              {testResult.testDescription}
+                            </div>
+                          )}
+                      </TableCell>
+                      <TableCell>
+                        <span style={{ whiteSpace: "pre-line" }}>
+                          {testResult.displayValue}
+                          {testResult.unitOfMeasure &&
+                            ` ${testResult.unitOfMeasure}`}
+                        </span>
+                      </TableCell>
+                      <TableCell>
+                        <Checkbox
+                          id={`chem-validate-${testResult.testId}`}
+                          labelText=""
+                          checked={
+                            chemistryValidation[testResult.testId] || false
+                          }
+                          onChange={(e) => {
+                            setChemistryValidation({
+                              ...chemistryValidation,
+                              [testResult.testId]: e.target.checked,
+                            });
+                            if (e.target.checked) {
+                              setChemistryRejection({
+                                ...chemistryRejection,
+                                [testResult.testId]: false,
+                              });
+                            }
+                          }}
+                          disabled={disabled || saving}
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Checkbox
+                          id={`chem-reject-${testResult.testId}`}
+                          labelText=""
+                          checked={
+                            chemistryRejection[testResult.testId] || false
+                          }
+                          onChange={(e) => {
+                            setChemistryRejection({
+                              ...chemistryRejection,
+                              [testResult.testId]: e.target.checked,
+                            });
+                            if (e.target.checked) {
+                              setChemistryValidation({
+                                ...chemistryValidation,
+                                [testResult.testId]: false,
+                              });
+                            }
+                          }}
+                          disabled={disabled || saving}
+                        />
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </div>
+        )}
 
         {/* Sample Interpretation / Notes Section */}
         <div style={{ marginTop: "1.5rem" }}>

@@ -87,6 +87,12 @@ public class ResultServiceImpl extends AuditableBaseObjectServiceImpl<Result, St
         return baseObjectDAO.getAllMatchingOrdered("analysis.id", analysis.getId(), "id", false);
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public String getUomIdForResult(String resultId) {
+        return baseObjectDAO.getUomIdForResult(resultId);
+    }
+
     @Transactional(readOnly = true)
     public String getLabSectionName(Result result) {
         return result.getAnalysis().getTestSection().getName();

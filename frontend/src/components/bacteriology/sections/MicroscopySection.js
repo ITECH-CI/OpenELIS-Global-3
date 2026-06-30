@@ -5,19 +5,30 @@ import BacteriologyResultField from "../common/BacteriologyResultField";
 import ConditionalTestGroup from "../ConditionalTestGroup";
 import FloraList from "../FloraList";
 
-// Whitelist of tests for which the user may switch the unit of measure
-// between mm³ and num/champ at result entry time (Etat frais Quantitatif).
-const UOM_SELECTABLE_TEST_IDS = new Set(["486", "487", "567", "568"]);
-const UOM_OPTIONS = [
-  { id: "7", value: "mm3", label: "mm³" },
-  { id: "165", value: "num/champ", label: "num/champ" },
-];
+// Tests for which the user may switch the unit of measure between mm³ and
+// num/champ at result entry time are identified BY NAME, not by id: test ids
+// are sequence-generated and differ between databases (a hardcoded id list
+// silently attached the unit picker to the wrong tests in prod). These are the
+// "Microscopie - Etat frais Quantitatif - Hématies/Leucocytes" tests (with or
+// without a sample-type suffix like "Sécrétion vaginale").
+const isUomSelectableTest = (testName) => {
+  if (!testName) return false;
+  const normalized = testName
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+  return (
+    normalized.includes("etat frais quantitatif") &&
+    (normalized.includes("hematies") || normalized.includes("leucocytes"))
+  );
+};
 
 const MicroscopySection = ({
   accessionNumber,
   testResults = [],
   microscopyResults = {},
   microscopyUoms = {},
+  microscopyUomOptions = [],
   floraData = {},
   onChange,
   onUomChange,
@@ -191,9 +202,9 @@ const MicroscopySection = ({
               const isMultiSelect = test.resultType === "M";
               const uniqueKey = `${test.analysisId}-${test.testId}`;
               const cleanedName = cleanTestName(test.testName);
-              const uomSelectable = UOM_SELECTABLE_TEST_IDS.has(
-                String(test.testId),
-              );
+              const uomSelectable =
+                isUomSelectableTest(test.testName) &&
+                microscopyUomOptions.length > 0;
               const selectedUomId =
                 effectiveUoms[test.testId] != null
                   ? String(effectiveUoms[test.testId])
@@ -250,10 +261,10 @@ const MicroscopySection = ({
                           disabled={disabled}
                         >
                           <SelectItem value="" text="Choisir..." />
-                          {UOM_OPTIONS.map((opt) => (
+                          {microscopyUomOptions.map((opt) => (
                             <SelectItem
                               key={opt.id}
-                              value={opt.id}
+                              value={String(opt.id)}
                               text={opt.label}
                             />
                           ))}

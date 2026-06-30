@@ -150,17 +150,27 @@ public interface BacteriologyWorkflowService {
         private List<BacteriologyTestResultBean> macroscopyResults = new ArrayList<>();
         private List<BacteriologyTestResultBean> microscopyResults = new ArrayList<>();
         private List<BacteriologyTestResultBean> cultureResults = new ArrayList<>();
+        // Chemistry tests (Glucose, Protéine) shown as a dedicated section after
+        // culture; they belong to bacteriology samples (e.g. LCR) but are not
+        // macroscopy/microscopy/culture.
+        private List<BacteriologyTestResultBean> chemistryResults = new ArrayList<>();
 
         // Test results as maps (testId -> value) for easy lookup and automatic
         // deduplication
         private Map<String, String> macroscopyResultsMap = new HashMap<>();
         private Map<String, String> microscopyResultsMap = new HashMap<>();
         private Map<String, String> cultureResultsMap = new HashMap<>();
+        private Map<String, String> chemistryResultsMap = new HashMap<>();
 
         // Per-result UoM overrides for microscopy (testId -> uom_id). Only
         // populated for results that have a non-null result.uom_id; the
         // frontend uses it to pre-select the unit picker.
         private Map<String, String> microscopyUomsMap = new HashMap<>();
+
+        // Selectable units for the microscopy quantitative tests, resolved by
+        // name on the server (id is sequence-generated and differs per DB, so
+        // the frontend must NOT hardcode it). Each entry: {id, label}.
+        private List<Map<String, String>> microscopyUomOptions = new ArrayList<>();
 
         // Biologist's interpretation note (loaded from observation_history)
         private String sampleInterpretation;
@@ -221,6 +231,14 @@ public interface BacteriologyWorkflowService {
             this.cultureResults = cultureResults;
         }
 
+        public List<BacteriologyTestResultBean> getChemistryResults() {
+            return chemistryResults;
+        }
+
+        public void setChemistryResults(List<BacteriologyTestResultBean> chemistryResults) {
+            this.chemistryResults = chemistryResults;
+        }
+
         public String getSampleTypeName() {
             return sampleTypeName;
         }
@@ -253,12 +271,28 @@ public interface BacteriologyWorkflowService {
             this.cultureResultsMap = cultureResultsMap;
         }
 
+        public Map<String, String> getChemistryResultsMap() {
+            return chemistryResultsMap;
+        }
+
+        public void setChemistryResultsMap(Map<String, String> chemistryResultsMap) {
+            this.chemistryResultsMap = chemistryResultsMap;
+        }
+
         public Map<String, String> getMicroscopyUomsMap() {
             return microscopyUomsMap;
         }
 
         public void setMicroscopyUomsMap(Map<String, String> microscopyUomsMap) {
             this.microscopyUomsMap = microscopyUomsMap;
+        }
+
+        public List<Map<String, String>> getMicroscopyUomOptions() {
+            return microscopyUomOptions;
+        }
+
+        public void setMicroscopyUomOptions(List<Map<String, String>> microscopyUomOptions) {
+            this.microscopyUomOptions = microscopyUomOptions;
         }
 
         public String getSampleInterpretation() {

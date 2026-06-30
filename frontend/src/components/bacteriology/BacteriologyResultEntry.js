@@ -8,6 +8,7 @@ import {
   postToOpenElisServerJsonResponse,
 } from "../utils/Utils";
 import { API_ENDPOINTS } from "./BacteriologyConstants";
+import ChemistrySection from "./sections/ChemistrySection";
 import CultureSection from "./sections/CultureSection";
 import MacroscopySection from "./sections/MacroscopySection";
 import MicroscopySection from "./sections/MicroscopySection";
@@ -26,9 +27,14 @@ const BacteriologyResultEntry = ({
 
   const [macroscopyResults, setMacroscopyResults] = useState({});
   const [microscopyResults, setMicroscopyResults] = useState({});
+  // Chemistry results (Glucose, Protéine) entered in a section after culture.
+  const [chemistryResults, setChemistryResults] = useState({});
   // Per-result UoM override for microscopy tests with a selectable unit
   // (testId -> uom_id). Restored from backend on load, sent back on save.
   const [microscopyUoms, setMicroscopyUoms] = useState({});
+  // Selectable units ({id, label}) for microscopy quantitative tests, resolved
+  // by the backend by name so ids stay correct across databases/prod.
+  const [microscopyUomOptions, setMicroscopyUomOptions] = useState([]);
   const [floraData, setFloraData] = useState({});
   // Map of testId -> { cultureResult, organisms }
   const [cultures, setCultures] = useState({});
@@ -60,10 +66,20 @@ const BacteriologyResultEntry = ({
           setMicroscopyResults(data.microscopyResultsMap);
         }
 
+        // Load chemistry results from Map (testId -> value)
+        if (data && data.chemistryResultsMap) {
+          setChemistryResults(data.chemistryResultsMap);
+        }
+
         // Restore per-result UoM picker selection (testId -> uom_id) for
         // microscopy tests that override the test's default unit.
         if (data && data.microscopyUomsMap) {
           setMicroscopyUoms(data.microscopyUomsMap);
+        }
+
+        // Restore the selectable unit options resolved by the backend.
+        if (data && Array.isArray(data.microscopyUomOptions)) {
+          setMicroscopyUomOptions(data.microscopyUomOptions);
         }
 
         // Load culture results and organisms
@@ -239,6 +255,7 @@ const BacteriologyResultEntry = ({
       sysUserId: parseInt(sysUserId),
       macroscopyResults,
       microscopyResults,
+      chemistryResults,
       microscopyUoms,
       floraData,
       // For backward compatibility, use first culture's result or empty
@@ -388,6 +405,7 @@ const BacteriologyResultEntry = ({
           testResults={testResults}
           microscopyResults={microscopyResults}
           microscopyUoms={microscopyUoms}
+          microscopyUomOptions={microscopyUomOptions}
           floraData={floraData}
           onChange={setMicroscopyResults}
           onUomChange={setMicroscopyUoms}
@@ -400,6 +418,14 @@ const BacteriologyResultEntry = ({
           testResults={testResults}
           cultures={cultures}
           onCulturesChange={setCultures}
+          disabled={disabled || saving}
+        />
+
+        <ChemistrySection
+          accessionNumber={accessionNumber}
+          testResults={testResults}
+          chemistryResults={chemistryResults}
+          onChange={setChemistryResults}
           disabled={disabled || saving}
         />
 

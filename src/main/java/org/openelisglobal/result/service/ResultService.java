@@ -18,6 +18,12 @@ public interface ResultService extends BaseObjectService<Result, String> {
 
     List<Result> getResultsByAnalysis(Analysis analysis);
 
+    /**
+     * Read the per-result UoM override id (result.uom_id) without initializing the
+     * lazy uom association. Returns null when no override is set.
+     */
+    String getUomIdForResult(String resultId);
+
     List<Result> getResultsForAnalysisIdList(List<Integer> analysisIdList);
 
     List<Result> getResultsForPanelInDateRange(String panelId, Date lowDate, Date highDate);

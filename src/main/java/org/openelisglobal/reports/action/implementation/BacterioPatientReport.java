@@ -67,7 +67,19 @@ public class BacterioPatientReport extends PatientReport implements IReportCreat
     private static final int TYPE_ORDER_MACROSCOPY = 1;
     private static final int TYPE_ORDER_MICROSCOPY = 2;
     private static final int TYPE_ORDER_CULTURE = 3;
+    // Chemistry (Glucose, Protéine) is rendered after culture.
+    private static final int TYPE_ORDER_CHEMISTRY = 4;
     private static final int TYPE_ORDER_OTHER = 99;
+
+    // Chemistry test names (case-insensitive) used to route Glucose/Protéine to
+    // the dedicated "Chimie" section in the report.
+    private static boolean isChemistryName(String name) {
+        if (name == null) {
+            return false;
+        }
+        String n = name.toLowerCase();
+        return n.contains("glucose") || n.contains("protéine") || n.contains("proteine");
+    }
 
     static {
         analysisStatusIds = new HashSet<>();
@@ -614,6 +626,10 @@ public class BacterioPatientReport extends PatientReport implements IReportCreat
             return MessageUtil.getMessage("bacteriology.section.culture");
         }
 
+        if (isChemistryName(keyword)) {
+            return MessageUtil.getMessage("bacteriology.section.chemistry");
+        }
+
         return MessageUtil.getMessage("bacteriology.section.other");
     }
 
@@ -648,6 +664,11 @@ public class BacterioPatientReport extends PatientReport implements IReportCreat
             return MessageUtil.getMessage("bacteriology.section.culture");
         }
 
+        // Check for Chemistry tests (Glucose, Protéine)
+        if (isChemistryName(combinedName)) {
+            return MessageUtil.getMessage("bacteriology.section.chemistry");
+        }
+
         return MessageUtil.getMessage("bacteriology.section.other");
     }
 
@@ -663,6 +684,7 @@ public class BacterioPatientReport extends PatientReport implements IReportCreat
         String macroscopy = MessageUtil.getMessage("bacteriology.section.macroscopy");
         String microscopy = MessageUtil.getMessage("bacteriology.section.microscopy");
         String culture = MessageUtil.getMessage("bacteriology.section.culture");
+        String chemistry = MessageUtil.getMessage("bacteriology.section.chemistry");
 
         if (testSection.equals(macroscopy)) {
             return TYPE_ORDER_MACROSCOPY;
@@ -670,6 +692,8 @@ public class BacterioPatientReport extends PatientReport implements IReportCreat
             return TYPE_ORDER_MICROSCOPY;
         } else if (testSection.equals(culture)) {
             return TYPE_ORDER_CULTURE;
+        } else if (testSection.equals(chemistry)) {
+            return TYPE_ORDER_CHEMISTRY;
         }
 
         return TYPE_ORDER_OTHER;
@@ -1182,14 +1206,24 @@ public class BacterioPatientReport extends PatientReport implements IReportCreat
         }
 
         // Lookup the most recent Result for this analysis; prefer its UoM override.
+        // The override id is read via a FK projection (getUomIdForResult) instead
+        // of the lazy r.getUom*(): the latter returns null here because the result
+        // is detached when the report renders, which is why the report previously
+        // always fell back to the test's default unit (e.g. always "/mm3").
         String uom = data.getUom();
         try {
             List<Result> results = analysisService.getResults(analysis);
             if (results != null && !results.isEmpty()) {
                 Result r = results.get(0);
-                String overrideName = r.getUomName();
-                if (overrideName != null && !overrideName.trim().isEmpty()) {
-                    uom = overrideName;
+                String overrideUomId = SpringContext.getBean(ResultService.class).getUomIdForResult(r.getId());
+                if (overrideUomId != null && !overrideUomId.trim().isEmpty()) {
+                    org.openelisglobal.unitofmeasure.valueholder.UnitOfMeasure overrideUom = SpringContext
+                            .getBean(org.openelisglobal.unitofmeasure.service.UnitOfMeasureService.class)
+                            .getUnitOfMeasureById(overrideUomId);
+                    if (overrideUom != null && overrideUom.getUnitOfMeasureName() != null
+                            && !overrideUom.getUnitOfMeasureName().trim().isEmpty()) {
+                        uom = overrideUom.getUnitOfMeasureName();
+                    }
                 }
             }
         } catch (RuntimeException ignored) {

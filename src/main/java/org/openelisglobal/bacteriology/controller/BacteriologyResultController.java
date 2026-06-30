@@ -206,11 +206,13 @@ public class BacteriologyResultController extends BaseController {
             java.util.Map<String, BacteriologyWorkflowService.BacteriologyTestResultBean> macroscopyMap = new java.util.LinkedHashMap<>();
             java.util.Map<String, BacteriologyWorkflowService.BacteriologyTestResultBean> microscopyMap = new java.util.LinkedHashMap<>();
             java.util.Map<String, BacteriologyWorkflowService.BacteriologyTestResultBean> cultureMap = new java.util.LinkedHashMap<>();
+            java.util.Map<String, BacteriologyWorkflowService.BacteriologyTestResultBean> chemistryMap = new java.util.LinkedHashMap<>();
 
             // Also build simple Maps (testId -> value) for result entry form
             java.util.Map<String, String> macroscopyResultsMap = new java.util.HashMap<>();
             java.util.Map<String, String> microscopyResultsMap = new java.util.HashMap<>();
             java.util.Map<String, String> cultureResultsMap = new java.util.HashMap<>();
+            java.util.Map<String, String> chemistryResultsMap = new java.util.HashMap<>();
 
             // Per-result UoM overrides for microscopy (testId -> uom_id). Lets
             // the frontend restore the unit picker selection on reload.
@@ -300,6 +302,9 @@ public class BacteriologyResultController extends BaseController {
                     } else if (lowerName.contains("culture") || test.getIsCultureTest()) {
                         cultureMap.put(testId, testResultBean);
                         cultureResultsMap.put(testId, value);
+                    } else if (isChemistryTest(testName)) {
+                        chemistryMap.put(testId, testResultBean);
+                        chemistryResultsMap.put(testId, value);
                     }
                 }
             }
@@ -434,12 +439,15 @@ public class BacteriologyResultController extends BaseController {
             resultData.setMacroscopyResults(new java.util.ArrayList<>(macroscopyMap.values()));
             resultData.setMicroscopyResults(new java.util.ArrayList<>(microscopyMap.values()));
             resultData.setCultureResults(new java.util.ArrayList<>(cultureMap.values()));
+            resultData.setChemistryResults(new java.util.ArrayList<>(chemistryMap.values()));
 
             // Set simple Maps for result entry form
             resultData.setMacroscopyResultsMap(macroscopyResultsMap);
             resultData.setMicroscopyResultsMap(microscopyResultsMap);
             resultData.setCultureResultsMap(cultureResultsMap);
+            resultData.setChemistryResultsMap(chemistryResultsMap);
             resultData.setMicroscopyUomsMap(microscopyUomsMap);
+            resultData.setMicroscopyUomOptions(buildMicroscopyUomOptions());
 
         } catch (Exception e) {
             LogEvent.logError("BacteriologyResultController", "loadTestResults",
@@ -605,6 +613,27 @@ public class BacteriologyResultController extends BaseController {
             }
         }
 
+        // Save chemistry results (Glucose, Protéine)
+        if (form.getChemistryResults() != null && !form.getChemistryResults().isEmpty()) {
+            for (Map.Entry<String, String> entry : form.getChemistryResults().entrySet()) {
+                String testId = entry.getKey();
+                String value = entry.getValue();
+
+                // Skip empty values
+                if (value == null || value.trim().isEmpty()) {
+                    continue;
+                }
+
+                // Find or create the analysis for this specific test
+                org.openelisglobal.analysis.valueholder.Analysis analysis = findOrCreateAnalysisForTest(
+                        primaryAnalysis.getSampleItem(), testId, form.getSysUserId());
+                if (analysis != null) {
+                    testIdToAnalysisIdMap.put(testId, Integer.parseInt(analysis.getId()));
+                    saveOrUpdateResult(analysis, testId, value, null, form.getSysUserId());
+                }
+            }
+        }
+
         // Save microscopy results
         if (form.getMicroscopyResults() != null && !form.getMicroscopyResults().isEmpty()) {
             Map<String, String> microscopyUoms = form.getMicroscopyUoms() != null ? form.getMicroscopyUoms()
@@ -740,6 +769,56 @@ public class BacteriologyResultController extends BaseController {
             LogEvent.logError(e);
             return null;
         }
+    }
+
+    // Bacteriology chemistry tests (e.g. on LCR) that are neither macroscopy,
+    // microscopy nor culture, but must be entered/validated/reported in the
+    // bacteriology workflow. Matched by SUBSTRING (case-insensitive): the test
+    // name often carries a sample-type suffix, e.g. "Glucose(LCR)".
+    private static final java.util.List<String> CHEMISTRY_TEST_NAMES = java.util.List.of("glucose", "protéine",
+            "proteine");
+
+    private static boolean isChemistryTest(String testName) {
+        if (testName == null) {
+            return false;
+        }
+        String lower = testName.toLowerCase();
+        return CHEMISTRY_TEST_NAMES.stream().anyMatch(lower::contains);
+    }
+
+    // UoM names offered at microscopy quantitative result entry. Resolved to
+    // their DB ids by name here so the frontend never hardcodes ids (which are
+    // sequence-generated and differ between databases/prod).
+    private static final String[] MICROSCOPY_UOM_NAMES = { "mm3", "num/champ" };
+
+    private static final java.util.Map<String, String> MICROSCOPY_UOM_LABELS = java.util.Map.of("mm3", "mm³",
+            "num/champ", "num/champ");
+
+    /**
+     * Build the list of selectable units ({id, label}) for the microscopy
+     * quantitative tests, resolving each unit by name. Units missing from the
+     * current database are skipped.
+     */
+    private List<java.util.Map<String, String>> buildMicroscopyUomOptions() {
+        List<java.util.Map<String, String>> options = new ArrayList<>();
+        for (String name : MICROSCOPY_UOM_NAMES) {
+            try {
+                org.openelisglobal.unitofmeasure.valueholder.UnitOfMeasure probe = new org.openelisglobal.unitofmeasure.valueholder.UnitOfMeasure();
+                probe.setUnitOfMeasureName(name);
+                org.openelisglobal.unitofmeasure.valueholder.UnitOfMeasure uom = unitOfMeasureService
+                        .getUnitOfMeasureByName(probe);
+                if (uom != null && uom.getId() != null) {
+                    java.util.Map<String, String> opt = new java.util.HashMap<>();
+                    opt.put("id", uom.getId());
+                    opt.put("label", MICROSCOPY_UOM_LABELS.getOrDefault(name, name));
+                    options.add(opt);
+                }
+            } catch (Exception ex) {
+                LogEvent.logWarn("BacteriologyResultController", "buildMicroscopyUomOptions",
+                        "Unit of measure not found by name: " + name + " (" + ex.getMessage() + ")");
+            }
+        }
+        return options;
     }
 
     /**
@@ -1065,6 +1144,9 @@ public class BacteriologyResultController extends BaseController {
                 if (validated.getCulture() != null) {
                     allValidatedTestIds.addAll(validated.getCulture());
                 }
+                if (validated.getChemistry() != null) {
+                    allValidatedTestIds.addAll(validated.getChemistry());
+                }
             }
 
             if (rejected != null) {
@@ -1076,6 +1158,9 @@ public class BacteriologyResultController extends BaseController {
                 }
                 if (rejected.getCulture() != null) {
                     allRejectedTestIds.addAll(rejected.getCulture());
+                }
+                if (rejected.getChemistry() != null) {
+                    allRejectedTestIds.addAll(rejected.getChemistry());
                 }
             }
 

@@ -53,6 +53,12 @@ public interface ResultDAO extends BaseDAO<Result, String> {
 
     List<Result> getResultsByAnalysis(Analysis analysis) throws LIMSRuntimeException;
 
+    /**
+     * Read the per-result UoM override id (result.uom_id) without initializing the
+     * lazy uom association. Returns null when no override is set.
+     */
+    String getUomIdForResult(String resultId) throws LIMSRuntimeException;
+
     List<Result> getReportableResultsByAnalysis(Analysis analysis) throws LIMSRuntimeException;
 
     Result getResultForAnalyteInAnalysisSet(String analyteId, List<Integer> analysisIDList) throws LIMSRuntimeException;
