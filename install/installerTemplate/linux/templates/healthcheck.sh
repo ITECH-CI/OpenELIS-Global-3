@@ -9,7 +9,10 @@ while [ -h "$SOURCE" ]; do # resolve $SOURCE until the file is no longer a symli
 done
 scriptDir="$( cd -P "$( dirname "$SOURCE" )" >/dev/null 2>&1 && pwd )"
 
-if [ $(curl --fail --silent http://fhir.openelis.org:8080/fhir/Task?status=requested -o /dev/null -w '%{http_code}' -s) == "200" ]; then
+# FHIR health = the CapabilityStatement (lightweight, always available once the
+# server is up). Cheaper than querying resources (e.g. Task?status=requested).
+# Uses localhost so this check is valid inside the FHIR container itself.
+if [ $(curl --fail --silent http://localhost:8080/fhir/metadata -o /dev/null -w '%{http_code}' -s) == "200" ]; then
     exit 0;
 else
     exit 1;

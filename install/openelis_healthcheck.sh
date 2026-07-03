@@ -9,7 +9,8 @@ while [ -h "$SOURCE" ]; do # resolve $SOURCE until the file is no longer a symli
 done
 scriptDir="$( cd -P "$( dirname "$SOURCE" )" >/dev/null 2>&1 && pwd )"
 
-if [ $(curl --fail --silent http://oe.openelis.org:8080/api/OpenELIS-Global/health -o /dev/null -w '%{http_code}' -s) == "200" ]; then
+# Runs inside the webapp container: use localhost (no DNS dependency).
+if [ $(curl --fail --silent http://localhost:8080/api/OpenELIS-Global/health -o /dev/null -w '%{http_code}' -s) == "200" ]; then
     exit 0;
 else
     exit 1;

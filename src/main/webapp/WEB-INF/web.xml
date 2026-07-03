@@ -60,13 +60,18 @@
         </web-resource-collection>
         <auth-constraint />
     </security-constraint>
+    <!-- Simplified TLS: TLS is terminated at the nginx entry point; the backend
+         serves plain HTTP on the private Docker network. Forcing CONFIDENTIAL
+         here made Tomcat redirect every internal HTTP request to HTTPS (302),
+         which broke the container healthcheck and internal proxying. Set to
+         NONE — the edge (nginx) enforces HTTPS for external clients. -->
     <security-constraint>
         <web-resource-collection>
             <web-resource-name>HTTPSOnly</web-resource-name>
             <url-pattern>/*</url-pattern>
         </web-resource-collection>
         <user-data-constraint>
-            <transport-guarantee>CONFIDENTIAL</transport-guarantee>
+            <transport-guarantee>NONE</transport-guarantee>
         </user-data-constraint>
     </security-constraint>
     <security-constraint>
