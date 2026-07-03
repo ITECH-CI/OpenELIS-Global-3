@@ -130,6 +130,7 @@ cp Postgres_DockerImage.tar.gz        "${DEST}/dockerImage/Postgres_DockerImage.
 cp AutoHeal_DockerImage.tar.gz        "${DEST}/dockerImage/AutoHeal_DockerImage.tar.gz"
 
 chmod +x "${DEST}/scripts/"*.sh 2>/dev/null || true
+chmod +x "${DEST}/install.sh" 2>/dev/null || true
 
 # Archive finale
 cd "${INSTALLER_CREATION_DIR}/linux"

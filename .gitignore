@@ -67,3 +67,7 @@ src/main/resources/reports/backups/
 oe-build-export.sh
 oe-build-export.txt
 *.tar.gz
+
+# Python bytecode
+__pycache__/
+*.pyc

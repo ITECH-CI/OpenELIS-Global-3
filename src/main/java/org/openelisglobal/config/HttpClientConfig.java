@@ -6,6 +6,7 @@ import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.ssl.SSLContextBuilder;
+import org.openelisglobal.common.log.LogEvent;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -14,19 +15,24 @@ import org.springframework.core.io.Resource;
 @Configuration
 public class HttpClientConfig {
 
-    @Value("${server.ssl.trust-store}")
+    // Client-certificate (mTLS) material is OPTIONAL: with the simplified TLS
+    // architecture, inter-container traffic (FHIR, etc.) is plain HTTP on a
+    // private Docker network, so no client keystore/truststore is required.
+    // Defaults are empty so the bean still builds when these properties are
+    // absent; outgoing HTTPS then relies on the JVM default trust store.
+    @Value("${server.ssl.trust-store:}")
     private Resource trustStore;
 
-    @Value("${server.ssl.trust-store-password}")
+    @Value("${server.ssl.trust-store-password:}")
     private String trustStorePassword;
 
-    @Value("${server.ssl.key-store}")
+    @Value("${server.ssl.key-store:}")
     private Resource keyStore;
 
-    @Value("${server.ssl.key-store-password}")
+    @Value("${server.ssl.key-store-password:}")
     private String keyStorePassword;
 
-    @Value("${server.ssl.key-password}")
+    @Value("${server.ssl.key-password:}")
     private String keyPassword;
 
     @Value("${org.openelisglobal.httpclient.connectionRequestTimeout:0}")
@@ -65,8 +71,35 @@ public class HttpClientConfig {
     }
 
     public SSLContext sslContext() throws Exception {
-        return SSLContextBuilder.create()
-                .loadKeyMaterial(keyStore.getFile(), keyStorePassword.toCharArray(), keyPassword.toCharArray())
-                .loadTrustMaterial(trustStore.getFile(), trustStorePassword.toCharArray()).build();
+        SSLContextBuilder builder = SSLContextBuilder.create();
+
+        // Load client key material only when a real, readable keystore is
+        // configured. When absent (simplified TLS, no internal keystores), skip
+        // it so the context still builds and outgoing HTTPS uses the JVM default
+        // trust store.
+        if (isUsable(keyStore)) {
+            builder.loadKeyMaterial(keyStore.getFile(), toChars(keyStorePassword), toChars(keyPassword));
+        } else {
+            LogEvent.logInfo("HttpClientConfig", "sslContext",
+                    "No client keystore configured — building HTTP client without mTLS key material");
+        }
+
+        if (isUsable(trustStore)) {
+            builder.loadTrustMaterial(trustStore.getFile(), toChars(trustStorePassword));
+        }
+
+        return builder.build();
+    }
+
+    private boolean isUsable(Resource resource) {
+        try {
+            return resource != null && resource.exists() && resource.getFile().length() > 0;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    private char[] toChars(String value) {
+        return value == null ? new char[0] : value.toCharArray();
     }
 }

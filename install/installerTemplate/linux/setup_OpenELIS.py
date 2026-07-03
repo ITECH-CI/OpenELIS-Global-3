@@ -109,7 +109,7 @@ SITE_ID = ''
 KEYSTORE_PWD = ''
 TRUSTSTORE_PWD = ''
 ENCRYPTION_KEY = ''
-LOCAL_FHIR_SERVER_ADDRESS = 'https://fhir.openelis.org:8443/fhir/'
+LOCAL_FHIR_SERVER_ADDRESS = 'http://fhir.openelis.org:8080/fhir/'
 REMOTE_FHIR_SOURCE = []
 REMOTE_FHIR_SOURCE_UPDATE_STATUS = "true"
 CONSOLIDATED_SERVER_ADDRESS = []
@@ -1109,16 +1109,13 @@ def get_keystore_password():
     
     
 def set_keystore_password():
-    print("keystore location: " + KEYSTORE_PATH)
-    k_password = getpass("keystore password: ")
-    cmd = "openssl pkcs12 -info -in " + KEYSTORE_PATH + " -nokeys -passin pass:" + k_password
-    status = os.system(cmd)
-    if not status == 0:
-        print("password for the keystore is incorrect. Please try again")
-        set_keystore_password()
-    else:
-        with open(CONFIG_DIR + 'KEYSTORE_PASSWORD', mode='wt') as file:
-            file.write(k_password)
+    # Simplified TLS: this password now only protects the nginx private key
+    # (nginx.key.pem). It is generated automatically — no keystore to unlock,
+    # no question asked. Kept under this name so nginx.conf/ssl_password_file and
+    # create_nginx_certs() keep working unchanged.
+    k_password = ''.join(random.SystemRandom().choice(string.ascii_letters + string.digits) for _ in range(16))
+    with open(CONFIG_DIR + 'KEYSTORE_PASSWORD', mode='wt') as file:
+        file.write(k_password)
     
     
 def is_truststore_password_set():
@@ -1155,19 +1152,21 @@ def get_encryption_key():
         
         
 def set_encryption_key():
-    print("""
-    Enter an encryption key that will be used to encrypt sensitive data.
-    This value must stay the same between installations or the program will lose all encrypted data.
-    Record this value somewhere secure.
-    """)
-    e_key = getpass("encryption key: ")
-    confirm_encryption_key = getpass("confirm encryption key: ")
-    while (not confirm_encryption_key == e_key):
-        print("encryption key did not match. Please re-enter the encryption key")
-        e_key = getpass("encryption key: ")
-        confirm_encryption_key = getpass("confirm encryption key: ")
+    # Generated automatically at first install and persisted in
+    # CONFIG_DIR/ENCRYPTION_KEY. It MUST stay identical across updates/reinstalls
+    # of the same site, otherwise previously encrypted data becomes unreadable —
+    # so it is only generated when absent, and printed once for safe keeping.
+    e_key = ''.join(random.SystemRandom().choice(string.ascii_letters + string.digits) for _ in range(32))
     with open(CONFIG_DIR + 'ENCRYPTION_KEY', mode='wt') as file:
         file.write(e_key)
+    print("""
+    ============================================================
+    A data encryption key has been generated automatically.
+    It is stored in: """ + CONFIG_DIR + """ENCRYPTION_KEY
+    KEEP A SECURE COPY. It must stay identical for any future
+    update or reinstall of this site, or encrypted data is lost.
+    ============================================================
+    """)
 
 
 def is_remote_fhir_source_set():
@@ -1250,8 +1249,13 @@ def get_timezone():
 
     
 def set_timezone():
-    cmd = "tzselect >" + CONFIG_DIR + 'TZ'
-    os.system(cmd)
+    # Default to the CIV timezone for a frictionless install. Override by
+    # pre-creating the config file (echo 'Region/City' > .../config/TZ) or by
+    # running `tzselect` manually before install.
+    default_tz = "Africa/Abidjan"
+    with open(CONFIG_DIR + 'TZ', mode='wt') as file:
+        file.write(default_tz)
+    log("timezone set to default: " + default_tz, PRINT_TO_CONSOLE)
     
 
 def is_external_hosts_set():
@@ -1335,17 +1339,33 @@ def create_db_backup_user():
     
         
 def create_nginx_certs():
-# copying file as openssl wont accept the same input and output file for passwords
-    cmd = 'cp ' + CONFIG_DIR + 'KEYSTORE_PASSWORD ' + CONFIG_DIR + 'KEYSTORE_PASSWORD2'
-    os.system(cmd)
-#openssl pkcs12 -in /etc/openelis-global/new/client_facing_keystore -out /etc/openelis-global/nginx.key.pem -nocerts -passout file:/var/lib/openelis-global/config/KEYSTORE_PASSWORD -passin file:/var/lib/openelis-global/config/KEYSTORE_PASSWORD2
-    cmd = 'openssl pkcs12 -in ' + CLIENT_FACING_KEYSTORE_PATH + ' -out ' + CLIENT_FACING_KEY_PATH + ' -nocerts -passout file:' + CONFIG_DIR + 'KEYSTORE_PASSWORD -passin file:' + CONFIG_DIR + 'KEYSTORE_PASSWORD2'
-    os.system(cmd)
-#openssl pkcs12 -in /etc/openelis-global/client_facing_keystore -out /etc/openelis-global/nginx.crt.pem -nodes -nokeys -passin file:/var/lib/openelis-global/config/KEYSTORE_PASSWORD -passout file:/var/lib/openelis-global/config/KEYSTORE_PASSWORD
-    cmd = 'openssl pkcs12 -in ' + CLIENT_FACING_KEYSTORE_PATH + ' -out ' + CLIENT_FACING_CERT_PATH + ' -nokeys -nodes -passout file:' + CONFIG_DIR + 'KEYSTORE_PASSWORD -passin file:' + CONFIG_DIR + 'KEYSTORE_PASSWORD2'
-    os.system(cmd)
-# cleanup temp file
-    cmd = 'rm ' + CONFIG_DIR + 'KEYSTORE_PASSWORD2'
+    # Simplified TLS: generate a self-signed certificate directly for the nginx
+    # entry point, valid 10 years (no internal PKCS12 keystore involved).
+    #
+    # The private key is encrypted with KEYSTORE_PWD so the existing nginx.conf
+    # (ssl_password_file) keeps working unchanged. To use a REAL certificate
+    # later (public domain), simply replace nginx.cert.pem / nginx.key.pem and
+    # restart the proxy — if the real key has no passphrase, drop the
+    # ssl_password_file line in nginx.conf.
+    #
+    # Skip regeneration if a certificate is already present (e.g. an update, or
+    # an operator-provided real certificate) so we never overwrite it.
+    if os.path.exists(CLIENT_FACING_CERT_PATH) and os.path.exists(CLIENT_FACING_KEY_PATH):
+        log("nginx certificate already present — keeping it", PRINT_TO_CONSOLE)
+        return
+
+    subject = "/C=CI/ST=Abidjan/L=Abidjan/O=OpenELIS-Global/OU=CIV/CN=" + (EXTERNAL_HOSTS[0] if EXTERNAL_HOSTS else "localhost")
+    san = "subjectAltName=DNS:*.openelis.org,DNS:localhost"
+    for host in EXTERNAL_HOSTS:
+        san = san + ",DNS:" + host
+
+    # One-shot: self-signed cert (10 years) + encrypted private key.
+    cmd = ('openssl req -x509 -newkey rsa:2048 -days 3650'
+           + ' -keyout ' + CLIENT_FACING_KEY_PATH
+           + ' -out ' + CLIENT_FACING_CERT_PATH
+           + ' -subj "' + subject + '"'
+           + ' -addext "' + san + '"'
+           + ' -passout file:' + CONFIG_DIR + 'KEYSTORE_PASSWORD')
     os.system(cmd)
                 
 #---------------------------------------------------------------------
