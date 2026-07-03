@@ -160,9 +160,17 @@ sudo python3 ./setup_OpenELIS.py -m uninstall
 Le mode `uninstall` (interactif, demande confirmation) :
 1. effectue un backup de la base ;
 2. arrête + supprime tous les conteneurs et images OpenELIS ;
-3. supprime la base (volume de données) ;
-4. supprime le cron de backup ;
-5. supprime `/etc/openelis-global/` et `/var/lib/openelis-global/`.
+3. supprime le réseau Docker `openelis-network` (sous-réseau fixe `172.20.1.0/24`)
+   pour éviter qu'un bridge résiduel n'entre en conflit à la prochaine
+   installation (conteneurs injoignables / connection reset) ;
+4. supprime la base (volume de données) ;
+5. supprime le cron de backup ;
+6. supprime `/etc/openelis-global/` et `/var/lib/openelis-global/`.
+
+> Un simple `docker compose down` **ne supprime pas** le réseau (subnet fixe
+> conservé). Le réseau n'est nettoyé qu'à l'`uninstall` (ou recréé proprement au
+> prochain démarrage). Si un bridge fantôme subsiste malgré tout, le supprimer
+> manuellement : `docker network rm openelis-network`.
 
 > ⚠️ **Irréversible** hors backup. S'assurer d'avoir un backup exploitable avant.
 
