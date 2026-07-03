@@ -45,7 +45,8 @@ LOGGING_INCOMPLETE_TESTS.md
 check_*.sql
 cleanup_*.sql
 fix_*.sql
-scripts/
+# Root-level scratch scripts only — must NOT ignore install/.../scripts/ etc.
+/scripts/
 docs/BACTERIOLOGY_*.md
 docs/VERIFY_BACTERIOLOGY_TABLES.sql
 
