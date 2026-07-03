@@ -24,6 +24,57 @@ VERSION = ""
 APP_NAME = "OpenELIS-Global"
 LANG_NAME = "en_US.UTF-8"
 
+# -------------------------------------------------------------------
+#  Internationalisation (FR par défaut ; EN via env OE_INSTALL_LANG=en)
+# -------------------------------------------------------------------
+INSTALL_LANG = os.environ.get("OE_INSTALL_LANG", "fr").lower()
+if INSTALL_LANG not in ("fr", "en"):
+    INSTALL_LANG = "fr"
+
+# Table de traduction : clé = texte source (EN), valeur = {fr: ..., en: ...}.
+# Un texte absent de la table est renvoyé tel quel (fallback EN).
+TRANSLATIONS = {
+    "This is the postgres admin password. It has also been saved to:": {
+        "fr": "Voici le mot de passe admin postgres. Il a aussi été enregistré dans :",
+        "en": "This is the postgres admin password. It has also been saved to:",
+    },
+    "\npress any key once you have recorded it": {
+        "fr": "\nappuyez sur une touche une fois que vous l'avez noté",
+        "en": "\npress any key once you have recorded it",
+    },
+    "site number for this lab (5 character): ": {
+        "fr": "numéro de ce laboratoire (5 caractères) : ",
+        "en": "site number for this lab (5 character): ",
+    },
+    "Remote Fhir Address: ": {
+        "fr": "Adresse FHIR distante (laisser vide si aucune) : ",
+        "en": "Remote Fhir Address: ",
+    },
+    "Consolidated server address(es) (comma delimited): ": {
+        "fr": "Adresse(s) du serveur consolidé (séparées par des virgules, vide si aucune) : ",
+        "en": "Consolidated server address(es) (comma delimited): ",
+    },
+    "type a comma delimited list of extra hosts (format DNS_ENTRY1:IP_ADDRESS1,DNS_ENTRY2:IP_ADDRESS2...): ": {
+        "fr": "Liste d'hôtes supplémentaires (format DNS1:IP1,DNS2:IP2... — vide si aucun) : ",
+        "en": "type a comma delimited list of extra hosts (format DNS_ENTRY1:IP_ADDRESS1,DNS_ENTRY2:IP_ADDRESS2...): ",
+    },
+    "type a comma delimited list of fhir identifiers (format Practitioner/id1,Organization/id2...): ": {
+        "fr": "Liste d'identifiants FHIR (format Practitioner/id1,Organization/id2... — vide si aucun) : ",
+        "en": "type a comma delimited list of fhir identifiers (format Practitioner/id1,Organization/id2...): ",
+    },
+    "Do you want to continue with the uninstall? y/n: ": {
+        "fr": "Voulez-vous continuer la désinstallation ? o/n : ",
+        "en": "Do you want to continue with the uninstall? y/n: ",
+    },
+}
+
+
+def _t(text):
+    entry = TRANSLATIONS.get(text)
+    if entry is None:
+        return text
+    return entry.get(INSTALL_LANG, text)
+
 #Installer directories' names
 INSTALLER_CROSSTAB_DIR = "./crosstab/"
 INSTALLER_DB_INIT_DIR = "./initDB/"
@@ -198,7 +249,7 @@ def main(argv):
     elif MODE == "uninstall":
         log("uninstall " + strftime("%a, %d %b %Y %H:%M:%S", gmtime()), not PRINT_TO_CONSOLE)
         print("This will uninstall OpenELIS from this machine including **ALL** data from database and **ALL** local backups")
-        remove = input("Do you want to continue with the uninstall? y/n: ")
+        remove = input(_t("Do you want to continue with the uninstall? y/n: "))
         if remove.lower() == 'y':
             uninstall()
     
@@ -262,8 +313,51 @@ def do_install():
     ensure_file_exists(DB_PGPASS)
 
     start_docker_containers()
-    
+
     create_db_backup_user()
+
+    write_install_summary()
+
+
+def write_install_summary():
+    # One protected file that gathers everything an operator needs to keep:
+    # access URL, default credentials, postgres admin password and the location
+    # of the encryption key (which must never change between updates).
+    ensure_dir_exists(CONFIG_DIR)
+    path = CONFIG_DIR + 'INSTALL_SUMMARY.txt'
+    access_host = EXTERNAL_HOSTS[0] if EXTERNAL_HOSTS else "<adresse-du-serveur>"
+    lines = [
+        "==============================================================",
+        " OpenELIS-Global - Recapitulatif d'installation",
+        "==============================================================",
+        "",
+        " Acces        : https://" + access_host + "/",
+        " Identifiants : admin / adminADMIN!  (A CHANGER IMMEDIATEMENT)",
+        "",
+        " Numero de site (SITE_ID) : " + str(SITE_ID).strip(),
+        "",
+        " --- Secrets a conserver en lieu sur ---",
+        " Mot de passe admin postgres : " + str(ADMIN_PWD),
+        "   (aussi dans " + CONFIG_DIR + "postgres_admin.password)",
+        "",
+        " Cle de chiffrement des donnees :",
+        "   " + CONFIG_DIR + "ENCRYPTION_KEY",
+        "   /!\\ Doit rester IDENTIQUE a chaque mise a jour / reinstallation,",
+        "       sinon les donnees chiffrees deviennent illisibles.",
+        "",
+        " Configuration generee : " + OE_ETC_DIR,
+        " Etat des conteneurs :",
+        "   docker compose -f " + OE_ETC_DIR + "docker-compose.yml ps",
+        "==============================================================",
+        "",
+    ]
+    with open(path, mode='wt') as file:
+        file.write("\n".join(lines))
+    try:
+        os.chmod(path, 0o600)
+    except Exception:
+        pass
+    log("Recapitulatif d'installation ecrit dans: " + path, PRINT_TO_CONSOLE)
 
 
 def install_files_from_templates():
@@ -1094,7 +1188,7 @@ def set_site_id():
         If you do not know if it is needed or you do not know the correct value it may be left blank.
         You can set the values after the installation is complete.
     """)
-    site_id = input("site number for this lab (5 character): ")
+    site_id = input(_t("site number for this lab (5 character): "))
     with open(CONFIG_DIR + 'SITE_ID', mode='wt') as file:
         file.write(site_id)   
     
@@ -1188,7 +1282,7 @@ def set_remote_fhir_source():
     Leave blank to disable polling a remote instance
     (entries should be comma delimited)
     """)
-    user_input = input("Remote Fhir Address: ")
+    user_input = input(_t("Remote Fhir Address: "))
     if (user_input != ''):
         remote_fhir_sources = user_input.split(',')
         remote_fhir_sources_with_protocol = []
@@ -1222,7 +1316,7 @@ def set_cs_server():
     Enter the full server path to the consolidated server to send data to. 
     Leave blank to disable sending data to the Consolidated server
     """)
-    user_input = input("Consolidated server address(es) (comma delimited): ")
+    user_input = input(_t("Consolidated server address(es) (comma delimited): "))
     if (user_input != ''):
         cs_addresses = user_input.split(',')
         cs_addresses_with_protocol = []
@@ -1272,7 +1366,7 @@ def get_external_hosts():
     
 
 def set_external_hosts(): 
-    extra_hosts = input("type a comma delimited list of extra hosts (format DNS_ENTRY1:IP_ADDRESS1,DNS_ENTRY2:IP_ADDRESS2...): ").split(',')
+    extra_hosts = input(_t("type a comma delimited list of extra hosts (format DNS_ENTRY1:IP_ADDRESS1,DNS_ENTRY2:IP_ADDRESS2...): ")).split(',')
     with open(CONFIG_DIR + 'EXTERNAL_HOSTS', mode='wt') as file:
         file.write('\n'.join(extra_hosts))
     
@@ -1290,7 +1384,7 @@ def get_fhir_identifier():
     
 
 def set_fhir_identifier(): 
-    identifier = input("type a comma delimited list of fhir identifiers (format Practitioner/id1,Organization/id2...): ").split(',')
+    identifier = input(_t("type a comma delimited list of fhir identifiers (format Practitioner/id1,Organization/id2...): ")).split(',')
     with open(CONFIG_DIR + 'FHIR_IDENTIFIER', mode='wt') as file:
         file.write(','.join(identifier))
     
@@ -1391,11 +1485,24 @@ def generate_database_backup_password():
 def generate_database_admin_password():
     global ADMIN_PWD
     ADMIN_PWD = ''.join(random.SystemRandom().choice(string.ascii_letters + string.digits) for _ in range(12))
-    print("This is the postgres admin password.  Please record it in a safe and private place.")
-    print("It will not be able to be recovered once this script is finished\n")
+    # Persist it (protected) so it is recoverable, instead of only shown once.
+    save_admin_password(ADMIN_PWD)
+    print(_t("This is the postgres admin password. It has also been saved to:"))
+    print("   " + CONFIG_DIR + "postgres_admin.password  (chmod 600)")
     print(ADMIN_PWD)
-    print(input("\npress any key once you have recorded it"))
+    print(input(_t("\npress any key once you have recorded it")))
     os.system('clear')
+
+
+def save_admin_password(pwd):
+    ensure_dir_exists(CONFIG_DIR)
+    path = CONFIG_DIR + 'postgres_admin.password'
+    with open(path, mode='wt') as file:
+        file.write(pwd)
+    try:
+        os.chmod(path, 0o600)
+    except Exception:
+        pass
         
         
         

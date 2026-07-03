@@ -20,26 +20,13 @@ if [ "$(id -u)" -ne 0 ]; then
   exit 1
 fi
 
-# --- Docker ---
-if ! command -v docker >/dev/null 2>&1; then
-  err "Docker n'est pas installé."
-  echo
-  echo "Installez Docker (une fois, avec connexion) puis relancez :"
-  echo "  Ubuntu/Debian : https://docs.docker.com/engine/install/"
-  echo "  Rapide        : curl -fsSL https://get.docker.com | sh"
+# --- Prérequis système (curl, python3, Docker) : installés automatiquement si
+#     absents ; nécessite internet UNE fois. Sans internet -> message + arrêt.
+info "Vérification/installation des prérequis (curl, python3, Docker)…"
+bash "${SCRIPT_DIR}/scripts/setupDocker.sh" || {
+  err "Prérequis non satisfaits (voir message ci-dessus)."
   exit 1
-fi
-if ! docker compose version >/dev/null 2>&1; then
-  err "Le plugin 'docker compose' est absent."
-  echo "  Installez docker-compose-plugin (ex: apt-get install docker-compose-plugin)"
-  exit 1
-fi
-
-# --- Python 3 ---
-if ! command -v python3 >/dev/null 2>&1; then
-  err "python3 est requis. Installez-le (ex: apt-get install python3)."
-  exit 1
-fi
+}
 
 # --- Espace disque (avertissement si < 10 Go) ---
 avail_kb=$(df -k . | awk 'NR==2 {print $4}')
