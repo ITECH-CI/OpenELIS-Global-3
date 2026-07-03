@@ -19,7 +19,11 @@
 | Droits | Exécution en **root** (`sudo`) |
 | Python | Python 3 (pour `setup_OpenELIS.py`) |
 | Espace disque | ~10 Go libres (images + volumes DB) |
-| Certificats TLS | `keystore`, `truststore`, `client_facing_keystore` (PKCS12) placés dans `/etc/openelis-global/` **avant** l'installation (voir §2.1). |
+| Certificats TLS | **Aucun prérequis** — le certificat d'entrée (nginx) est **auto-généré** (auto-signé 10 ans). Voir §7 pour utiliser un vrai certificat. |
+
+> **Architecture TLS simplifiée** : le TLS est terminé uniquement sur nginx (la
+> porte d'entrée). Les conteneurs (backend, FHIR) communiquent en HTTP clair sur
+> un réseau Docker privé isolé. Plus aucun keystore/truststore interne à gérer.
 
 L'installeur crée/utilise deux arborescences :
 - `/etc/openelis-global/` — configuration générée (compose, properties, certs, secrets)
@@ -29,21 +33,7 @@ L'installeur crée/utilise deux arborescences :
 
 ## 2. Installation (site neuf)
 
-### 2.1 Préparer les certificats TLS (une fois)
-Le script **vérifie** la présence de `keystore` / `truststore` / `client_facing_keystore`
-dans `/etc/openelis-global/` mais ne les génère pas. Deux options :
-
-- **Réutiliser** ceux d'un déploiement existant (recommandé pour homogénéité), ou
-- **Générer** des certificats auto-signés PKCS12 (keytool/openssl) — noter les mots
-  de passe keystore/truststore, ils seront demandés à l'install.
-
-```bash
-sudo mkdir -p /etc/openelis-global
-# copier keystore, truststore, client_facing_keystore dans /etc/openelis-global/
-sudo chmod 644 /etc/openelis-global/keystore /etc/openelis-global/truststore
-```
-
-### 2.2 Transférer et décompresser l'installeur
+### 2.1 Transférer et décompresser l'installeur
 ```bash
 # depuis la machine de build ou la Release GitHub
 scp OpenELIS-Global_3.3.1.0_Installer.tar.gz operateur@serveur:/opt/
@@ -53,40 +43,47 @@ tar -xzf OpenELIS-Global_3.3.1.0_Installer.tar.gz
 cd OpenELIS-Global_3.3.1.0_Installer
 ```
 
-### 2.3 (Option) Ajuster `setup.ini`
+### 2.2 (Option) Ajuster `setup.ini`
 Par défaut la base tourne **dans un conteneur Docker** (`provide_database=True`).
 À modifier seulement pour un postgres hôte/distant. Les valeurs par défaut
 conviennent à la majorité des installations mono-serveur.
 
-### 2.4 Lancer l'installation
+### 2.3 Lancer l'installation
 ```bash
-sudo python3 ./setup_OpenELIS.py -m install
-# ou simplement (auto-détecte install vs update) :
-sudo python3 ./setup_OpenELIS.py
+sudo ./install.sh
 ```
+Le wrapper `install.sh` vérifie les prérequis (Docker, root, espace disque),
+lance l'installeur, puis affiche un récapitulatif (URL, identifiants,
+emplacement de la clé de chiffrement). Équivalent manuel :
+`sudo python3 ./setup_OpenELIS.py -m update-install`.
 
 Le script :
-1. génère les mots de passe (clinlims, admin postgres, backup) —
-   **⚠️ le mot de passe admin postgres s'affiche UNE SEULE FOIS : le noter** ;
-2. demande interactivement les paramètres du site :
-   - **SITE_ID** (numéro de labo, 5 caractères),
-   - **KEYSTORE_PASSWORD / TRUSTSTORE_PASSWORD** (vérifiés),
-   - **ENCRYPTION_KEY** — ⚠️ **doit être identique** entre installations/mises à
-     jour d'un même site (sinon données chiffrées illisibles). La conserver.
-   - REMOTE_FHIR_SOURCE, CS_SERVER, fuseau horaire (TZ), hôtes externes, FHIR_IDENTIFIER ;
-3. charge les images (`docker load`) depuis `dockerImage/*.tar.gz` ;
-4. initialise la base (schéma + données depuis `initDB/OpenELIS-Global.sql`) ;
-5. génère la config dans `/etc/openelis-global/` ;
-6. démarre la stack : `docker compose up -d` ;
-7. configure l'utilisateur de backup + le cron de sauvegarde quotidienne.
+1. génère automatiquement les mots de passe (clinlims, admin postgres, backup,
+   passphrase de la clé nginx) — **⚠️ le mot de passe admin postgres s'affiche
+   UNE SEULE FOIS : le noter** ;
+2. génère automatiquement le **certificat d'entrée nginx** (auto-signé 10 ans) ;
+3. génère automatiquement la **clé de chiffrement** (persistée dans
+   `/var/lib/openelis-global/config/ENCRYPTION_KEY`) — **⚠️ à sauvegarder : elle
+   doit rester identique aux mises à jour, sinon les données chiffrées sont
+   perdues** ;
+4. **fuseau horaire par défaut** : `Africa/Abidjan` (modifiable) ;
+5. demande uniquement les paramètres réellement propres au site :
+   - **SITE_ID** (numéro de labo, 5 caractères) — la seule vraie question ;
+   - REMOTE_FHIR_SOURCE, CS_SERVER, hôtes externes, FHIR_IDENTIFIER — **optionnels**
+     (appuyer sur Entrée pour passer sur un site mono-serveur) ;
+6. charge les images (`docker load`) depuis `dockerImage/*.tar.gz` ;
+7. initialise la base (schéma + données depuis `initDB/OpenELIS-Global.sql`) ;
+8. génère la config dans `/etc/openelis-global/`, démarre `docker compose up -d`,
+   configure le cron de sauvegarde quotidienne.
 
-### 2.5 Vérifier
+### 2.4 Vérifier
 ```bash
 docker compose -f /etc/openelis-global/docker-compose.yml ps   # tous "Up"
 curl -k https://localhost/                                     # frontend
 ```
 Accès : `https://<serveur>/` — login admin par défaut `admin` / `adminADMIN!`
-(**à changer immédiatement**).
+(**à changer immédiatement**). L'avertissement navigateur (certificat auto-signé)
+est normal ; voir §7 pour un vrai certificat.
 
 ---
 
@@ -166,7 +163,7 @@ Le mode `uninstall` (interactif, demande confirmation) :
 
 | Symptôme | Piste |
 |----------|-------|
-| Conteneur `certs` en redémarrage | certificat expiré — warning, non bloquant. Régénérer keystore/truststore si besoin. |
+| Avertissement certificat navigateur | normal (auto-signé). Voir §7 pour un vrai certificat. |
 | 502 sur `/` | frontend pas prêt (webpack) ou backend down. `docker compose logs <service>`. |
 | Backend ne démarre pas | vérifier connexion DB dans les logs webapp ; la DB doit être `healthy` avant. |
 | Sauvegarde de demande figée | vérifier que le conteneur FHIR répond (écriture FHIR synchrone à la création). |
@@ -179,7 +176,28 @@ docker compose -f /etc/openelis-global/docker-compose.yml logs -f oe.openelis.or
 
 ---
 
-## 7. Construire l'installeur (pour les mainteneurs)
+## 7. Utiliser un vrai certificat (serveur en ligne / nom de domaine)
+
+Par défaut nginx utilise un certificat **auto-signé 10 ans** (avertissement
+navigateur, sans conséquence sur la sécurité du chiffrement). Pour un serveur
+public avec un vrai certificat (Let's Encrypt, cert acheté), il suffit de
+**remplacer 2 fichiers** puis redémarrer le proxy :
+
+```bash
+# Remplacer par vos fichiers réels
+sudo cp fullchain.pem /etc/openelis-global/nginx.cert.pem
+sudo cp privkey.pem   /etc/openelis-global/nginx.key.pem
+sudo docker restart openelisglobal-proxy
+```
+
+Aucune reconfiguration du backend, du FHIR ou du compose : ils sont en HTTP
+interne et ignorent le certificat. Si la vraie clé n'a **pas** de passphrase
+(cas Let's Encrypt), retirer la ligne `ssl_password_file` de
+`/etc/openelis-global/nginx.conf` avant de redémarrer.
+
+---
+
+## 8. Construire l'installeur (pour les mainteneurs)
 
 ### En local
 ```bash

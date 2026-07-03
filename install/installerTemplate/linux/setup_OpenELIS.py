@@ -1009,8 +1009,9 @@ def get_stored_user_values():
     ensure_dir_exists(CONFIG_DIR)
     os.chmod(CONFIG_DIR, 0o640) 
     get_set_site_id()
+    # keystore password = passphrase for the nginx private key (auto-generated).
     get_set_keystore_password()
-    get_set_truststore_password()
+    # Simplified TLS: no truststore anymore -> no truststore password to set.
     get_set_encryption_key()
     get_set_remote_fhir_source()
     get_set_cs_server()
@@ -1414,36 +1415,14 @@ def check_preconditions(goal):
         if (db_installed('clinlims')):
             log("\nThere is a currently installed version of OpenElis", PRINT_TO_CONSOLE)
             return False
-        if (not os.path.isfile(KEYSTORE_PATH) or not os.access(KEYSTORE_PATH, os.R_OK)):
-            log("\ncould not find a readable keystore. Check that file exists and is readable by the current user", PRINT_TO_CONSOLE)
-            log("\nkeystore should exist at: " + KEYSTORE_PATH, PRINT_TO_CONSOLE)
-            return False
-        if (not os.path.isfile(CLIENT_FACING_KEYSTORE_PATH) or not os.access(CLIENT_FACING_KEYSTORE_PATH, os.R_OK)):
-            log("\ncould not find a readable client facing keystore. Check that file exists and is readable by the current user", PRINT_TO_CONSOLE)
-            log("\nkeystore should exist at: " + CLIENT_FACING_KEYSTORE_PATH, PRINT_TO_CONSOLE)
-            return False
-        if (not os.path.isfile(TRUSTSTORE_PATH) or not os.access(TRUSTSTORE_PATH, os.R_OK)):
-            log("\ncould not find a readable trsutstore. Check that file exists and is readable by the current user", PRINT_TO_CONSOLE)
-            log("\ntruststore should exist at: " + TRUSTSTORE_PATH, PRINT_TO_CONSOLE)
-            return False
-        
+        # Simplified TLS: no keystore/truststore prerequisite. The nginx entry
+        # certificate is generated automatically by create_nginx_certs().
+
     elif goal == 'update':
         if (not db_installed('clinlims')):
             log("\nThere is no currently installed version of OpenElis", PRINT_TO_CONSOLE)
             return False
-        if (not os.path.isfile(KEYSTORE_PATH) or not os.access(KEYSTORE_PATH, os.R_OK)):
-            log("\ncould not find a readable keystore. Check that file exists and is readable by the current user", PRINT_TO_CONSOLE)
-            log("\nkeystore should exist at: " + KEYSTORE_PATH, PRINT_TO_CONSOLE)
-            return False
-        if (not os.path.isfile(CLIENT_FACING_KEYSTORE_PATH) or not os.access(CLIENT_FACING_KEYSTORE_PATH, os.R_OK)):
-            log("\ncould not find a readable client facing keystore. Check that file exists and is readable by the current user", PRINT_TO_CONSOLE)
-            log("\nkeystore should exist at: " + CLIENT_FACING_KEYSTORE_PATH, PRINT_TO_CONSOLE)
-            return False
-        if (not os.path.isfile(TRUSTSTORE_PATH) or not os.access(TRUSTSTORE_PATH, os.R_OK)):
-            log("\ncould not find a readable trsutstore. Check that file exists and is readable by the current user", PRINT_TO_CONSOLE)
-            log("\ntruststore should exist at: " + TRUSTSTORE_PATH, PRINT_TO_CONSOLE)
-            return False
-        
+
     elif goal == 'uninstall':
         if (not db_installed('clinlims')):
             log("\nThere is no currently installed version of OpenElis", PRINT_TO_CONSOLE)
