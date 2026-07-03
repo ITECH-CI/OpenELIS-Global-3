@@ -974,7 +974,19 @@ def uninstall_docker_images():
     log("removing autoheal image...", PRINT_TO_CONSOLE)
     cmd = 'docker rm $(docker stop $(docker ps -a -q --filter="name=' + DOCKER_AUTOHEAL_CONTAINER_NAME + '" --format="{{.ID}}"))'
     os.system(cmd)
-    
+
+    uninstall_docker_network()
+
+
+def uninstall_docker_network():
+    # Remove the fixed-subnet network (openelis-network / 172.20.1.0/24) so no
+    # stale bridge lingers. A leftover network with the same hardcoded subnet
+    # causes an unroutable duplicate bridge on the next install (host cannot
+    # reach the containers -> connection reset). Runs only once all containers
+    # using it have been removed above.
+    log("removing docker network openelis-network...", PRINT_TO_CONSOLE)
+    os.system('docker network rm openelis-network 2>/dev/null')
+
 
 def uninstall_cron_tasks():
     log("removing backup task " + APP_NAME, PRINT_TO_CONSOLE)
@@ -1627,18 +1639,28 @@ def load_docker_image():
     
 
 def start_docker_containers():
+    # The compose network has a FIXED subnet (172.20.1.0/24). If a stale
+    # openelis-network bridge from a previous/aborted install still exists with
+    # no running container, "docker compose up" may create a duplicate bridge on
+    # the same subnet -> unroutable containers (connection reset from the host).
+    # Best-effort remove any dangling openelis-network first; it fails harmlessly
+    # (ignored) if the network is in use or absent, and compose recreates it.
+    log("ensuring no stale openelis-network before start", PRINT_TO_CONSOLE)
+    os.system('docker network rm openelis-network 2>/dev/null')
+
     log("starting docker containers", PRINT_TO_CONSOLE)
     cmd = 'sudo docker compose up -d '
     os.system(cmd)
 
 
 def clean_docker_objects():
+    # -f: run non-interactively (a bare "prune" prompts y/N and hangs a script).
     log("cleaning docker network", PRINT_TO_CONSOLE)
-    cmd = 'sudo docker network prune'
+    cmd = 'sudo docker network prune -f'
     os.system(cmd)
-    
+
     log("cleaning docker images", PRINT_TO_CONSOLE)
-    cmd = 'sudo docker image prune'
+    cmd = 'sudo docker image prune -f'
     os.system(cmd)
     
     

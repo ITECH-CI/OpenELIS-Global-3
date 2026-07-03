@@ -164,6 +164,9 @@ services:
   proxy.openelis.org:
     container_name: [% nginx_name %]
     image: nginx-proxy
+    depends_on:
+      - oe.openelis.org
+      - frontend.openelis.org
     ports:
       - 80:80
       - 443:443
