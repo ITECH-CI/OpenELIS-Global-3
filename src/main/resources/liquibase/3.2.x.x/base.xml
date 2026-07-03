@@ -113,6 +113,8 @@
         file="add_microscopy_quant_tests_to_pus_sampletype.xml" />
     <include relativeToChangelogFile="true"
         file="add_gram_polynucleaires_to_crachat_sampletype.xml" />
+    <include relativeToChangelogFile="true"
+        file="fix_polynucleaires_crachat_and_num_champ_uom.xml" />
 
 
 </databaseChangeLog>

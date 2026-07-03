@@ -17,6 +17,12 @@ const isUomSelectableTest = (testName) => {
     .toLowerCase()
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "");
+  // The "S\u00e9cr\u00e9tion vaginale" variants keep a fixed unit (num/champ) and must NOT
+  // offer the mm\u00b3 / num-champ picker \u2014 only the generic Etat frais Quantitatif
+  // H\u00e9maties/Leucocytes tests do.
+  if (normalized.includes("secretion vaginale")) {
+    return false;
+  }
   return (
     normalized.includes("etat frais quantitatif") &&
     (normalized.includes("hematies") || normalized.includes("leucocytes"))
