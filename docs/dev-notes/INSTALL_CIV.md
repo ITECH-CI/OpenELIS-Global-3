@@ -15,9 +15,8 @@
 | Élément | Détail |
 |---------|--------|
 | OS | Linux (Ubuntu/Debian recommandé, 64-bit amd64) |
-| Docker | **Docker Engine + plugin `docker compose` installés au préalable** (l'installeur ne les installe pas en mode offline). Vérifier : `docker --version` et `docker compose version`. |
+| Docker, curl, python3 | **Installés automatiquement** par l'installeur s'ils manquent (curl, python3, Docker Engine + plugin `docker compose`). ⚠ Cette installation des prérequis **nécessite internet UNE fois** ; sans connexion, l'installeur s'arrête avec un message clair. L'application elle-même s'installe ensuite hors ligne. |
 | Droits | Exécution en **root** (`sudo`) |
-| Python | Python 3 (pour `setup_OpenELIS.py`) |
 | Espace disque | ~10 Go libres (images + volumes DB) |
 | Certificats TLS | **Aucun prérequis** — le certificat d'entrée (nginx) est **auto-généré** (auto-signé 10 ans). Voir §7 pour utiliser un vrai certificat. |
 
@@ -52,15 +51,18 @@ conviennent à la majorité des installations mono-serveur.
 ```bash
 sudo ./install.sh
 ```
-Le wrapper `install.sh` vérifie les prérequis (Docker, root, espace disque),
-lance l'installeur, puis affiche un récapitulatif (URL, identifiants,
-emplacement de la clé de chiffrement). Équivalent manuel :
-`sudo python3 ./setup_OpenELIS.py -m update-install`.
+Le wrapper `install.sh` : installe les prérequis manquants (curl, python3,
+Docker — nécessite internet une fois), lance l'installeur, puis affiche un
+récapitulatif. Équivalent manuel : `sudo python3 ./setup_OpenELIS.py -m update-install`.
+
+**Langue** : l'installeur est en **français par défaut**. Pour l'anglais :
+`OE_INSTALL_LANG=en sudo ./install.sh`.
 
 Le script :
 1. génère automatiquement les mots de passe (clinlims, admin postgres, backup,
-   passphrase de la clé nginx) — **⚠️ le mot de passe admin postgres s'affiche
-   UNE SEULE FOIS : le noter** ;
+   passphrase de la clé nginx). Le mot de passe admin postgres est **affiché ET
+   enregistré** dans `/var/lib/openelis-global/config/postgres_admin.password`
+   (chmod 600) ;
 2. génère automatiquement le **certificat d'entrée nginx** (auto-signé 10 ans) ;
 3. génère automatiquement la **clé de chiffrement** (persistée dans
    `/var/lib/openelis-global/config/ENCRYPTION_KEY`) — **⚠️ à sauvegarder : elle
@@ -74,7 +76,14 @@ Le script :
 6. charge les images (`docker load`) depuis `dockerImage/*.tar.gz` ;
 7. initialise la base (schéma + données depuis `initDB/OpenELIS-Global.sql`) ;
 8. génère la config dans `/etc/openelis-global/`, démarre `docker compose up -d`,
-   configure le cron de sauvegarde quotidienne.
+   configure le cron de sauvegarde quotidienne ;
+9. écrit un **récapitulatif complet** dans
+   `/var/lib/openelis-global/config/INSTALL_SUMMARY.txt` (chmod 600) : URL d'accès,
+   identifiants, mot de passe admin, emplacement de la clé de chiffrement.
+
+> ⚠️ Le webapp met **plusieurs minutes** à démarrer la première fois (déploiement
+> WAR + migrations Liquibase). Il apparaît en `health: starting` pendant ce temps —
+> c'est normal. Attendre qu'il passe `healthy` avant de conclure à un problème.
 
 ### 2.4 Vérifier
 ```bash
@@ -164,10 +173,13 @@ Le mode `uninstall` (interactif, demande confirmation) :
 | Symptôme | Piste |
 |----------|-------|
 | Avertissement certificat navigateur | normal (auto-signé). Voir §7 pour un vrai certificat. |
-| 502 sur `/` | frontend pas prêt (webpack) ou backend down. `docker compose logs <service>`. |
+| webapp reste `health: starting` longtemps | normal les premières minutes (WAR + Liquibase). Compter jusqu'à ~8 min. Suivre `docker logs openelisglobal-webapp`. |
+| webapp `unhealthy` / redémarre en boucle + page blanche | vérifier le healthcheck : `docker exec openelisglobal-webapp curl -s -o /dev/null -w '%{http_code}' http://localhost:8080/api/OpenELIS-Global/health` doit renvoyer **200** (pas 302). Un 302→https indique une contrainte TLS interne résiduelle. |
+| 502 sur `/` | frontend pas prêt ou backend down. `docker compose logs <service>`. |
 | Backend ne démarre pas | vérifier connexion DB dans les logs webapp ; la DB doit être `healthy` avant. |
 | Sauvegarde de demande figée | vérifier que le conteneur FHIR répond (écriture FHIR synchrone à la création). |
 | Page admin "Modifier les tests" en 500 | corrigé côté code (NPE SiteInformation) ; s'assurer d'être sur une version ≥ celle du fix. |
+| Mot de passe admin / clé de chiffrement oubliés | voir `/var/lib/openelis-global/config/INSTALL_SUMMARY.txt`, `postgres_admin.password`, `ENCRYPTION_KEY`. |
 
 Logs :
 ```bash
