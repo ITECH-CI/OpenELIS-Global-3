@@ -153,14 +153,22 @@ Le mode `update` :
 ## 4. Sauvegarde (backup)
 
 ### Backup automatique
-Un cron quotidien (`/etc/cron.d` → `openElis`, ~14h01) exécute `DatabaseBackup.pl` :
+Un cron quotidien (`/etc/cron.d` → `openElis`, **23h50**) exécute `DatabaseBackup.pl` :
 `pg_dump` du schéma `clinlims`, compression gzip, rotation dans
 `/var/lib/openelis-global/backup_dir/` (daily / cumulative), purge > 30 jours,
 et copie sur clé USB si `/media/USB0/Backup` est monté.
 
+> **Tables FHIR exclues du dump.** HAPI-FHIR crée ses tables (`hfj_*`, `trm_*`,
+> `mpi_*`, `npm_*`, `bt2_*`) dans le schéma `clinlims`. Volumineuses et
+> **reconstructibles** (projection des données métier), elles sont exclues du
+> backup (`--exclude-table-data`) : dump plus léger, plus d'erreurs à la
+> restauration. La **structure** est conservée (tables vides) et HAPI **repeuple**
+> au démarrage (`hbm2ddl=update`). Un backup manuel « complet » (ci-dessous) les
+> inclut si besoin.
+
 ### Backup manuel (avant intervention)
 ```bash
-# Dump manuel de la base (conteneur DB)
+# Dump manuel de la base (conteneur DB) — inclut TOUT (y compris FHIR)
 docker exec openelisglobal-database \
   pg_dump -U clinlims -d clinlims | gzip > ~/backup_clinlims_$(date +%F).sql.gz
 ```
