@@ -84,6 +84,9 @@ Le script :
      défaut — appuyer sur Entrée pour l'accepter, ou saisir l'IP correcte si la
      machine a plusieurs interfaces. C'est l'IP vers laquelle `oeglobal.local`
      résout (voir §9) ;
+   - **UPSTREAM_DNS** (DNS amont pour Internet) : **auto-détecté** (routeur du
+     centre) et proposé par défaut. Entrée pour l'accepter ; laisser vide pour un
+     site totalement isolé (voir §9) ;
    - REMOTE_FHIR_SOURCE, CS_SERVER, hôtes externes, FHIR_IDENTIFIER — **optionnels**
      (appuyer sur Entrée pour passer sur un site mono-serveur) ;
 6. charge les images (`docker load`) depuis `dockerImage/*.tar.gz` ;
@@ -259,6 +262,23 @@ Chaque installation embarque un **serveur DNS local** (conteneur `dnsmasq`,
 (`SERVER_IP_ADDRESS`, demandée à l'install). But : les postes clients accèdent
 tous à la **même URL** `https://oeglobal.local/` sans domaine public ni internet.
 
+### Forward Internet (les clients gardent l'accès au web)
+Comme les postes clients utilisent ce DNS pour **toute** leur résolution (pas
+seulement `oeglobal.local`), dnsmasq **forwarde tout le reste** vers un **DNS
+amont** — typiquement le **routeur du centre** (qui a Internet). Cette adresse
+(`UPSTREAM_DNS`) est demandée à l'install : **auto-détectée** (passerelle par
+défaut du serveur) et proposée par défaut ; appuyer sur Entrée pour l'accepter.
+
+- **Renseigné** → `oeglobal.local` en local, tout le reste vers le routeur : les
+  clients conservent Internet. C'est le cas normal d'un centre connecté.
+- **Laissé vide** → **mode isolé** : dnsmasq ne répond QUE `oeglobal.local` (option
+  `no-resolv`, aucune sortie DNS). À réserver aux zones totalement déconnectées où
+  les clients n'ont de toute façon pas d'Internet.
+
+> Modifier après coup : éditer `/var/lib/openelis-global/config/UPSTREAM_DNS`
+> (une IP, ou vide pour le mode isolé) puis relancer une mise à jour (régénère
+> `dnsmasq.conf`).
+
 ### Côté serveur
 Rien à faire : le DNS et le certificat (SAN `oeglobal.local` + IP) sont générés à
 l'installation. Vérifier le conteneur : `sudo docker compose ps` (service
@@ -281,6 +301,7 @@ Pour supprimer l'avertissement de certificat, importer le certificat
 | Le conteneur `dnsmasq` redémarre / port 53 occupé | Sur Ubuntu, `systemd-resolved` écoute sur `127.0.0.53`. dnsmasq est configuré avec `listen-address=<IP serveur>` + `bind-interfaces` pour **ne pas** entrer en conflit. Si le port 53 de l'IP LAN est déjà pris par un autre service, le libérer. |
 | `oeglobal.local` inconnu depuis un poste | Le poste n'utilise pas le serveur comme DNS. Vérifier sa config DNS / l'option DHCP 6. Tester : `nslookup oeglobal.local <IP-serveur>`. |
 | Accès OK par IP mais pas par nom | Idem : problème de résolution DNS côté client, pas côté serveur. |
+| Les postes clients n'ont plus Internet | `UPSTREAM_DNS` vide (mode isolé) ou incorrect : dnsmasq ne forwarde pas. Renseigner l'IP du routeur dans `/var/lib/openelis-global/config/UPSTREAM_DNS` puis relancer une mise à jour. Tester : `nslookup google.com <IP-serveur>`. |
 
 > **Mono-site** : il n'y a pas de gestion multisite. Chaque serveur a son propre
 > DNS et son propre certificat `oeglobal.local`. Pour changer l'IP du serveur

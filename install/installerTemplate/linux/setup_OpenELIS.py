@@ -70,6 +70,10 @@ TRANSLATIONS = {
         "fr": "adresse IP LAN du serveur (les postes clients joignent oeglobal.local ici)",
         "en": "server LAN IP address (clients reach oeglobal.local here)",
     },
+    "upstream DNS for Internet (usually the site router; empty = isolated)": {
+        "fr": "DNS amont pour Internet (souvent le routeur du centre ; vide = isolé)",
+        "en": "upstream DNS for Internet (usually the site router; empty = isolated)",
+    },
 }
 
 
@@ -171,6 +175,9 @@ ADMIN_PWD = ''
 SITE_ID = ''
 # IP LAN du serveur : dnsmasq y écoute et 'oeglobal.local' y résout (accès clients).
 SERVER_IP_ADDRESS = ''
+# DNS amont : tout ce qui n'est pas oeglobal.local y est forwardé (Internet des
+# postes clients). Vide = pas de forward (mode isolé). Défaut = passerelle du LAN.
+UPSTREAM_DNS = ''
 KEYSTORE_PWD = ''
 TRUSTSTORE_PWD = ''
 ENCRYPTION_KEY = ''
@@ -339,16 +346,19 @@ def write_install_summary():
     # of the encryption key (which must never change between updates).
     ensure_dir_exists(CONFIG_DIR)
     path = CONFIG_DIR + 'INSTALL_SUMMARY.txt'
-    access_host = EXTERNAL_HOSTS[0] if EXTERNAL_HOSTS else "<adresse-du-serveur>"
+    dns_line = ("Forward vers " + UPSTREAM_DNS) if UPSTREAM_DNS else "Aucun (mode isole, oeglobal.local uniquement)"
     lines = [
         "==============================================================",
         " OpenELIS-Global - Recapitulatif d'installation",
         "==============================================================",
         "",
-        " Acces        : https://" + access_host + "/",
+        " Acces        : https://oeglobal.local/  (ou https://" + str(SERVER_IP_ADDRESS).strip() + "/)",
         " Identifiants : admin / adminADMIN!  (A CHANGER IMMEDIATEMENT)",
         "",
         " Numero de site (SITE_ID) : " + str(SITE_ID).strip(),
+        " IP du serveur            : " + str(SERVER_IP_ADDRESS).strip(),
+        " DNS amont (Internet)     : " + dns_line,
+        "   -> Les postes clients doivent utiliser " + str(SERVER_IP_ADDRESS).strip() + " comme DNS.",
         "",
         " --- Secrets a conserver en lieu sur ---",
         " Mot de passe admin postgres : " + str(ADMIN_PWD),
@@ -610,14 +620,26 @@ def create_nginx_files():
 
 
 def create_dnsmasq_files():
-    # Generate the dnsmasq config that resolves oeglobal.local -> server LAN IP.
+    # Generate the dnsmasq config that resolves oeglobal.local -> server LAN IP,
+    # and forwards everything else to UPSTREAM_DNS (so clients keep Internet).
     ensure_dir_exists(SECRETS_DIR)
     template_file = open(INSTALLER_TEMPLATE_DIR + "dnsmasq.conf", "r")
     output_file = open(SECRETS_DIR + "dnsmasq.conf", "w")
 
+    # If an upstream is set -> 'server=<ip>' (forward). If empty -> 'no-resolv'
+    # so dnsmasq does NOT fall back to the host's /etc/resolv.conf (which points
+    # at 127.0.0.53 in host mode and is unreachable for remote clients): isolated
+    # mode answers only oeglobal.local.
+    if UPSTREAM_DNS:
+        upstream_line = "server=" + UPSTREAM_DNS
+    else:
+        upstream_line = "no-resolv"
+
     for line in template_file:
         if line.find("[% server_ip %]") >= 0:
             line = line.replace("[% server_ip %]", SERVER_IP_ADDRESS)
+        if line.find("[% upstream_dns_line %]") >= 0:
+            line = line.replace("[% upstream_dns_line %]", upstream_line)
         output_file.write(line)
 
     template_file.close()
@@ -1158,6 +1180,7 @@ def get_stored_user_values():
     os.chmod(CONFIG_DIR, 0o640) 
     get_set_site_id()
     get_set_server_ip()
+    get_set_upstream_dns()
     # keystore password = passphrase for the nginx private key (auto-generated).
     get_set_keystore_password()
     # Simplified TLS: no truststore anymore -> no truststore password to set.
@@ -1181,6 +1204,12 @@ def get_set_server_ip():
     if (not is_server_ip_set()):
         set_server_ip()
     get_server_ip()
+
+
+def get_set_upstream_dns():
+    if (not is_upstream_dns_set()):
+        set_upstream_dns()
+    get_upstream_dns()
 
 
 def get_set_keystore_password():
@@ -1293,6 +1322,49 @@ def set_server_ip():
     ensure_dir_exists(CONFIG_DIR)
     with open(CONFIG_DIR + 'SERVER_IP_ADDRESS', mode='wt') as file:
         file.write(server_ip)
+
+
+def detect_default_gateway():
+    # Best-effort detection of the LAN default gateway (usually the site router,
+    # which itself resolves/relays DNS to the Internet). Returns '' on failure.
+    try:
+        out = subprocess.check_output(
+            "ip route show default", shell=True).decode("utf-8")
+        # default via <GATEWAY> dev ... -> take the token right after 'via'
+        parts = out.split()
+        if 'via' in parts:
+            return parts[parts.index('via') + 1]
+    except Exception:
+        pass
+    return ''
+
+
+def is_upstream_dns_set():
+    # Presence of the file marks a deliberate choice (an EMPTY file = "no forward",
+    # isolated mode) so we never re-prompt on update.
+    return os.path.isfile(CONFIG_DIR + 'UPSTREAM_DNS')
+
+
+def get_upstream_dns():
+    global UPSTREAM_DNS
+    file = open(CONFIG_DIR + 'UPSTREAM_DNS')
+    UPSTREAM_DNS = file.readline().strip()
+
+
+def set_upstream_dns():
+    # DNS amont : dnsmasq forwarde tout ce qui n'est pas oeglobal.local vers cette
+    # adresse (les postes clients gardent Internet). Par défaut = passerelle du LAN
+    # (routeur du centre). Laisser vide -> mode isolé (pas de sortie DNS).
+    detected = detect_default_gateway()
+    prompt = _t("upstream DNS for Internet (usually the site router; empty = isolated)")
+    if detected:
+        answer = input(prompt + " [" + detected + "]: ").strip()
+        upstream = answer if answer else detected
+    else:
+        upstream = input(prompt + ": ").strip()
+    ensure_dir_exists(CONFIG_DIR)
+    with open(CONFIG_DIR + 'UPSTREAM_DNS', mode='wt') as file:
+        file.write(upstream)
 
 
 def is_keystore_password_set():
