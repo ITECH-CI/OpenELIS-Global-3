@@ -53,6 +53,6 @@ echo "   - Clé de chiffrement : /var/lib/openelis-global/config/ENCRYPTION_KEY"
 echo "     (à sauvegarder ! doit rester identique aux mises à jour)"
 echo "   - Config générée     : /etc/openelis-global/"
 echo
-echo " État des conteneurs :"
-echo "   docker compose -f /var/lib/openelis-global/docker-compose.yml ps"
+echo " État des conteneurs (depuis ce dossier d'installation) :"
+echo "   sudo docker compose ps"
 echo "============================================================"

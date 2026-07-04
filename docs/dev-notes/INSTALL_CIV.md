@@ -26,8 +26,14 @@
 
 L'installeur crée/utilise deux arborescences :
 - `/etc/openelis-global/` — configuration générée (server.xml, certs nginx, setup.ini)
-- `/var/lib/openelis-global/` — données + **`docker-compose.yml`** (backup_dir, secrets,
-  plugins, config, initDB, volume DB). C'est depuis ce compose que tournent les conteneurs.
+- `/var/lib/openelis-global/` — données (backup_dir, secrets, plugins, config, initDB,
+  volume DB). Contient une **copie d'archive** du `docker-compose.yml`, **non** utilisée
+  pour piloter les conteneurs.
+
+> ⚠️ Les conteneurs sont démarrés par `docker compose up` **depuis le dossier de
+> l'installer** (le `docker-compose.yml` qui s'y trouve). Pour vérifier/gérer les
+> conteneurs, se placer dans ce dossier et utiliser `sudo docker compose ps`
+> (la copie sous `/var/lib/` n'est qu'une sauvegarde de référence).
 
 ---
 
@@ -89,8 +95,9 @@ Le script :
 
 ### 2.4 Vérifier
 ```bash
-docker compose -f /var/lib/openelis-global/docker-compose.yml ps   # tous "Up"
-curl -k https://localhost/                                     # frontend
+# depuis le dossier d'installation (c'est ce compose qui pilote les conteneurs)
+sudo docker compose ps                 # tous "Up"
+curl -k https://localhost/             # frontend
 ```
 Accès : `https://<serveur>/` — login admin par défaut `admin` / `adminADMIN!`
 (**à changer immédiatement**). L'avertissement navigateur (certificat auto-signé)
@@ -193,7 +200,8 @@ Le mode `uninstall` (interactif, demande confirmation) :
 
 Logs :
 ```bash
-docker compose -f /var/lib/openelis-global/docker-compose.yml logs -f oe.openelis.org
+# depuis le dossier d'installation
+sudo docker compose logs -f oe.openelis.org
 ```
 
 ---

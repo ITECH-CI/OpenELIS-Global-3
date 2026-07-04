@@ -353,8 +353,8 @@ def write_install_summary():
         "       sinon les donnees chiffrees deviennent illisibles.",
         "",
         " Configuration generee : " + OE_ETC_DIR,
-        " Etat des conteneurs :",
-        "   docker compose -f " + OE_VAR_DIR + "docker-compose.yml ps",
+        " Etat des conteneurs (depuis le dossier d'installation) :",
+        "   sudo docker compose ps",
         "==============================================================",
         "",
     ]
