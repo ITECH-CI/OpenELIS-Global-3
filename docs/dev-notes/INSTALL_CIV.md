@@ -17,7 +17,9 @@
 | OS | Linux (Ubuntu/Debian recommandé, 64-bit amd64) |
 | Docker, curl, python3 | **Installés automatiquement** par l'installeur s'ils manquent (curl, python3, Docker Engine + plugin `docker compose`). ⚠ Cette installation des prérequis **nécessite internet UNE fois** ; sans connexion, l'installeur s'arrête avec un message clair. L'application elle-même s'installe ensuite hors ligne. |
 | Droits | Exécution en **root** (`sudo`) |
+| **Mémoire (RAM)** | **8 Go recommandé**, **4 Go minimum strict**. La pile fait tourner plusieurs JVM (webapp Tomcat/Spring + FHIR HAPI) en plus de PostgreSQL ; sous 4 Go le conteneur FHIR ou webapp peut être tué par manque de mémoire (OOM) et redémarrer en boucle. Prévoir aussi un peu de **swap**. |
 | Espace disque | ~10 Go libres (images + volumes DB) |
+| CPU / architecture | amd64 (x86_64). ⚠ Exécuter le bundle amd64 sur un hôte **arm64** (VM de test Apple Silicon) passe par l'émulation → démarrage **très lent** (webapp/FHIR peuvent mettre 10-20 min) et empreinte mémoire accrue. Sur serveur amd64 réel : démarrage en quelques minutes. |
 | Certificats TLS | **Aucun prérequis** — le certificat d'entrée (nginx) est **auto-généré** (auto-signé 10 ans). Voir §7 pour utiliser un vrai certificat. |
 
 > **Architecture TLS simplifiée** : le TLS est terminé uniquement sur nginx (la
@@ -211,6 +213,7 @@ Le mode `uninstall` (interactif, demande confirmation) :
 | webapp `unhealthy` / redémarre en boucle + page blanche | vérifier le healthcheck : `docker exec openelisglobal-webapp curl -s -o /dev/null -w '%{http_code}' http://localhost:8080/api/OpenELIS-Global/health` doit renvoyer **200** (pas 302). Un 302→https indique une contrainte TLS interne résiduelle. |
 | 502 sur `/` | frontend pas prêt ou backend down. `docker compose logs <service>`. |
 | Backend ne démarre pas | vérifier connexion DB dans les logs webapp ; la DB doit être `healthy` avant. |
+| FHIR ou webapp reste `health: starting` très longtemps | D'abord distinguer **OOM** de **lenteur** : `docker inspect <ctn> --format '{{.State.OOMKilled}} {{.RestartCount}}'`. Si `true`/redémarrages → manque de RAM : porter à **8 Go** (§1) + swap. Si `false` + `0` redémarrage mais CPU élevé (`docker stats`) → le service **démarre juste lentement** (typique en **émulation arm64**, ou CPU/DB saturés) : patienter, ne pas conclure trop tôt ; un `free -h` qui swappe beaucoup aggrave la lenteur. |
 | Sauvegarde de demande figée | vérifier que le conteneur FHIR répond (écriture FHIR synchrone à la création). |
 | Page admin "Modifier les tests" en 500 | corrigé côté code (NPE SiteInformation) ; s'assurer d'être sur une version ≥ celle du fix. |
 | Mot de passe admin / clé de chiffrement oubliés | voir `/var/lib/openelis-global/config/INSTALL_SUMMARY.txt`, `postgres_admin.password`, `ENCRYPTION_KEY`. |
