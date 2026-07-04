@@ -74,6 +74,14 @@ TRANSLATIONS = {
         "fr": "DNS amont pour Internet (souvent le routeur du centre ; vide = isolé)",
         "en": "upstream DNS for Internet (usually the site router; empty = isolated)",
     },
+    "deployment mode: [1] local (oeglobal.local) or [2] online (domain name)? [1]: ": {
+        "fr": "mode de déploiement : [1] local (oeglobal.local) ou [2] en ligne (nom de domaine) ? [1] : ",
+        "en": "deployment mode: [1] local (oeglobal.local) or [2] online (domain name)? [1]: ",
+    },
+    "public domain name (e.g. openelis.mon-labo.org): ": {
+        "fr": "nom de domaine public (ex. openelis.mon-labo.org) : ",
+        "en": "public domain name (e.g. openelis.mon-labo.org): ",
+    },
 }
 
 
@@ -173,6 +181,14 @@ ADMIN_PWD = ''
 
 #Get from user values
 SITE_ID = ''
+# Mode de déploiement :
+#  - 'local'  : accès LAN via oeglobal.local + DNS embarqué (dnsmasq) + cert
+#               auto-signé oeglobal.local. Cas des centres/labos hors ligne.
+#  - 'online' : serveur avec nom de domaine public ; PAS de dnsmasq ; cert = vos
+#               PEM déposés (fallback auto-signé pour le domaine).
+DEPLOY_MODE = 'local'
+# Nom de domaine public (mode online uniquement), ex. openelis.mon-labo.org.
+SERVER_DOMAIN = ''
 # IP LAN du serveur : dnsmasq y écoute et 'oeglobal.local' y résout (accès clients).
 SERVER_IP_ADDRESS = ''
 # DNS amont : tout ce qui n'est pas oeglobal.local y est forwardé (Internet des
@@ -346,21 +362,40 @@ def write_install_summary():
     # of the encryption key (which must never change between updates).
     ensure_dir_exists(CONFIG_DIR)
     path = CONFIG_DIR + 'INSTALL_SUMMARY.txt'
-    dns_line = ("Forward vers " + UPSTREAM_DNS) if UPSTREAM_DNS else "Aucun (mode isole, oeglobal.local uniquement)"
     lines = [
         "==============================================================",
         " OpenELIS-Global - Recapitulatif d'installation",
         "==============================================================",
         "",
-        " Acces        : https://oeglobal.local/  (ou https://" + str(SERVER_IP_ADDRESS).strip() + "/)",
-        " Identifiants : admin / adminADMIN!  (A CHANGER IMMEDIATEMENT)",
-        "",
-        " Numero de site (SITE_ID) : " + str(SITE_ID).strip(),
-        " IP du serveur            : " + str(SERVER_IP_ADDRESS).strip(),
-        " DNS amont (Internet)     : " + dns_line,
-        "   -> Les postes clients doivent utiliser " + str(SERVER_IP_ADDRESS).strip() + " comme DNS.",
-        "",
-        " --- Secrets a conserver en lieu sur ---",
+    ]
+    if DEPLOY_MODE == 'online':
+        lines += [
+            " Mode         : EN LIGNE (nom de domaine public)",
+            " Acces        : https://" + str(SERVER_DOMAIN).strip() + "/",
+            " Identifiants : admin / adminADMIN!  (A CHANGER IMMEDIATEMENT)",
+            "",
+            " Numero de site (SITE_ID) : " + str(SITE_ID).strip(),
+            " Domaine                  : " + str(SERVER_DOMAIN).strip(),
+            "   -> Certificat : deposez vos PEM reels en /etc/openelis-global/",
+            "      nginx.cert.pem / nginx.key.pem puis redemarrez le proxy (voir doc).",
+            "",
+            " --- Secrets a conserver en lieu sur ---",
+        ]
+    else:
+        dns_line = ("Forward vers " + UPSTREAM_DNS) if UPSTREAM_DNS else "Aucun (mode isole, oeglobal.local uniquement)"
+        lines += [
+            " Mode         : LOCAL (oeglobal.local + DNS embarque)",
+            " Acces        : https://oeglobal.local/  (ou https://" + str(SERVER_IP_ADDRESS).strip() + "/)",
+            " Identifiants : admin / adminADMIN!  (A CHANGER IMMEDIATEMENT)",
+            "",
+            " Numero de site (SITE_ID) : " + str(SITE_ID).strip(),
+            " IP du serveur            : " + str(SERVER_IP_ADDRESS).strip(),
+            " DNS amont (Internet)     : " + dns_line,
+            "   -> Les postes clients doivent utiliser " + str(SERVER_IP_ADDRESS).strip() + " comme DNS.",
+            "",
+            " --- Secrets a conserver en lieu sur ---",
+        ]
+    lines += [
         " Mot de passe admin postgres : " + str(ADMIN_PWD),
         "   (aussi dans " + CONFIG_DIR + "postgres_admin.password)",
         "",
@@ -393,7 +428,8 @@ def install_files_from_templates():
     install_permissions_file()
     create_nginx_certs()
     create_nginx_files()
-    create_dnsmasq_files()
+    if DEPLOY_MODE != 'online':
+        create_dnsmasq_files()
     if DOCKER_DB:
         install_environment_file()
 
@@ -413,6 +449,10 @@ def create_docker_compose_file():
         if ASTM_PROXY:
             if line.find("#astm") >= 0:
                 line = line.replace("#astm", "")
+        # Embedded DNS (dnsmasq) only in 'local' mode; absent in 'online' mode.
+        if DEPLOY_MODE != 'online':
+            if line.find("#dns") >= 0:
+                line = line.replace("#dns", "")
         #set docker db attributes
         if DOCKER_DB:
             if line.find("#db") >= 0:
@@ -608,7 +648,11 @@ def create_nginx_files():
     template_file = open(INSTALLER_TEMPLATE_DIR + "nginx.conf", "r")
     output_file = open(SECRETS_DIR + "nginx.conf", "w")
 
+    # server_name = public domain in online mode, oeglobal.local otherwise.
+    server_name = SERVER_DOMAIN if (DEPLOY_MODE == 'online' and SERVER_DOMAIN) else "oeglobal.local"
     for line in template_file:
+        if line.find("[% server_name %]") >= 0:
+            line = line.replace("[% server_name %]", server_name)
         output_file.write(line)
 
     template_file.close()
@@ -944,7 +988,8 @@ def do_update():
 
     create_nginx_files()
 
-    create_dnsmasq_files()
+    if DEPLOY_MODE != 'online':
+        create_dnsmasq_files()
 
     create_docker_compose_file()
 
@@ -1179,8 +1224,14 @@ def get_stored_user_values():
     ensure_dir_exists(CONFIG_DIR)
     os.chmod(CONFIG_DIR, 0o640) 
     get_set_site_id()
-    get_set_server_ip()
-    get_set_upstream_dns()
+    get_set_deploy_mode()
+    if DEPLOY_MODE == 'online':
+        # Online: public domain, no embedded DNS. Only the domain is needed.
+        get_set_server_domain()
+    else:
+        # Local: oeglobal.local served by the embedded dnsmasq.
+        get_set_server_ip()
+        get_set_upstream_dns()
     # keystore password = passphrase for the nginx private key (auto-generated).
     get_set_keystore_password()
     # Simplified TLS: no truststore anymore -> no truststore password to set.
@@ -1210,6 +1261,18 @@ def get_set_upstream_dns():
     if (not is_upstream_dns_set()):
         set_upstream_dns()
     get_upstream_dns()
+
+
+def get_set_deploy_mode():
+    if (not is_deploy_mode_set()):
+        set_deploy_mode()
+    get_deploy_mode()
+
+
+def get_set_server_domain():
+    if (not is_server_domain_set()):
+        set_server_domain()
+    get_server_domain()
 
 
 def get_set_keystore_password():
@@ -1365,6 +1428,45 @@ def set_upstream_dns():
     ensure_dir_exists(CONFIG_DIR)
     with open(CONFIG_DIR + 'UPSTREAM_DNS', mode='wt') as file:
         file.write(upstream)
+
+
+def is_deploy_mode_set():
+    return os.path.isfile(CONFIG_DIR + 'DEPLOY_MODE')
+
+
+def get_deploy_mode():
+    global DEPLOY_MODE
+    file = open(CONFIG_DIR + 'DEPLOY_MODE')
+    value = file.readline().strip().lower()
+    DEPLOY_MODE = 'online' if value == 'online' else 'local'
+
+
+def set_deploy_mode():
+    # local  -> oeglobal.local + dnsmasq embarqué (centres hors ligne).
+    # online -> nom de domaine public, pas de dnsmasq, vrai cert (serveur en ligne).
+    answer = input(_t("deployment mode: [1] local (oeglobal.local) or [2] online (domain name)? [1]: ")).strip()
+    mode = 'online' if answer in ('2', 'online', 'en ligne') else 'local'
+    ensure_dir_exists(CONFIG_DIR)
+    with open(CONFIG_DIR + 'DEPLOY_MODE', mode='wt') as file:
+        file.write(mode)
+
+
+def is_server_domain_set():
+    return os.path.isfile(CONFIG_DIR + 'SERVER_DOMAIN')
+
+
+def get_server_domain():
+    global SERVER_DOMAIN
+    file = open(CONFIG_DIR + 'SERVER_DOMAIN')
+    SERVER_DOMAIN = file.readline().strip()
+
+
+def set_server_domain():
+    # Nom de domaine public par lequel les clients accèdent au serveur (mode online).
+    domain = input(_t("public domain name (e.g. openelis.mon-labo.org): ")).strip()
+    ensure_dir_exists(CONFIG_DIR)
+    with open(CONFIG_DIR + 'SERVER_DOMAIN', mode='wt') as file:
+        file.write(domain)
 
 
 def is_keystore_password_set():
@@ -1618,19 +1720,28 @@ def create_nginx_certs():
     # ssl_password_file line in nginx.conf.
     #
     # Skip regeneration if a certificate is already present (e.g. an update, or
-    # an operator-provided real certificate) so we never overwrite it.
+    # an operator-provided REAL certificate dropped in before install) so we
+    # never overwrite it. In 'online' mode this is precisely how you use your own
+    # domain cert: place your fullchain/privkey as nginx.cert.pem / nginx.key.pem
+    # beforehand and the installer keeps them.
     if os.path.exists(CLIENT_FACING_CERT_PATH) and os.path.exists(CLIENT_FACING_KEY_PATH):
         log("nginx certificate already present — keeping it", PRINT_TO_CONSOLE)
         return
 
-    # Mono-site: each installation generates its own self-signed cert for the
-    # local access name 'oeglobal.local'. The server LAN IP is added to the SAN
-    # so a browser reaching the server directly by IP (before the client DNS is
-    # pointed at it) does not trip a name-mismatch warning.
-    subject = "/C=CI/ST=Abidjan/L=Abidjan/O=OpenELIS-Global/OU=CIV/CN=oeglobal.local"
-    san = "subjectAltName=DNS:oeglobal.local,DNS:localhost"
-    if SERVER_IP_ADDRESS:
-        san = san + ",IP:" + SERVER_IP_ADDRESS
+    if DEPLOY_MODE == 'online':
+        # Online: self-signed FALLBACK for the public domain (browser warning
+        # until real PEM are dropped in). CN/SAN = the domain.
+        cn = SERVER_DOMAIN if SERVER_DOMAIN else "localhost"
+        subject = "/C=CI/ST=Abidjan/L=Abidjan/O=OpenELIS-Global/OU=CIV/CN=" + cn
+        san = "subjectAltName=DNS:" + cn + ",DNS:localhost"
+    else:
+        # Local: self-signed cert for 'oeglobal.local'. The server LAN IP is added
+        # to the SAN so a browser reaching the server directly by IP (before the
+        # client DNS is pointed at it) does not trip a name-mismatch warning.
+        subject = "/C=CI/ST=Abidjan/L=Abidjan/O=OpenELIS-Global/OU=CIV/CN=oeglobal.local"
+        san = "subjectAltName=DNS:oeglobal.local,DNS:localhost"
+        if SERVER_IP_ADDRESS:
+            san = san + ",IP:" + SERVER_IP_ADDRESS
     for host in EXTERNAL_HOSTS:
         san = san + ",DNS:" + host
 

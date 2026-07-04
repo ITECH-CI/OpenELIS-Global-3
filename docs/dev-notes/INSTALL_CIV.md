@@ -80,13 +80,17 @@ Le script :
 4. **fuseau horaire par défaut** : `Africa/Abidjan` (modifiable) ;
 5. demande uniquement les paramètres réellement propres au site :
    - **SITE_ID** (numéro de labo, 5 caractères) ;
-   - **SERVER_IP_ADDRESS** (IP LAN du serveur) : **auto-détectée** et proposée par
-     défaut — appuyer sur Entrée pour l'accepter, ou saisir l'IP correcte si la
-     machine a plusieurs interfaces. C'est l'IP vers laquelle `oeglobal.local`
-     résout (voir §9) ;
-   - **UPSTREAM_DNS** (DNS amont pour Internet) : **auto-détecté** (routeur du
-     centre) et proposé par défaut. Entrée pour l'accepter ; laisser vide pour un
-     site totalement isolé (voir §9) ;
+   - **Mode de déploiement** : `[1] local` (défaut) ou `[2] en ligne` :
+     - **local** → accès LAN par `oeglobal.local`, DNS embarqué (dnsmasq), cert
+       auto-signé (cas des centres/labos, voir §9) ;
+     - **en ligne** → nom de domaine public, **pas** de dnsmasq, votre vrai
+       certificat (voir §7). Demande alors le **nom de domaine** ;
+   - *(mode local uniquement)* **SERVER_IP_ADDRESS** (IP LAN du serveur) :
+     **auto-détectée** et proposée par défaut — Entrée pour l'accepter, ou saisir
+     l'IP correcte si la machine a plusieurs interfaces (§9) ;
+   - *(mode local uniquement)* **UPSTREAM_DNS** (DNS amont pour Internet) :
+     **auto-détecté** (routeur du centre) et proposé par défaut. Entrée pour
+     l'accepter ; laisser vide pour un site totalement isolé (§9) ;
    - REMOTE_FHIR_SOURCE, CS_SERVER, hôtes externes, FHIR_IDENTIFIER — **optionnels**
      (appuyer sur Entrée pour passer sur un site mono-serveur) ;
 6. charge les images (`docker load`) depuis `dockerImage/*.tar.gz` ;
@@ -219,15 +223,27 @@ sudo docker compose logs -f oe.openelis.org
 
 ---
 
-## 7. Utiliser un vrai certificat (serveur en ligne / nom de domaine)
+## 7. Serveur en ligne (nom de domaine public + vrai certificat)
 
-Par défaut nginx utilise un certificat **auto-signé 10 ans** (avertissement
-navigateur, sans conséquence sur la sécurité du chiffrement). Pour un serveur
-public avec un vrai certificat (Let's Encrypt, cert acheté), il suffit de
-**remplacer 2 fichiers** puis redémarrer le proxy :
+Choisir le mode **en ligne** à l'install (question « mode de déploiement ») :
+- **aucun dnsmasq** n'est installé (le domaine est résolu par le DNS public) ;
+- `server_name` nginx = votre domaine ; le certificat est généré pour le domaine.
 
+### Utiliser votre vrai certificat
+Deux façons, au choix :
+
+**A. Le déposer AVANT l'install** (recommandé) — l'installeur détecte les PEM
+présents et les conserve (il ne génère alors aucun cert) :
 ```bash
-# Remplacer par vos fichiers réels
+sudo mkdir -p /etc/openelis-global
+sudo cp fullchain.pem /etc/openelis-global/nginx.cert.pem
+sudo cp privkey.pem   /etc/openelis-global/nginx.key.pem
+# puis lancer sudo ./install.sh en mode en ligne
+```
+
+**B. Le remplacer APRÈS coup** — si l'install a généré un cert auto-signé de
+secours (avertissement navigateur en attendant) :
+```bash
 sudo cp fullchain.pem /etc/openelis-global/nginx.cert.pem
 sudo cp privkey.pem   /etc/openelis-global/nginx.key.pem
 sudo docker restart openelisglobal-proxy
@@ -236,7 +252,10 @@ sudo docker restart openelisglobal-proxy
 Aucune reconfiguration du backend, du FHIR ou du compose : ils sont en HTTP
 interne et ignorent le certificat. Si la vraie clé n'a **pas** de passphrase
 (cas Let's Encrypt), retirer la ligne `ssl_password_file` de
-`/etc/openelis-global/nginx.conf` avant de redémarrer.
+`/var/lib/openelis-global/secrets/nginx.conf` avant de redémarrer.
+
+> Le même mécanisme (déposer les 2 PEM) fonctionne aussi en **mode local** si
+> vous disposez d'un cert pour `oeglobal.local`.
 
 ---
 
