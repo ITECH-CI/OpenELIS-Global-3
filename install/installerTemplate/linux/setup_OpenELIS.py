@@ -66,6 +66,10 @@ TRANSLATIONS = {
         "fr": "Voulez-vous continuer la désinstallation ? o/n : ",
         "en": "Do you want to continue with the uninstall? y/n: ",
     },
+    "server LAN IP address (clients reach oeglobal.local here)": {
+        "fr": "adresse IP LAN du serveur (les postes clients joignent oeglobal.local ici)",
+        "en": "server LAN IP address (clients reach oeglobal.local here)",
+    },
 }
 
 
@@ -142,6 +146,7 @@ DOCKER_NGINX_CONTAINER_NAME = "openelisglobal-proxy"
 DOCKER_FRONTEND_CONTAINER_NAME = "openelisglobal-frontend"
 DOCKER_ASTM_BRIDGE_CONTAINER_NAME = "astm-http-bridge"
 DOCKER_AUTOHEAL_CONTAINER_NAME = "autoheal-oe"
+DOCKER_DNSMASQ_CONTAINER_NAME = "openelisglobal-dnsmasq"
 DOCKER_DB_CONTAINER_NAME = "openelisglobal-database" 
 DOCKER_DB_BACKUPS_DIR = "/backups/"  # path in docker container
 DOCKER_DB_HOST_PORT = "5432"
@@ -164,6 +169,8 @@ ADMIN_PWD = ''
 
 #Get from user values
 SITE_ID = ''
+# IP LAN du serveur : dnsmasq y écoute et 'oeglobal.local' y résout (accès clients).
+SERVER_IP_ADDRESS = ''
 KEYSTORE_PWD = ''
 TRUSTSTORE_PWD = ''
 ENCRYPTION_KEY = ''
@@ -376,6 +383,7 @@ def install_files_from_templates():
     install_permissions_file()
     create_nginx_certs()
     create_nginx_files()
+    create_dnsmasq_files()
     if DOCKER_DB:
         install_environment_file()
 
@@ -441,6 +449,10 @@ def create_docker_compose_file():
             line = line.replace("[% frontend_name %]", DOCKER_FRONTEND_CONTAINER_NAME )
         if line.find("[% autoheal_name %]")  >= 0:
             line = line.replace("[% autoheal_name %]", DOCKER_AUTOHEAL_CONTAINER_NAME )
+        if line.find("[% dnsmasq_name %]")  >= 0:
+            line = line.replace("[% dnsmasq_name %]", DOCKER_DNSMASQ_CONTAINER_NAME )
+        if line.find("[% server_ip %]")  >= 0:
+            line = line.replace("[% server_ip %]", SERVER_IP_ADDRESS )
         if line.find("[% timezone %]")  >= 0:
             line = line.replace("[% timezone %]", TIMEZONE )
         if line.find("[% truststore_password %]")  >= 0:
@@ -591,9 +603,26 @@ def create_nginx_files():
 
     template_file.close()
     output_file.close()
-    os.chmod(SECRETS_DIR + "common.properties", 0o640)   
-    os.chown(SECRETS_DIR + "nginx.conf", 8443, 8443) 
-    
+    # Was a copy/paste slip chmod'ing common.properties; the file written here
+    # is nginx.conf.
+    os.chmod(SECRETS_DIR + "nginx.conf", 0o640)
+    os.chown(SECRETS_DIR + "nginx.conf", 8443, 8443)
+
+
+def create_dnsmasq_files():
+    # Generate the dnsmasq config that resolves oeglobal.local -> server LAN IP.
+    ensure_dir_exists(SECRETS_DIR)
+    template_file = open(INSTALLER_TEMPLATE_DIR + "dnsmasq.conf", "r")
+    output_file = open(SECRETS_DIR + "dnsmasq.conf", "w")
+
+    for line in template_file:
+        if line.find("[% server_ip %]") >= 0:
+            line = line.replace("[% server_ip %]", SERVER_IP_ADDRESS)
+        output_file.write(line)
+
+    template_file.close()
+    output_file.close()
+
 
 def install_cron_tasks():
     install_backup_script()
@@ -890,13 +919,15 @@ def do_update():
     get_stored_user_values()
     
     create_nginx_certs()
-    
+
     create_nginx_files()
-    
+
+    create_dnsmasq_files()
+
     create_docker_compose_file()
-    
+
     create_properties_files()
-    
+
     create_server_xml_files()
 
     start_docker_containers()
@@ -980,6 +1011,10 @@ def uninstall_docker_images():
     
     log("removing autoheal image...", PRINT_TO_CONSOLE)
     cmd = 'docker rm $(docker stop $(docker ps -a -q --filter="name=' + DOCKER_AUTOHEAL_CONTAINER_NAME + '" --format="{{.ID}}"))'
+    os.system(cmd)
+
+    log("removing dnsmasq image...", PRINT_TO_CONSOLE)
+    cmd = 'docker rm $(docker stop $(docker ps -a -q --filter="name=' + DOCKER_DNSMASQ_CONTAINER_NAME + '" --format="{{.ID}}"))'
     os.system(cmd)
 
     uninstall_docker_network()
@@ -1122,6 +1157,7 @@ def get_stored_user_values():
     ensure_dir_exists(CONFIG_DIR)
     os.chmod(CONFIG_DIR, 0o640) 
     get_set_site_id()
+    get_set_server_ip()
     # keystore password = passphrase for the nginx private key (auto-generated).
     get_set_keystore_password()
     # Simplified TLS: no truststore anymore -> no truststore password to set.
@@ -1139,6 +1175,12 @@ def get_set_site_id():
     if (not is_site_id_set()):
         set_site_id()
     get_site_id()
+
+
+def get_set_server_ip():
+    if (not is_server_ip_set()):
+        set_server_ip()
+    get_server_ip()
 
 
 def get_set_keystore_password():
@@ -1209,9 +1251,50 @@ def set_site_id():
     """)
     site_id = input(_t("site number for this lab (5 character): "))
     with open(CONFIG_DIR + 'SITE_ID', mode='wt') as file:
-        file.write(site_id)   
-    
-    
+        file.write(site_id)
+
+
+def detect_server_ip():
+    # Best-effort detection of the server's primary LAN IP (the source address
+    # the kernel would use to reach an external host). Returns '' on failure so
+    # the caller falls back to an empty default and the operator types it in.
+    try:
+        out = subprocess.check_output(
+            "ip route get 1.1.1.1", shell=True).decode("utf-8")
+        # ... src <IP> ... -> take the token right after 'src'
+        parts = out.split()
+        if 'src' in parts:
+            return parts[parts.index('src') + 1]
+    except Exception:
+        pass
+    return ''
+
+
+def is_server_ip_set():
+    return os.path.isfile(CONFIG_DIR + 'SERVER_IP_ADDRESS')
+
+
+def get_server_ip():
+    global SERVER_IP_ADDRESS
+    file = open(CONFIG_DIR + 'SERVER_IP_ADDRESS')
+    SERVER_IP_ADDRESS = file.readline().strip()
+
+
+def set_server_ip():
+    # IP LAN du serveur : dnsmasq y écoute et 'oeglobal.local' y résout pour les
+    # postes clients. Auto-détectée puis confirmée (l'opérateur peut corriger).
+    detected = detect_server_ip()
+    prompt = _t("server LAN IP address (clients reach oeglobal.local here)")
+    if detected:
+        answer = input(prompt + " [" + detected + "]: ").strip()
+        server_ip = answer if answer else detected
+    else:
+        server_ip = input(prompt + ": ").strip()
+    ensure_dir_exists(CONFIG_DIR)
+    with open(CONFIG_DIR + 'SERVER_IP_ADDRESS', mode='wt') as file:
+        file.write(server_ip)
+
+
 def is_keystore_password_set():
     return os.path.isfile(CONFIG_DIR + 'KEYSTORE_PASSWORD')
 
@@ -1468,8 +1551,14 @@ def create_nginx_certs():
         log("nginx certificate already present — keeping it", PRINT_TO_CONSOLE)
         return
 
-    subject = "/C=CI/ST=Abidjan/L=Abidjan/O=OpenELIS-Global/OU=CIV/CN=" + (EXTERNAL_HOSTS[0] if EXTERNAL_HOSTS else "localhost")
-    san = "subjectAltName=DNS:*.openelis.org,DNS:localhost"
+    # Mono-site: each installation generates its own self-signed cert for the
+    # local access name 'oeglobal.local'. The server LAN IP is added to the SAN
+    # so a browser reaching the server directly by IP (before the client DNS is
+    # pointed at it) does not trip a name-mismatch warning.
+    subject = "/C=CI/ST=Abidjan/L=Abidjan/O=OpenELIS-Global/OU=CIV/CN=oeglobal.local"
+    san = "subjectAltName=DNS:oeglobal.local,DNS:localhost"
+    if SERVER_IP_ADDRESS:
+        san = san + ",IP:" + SERVER_IP_ADDRESS
     for host in EXTERNAL_HOSTS:
         san = san + ",DNS:" + host
 
@@ -1629,6 +1718,10 @@ def load_docker_image():
     
     log("loading autoheal docker image", PRINT_TO_CONSOLE)
     cmd = 'sudo docker load < ' + INSTALLER_DOCKER_DIR + 'AutoHeal_DockerImage.tar.gz'
+    os.system(cmd)
+
+    log("loading dnsmasq docker image", PRINT_TO_CONSOLE)
+    cmd = 'sudo docker load < ' + INSTALLER_DOCKER_DIR + 'Dnsmasq_DockerImage.tar.gz'
     os.system(cmd)
     
     log("loading openelisglobal-frontend docker image", PRINT_TO_CONSOLE)

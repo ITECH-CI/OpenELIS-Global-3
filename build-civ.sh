@@ -67,6 +67,7 @@ IMG_FHIR="hapi-fhir-jpaserver"
 IMG_NGINX="nginx-proxy"
 IMG_POSTGRES="postgres:14.4"
 IMG_AUTOHEAL="willfarrell/autoheal:1.2.0"
+IMG_DNSMASQ="jpillora/dnsmasq"
 
 # ============================================================
 # 1) Build des images à partir du code courant
@@ -88,9 +89,10 @@ log "Build nginx-proxy (${IMG_NGINX})"
 docker build -f "${PROJECT_DIR}/nginx-proxy/Dockerfile" \
   -t "${IMG_NGINX}:latest" "${PROJECT_DIR}/nginx-proxy"
 
-log "Pull des images tierces (postgres, autoheal)"
+log "Pull des images tierces (postgres, autoheal, dnsmasq)"
 docker pull "${IMG_POSTGRES}"
 docker pull "${IMG_AUTOHEAL}"
+docker pull "${IMG_DNSMASQ}"
 
 if [ "${IMAGES_ONLY}" = true ]; then
   log "Images construites (--images-only). Fin."
@@ -108,6 +110,7 @@ docker save "${IMG_FHIR}:latest"     | gzip > JPAServer_DockerImage.tar.gz
 docker save "${IMG_NGINX}:latest"    | gzip > NGINX_DockerImage.tar.gz
 docker save "${IMG_POSTGRES}"        | gzip > Postgres_DockerImage.tar.gz
 docker save "${IMG_AUTOHEAL}"        | gzip > AutoHeal_DockerImage.tar.gz
+docker save "${IMG_DNSMASQ}"         | gzip > Dnsmasq_DockerImage.tar.gz
 
 # ============================================================
 # 3) Assemblage de l'installeur
@@ -128,6 +131,7 @@ cp JPAServer_DockerImage.tar.gz       "${DEST}/dockerImage/JPAServer_DockerImage
 cp NGINX_DockerImage.tar.gz           "${DEST}/dockerImage/NGINX_DockerImage.tar.gz"
 cp Postgres_DockerImage.tar.gz        "${DEST}/dockerImage/Postgres_DockerImage.tar.gz"
 cp AutoHeal_DockerImage.tar.gz        "${DEST}/dockerImage/AutoHeal_DockerImage.tar.gz"
+cp Dnsmasq_DockerImage.tar.gz         "${DEST}/dockerImage/Dnsmasq_DockerImage.tar.gz"
 
 chmod +x "${DEST}/scripts/"*.sh 2>/dev/null || true
 chmod +x "${DEST}/install.sh" 2>/dev/null || true
@@ -141,7 +145,8 @@ cd "${PROJECT_DIR}"
 # Nettoyage des tar intermédiaires à la racine
 rm -f OpenELIS-Global_DockerImage.tar.gz ReactFrontend_DockerImage.tar.gz \
       JPAServer_DockerImage.tar.gz NGINX_DockerImage.tar.gz \
-      Postgres_DockerImage.tar.gz AutoHeal_DockerImage.tar.gz
+      Postgres_DockerImage.tar.gz AutoHeal_DockerImage.tar.gz \
+      Dnsmasq_DockerImage.tar.gz
 
 FINAL="${INSTALLER_CREATION_DIR}/linux/${INSTALLER_NAME}.tar.gz"
 log "OK — installeur prêt :"

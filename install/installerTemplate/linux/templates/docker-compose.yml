@@ -216,7 +216,24 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
     logging: *local-logging
 #    logging: *loki-logging
-          
+
+  # DNS local mono-site : résout oeglobal.local -> IP LAN du serveur pour les
+  # postes clients. network_mode: host est OBLIGATOIRE (le DNS doit être joignable
+  # sur l'IP LAN du serveur, pas seulement depuis le réseau Docker interne) ; il
+  # est donc hors de openelis-network, ce qui est sans incidence (dnsmasq ne parle
+  # pas aux autres conteneurs).
+  dnsmasq.openelis.org:
+    container_name: [% dnsmasq_name %]
+    image: jpillora/dnsmasq
+    network_mode: host
+    cap_add:
+      - NET_ADMIN
+    volumes:
+      - /var/lib/openelis-global/secrets/dnsmasq.conf:/etc/dnsmasq.conf:ro
+    restart: always
+    logging: *local-logging
+#    logging: *loki-logging
+
 secrets:
   datasource.password:
     file: [% secrets_dir %]datasource.password  

@@ -70,14 +70,20 @@ Le script :
    passphrase de la clé nginx). Le mot de passe admin postgres est **affiché ET
    enregistré** dans `/var/lib/openelis-global/config/postgres_admin.password`
    (chmod 600) ;
-2. génère automatiquement le **certificat d'entrée nginx** (auto-signé 10 ans) ;
+2. génère automatiquement le **certificat d'entrée nginx** (auto-signé 10 ans,
+   **propre à cette installation**) pour le nom local `oeglobal.local` (le SAN
+   inclut aussi l'IP du serveur et `localhost`) ;
 3. génère automatiquement la **clé de chiffrement** (persistée dans
    `/var/lib/openelis-global/config/ENCRYPTION_KEY`) — **⚠️ à sauvegarder : elle
    doit rester identique aux mises à jour, sinon les données chiffrées sont
    perdues** ;
 4. **fuseau horaire par défaut** : `Africa/Abidjan` (modifiable) ;
 5. demande uniquement les paramètres réellement propres au site :
-   - **SITE_ID** (numéro de labo, 5 caractères) — la seule vraie question ;
+   - **SITE_ID** (numéro de labo, 5 caractères) ;
+   - **SERVER_IP_ADDRESS** (IP LAN du serveur) : **auto-détectée** et proposée par
+     défaut — appuyer sur Entrée pour l'accepter, ou saisir l'IP correcte si la
+     machine a plusieurs interfaces. C'est l'IP vers laquelle `oeglobal.local`
+     résout (voir §9) ;
    - REMOTE_FHIR_SOURCE, CS_SERVER, hôtes externes, FHIR_IDENTIFIER — **optionnels**
      (appuyer sur Entrée pour passer sur un site mono-serveur) ;
 6. charge les images (`docker load`) depuis `dockerImage/*.tar.gz` ;
@@ -99,9 +105,13 @@ Le script :
 sudo docker compose ps                 # tous "Up"
 curl -k https://localhost/             # frontend
 ```
-Accès : `https://<serveur>/` — login admin par défaut `admin` / `adminADMIN!`
-(**à changer immédiatement**). L'avertissement navigateur (certificat auto-signé)
-est normal ; voir §7 pour un vrai certificat.
+Accès : `https://oeglobal.local/` (ou `https://<IP-du-serveur>/`) — login admin
+par défaut `admin` / `adminADMIN!` (**à changer immédiatement**). L'avertissement
+navigateur (certificat auto-signé) est normal ; voir §7 pour un vrai certificat.
+
+> Pour que `https://oeglobal.local/` fonctionne depuis les **postes clients**, ils
+> doivent utiliser le serveur comme DNS (voir §9). Depuis le serveur lui-même,
+> l'accès par IP fonctionne immédiatement.
 
 ---
 
@@ -239,3 +249,41 @@ Options : `--images-only` (build images sans installeur), `VERSION=x.y.z.w` (for
 ### En CI (à venir — cf. CICD_STRATEGY_CIV.md)
 Build automatique sur tag `v*` → images ghcr + installeur attaché à la **GitHub
 Release** (téléchargeable). Voir la roadmap dans `CICD_STRATEGY_CIV.md`.
+
+---
+
+## 9. Accès local par nom `oeglobal.local` (DNS embarqué)
+
+Chaque installation embarque un **serveur DNS local** (conteneur `dnsmasq`,
+`network_mode: host`) qui résout `oeglobal.local` vers l'IP du serveur
+(`SERVER_IP_ADDRESS`, demandée à l'install). But : les postes clients accèdent
+tous à la **même URL** `https://oeglobal.local/` sans domaine public ni internet.
+
+### Côté serveur
+Rien à faire : le DNS et le certificat (SAN `oeglobal.local` + IP) sont générés à
+l'installation. Vérifier le conteneur : `sudo docker compose ps` (service
+`dnsmasq.openelis.org`).
+
+### Côté postes clients — pointer le DNS vers le serveur
+Chaque poste qui doit ouvrir `https://oeglobal.local/` doit utiliser le **serveur
+OpenELIS comme DNS** (adresse = `SERVER_IP_ADDRESS`). Deux options :
+- **Recommandé** : configurer l'option DHCP 6 (serveur DNS) du routeur/box du
+  labo pour distribuer l'IP du serveur à tous les postes.
+- **Manuel** : renseigner l'IP du serveur comme DNS dans la config réseau du poste.
+
+Pour supprimer l'avertissement de certificat, importer le certificat
+`/etc/openelis-global/nginx.cert.pem` dans le magasin de confiance des postes
+(GPO en environnement Windows, ou import manuel).
+
+### Dépannage DNS
+| Symptôme | Piste |
+|----------|-------|
+| Le conteneur `dnsmasq` redémarre / port 53 occupé | Sur Ubuntu, `systemd-resolved` écoute sur `127.0.0.53`. dnsmasq est configuré avec `listen-address=<IP serveur>` + `bind-interfaces` pour **ne pas** entrer en conflit. Si le port 53 de l'IP LAN est déjà pris par un autre service, le libérer. |
+| `oeglobal.local` inconnu depuis un poste | Le poste n'utilise pas le serveur comme DNS. Vérifier sa config DNS / l'option DHCP 6. Tester : `nslookup oeglobal.local <IP-serveur>`. |
+| Accès OK par IP mais pas par nom | Idem : problème de résolution DNS côté client, pas côté serveur. |
+
+> **Mono-site** : il n'y a pas de gestion multisite. Chaque serveur a son propre
+> DNS et son propre certificat `oeglobal.local`. Pour changer l'IP du serveur
+> après coup, éditer `/var/lib/openelis-global/config/SERVER_IP_ADDRESS`, puis
+> relancer une mise à jour (régénère dnsmasq.conf) — ou supprimer le certificat
+> pour qu'il soit régénéré avec la nouvelle IP dans son SAN.
