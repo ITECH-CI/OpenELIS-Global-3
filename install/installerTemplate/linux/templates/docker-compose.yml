@@ -228,7 +228,7 @@ services:
 #    logging: *loki-logging
 
   # DNS local mono-site (mode 'local' uniquement — lignes #dns décommentées par
-  # l'installeur). Résout oeglobal.local -> IP LAN du serveur pour les postes
+  # l'installeur). Résout oeglobal.lan -> IP LAN du serveur pour les postes
   # clients. network_mode: host est OBLIGATOIRE (le DNS doit être joignable sur
   # l'IP LAN du serveur, pas seulement depuis le réseau Docker interne) ; il est
   # donc hors de openelis-network, sans incidence (dnsmasq ne parle pas aux autres

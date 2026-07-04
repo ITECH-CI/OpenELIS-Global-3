@@ -66,17 +66,17 @@ TRANSLATIONS = {
         "fr": "Voulez-vous continuer la désinstallation ? o/n : ",
         "en": "Do you want to continue with the uninstall? y/n: ",
     },
-    "server LAN IP address (clients reach oeglobal.local here)": {
-        "fr": "adresse IP LAN du serveur (les postes clients joignent oeglobal.local ici)",
-        "en": "server LAN IP address (clients reach oeglobal.local here)",
+    "server LAN IP address (clients reach oeglobal.lan here)": {
+        "fr": "adresse IP LAN du serveur (les postes clients joignent oeglobal.lan ici)",
+        "en": "server LAN IP address (clients reach oeglobal.lan here)",
     },
     "upstream DNS for Internet (usually the site router; empty = isolated)": {
         "fr": "DNS amont pour Internet (souvent le routeur du centre ; vide = isolé)",
         "en": "upstream DNS for Internet (usually the site router; empty = isolated)",
     },
-    "deployment mode: [1] local (oeglobal.local) or [2] online (domain name)? [1]: ": {
-        "fr": "mode de déploiement : [1] local (oeglobal.local) ou [2] en ligne (nom de domaine) ? [1] : ",
-        "en": "deployment mode: [1] local (oeglobal.local) or [2] online (domain name)? [1]: ",
+    "deployment mode: [1] local (oeglobal.lan) or [2] online (domain name)? [1]: ": {
+        "fr": "mode de déploiement : [1] local (oeglobal.lan) ou [2] en ligne (nom de domaine) ? [1] : ",
+        "en": "deployment mode: [1] local (oeglobal.lan) or [2] online (domain name)? [1]: ",
     },
     "public domain name (e.g. openelis.mon-labo.org): ": {
         "fr": "nom de domaine public (ex. openelis.mon-labo.org) : ",
@@ -182,16 +182,16 @@ ADMIN_PWD = ''
 #Get from user values
 SITE_ID = ''
 # Mode de déploiement :
-#  - 'local'  : accès LAN via oeglobal.local + DNS embarqué (dnsmasq) + cert
-#               auto-signé oeglobal.local. Cas des centres/labos hors ligne.
+#  - 'local'  : accès LAN via oeglobal.lan + DNS embarqué (dnsmasq) + cert
+#               auto-signé oeglobal.lan. Cas des centres/labos hors ligne.
 #  - 'online' : serveur avec nom de domaine public ; PAS de dnsmasq ; cert = vos
 #               PEM déposés (fallback auto-signé pour le domaine).
 DEPLOY_MODE = 'local'
 # Nom de domaine public (mode online uniquement), ex. openelis.mon-labo.org.
 SERVER_DOMAIN = ''
-# IP LAN du serveur : dnsmasq y écoute et 'oeglobal.local' y résout (accès clients).
+# IP LAN du serveur : dnsmasq y écoute et 'oeglobal.lan' y résout (accès clients).
 SERVER_IP_ADDRESS = ''
-# DNS amont : tout ce qui n'est pas oeglobal.local y est forwardé (Internet des
+# DNS amont : tout ce qui n'est pas oeglobal.lan y est forwardé (Internet des
 # postes clients). Vide = pas de forward (mode isolé). Défaut = passerelle du LAN.
 UPSTREAM_DNS = ''
 KEYSTORE_PWD = ''
@@ -382,10 +382,10 @@ def write_install_summary():
             " --- Secrets a conserver en lieu sur ---",
         ]
     else:
-        dns_line = ("Forward vers " + UPSTREAM_DNS) if UPSTREAM_DNS else "Aucun (mode isole, oeglobal.local uniquement)"
+        dns_line = ("Forward vers " + UPSTREAM_DNS) if UPSTREAM_DNS else "Aucun (mode isole, oeglobal.lan uniquement)"
         lines += [
-            " Mode         : LOCAL (oeglobal.local + DNS embarque)",
-            " Acces        : https://oeglobal.local/  (ou https://" + str(SERVER_IP_ADDRESS).strip() + "/)",
+            " Mode         : LOCAL (oeglobal.lan + DNS embarque)",
+            " Acces        : https://oeglobal.lan/  (ou https://" + str(SERVER_IP_ADDRESS).strip() + "/)",
             " Identifiants : admin / adminADMIN!  (A CHANGER IMMEDIATEMENT)",
             "",
             " Numero de site (SITE_ID) : " + str(SITE_ID).strip(),
@@ -648,8 +648,8 @@ def create_nginx_files():
     template_file = open(INSTALLER_TEMPLATE_DIR + "nginx.conf", "r")
     output_file = open(SECRETS_DIR + "nginx.conf", "w")
 
-    # server_name = public domain in online mode, oeglobal.local otherwise.
-    server_name = SERVER_DOMAIN if (DEPLOY_MODE == 'online' and SERVER_DOMAIN) else "oeglobal.local"
+    # server_name = public domain in online mode, oeglobal.lan otherwise.
+    server_name = SERVER_DOMAIN if (DEPLOY_MODE == 'online' and SERVER_DOMAIN) else "oeglobal.lan"
     for line in template_file:
         if line.find("[% server_name %]") >= 0:
             line = line.replace("[% server_name %]", server_name)
@@ -664,7 +664,7 @@ def create_nginx_files():
 
 
 def create_dnsmasq_files():
-    # Generate the dnsmasq config that resolves oeglobal.local -> server LAN IP,
+    # Generate the dnsmasq config that resolves oeglobal.lan -> server LAN IP,
     # and forwards everything else to UPSTREAM_DNS (so clients keep Internet).
     ensure_dir_exists(SECRETS_DIR)
     template_file = open(INSTALLER_TEMPLATE_DIR + "dnsmasq.conf", "r")
@@ -673,7 +673,7 @@ def create_dnsmasq_files():
     # If an upstream is set -> 'server=<ip>' (forward). If empty -> 'no-resolv'
     # so dnsmasq does NOT fall back to the host's /etc/resolv.conf (which points
     # at 127.0.0.53 in host mode and is unreachable for remote clients): isolated
-    # mode answers only oeglobal.local.
+    # mode answers only oeglobal.lan.
     if UPSTREAM_DNS:
         upstream_line = "server=" + UPSTREAM_DNS
     else:
@@ -1251,7 +1251,7 @@ def get_stored_user_values():
         # Online: public domain, no embedded DNS. Only the domain is needed.
         get_set_server_domain()
     else:
-        # Local: oeglobal.local served by the embedded dnsmasq.
+        # Local: oeglobal.lan served by the embedded dnsmasq.
         get_set_server_ip()
         get_set_upstream_dns()
     # keystore password = passphrase for the nginx private key (auto-generated).
@@ -1395,10 +1395,10 @@ def get_server_ip():
 
 
 def set_server_ip():
-    # IP LAN du serveur : dnsmasq y écoute et 'oeglobal.local' y résout pour les
+    # IP LAN du serveur : dnsmasq y écoute et 'oeglobal.lan' y résout pour les
     # postes clients. Auto-détectée puis confirmée (l'opérateur peut corriger).
     detected = detect_server_ip()
-    prompt = _t("server LAN IP address (clients reach oeglobal.local here)")
+    prompt = _t("server LAN IP address (clients reach oeglobal.lan here)")
     if detected:
         answer = input(prompt + " [" + detected + "]: ").strip()
         server_ip = answer if answer else detected
@@ -1437,7 +1437,7 @@ def get_upstream_dns():
 
 
 def set_upstream_dns():
-    # DNS amont : dnsmasq forwarde tout ce qui n'est pas oeglobal.local vers cette
+    # DNS amont : dnsmasq forwarde tout ce qui n'est pas oeglobal.lan vers cette
     # adresse (les postes clients gardent Internet). Par défaut = passerelle du LAN
     # (routeur du centre). Laisser vide -> mode isolé (pas de sortie DNS).
     detected = detect_default_gateway()
@@ -1464,9 +1464,9 @@ def get_deploy_mode():
 
 
 def set_deploy_mode():
-    # local  -> oeglobal.local + dnsmasq embarqué (centres hors ligne).
+    # local  -> oeglobal.lan + dnsmasq embarqué (centres hors ligne).
     # online -> nom de domaine public, pas de dnsmasq, vrai cert (serveur en ligne).
-    answer = input(_t("deployment mode: [1] local (oeglobal.local) or [2] online (domain name)? [1]: ")).strip()
+    answer = input(_t("deployment mode: [1] local (oeglobal.lan) or [2] online (domain name)? [1]: ")).strip()
     mode = 'online' if answer in ('2', 'online', 'en ligne') else 'local'
     ensure_dir_exists(CONFIG_DIR)
     with open(CONFIG_DIR + 'DEPLOY_MODE', mode='wt') as file:
@@ -1757,11 +1757,11 @@ def create_nginx_certs():
         subject = "/C=CI/ST=Abidjan/L=Abidjan/O=OpenELIS-Global/OU=CIV/CN=" + cn
         san = "subjectAltName=DNS:" + cn + ",DNS:localhost"
     else:
-        # Local: self-signed cert for 'oeglobal.local'. The server LAN IP is added
+        # Local: self-signed cert for 'oeglobal.lan'. The server LAN IP is added
         # to the SAN so a browser reaching the server directly by IP (before the
         # client DNS is pointed at it) does not trip a name-mismatch warning.
-        subject = "/C=CI/ST=Abidjan/L=Abidjan/O=OpenELIS-Global/OU=CIV/CN=oeglobal.local"
-        san = "subjectAltName=DNS:oeglobal.local,DNS:localhost"
+        subject = "/C=CI/ST=Abidjan/L=Abidjan/O=OpenELIS-Global/OU=CIV/CN=oeglobal.lan"
+        san = "subjectAltName=DNS:oeglobal.lan,DNS:localhost"
         if SERVER_IP_ADDRESS:
             san = san + ",IP:" + SERVER_IP_ADDRESS
     for host in EXTERNAL_HOSTS:
