@@ -75,6 +75,13 @@ def _t(text):
         return text
     return entry.get(INSTALL_LANG, text)
 
+
+def is_yes(answer):
+    # Accept affirmative answers in both languages: the prompts are translated
+    # (they show "o/n" in French) but the raw comparison used to check only "y",
+    # so typing "o" did nothing. Match y/yes (en) and o/oui (fr), any case.
+    return answer.strip().lower() in ("y", "yes", "o", "oui")
+
 #Installer directories' names
 INSTALLER_CROSSTAB_DIR = "./crosstab/"
 INSTALLER_DB_INIT_DIR = "./initDB/"
@@ -250,7 +257,7 @@ def main(argv):
         log("uninstall " + strftime("%a, %d %b %Y %H:%M:%S", gmtime()), not PRINT_TO_CONSOLE)
         print("This will uninstall OpenELIS from this machine including **ALL** data from database and **ALL** local backups")
         remove = input(_t("Do you want to continue with the uninstall? y/n: "))
-        if remove.lower() == 'y':
+        if is_yes(remove):
             uninstall()
     
     elif MODE == "update":
@@ -596,7 +603,7 @@ def install_cron_tasks():
 def install_backup_script():
     if os.path.exists(DB_BACKUPS_DIR + BACKUP_SCRIPT_NAME):
         over_ride = input("The backup script is already installed. Do you want to overwrite it? y/n ")
-        if not over_ride.lower() == "y":
+        if not is_yes(over_ride):
             return
     
     backup_script_template = INSTALLER_TEMPLATE_DIR + BACKUP_SCRIPT_NAME 
@@ -854,7 +861,7 @@ def do_update():
 
     while not find_backup_password():
         do_create_user = input("Unable to find backup password from secrets file. Would you like to create a backup user? y/n ")
-        if do_create_user.lower() == 'y':
+        if is_yes(do_create_user):
             generate_database_backup_password()
             preserve_database_backup_user_password()
             create_db_backup_user()
@@ -1703,7 +1710,7 @@ def backup_db():
     action_time = strftime("%Y_%m_%d-%H_%M_%S", time.localtime())
     backup_name = 'oe_backup_' + action_time
     logical_backup = input("Would you like to take a logical backup? (slower than default backup, but mandatory if you are migrating between database versions) y/n ")
-    if logical_backup.lower() == "y":
+    if is_yes(logical_backup):
         backup_name = backup_name + '.sql'
         if find_password():
             log("backing up database to " + INSTALLER_ROLLBACK_DIR + backup_name, PRINT_TO_CONSOLE)
@@ -1716,7 +1723,7 @@ def backup_db():
                     shutil.move(DB_BACKUPS_DIR + backup_name, INSTALLER_ROLLBACK_DIR + backup_name)
                 else:
                     over_ride = input("Database could not be backed up properly. Do you want to continue without a proper backup? y/n ")
-                    if not over_ride.lower() == "y":
+                    if not is_yes(over_ride):
                         clean_exit()  
             elif LOCAL_DB:
                 os.system(
@@ -1737,7 +1744,7 @@ def backup_db():
                     shutil.move(DB_BACKUPS_DIR + backup_name, INSTALLER_ROLLBACK_DIR + backup_name)
                 else:
                     over_ride = input("Database could not be backed up properly. Do you want to continue without a proper backup? y/n ")
-                    if not over_ride.lower() == "y":
+                    if not is_yes(over_ride):
                         clean_exit()  
             elif LOCAL_DB:
                 os.system(
