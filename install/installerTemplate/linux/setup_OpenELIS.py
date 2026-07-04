@@ -1084,7 +1084,29 @@ def uninstall_docker_images():
     cmd = 'docker rm $(docker stop $(docker ps -a -q --filter="name=' + DOCKER_DNSMASQ_CONTAINER_NAME + '" --format="{{.ID}}"))'
     os.system(cmd)
 
+    remove_docker_images()
+
     uninstall_docker_network()
+
+
+def remove_docker_images():
+    # The loop above only removed CONTAINERS; the IMAGES stayed on disk (a
+    # historical bug: only the openelis image was rmi'd). Remove every image the
+    # installer ships so a fresh install/reload really uses the new bundle and no
+    # stale layers linger. '-f' + '2>/dev/null' = best-effort, ignored if absent
+    # or still referenced.
+    log("removing docker images...", PRINT_TO_CONSOLE)
+    images = [
+        DOCKER_OE_REPO_NAME,          # openelisglobal
+        "hapi-fhir-jpaserver",
+        "nginx-proxy",
+        "openelisglobal-frontend",
+        "openelisglobal-dnsmasq",
+    ]
+    if DOCKER_DB:
+        images.append("postgres:14.4")
+    for image in images:
+        os.system('docker rmi -f ' + image + ' 2>/dev/null')
 
 
 def uninstall_docker_network():
