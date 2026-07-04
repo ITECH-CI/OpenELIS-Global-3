@@ -249,6 +249,13 @@ git submodule update --init --recursive   # dataexport requis
 ```
 Options : `--images-only` (build images sans installeur), `VERSION=x.y.z.w` (forcer la version).
 
+> **Plateforme** : les images sont construites/tirées en `linux/amd64` (cible =
+> serveurs Linux amd64), même si la machine de build est arm64 (Mac Apple
+> Silicon). Le `docker-compose` fixe aussi `platform: linux/amd64` sur chaque
+> service. Sur un hôte arm64, l'exécution passe par l'émulation. Pour cibler une
+> autre architecture : `TARGET_PLATFORM=linux/arm64 ./build-civ.sh` (et adapter
+> le `platform:` du template).
+
 ### En CI (à venir — cf. CICD_STRATEGY_CIV.md)
 Build automatique sur tag `v*` → images ghcr + installeur attaché à la **GitHub
 Release** (téléchargeable). Voir la roadmap dans `CICD_STRATEGY_CIV.md`.

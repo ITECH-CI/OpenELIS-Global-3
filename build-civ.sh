@@ -60,6 +60,14 @@ fi
 [ -n "${VERSION}" ] || fail "Impossible de déterminer la version (essayez VERSION=x.y.z.w ./build-civ.sh)"
 log "VERSION=${VERSION}"
 
+# Plateforme cible des images = celle des serveurs de déploiement (amd64), et
+# celle imposée par le docker-compose du template (platform: linux/amd64). On la
+# force au build/pull pour que, même sur une machine de build arm64 (Mac Apple
+# Silicon), le bundle offline contienne bien des images amd64. Surchargeable via
+# TARGET_PLATFORM=... ./build-civ.sh
+TARGET_PLATFORM="${TARGET_PLATFORM:-linux/amd64}"
+log "TARGET_PLATFORM=${TARGET_PLATFORM}"
+
 # --- Noms d'images (doivent matcher docker-compose.yml du template et setup_OpenELIS.py) ---
 IMG_BACKEND="openelisglobal"
 IMG_FRONTEND="openelisglobal-frontend"
@@ -73,26 +81,26 @@ IMG_DNSMASQ="jpillora/dnsmasq"
 # 1) Build des images à partir du code courant
 # ============================================================
 log "Build backend (${IMG_BACKEND}) — WAR + dataexport dans le Dockerfile multi-stage"
-docker build -f "${PROJECT_DIR}/Dockerfile" \
+docker build --platform "${TARGET_PLATFORM}" -f "${PROJECT_DIR}/Dockerfile" \
   --build-arg SKIP_SPOTLESS=true \
   -t "${IMG_BACKEND}:latest" "${PROJECT_DIR}"
 
 log "Build frontend (${IMG_FRONTEND}) — Dockerfile.prod (npm build -> nginx)"
-docker build -f "${PROJECT_DIR}/frontend/Dockerfile.prod" \
+docker build --platform "${TARGET_PLATFORM}" -f "${PROJECT_DIR}/frontend/Dockerfile.prod" \
   -t "${IMG_FRONTEND}:latest" "${PROJECT_DIR}/frontend"
 
 log "Build FHIR (${IMG_FHIR})"
-docker build -f "${PROJECT_DIR}/fhir/Dockerfile" \
+docker build --platform "${TARGET_PLATFORM}" -f "${PROJECT_DIR}/fhir/Dockerfile" \
   -t "${IMG_FHIR}:latest" "${PROJECT_DIR}/fhir"
 
 log "Build nginx-proxy (${IMG_NGINX})"
-docker build -f "${PROJECT_DIR}/nginx-proxy/Dockerfile" \
+docker build --platform "${TARGET_PLATFORM}" -f "${PROJECT_DIR}/nginx-proxy/Dockerfile" \
   -t "${IMG_NGINX}:latest" "${PROJECT_DIR}/nginx-proxy"
 
 log "Pull des images tierces (postgres, autoheal, dnsmasq)"
-docker pull "${IMG_POSTGRES}"
-docker pull "${IMG_AUTOHEAL}"
-docker pull "${IMG_DNSMASQ}"
+docker pull --platform "${TARGET_PLATFORM}" "${IMG_POSTGRES}"
+docker pull --platform "${TARGET_PLATFORM}" "${IMG_AUTOHEAL}"
+docker pull --platform "${TARGET_PLATFORM}" "${IMG_DNSMASQ}"
 
 if [ "${IMAGES_ONLY}" = true ]; then
   log "Images construites (--images-only). Fin."
