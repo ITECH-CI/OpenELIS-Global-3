@@ -430,6 +430,7 @@ def install_files_from_templates():
     create_nginx_files()
     if DEPLOY_MODE != 'online':
         create_dnsmasq_files()
+        configure_host_dns_resolution()
     if DOCKER_DB:
         install_environment_file()
 
@@ -688,6 +689,23 @@ def create_dnsmasq_files():
 
     template_file.close()
     output_file.close()
+
+
+def configure_host_dns_resolution():
+    # Local mode only: make the SERVER ITSELF resolve oeglobal.lan through the
+    # embedded dnsmasq, so an operator can open https://oeglobal.lan/ from the
+    # server's own browser/curl. Clients don't need this (they point their DNS at
+    # the server). We add a systemd-resolved drop-in that forwards ONLY the
+    # oeglobal.lan domain to 127.0.0.1 (dnsmasq) — everything else is untouched.
+    # No-op if systemd-resolved is absent (some minimal servers).
+    resolved_dir = "/etc/systemd/resolved.conf.d"
+    if not os.path.isdir("/etc/systemd"):
+        return
+    ensure_dir_exists(resolved_dir)
+    dropin = resolved_dir + "/oeglobal.conf"
+    with open(dropin, mode='wt') as file:
+        file.write("[Resolve]\nDNS=127.0.0.1\nDomains=~oeglobal.lan\n")
+    os.system('systemctl restart systemd-resolved 2>/dev/null')
 
 
 def install_cron_tasks():
@@ -990,6 +1008,7 @@ def do_update():
 
     if DEPLOY_MODE != 'online':
         create_dnsmasq_files()
+        configure_host_dns_resolution()
 
     create_docker_compose_file()
 
@@ -1141,6 +1160,11 @@ def uninstall_program_files():
         shutil.rmtree(OE_ETC_DIR)
     if os.path.exists(OE_VAR_DIR):
         shutil.rmtree(OE_VAR_DIR)
+    # Remove the systemd-resolved drop-in added in local mode (oeglobal.lan).
+    resolved_dropin = "/etc/systemd/resolved.conf.d/oeglobal.conf"
+    if os.path.exists(resolved_dropin):
+        os.remove(resolved_dropin)
+        os.system('systemctl restart systemd-resolved 2>/dev/null')
 
 
 #---------------------------------------------------------------------

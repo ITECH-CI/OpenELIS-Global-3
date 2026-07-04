@@ -193,7 +193,8 @@ Le mode `uninstall` (interactif, demande confirmation) :
    installation (conteneurs injoignables / connection reset) ;
 4. supprime la base (volume de données) ;
 5. supprime le cron de backup ;
-6. supprime `/etc/openelis-global/` et `/var/lib/openelis-global/`.
+6. supprime `/etc/openelis-global/` et `/var/lib/openelis-global/`, ainsi que le
+   drop-in DNS `/etc/systemd/resolved.conf.d/oeglobal.conf` (mode local).
 
 > Un simple `docker compose down` **ne supprime pas** le réseau (subnet fixe
 > conservé). Le réseau n'est nettoyé qu'à l'`uninstall` (ou recréé proprement au
@@ -321,8 +322,11 @@ défaut du serveur) et proposée par défaut ; appuyer sur Entrée pour l'accept
 
 ### Côté serveur
 Rien à faire : le DNS et le certificat (SAN `oeglobal.lan` + IP) sont générés à
-l'installation. Vérifier le conteneur : `sudo docker compose ps` (service
-`dnsmasq.openelis.org`).
+l'installation. L'installeur configure aussi automatiquement `systemd-resolved`
+pour que **le serveur lui-même** résolve `oeglobal.lan` (drop-in
+`/etc/systemd/resolved.conf.d/oeglobal.conf`) — utile pour ouvrir l'appli depuis
+le navigateur du serveur. Vérifier le conteneur : `sudo docker compose ps`
+(service `dnsmasq.openelis.org`).
 
 ### Côté postes clients — pointer le DNS vers le serveur
 Chaque poste qui doit ouvrir `https://oeglobal.lan/` doit utiliser le **serveur
@@ -330,6 +334,12 @@ OpenELIS comme DNS** (adresse = `SERVER_IP_ADDRESS`). Deux options :
 - **Recommandé** : configurer l'option DHCP 6 (serveur DNS) du routeur/box du
   labo pour distribuer l'IP du serveur à tous les postes.
 - **Manuel** : renseigner l'IP du serveur comme DNS dans la config réseau du poste.
+
+> 💡 **Dans le navigateur** : taper `oeglobal.lan` **seul** déclenche souvent une
+> **recherche Google** au lieu d'ouvrir le site. Taper l'adresse **complète**
+> `https://oeglobal.lan` (avec `https://`), ou ajouter un `/` final
+> (`oeglobal.lan/`). Le plus simple pour les utilisateurs : créer un **favori /
+> marque-page** `https://oeglobal.lan` sur chaque poste.
 
 Pour supprimer l'avertissement de certificat, importer le certificat
 `/etc/openelis-global/nginx.cert.pem` dans le magasin de confiance des postes
