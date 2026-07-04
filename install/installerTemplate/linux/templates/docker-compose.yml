@@ -234,7 +234,7 @@ services:
   # pas aux autres conteneurs).
   dnsmasq.openelis.org:
     container_name: [% dnsmasq_name %]
-    image: jpillora/dnsmasq
+    image: openelisglobal-dnsmasq
     platform: linux/amd64
     network_mode: host
     cap_add:
@@ -244,6 +244,12 @@ services:
     restart: always
     logging: *local-logging
 #    logging: *loki-logging
+    healthcheck:
+      test: ["CMD", "/healthcheck.sh"]
+      timeout: 10s
+      interval: 30s
+      retries: 3
+      start_period: 30s
 
 secrets:
   datasource.password:

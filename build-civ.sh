@@ -75,7 +75,7 @@ IMG_FHIR="hapi-fhir-jpaserver"
 IMG_NGINX="nginx-proxy"
 IMG_POSTGRES="postgres:14.4"
 IMG_AUTOHEAL="willfarrell/autoheal:1.2.0"
-IMG_DNSMASQ="jpillora/dnsmasq"
+IMG_DNSMASQ="openelisglobal-dnsmasq"
 
 # ============================================================
 # 1) Build des images à partir du code courant
@@ -97,10 +97,13 @@ log "Build nginx-proxy (${IMG_NGINX})"
 docker build --platform "${TARGET_PLATFORM}" -f "${PROJECT_DIR}/nginx-proxy/Dockerfile" \
   -t "${IMG_NGINX}:latest" "${PROJECT_DIR}/nginx-proxy"
 
-log "Pull des images tierces (postgres, autoheal, dnsmasq)"
+log "Build dnsmasq (${IMG_DNSMASQ}) — dnsmasq pur (sans UI), lit /etc/dnsmasq.conf"
+docker build --platform "${TARGET_PLATFORM}" -f "${PROJECT_DIR}/dnsmasq/Dockerfile" \
+  -t "${IMG_DNSMASQ}:latest" "${PROJECT_DIR}/dnsmasq"
+
+log "Pull des images tierces (postgres, autoheal)"
 docker pull --platform "${TARGET_PLATFORM}" "${IMG_POSTGRES}"
 docker pull --platform "${TARGET_PLATFORM}" "${IMG_AUTOHEAL}"
-docker pull --platform "${TARGET_PLATFORM}" "${IMG_DNSMASQ}"
 
 if [ "${IMAGES_ONLY}" = true ]; then
   log "Images construites (--images-only). Fin."
@@ -118,7 +121,7 @@ docker save "${IMG_FHIR}:latest"     | gzip > JPAServer_DockerImage.tar.gz
 docker save "${IMG_NGINX}:latest"    | gzip > NGINX_DockerImage.tar.gz
 docker save "${IMG_POSTGRES}"        | gzip > Postgres_DockerImage.tar.gz
 docker save "${IMG_AUTOHEAL}"        | gzip > AutoHeal_DockerImage.tar.gz
-docker save "${IMG_DNSMASQ}"         | gzip > Dnsmasq_DockerImage.tar.gz
+docker save "${IMG_DNSMASQ}:latest"  | gzip > Dnsmasq_DockerImage.tar.gz
 
 # ============================================================
 # 3) Assemblage de l'installeur
