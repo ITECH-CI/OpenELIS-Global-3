@@ -252,9 +252,20 @@ Options : `--images-only` (build images sans installeur), `VERSION=x.y.z.w` (for
 > **Plateforme** : les images sont construites/tirées en `linux/amd64` (cible =
 > serveurs Linux amd64), même si la machine de build est arm64 (Mac Apple
 > Silicon). Le `docker-compose` fixe aussi `platform: linux/amd64` sur chaque
-> service. Sur un hôte arm64, l'exécution passe par l'émulation. Pour cibler une
-> autre architecture : `TARGET_PLATFORM=linux/arm64 ./build-civ.sh` (et adapter
-> le `platform:` du template).
+> service. Pour cibler une autre architecture :
+> `TARGET_PLATFORM=linux/arm64 ./build-civ.sh` (et adapter le `platform:` du template).
+
+> ⚠️ **Tester le bundle amd64 dans une VM arm64** (ex. Ubuntu Parallels sur Mac
+> Apple Silicon) : Docker Engine natif dans la VM n'a pas l'émulation QEMU, donc
+> exécuter un binaire amd64 échoue avec `exec format error` (typiquement le
+> conteneur `dnsmasq` : `exec /usr/local/bin/webproc: exec format error`).
+> **C'est un artefact du test en VM arm64, pas un bug du bundle** : les serveurs
+> de déploiement réels (amd64) exécutent nativement, sans émulation. Pour tester
+> quand même dans la VM arm64, installer les handlers binfmt une fois :
+> ```bash
+> sudo docker run --privileged --rm tonistiigi/binfmt --install all
+> sudo docker compose up -d   # relancer depuis le dossier de l'installer
+> ```
 
 ### En CI (à venir — cf. CICD_STRATEGY_CIV.md)
 Build automatique sur tag `v*` → images ghcr + installeur attaché à la **GitHub
