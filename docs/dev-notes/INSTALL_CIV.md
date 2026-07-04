@@ -25,8 +25,9 @@
 > un réseau Docker privé isolé. Plus aucun keystore/truststore interne à gérer.
 
 L'installeur crée/utilise deux arborescences :
-- `/etc/openelis-global/` — configuration générée (compose, properties, certs, secrets)
-- `/var/lib/openelis-global/` — données (backup_dir, secrets, plugins, config, initDB, volume DB)
+- `/etc/openelis-global/` — configuration générée (server.xml, certs nginx, setup.ini)
+- `/var/lib/openelis-global/` — données + **`docker-compose.yml`** (backup_dir, secrets,
+  plugins, config, initDB, volume DB). C'est depuis ce compose que tournent les conteneurs.
 
 ---
 
@@ -75,8 +76,9 @@ Le script :
      (appuyer sur Entrée pour passer sur un site mono-serveur) ;
 6. charge les images (`docker load`) depuis `dockerImage/*.tar.gz` ;
 7. initialise la base (schéma + données depuis `initDB/OpenELIS-Global.sql`) ;
-8. génère la config dans `/etc/openelis-global/`, démarre `docker compose up -d`,
-   configure le cron de sauvegarde quotidienne ;
+8. génère la config dans `/etc/openelis-global/` et le `docker-compose.yml` dans
+   `/var/lib/openelis-global/`, démarre `docker compose up -d`, configure le cron
+   de sauvegarde quotidienne ;
 9. écrit un **récapitulatif complet** dans
    `/var/lib/openelis-global/config/INSTALL_SUMMARY.txt` (chmod 600) : URL d'accès,
    identifiants, mot de passe admin, emplacement de la clé de chiffrement.
@@ -87,7 +89,7 @@ Le script :
 
 ### 2.4 Vérifier
 ```bash
-docker compose -f /etc/openelis-global/docker-compose.yml ps   # tous "Up"
+docker compose -f /var/lib/openelis-global/docker-compose.yml ps   # tous "Up"
 curl -k https://localhost/                                     # frontend
 ```
 Accès : `https://<serveur>/` — login admin par défaut `admin` / `adminADMIN!`
@@ -191,7 +193,7 @@ Le mode `uninstall` (interactif, demande confirmation) :
 
 Logs :
 ```bash
-docker compose -f /etc/openelis-global/docker-compose.yml logs -f oe.openelis.org
+docker compose -f /var/lib/openelis-global/docker-compose.yml logs -f oe.openelis.org
 ```
 
 ---

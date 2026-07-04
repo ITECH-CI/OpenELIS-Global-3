@@ -347,7 +347,7 @@ def write_install_summary():
         "",
         " Configuration generee : " + OE_ETC_DIR,
         " Etat des conteneurs :",
-        "   docker compose -f " + OE_ETC_DIR + "docker-compose.yml ps",
+        "   docker compose -f " + OE_VAR_DIR + "docker-compose.yml ps",
         "==============================================================",
         "",
     ]

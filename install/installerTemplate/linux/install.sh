@@ -54,5 +54,5 @@ echo "     (à sauvegarder ! doit rester identique aux mises à jour)"
 echo "   - Config générée     : /etc/openelis-global/"
 echo
 echo " État des conteneurs :"
-echo "   docker compose -f /etc/openelis-global/docker-compose.yml ps"
+echo "   docker compose -f /var/lib/openelis-global/docker-compose.yml ps"
 echo "============================================================"
