@@ -84,10 +84,23 @@ my $snapShotFileName     = $snapShotFileBase . '.backup';
 my $snapShotFileNameZipped     = $snapShotFileName . '.gz'; 
 my $databaseDockerBackupDir	 			 = '[% docker_backups_dir %]';
 my $databaseDockerImageName				 = 'openelisglobal-database'; #don't change
+
+# HAPI-FHIR crée ses tables (hfj_/trm_/mpi_/npm_/bt2_) dans le schéma clinlims
+# (currentSchema=clinlims + hbm2ddl.auto=update). Elles sont volumineuses ET
+# reconstructibles (projection du métier) : les inclure alourdit le dump et
+# provoque des erreurs à la restauration. On les EXCLUT du backup ; HAPI les
+# recrée au démarrage (hbm2ddl=update). Les motifs sont quotés (simples) pour que
+# le pattern '*' soit interprété par pg_dump, pas par le shell.
+my $fhirExcludes = " --exclude-table-data='clinlims.hfj_*'"
+                 . " --exclude-table-data='clinlims.trm_*'"
+                 . " --exclude-table-data='clinlims.mpi_*'"
+                 . " --exclude-table-data='clinlims.npm_*'"
+                 . " --exclude-table-data='clinlims.bt2_*'";
+
 #for backup task in docker database command
-my $docker_cmd = 'docker exec ' . $databaseDockerImageName . ' /usr/bin/pg_dump -U clinlims -f "' . $databaseDockerBackupDir . '/' . $snapShotFileName . '" -n \"clinlims\" clinlims';
+my $docker_cmd = 'docker exec ' . $databaseDockerImageName . ' /usr/bin/pg_dump -U clinlims -f "' . $databaseDockerBackupDir . '/' . $snapShotFileName . '" -n \"clinlims\"' . $fhirExcludes . ' clinlims';
 #for backup task using postgres running on the host
-my $host_cmd = 'pg_dump -h localhost  -U clinlims -f "' . $snapShotFileName . '" -n \"clinlims\" clinlims'; 
+my $host_cmd = 'pg_dump -h localhost  -U clinlims -f "' . $snapShotFileName . '" -n \"clinlims\"' . $fhirExcludes . ' clinlims';
 my $zipCmd = 'gzip -f ' .  $snapShotFileName;
 #my $backBaseDir          = cwd();
 my $backBaseDir          = '[% db_backups_dir %]';
@@ -107,7 +120,7 @@ chdir "$dailyDir";
 if ( $db_install_type eq "docker" ) {
 	my $response = system("$docker_cmd")  and warn "Error while running: $! \n";
 	copy( "$backBaseDir/$snapShotFileName", "$dailyDir" ) or die "File cannot be copied.";
-} else if ( $db_install_type eq "host" ) {
+} elsif ( $db_install_type eq "host" ) {
 	my $response = system("$host_cmd")  and warn "Error while running: $! \n";
 } else {
 	die "Cannot backup remote databases";
