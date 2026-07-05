@@ -893,23 +893,19 @@ def install_db():
         os.chmod(DB_INIT_DIR + '1-pgsqlPermissions.sql', 0o644)  
     elif LOCAL_DB:
         #configure the postgres installation to make sure it can be connected to from the docker container
-        cmd = 'sudo ' + INSTALLER_SCRIPTS_DIR + 'configureHostPostgres.sh ' + POSTGRES_MAIN_DIR
-        os.system(cmd)
-        
-        cmd = 'su -c "createdb  clinlims" postgres'
-        os.system(cmd)
+        run('sudo ' + INSTALLER_SCRIPTS_DIR + 'configureHostPostgres.sh ' + POSTGRES_MAIN_DIR)
+
+        # createdb peut échouer si la base existe déjà (reprise d'install) -> non critique
+        run('su -c "createdb  clinlims" postgres', critical=False)
         #make sure postgres can read this file to run it
         os.chown(INSTALLER_DB_INIT_DIR + '1-pgsqlPermissions.sql', 0, grp.getgrnam('postgres')[2])
-        cmd = 'su -c "psql  <  ' + INSTALLER_DB_INIT_DIR + '1-pgsqlPermissions.sql" postgres'
-        os.system(cmd)
-        cmd = 'su -c "psql clinlims  < ' + INSTALLER_DB_INIT_DIR + 'OpenELIS-Global.sql" postgres'
-        os.system(cmd)
-        cmd = 'su -c "psql clinlims <  ' + INSTALLER_DB_INIT_DIR + 'siteInfo.sql" postgres'
-        os.system(cmd)
+        run('su -c "psql  <  ' + INSTALLER_DB_INIT_DIR + '1-pgsqlPermissions.sql" postgres')
+        run('su -c "psql clinlims  < ' + INSTALLER_DB_INIT_DIR + 'OpenELIS-Global.sql" postgres')
+        run('su -c "psql clinlims <  ' + INSTALLER_DB_INIT_DIR + 'siteInfo.sql" postgres')
     else:
-        log("can't install database remotely". PRINT_TO_CONSOLE)
-        log("please follow instructions for setting up a remote database". PRINT_TO_CONSOLE)
-        log("if you have already done so, please ignore this". PRINT_TO_CONSOLE)
+        log("can't install database remotely", PRINT_TO_CONSOLE)
+        log("please follow instructions for setting up a remote database", PRINT_TO_CONSOLE)
+        log("if you have already done so, please ignore this", PRINT_TO_CONSOLE)
 
 
 def preserve_database_user_password():
@@ -1070,7 +1066,7 @@ def delete_database():
         os.system('su -c "dropuser -e clinlims" postgres')
         os.system('su -c "dropuser -e admin" postgres')
     else:
-        log("please manually remove remote database". PRINT_TO_CONSOLE)
+        log("please manually remove remote database", PRINT_TO_CONSOLE)
 
 
 def uninstall_docker_images():
@@ -1946,33 +1942,26 @@ def check_postgres_preconditions():
 #---------------------------------------------------------------------
 def load_docker_image():
     log("loading openelis-global docker image", PRINT_TO_CONSOLE)
-    cmd = 'sudo docker load < ' + INSTALLER_DOCKER_DIR + APP_NAME + '-' + VERSION + '.tar.gz'
-    os.system(cmd)
-    
+    run('sudo docker load < ' + INSTALLER_DOCKER_DIR + APP_NAME + '-' + VERSION + '.tar.gz')
+
     log("loading jpa-server docker image", PRINT_TO_CONSOLE)
-    cmd = 'sudo docker load < ' + INSTALLER_DOCKER_DIR + 'JPAServer_DockerImage.tar.gz'
-    os.system(cmd)
-    
+    run('sudo docker load < ' + INSTALLER_DOCKER_DIR + 'JPAServer_DockerImage.tar.gz')
+
     log("loading autoheal docker image", PRINT_TO_CONSOLE)
-    cmd = 'sudo docker load < ' + INSTALLER_DOCKER_DIR + 'AutoHeal_DockerImage.tar.gz'
-    os.system(cmd)
+    run('sudo docker load < ' + INSTALLER_DOCKER_DIR + 'AutoHeal_DockerImage.tar.gz')
 
     log("loading dnsmasq docker image", PRINT_TO_CONSOLE)
-    cmd = 'sudo docker load < ' + INSTALLER_DOCKER_DIR + 'Dnsmasq_DockerImage.tar.gz'
-    os.system(cmd)
-    
+    run('sudo docker load < ' + INSTALLER_DOCKER_DIR + 'Dnsmasq_DockerImage.tar.gz')
+
     log("loading openelisglobal-frontend docker image", PRINT_TO_CONSOLE)
-    cmd = 'sudo docker load < ' + INSTALLER_DOCKER_DIR + 'ReactFrontend_DockerImage.tar.gz'
-    os.system(cmd)
-    
+    run('sudo docker load < ' + INSTALLER_DOCKER_DIR + 'ReactFrontend_DockerImage.tar.gz')
+
     log("loading nginx-proxy docker image", PRINT_TO_CONSOLE)
-    cmd = 'sudo docker load < ' + INSTALLER_DOCKER_DIR + 'NGINX_DockerImage.tar.gz'
-    os.system(cmd)
+    run('sudo docker load < ' + INSTALLER_DOCKER_DIR + 'NGINX_DockerImage.tar.gz')
 
     if DOCKER_DB:
         log("loading postgres docker image", PRINT_TO_CONSOLE)
-        cmd = 'sudo docker load < ' + INSTALLER_DOCKER_DIR + 'Postgres_DockerImage.tar.gz'
-        os.system(cmd)
+        run('sudo docker load < ' + INSTALLER_DOCKER_DIR + 'Postgres_DockerImage.tar.gz')
     
 
 def start_docker_containers():
@@ -1986,8 +1975,32 @@ def start_docker_containers():
     os.system('docker network rm openelis-network 2>/dev/null')
 
     log("starting docker containers", PRINT_TO_CONSOLE)
-    cmd = 'sudo docker compose up -d '
-    os.system(cmd)
+    run('sudo docker compose up -d')
+
+    verify_containers_started()
+
+
+def verify_containers_started():
+    # Contrôle immédiat : 'compose up' peut réussir alors qu'un conteneur sort
+    # aussitôt (image absente/corrompue). On liste les conteneurs qui ont déjà
+    # quitté ; s'il y en a, on prévient CLAIREMENT (le webapp, lui, met plusieurs
+    # minutes à devenir healthy — c'est normal et non concerné ici).
+    try:
+        exited = subprocess.check_output(
+            "sudo docker compose ps --status exited --format '{{.Name}}' 2>/dev/null",
+            shell=True).decode("utf-8").strip()
+    except Exception:
+        exited = ""
+    if exited:
+        log("", PRINT_TO_CONSOLE)
+        log("  /!\\ ATTENTION : des conteneurs se sont arrêtés juste après le "
+            "démarrage :", PRINT_TO_CONSOLE)
+        for name in exited.splitlines():
+            log("      - " + name, PRINT_TO_CONSOLE)
+        log("  Vérifiez les journaux : sudo docker compose logs <nom>", PRINT_TO_CONSOLE)
+        log("  (Le webapp met plusieurs minutes à devenir 'healthy' — c'est "
+            "normal et différent d'un conteneur 'exited'.)", PRINT_TO_CONSOLE)
+        log("", PRINT_TO_CONSOLE)
 
 
 def clean_docker_objects():
@@ -2059,7 +2072,7 @@ def backup_db():
                 os.system(
                     "PGPASSWORD=\"" + CLINLIMS_PWD + "\";export PGPASSWORD; su -c  'pg_dumpall --verbose --clean -h localhost -U clinlims clinlims > " + INSTALLER_ROLLBACK_DIR + backup_name + "'")
             else:
-                log("can't backup remote databases. proceeding". PRINT_TO_CONSOLE)
+                log("can't backup remote databases. proceeding", PRINT_TO_CONSOLE)
         else:
             log("can't back up database, missing password file ", PRINT_TO_CONSOLE)    
     else :
@@ -2080,7 +2093,7 @@ def backup_db():
                 os.system(
                     "PGPASSWORD=\"" + BACKUP_PWD + "\";export PGPASSWORD; su -c  '/usr/bin/pg_basebackup -h localhost -U backup -D " + INSTALLER_ROLLBACK_DIR + backup_name + "'")
             else:
-                log("can't backup remote databases. proceeding". PRINT_TO_CONSOLE)
+                log("can't backup remote databases. proceeding", PRINT_TO_CONSOLE)
         else:
             log("can't back up database, missing password file ", PRINT_TO_CONSOLE)
 
@@ -2151,12 +2164,34 @@ def log(message, to_console):
     LOG_FILE.write(message + "\n")
     if to_console:
         print(message)
-        
-        
+
+
+def run(cmd, critical=True):
+    # Exécute une commande shell en vérifiant le code retour. Sur une étape
+    # CRITIQUE en échec (docker load, compose up, init DB...), on ARRÊTE
+    # l'installation avec un message clair — au lieu de continuer et d'afficher
+    # "installation terminée" alors que rien ne tourne (piège pour l'opérateur).
+    rc = os.system(cmd)
+    # os.system encode le code de sortie dans les 8 bits de poids fort.
+    exit_code = (rc >> 8) if rc > 255 else rc
+    if exit_code != 0:
+        msg = "[ECHEC] La commande a échoué (code " + str(exit_code) + ") : " + cmd
+        log(msg, PRINT_TO_CONSOLE)
+        if critical:
+            log("Installation interrompue. Corrigez la cause ci-dessus puis "
+                "relancez. (Un bundle d'images incomplet/corrompu est la cause "
+                "la plus fréquente.)", PRINT_TO_CONSOLE)
+            clean_exit()
+    return exit_code
+
+
 def clean_exit():
     global LOG_FILE
-    LOG_FILE.close()
-    exit()
+    try:
+        LOG_FILE.close()
+    except Exception:
+        pass
+    exit(1)
         
     
 # call the main function
