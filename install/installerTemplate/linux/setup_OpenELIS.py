@@ -391,7 +391,9 @@ def write_install_summary():
         lines += [
             " Mode         : EN LIGNE (nom de domaine public)",
             " Acces        : https://" + str(SERVER_DOMAIN).strip() + "/",
-            " Identifiants : admin / adminADMIN!  (A CHANGER IMMEDIATEMENT)",
+            " Identifiants : admin / adminADMIN!",
+            "   /!\\ SECURITE : changez ce mot de passe des le premier login",
+            "       (compte par defaut connu = acces total aux donnees).",
             "",
             " Numero de site (SITE_ID) : " + str(SITE_ID).strip(),
             " Domaine                  : " + str(SERVER_DOMAIN).strip(),
@@ -405,7 +407,9 @@ def write_install_summary():
         lines += [
             " Mode         : LOCAL (oeglobal.lan + DNS embarque)",
             " Acces        : https://oeglobal.lan/  (ou https://" + str(SERVER_IP_ADDRESS).strip() + "/)",
-            " Identifiants : admin / adminADMIN!  (A CHANGER IMMEDIATEMENT)",
+            " Identifiants : admin / adminADMIN!",
+            "   /!\\ SECURITE : changez ce mot de passe des le premier login",
+            "       (compte par defaut connu = acces total aux donnees).",
             "",
             " Numero de site (SITE_ID) : " + str(SITE_ID).strip(),
             " IP du serveur            : " + str(SERVER_IP_ADDRESS).strip(),

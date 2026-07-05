@@ -26,6 +26,12 @@
 > porte d'entrée). Les conteneurs (backend, FHIR) communiquent en HTTP clair sur
 > un réseau Docker privé isolé. Plus aucun keystore/truststore interne à gérer.
 
+> ⚠️ **Plage réseau Docker** : la pile utilise le sous-réseau interne
+> `172.20.1.0/24`. Si le **LAN du site** utilise déjà cette plage, il y a un risque
+> de collision (routage). Dans ce cas rare, prévenir le mainteneur (le subnet est
+> défini dans le `docker-compose.yml`). Les plages `192.168.x.x` habituelles ne
+> posent pas de problème.
+
 L'installeur crée/utilise deux arborescences :
 - `/etc/openelis-global/` — configuration générée (server.xml, certs nginx, setup.ini)
 - `/var/lib/openelis-global/` — données (backup_dir, secrets, plugins, config, initDB,
@@ -121,6 +127,18 @@ navigateur (certificat auto-signé) est normal ; voir §7 pour un vrai certifica
 > Pour que `https://oeglobal.lan/` fonctionne depuis les **postes clients**, ils
 > doivent utiliser le serveur comme DNS (voir §9). Depuis le serveur lui-même,
 > l'accès par IP fonctionne immédiatement.
+
+### 2.5 ⚠️ Étapes de sécurité post-installation (OBLIGATOIRES)
+1. **Changer le mot de passe admin** dès le premier login. Le compte par défaut
+   `admin` / `adminADMIN!` est **connu publiquement** (défaut OpenELIS) → tant
+   qu'il n'est pas changé, n'importe qui sur le réseau a un **accès total** aux
+   données patients. Menu **Administration → Utilisateurs**.
+2. **Sauvegarder** la clé de chiffrement (`/var/lib/openelis-global/config/ENCRYPTION_KEY`)
+   et le mot de passe admin postgres (`.../config/postgres_admin.password`) dans un
+   lieu sûr **hors du serveur**.
+3. Vérifier que la **sauvegarde automatique** tourne (voir §4) : le fichier
+   `/var/lib/openelis-global/backups/LAST_BACKUP_OK` doit apparaître après la
+   première nuit.
 
 ---
 

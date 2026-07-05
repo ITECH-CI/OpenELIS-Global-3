@@ -34,7 +34,10 @@ services:
 #db    image: postgres:14.4
 #db    platform: linux/amd64
 #db    ports:
-#db      - "[% db_host_port %]:5432"
+#db      # 127.0.0.1 uniquement : la DB n'est PAS exposée au LAN. Les conteneurs
+#db      # se connectent via le réseau Docker interne (db.openelis.org). Ce mapping
+#db      # ne sert qu'à un psql local sur l'hôte.
+#db      - "127.0.0.1:[% db_host_port %]:5432"
 #db    networks:
 #db      - openelis-network
 #db    restart: unless-stopped
@@ -82,7 +85,11 @@ services:
     environment:
       - TZ=[% timezone %]
       # context.xml doesn't seem to be able to pick up environment variables directly, so we are passing them in as CATALINA_OPTS
-      - CATALINA_OPTS= -Ddatasource.url=jdbc:postgresql://[% db_host %]:[% db_port %]/clinlims -Ddatasource.username=clinlims
+      # -Xmx2g : plafonne le heap JVM (évite qu'elle consomme toute la RAM et
+      # déclenche l'OOM-killer). Valeur fixe adaptée à 8 Go comme à 16 Go : le
+      # reste de la RAM reste disponible pour Docker, le système et le cache DB.
+      # PAS de mem_limit rigide (dépendrait de la taille du serveur).
+      - CATALINA_OPTS= -Xms512m -Xmx2g -Ddatasource.url=jdbc:postgresql://[% db_host %]:[% db_port %]/clinlims -Ddatasource.username=clinlims
     volumes:
       - [% plugins_dir %]:/var/lib/openelis-global/plugins
       - [% etc_dir %]oe_server.xml:/usr/local/tomcat/conf/server.xml

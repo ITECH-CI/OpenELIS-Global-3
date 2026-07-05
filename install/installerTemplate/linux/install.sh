@@ -46,7 +46,13 @@ echo "============================================================"
 echo " Installation terminée."
 echo
 echo " Accès        : https://<adresse-du-serveur>/"
-echo " Identifiants : admin / adminADMIN!  (à changer immédiatement)"
+echo
+echo " ***********************************************************"
+echo " *  /!\\  SÉCURITÉ — ÉTAPE OBLIGATOIRE                      *"
+echo " *  Identifiants par défaut : admin / adminADMIN!          *"
+echo " *  CHANGEZ le mot de passe admin DÈS LE PREMIER LOGIN.    *"
+echo " *  (compte par défaut connu publiquement = accès total).  *"
+echo " ***********************************************************"
 echo
 echo " Secrets/config :"
 echo "   - Clé de chiffrement : /var/lib/openelis-global/config/ENCRYPTION_KEY"
