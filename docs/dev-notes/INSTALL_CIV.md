@@ -15,7 +15,7 @@
 | Élément | Détail |
 |---------|--------|
 | OS | Linux (Ubuntu/Debian recommandé, 64-bit amd64) |
-| Docker, curl, python3 | **Installés automatiquement** par l'installeur s'ils manquent (curl, python3, Docker Engine + plugin `docker compose`). ⚠ Cette installation des prérequis **nécessite internet UNE fois** ; sans connexion, l'installeur s'arrête avec un message clair. L'application elle-même s'installe ensuite hors ligne. |
+| Prérequis système | **Installés/configurés automatiquement** par l'installeur s'ils manquent : `curl`, `python3`, `net-tools`, `openssh-server` (accès distant), `ufw` (firewall), **Docker Engine + plugin `docker compose`**. L'installeur fait aussi un **`apt update && apt upgrade`** (mise à jour des sources/système), ouvre les ports **22/80/443 + 53** (UFW, avant activation → ne coupe jamais SSH), et ajoute l'utilisateur au **groupe docker**. ⚠ Cette étape **nécessite internet UNE fois** ; sans connexion, l'installeur s'arrête avec un message clair. L'application elle-même s'installe ensuite hors ligne. |
 | Droits | Exécution en **root** (`sudo`) |
 | **Mémoire (RAM)** | **8 Go recommandé**, **4 Go minimum strict**. La pile fait tourner plusieurs JVM (webapp Tomcat/Spring + FHIR HAPI) en plus de PostgreSQL ; sous 4 Go le conteneur FHIR ou webapp peut être tué par manque de mémoire (OOM) et redémarrer en boucle. Prévoir aussi un peu de **swap**. |
 | Espace disque | ~10 Go libres (images + volumes DB) |
@@ -155,8 +155,39 @@ Le mode `update` :
 ### Backup automatique
 Un cron quotidien (`/etc/cron.d` → `openElis`, **23h50**) exécute `DatabaseBackup.pl` :
 `pg_dump` du schéma `clinlims`, compression gzip, rotation dans
-`/var/lib/openelis-global/backup_dir/` (daily / cumulative), purge > 30 jours,
-et copie sur clé USB si `/media/USB0/Backup` est monté.
+`/var/lib/openelis-global/backups/` (daily / cumulative), purge > 30 jours,
+copie optionnelle sur support externe (USB) et envoi FTP optionnel (voir ci-dessous).
+
+### Configurer le support externe (USB) et/ou le FTP
+Éditer le fichier **`/var/lib/openelis-global/backups/backup.conf`** (créé à
+l'installation, **jamais écrasé** aux mises à jour → vos réglages sont préservés) :
+
+```ini
+# Copie sur disque dur / clé USB : si ce dossier existe (support monté),
+# CHAQUE backup y est copié en plus. Sinon la copie est simplement ignorée.
+EXTERNAL_BACKUP_DIR=/media/oeserver/USB0/Backup
+
+# Envoi hors-site par FTP (optionnel) — passer à true et renseigner les champs.
+# FTP_TARGET_URL doit finir par '/' (le nom du fichier y est ajouté).
+FTP_ENABLED=true
+FTP_TARGET_URL=ftp://serveur-distant/openelis/
+FTP_USERNAME=ftpuser
+FTP_PASSWORD=motdepasse
+```
+
+Aucune modification du script Perl n'est nécessaire : `backup.conf` est relu à
+chaque exécution. Pour appliquer immédiatement, relancer un backup manuel :
+```bash
+cd /var/lib/openelis-global/backups && sudo ./DatabaseBackup.pl
+```
+
+> **Tables FHIR exclues du dump.** HAPI-FHIR crée ses tables (`hfj_*`, `trm_*`,
+> `mpi_*`, `npm_*`, `bt2_*`) dans le schéma `clinlims`. Volumineuses et
+> **reconstructibles** (projection des données métier), elles sont exclues du
+> backup (`--exclude-table-data`) : dump plus léger, plus d'erreurs à la
+> restauration. La **structure** est conservée (tables vides) et HAPI **repeuple**
+> au démarrage (`hbm2ddl=update`). Un backup manuel « complet » (ci-dessous) les
+> inclut si besoin.
 
 > **Tables FHIR exclues du dump.** HAPI-FHIR crée ses tables (`hfj_*`, `trm_*`,
 > `mpi_*`, `npm_*`, `bt2_*`) dans le schéma `clinlims`. Volumineuses et
@@ -179,10 +210,9 @@ gunzip -c backup_clinlims_YYYY-MM-DD.sql.gz | \
   docker exec -i openelisglobal-database psql -U clinlims -d clinlims
 ```
 
-> ⚠️ Points de vigilance connus : `sendOffsite()` (envoi hors-site) est désactivé
-> par défaut ; le mode "host DB" de `DatabaseBackup.pl` a un bug historique
-> (`else if` au lieu de `elsif`). En config Docker DB standard, le backup
-> fonctionne.
+> ℹ️ L'envoi hors-site (FTP) est **désactivé par défaut** — l'activer via
+> `backup.conf` (voir plus haut). Le bug historique du mode "host DB"
+> (`else if` → `elsif`) est **corrigé**.
 
 ---
 
