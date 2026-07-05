@@ -85,11 +85,16 @@ if ! has_internet; then
 fi
 
 export DEBIAN_FRONTEND=noninteractive
+# NEEDRESTART_MODE=a : redémarre les services impactés automatiquement, SANS
+# ouvrir l'écran interactif needrestart qui bloquerait le script (Ubuntu 22.04+).
+export NEEDRESTART_MODE=a
 
 # --- Mise à jour des sources + du système (demandé) ---
+# 'upgrade' (pas 'dist-upgrade') : ne change pas de noyau ni ne retire de paquets.
+# --force-confold : conserve les fichiers de conf existants sans prompt.
 log "Mise à jour des sources et du système (apt update && apt upgrade)…"
 sudo apt-get update
-sudo apt-get upgrade -y
+sudo apt-get -y -o Dpkg::Options::="--force-confold" upgrade
 
 # --- curl + python3 + outils système (net-tools, openssh-server) ---
 log "Installation des paquets de base (curl, python3, net-tools, openssh-server, ufw)…"

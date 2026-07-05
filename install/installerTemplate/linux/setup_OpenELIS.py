@@ -42,9 +42,9 @@ TRANSLATIONS = {
         "fr": "\nappuyez sur une touche une fois que vous l'avez noté",
         "en": "\npress any key once you have recorded it",
     },
-    "site number for this lab (5 character): ": {
-        "fr": "numéro de ce laboratoire (5 caractères) : ",
-        "en": "site number for this lab (5 character): ",
+    "site number for this lab (5 character)": {
+        "fr": "numéro de ce laboratoire (5 caractères)",
+        "en": "site number for this lab (5 character)",
     },
     "Remote Fhir Address: ": {
         "fr": "Adresse FHIR distante (laisser vide si aucune) : ",
@@ -78,9 +78,9 @@ TRANSLATIONS = {
         "fr": "mode de déploiement : [1] local (oeglobal.lan) ou [2] en ligne (nom de domaine) ? [1] : ",
         "en": "deployment mode: [1] local (oeglobal.lan) or [2] online (domain name)? [1]: ",
     },
-    "public domain name (e.g. openelis.mon-labo.org): ": {
-        "fr": "nom de domaine public (ex. openelis.mon-labo.org) : ",
-        "en": "public domain name (e.g. openelis.mon-labo.org): ",
+    "public domain name (e.g. openelis.mon-labo.org)": {
+        "fr": "nom de domaine public (ex. openelis.mon-labo.org)",
+        "en": "public domain name (e.g. openelis.mon-labo.org)",
     },
 }
 
@@ -97,6 +97,25 @@ def is_yes(answer):
     # (they show "o/n" in French) but the raw comparison used to check only "y",
     # so typing "o" did nothing. Match y/yes (en) and o/oui (fr), any case.
     return answer.strip().lower() in ("y", "yes", "o", "oui")
+
+
+def prompt_validated(prompt, pattern, error_msg, default=None, allow_empty=False):
+    # Redemande tant que la saisie ne correspond pas au motif attendu, pour
+    # éviter qu'une valeur vide/erronée casse silencieusement l'install (cert,
+    # DNS...). 'default' est proposé entre [] et accepté sur Entrée.
+    full = prompt + (" [" + default + "]" if default else "") + ": "
+    for _ in range(10):
+        answer = input(full).strip()
+        if answer == "" and default is not None:
+            answer = default
+        if answer == "" and allow_empty:
+            return ""
+        if re.match(pattern, answer):
+            return answer
+        print("  " + error_msg)
+    # Après 10 essais infructueux, renvoyer la dernière saisie (ne pas boucler
+    # à l'infini si l'opérateur ne comprend pas) — l'install continue.
+    return answer
 
 #Installer directories' names
 INSTALLER_CROSSTAB_DIR = "./crosstab/"
@@ -1393,7 +1412,10 @@ def set_site_id():
         If you do not know if it is needed or you do not know the correct value it may be left blank.
         You can set the values after the installation is complete.
     """)
-    site_id = input(_t("site number for this lab (5 character): "))
+    site_id = prompt_validated(
+        _t("site number for this lab (5 character)"),
+        r'^.{5}$',
+        _t("Le numéro de site doit faire exactement 5 caractères."))
     with open(CONFIG_DIR + 'SITE_ID', mode='wt') as file:
         file.write(site_id)
 
@@ -1428,12 +1450,11 @@ def set_server_ip():
     # IP LAN du serveur : dnsmasq y écoute et 'oeglobal.lan' y résout pour les
     # postes clients. Auto-détectée puis confirmée (l'opérateur peut corriger).
     detected = detect_server_ip()
-    prompt = _t("server LAN IP address (clients reach oeglobal.lan here)")
-    if detected:
-        answer = input(prompt + " [" + detected + "]: ").strip()
-        server_ip = answer if answer else detected
-    else:
-        server_ip = input(prompt + ": ").strip()
+    server_ip = prompt_validated(
+        _t("server LAN IP address (clients reach oeglobal.lan here)"),
+        r'^(\d{1,3}\.){3}\d{1,3}$',
+        _t("Adresse IPv4 invalide (ex. 192.168.1.50)."),
+        default=(detected if detected else None))
     ensure_dir_exists(CONFIG_DIR)
     with open(CONFIG_DIR + 'SERVER_IP_ADDRESS', mode='wt') as file:
         file.write(server_ip)
@@ -1515,7 +1536,10 @@ def get_server_domain():
 
 def set_server_domain():
     # Nom de domaine public par lequel les clients accèdent au serveur (mode online).
-    domain = input(_t("public domain name (e.g. openelis.mon-labo.org): ")).strip()
+    domain = prompt_validated(
+        _t("public domain name (e.g. openelis.mon-labo.org)"),
+        r'^[a-zA-Z0-9]([a-zA-Z0-9.-]*[a-zA-Z0-9])?$',
+        _t("Nom de domaine invalide (lettres/chiffres/points/tirets, sans http:// ni espace)."))
     ensure_dir_exists(CONFIG_DIR)
     with open(CONFIG_DIR + 'SERVER_DOMAIN', mode='wt') as file:
         file.write(domain)
