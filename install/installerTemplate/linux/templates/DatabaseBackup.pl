@@ -32,10 +32,10 @@ sub sendOffsite{
 	my $upLoadUserName = shift;
 	my $upLoadPassword = shift;
 	
-	my $maxRetryCount = 1;
+	my $maxRetryCount = 3;   # ré-essaie vraiment (lien instable en site isolé)
 	my $curlExe = 'curl';
 
-	chdir "$queueDir";
+	chdir "$queueDir" or return;
 
 	my @files = <$queueDir/*.backup.gz>; 
 
@@ -145,22 +145,56 @@ my $maxTimeSpan = 60 * 60 * 24 * $keepFileDays;
 
 $ENV{'PGPASSWORD'} = $postgres_pwd;
 
-chdir "$dailyDir";
-if ( $db_install_type eq "docker" ) {
-	my $response = system("$docker_cmd")  and warn "Error while running: $! \n";
-	copy( "$backBaseDir/$snapShotFileName", "$dailyDir" ) or die "File cannot be copied.";
-} elsif ( $db_install_type eq "host" ) {
-	my $response = system("$host_cmd")  and warn "Error while running: $! \n";
-} else {
-	die "Cannot backup remote databases";
+# Journal horodaté + sentinelle de succès, lisibles par l'opérateur.
+my $backupLog = "$backBaseDir/backup.log";
+sub logmsg {
+    my ($m) = @_;
+    my $ts = getTimeStamp();
+    if (open my $lh, '>>', $backupLog) { print $lh "$ts $m\n"; close $lh; }
+    print "$m\n";
 }
-system("$zipCmd")  and warn "Error while running: $! \n";
+# abort() : échec FATAL -> on N'écrit PAS de fichier daté (évite de re-dater un
+# vieux dump comme s'il était frais) et on sort en erreur pour que l'échec soit
+# visible (code retour non nul du cron).
+sub abort {
+    my ($m) = @_;
+    logmsg("[ECHEC] $m");
+    die "$m\n";
+}
 
-copy( $snapShotFileNameZipped, "$cumulativeDir/$todaysCummlativeFile" ) or die "File cannot be copied.";
-copy( $snapShotFileNameZipped, "$queueDir/$todaysCummlativeFile" ) or die "File cannot be copied.";
-if (-d $mountedBackup) {
-    copy( $snapShotFileNameZipped, "$mountedBackup/$todaysCummlativeFile" ) or die "File cannot be copied.";
+chdir "$dailyDir" or abort("Impossible d'accéder au dossier daily: $dailyDir");
+
+# 1) Dump — FAIL-FAST : si pg_dump échoue, on s'arrête (pas de fichier périmé daté).
+if ( $db_install_type eq "docker" ) {
+	system("$docker_cmd") == 0 or abort("pg_dump (docker) a échoué");
+	copy( "$backBaseDir/$snapShotFileName", "$dailyDir" ) or abort("Copie du dump échouée: $!");
+} elsif ( $db_install_type eq "host" ) {
+	system("$host_cmd") == 0 or abort("pg_dump (host) a échoué");
+} else {
+	abort("Sauvegarde d'une base distante non supportée");
 }
+
+# 2) Vérifier que le dump n'est PAS vide avant de compresser.
+abort("Dump vide ou absent: $snapShotFileName") unless (-s "$dailyDir/$snapShotFileName");
+
+# 3) Compression — fail-fast.
+system("$zipCmd") == 0 or abort("Compression gzip échouée");
+
+# 4) Vérifier l'intégrité de l'archive gzip AVANT de la dater/diffuser.
+system("gzip -t \"$dailyDir/$snapShotFileNameZipped\"") == 0
+    or abort("Archive gzip corrompue: $snapShotFileNameZipped");
+
+# 5) Seulement maintenant : dater dans cumulative + file d'attente (+ USB).
+copy( $snapShotFileNameZipped, "$cumulativeDir/$todaysCummlativeFile" ) or abort("Copie cumulative échouée: $!");
+copy( $snapShotFileNameZipped, "$queueDir/$todaysCummlativeFile" ) or abort("Copie file d'attente échouée: $!");
+if (-d $mountedBackup) {
+    copy( $snapShotFileNameZipped, "$mountedBackup/$todaysCummlativeFile" )
+        or logmsg("[ATTENTION] Copie sur support externe échouée: $!");
+}
+
+# 6) Sentinelle de succès (timestamp) : permet de détecter un backup manquant.
+if (open my $sf, '>', "$backBaseDir/LAST_BACKUP_OK") { print $sf getTimeStamp() . "\n"; close $sf; }
+logmsg("[OK] Sauvegarde réussie: $todaysCummlativeFile");
 
 deleteOverAgedBackups ($maxTimeSpan, $cumulativeDir);
 

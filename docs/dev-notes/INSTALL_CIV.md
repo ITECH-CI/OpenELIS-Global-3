@@ -181,38 +181,61 @@ chaque exécution. Pour appliquer immédiatement, relancer un backup manuel :
 cd /var/lib/openelis-global/backups && sudo ./DatabaseBackup.pl
 ```
 
-> **Tables FHIR exclues du dump.** HAPI-FHIR crée ses tables (`hfj_*`, `trm_*`,
-> `mpi_*`, `npm_*`, `bt2_*`) dans le schéma `clinlims`. Volumineuses et
-> **reconstructibles** (projection des données métier), elles sont exclues du
-> backup (`--exclude-table-data`) : dump plus léger, plus d'erreurs à la
-> restauration. La **structure** est conservée (tables vides) et HAPI **repeuple**
-> au démarrage (`hbm2ddl=update`). Un backup manuel « complet » (ci-dessous) les
-> inclut si besoin.
-
-> **Tables FHIR exclues du dump.** HAPI-FHIR crée ses tables (`hfj_*`, `trm_*`,
-> `mpi_*`, `npm_*`, `bt2_*`) dans le schéma `clinlims`. Volumineuses et
-> **reconstructibles** (projection des données métier), elles sont exclues du
-> backup (`--exclude-table-data`) : dump plus léger, plus d'erreurs à la
-> restauration. La **structure** est conservée (tables vides) et HAPI **repeuple**
-> au démarrage (`hbm2ddl=update`). Un backup manuel « complet » (ci-dessous) les
-> inclut si besoin.
+> **⚠️ Données FHIR exclues du dump — choix assumé.** HAPI-FHIR stocke ses
+> tables (`hfj_*`, `trm_*`, `mpi_*`, `npm_*`, `bt2_*`) dans le schéma `clinlims`.
+> Le backup automatique **exclut leurs données** (`--exclude-table-data`) pour
+> deux raisons : (1) elles sont volumineuses (dump plus long/lourd) ; (2) surtout,
+> une restauration partielle de FHIR crée des **incohérences** qui cassent le
+> restore. La **structure** (tables vides) est conservée.
+>
+> **Conséquence à connaître** : après restauration, les données **métier**
+> (patients, échantillons, résultats) sont intégralement restaurées, mais les
+> ressources **FHIR ne sont pas restaurées** (tables vides). Elles doivent être
+> **reconstituées à partir des données métier** (ré-émission transactionnelle).
+> HAPI ne les repeuple **pas** tout seul au démarrage. Ce point est un choix
+> d'architecture : la base métier est la source de vérité ; FHIR en est une
+> projection à régénérer.
+>
+> Pour un backup **complet incluant FHIR** (ex. avant une migration délicate),
+> utiliser le backup manuel ci-dessous.
 
 ### Backup manuel (avant intervention)
 ```bash
-# Dump manuel de la base (conteneur DB) — inclut TOUT (y compris FHIR)
+# Dump manuel COMPLET (inclut FHIR) — schéma clinlims entier
 docker exec openelisglobal-database \
-  pg_dump -U clinlims -d clinlims | gzip > ~/backup_clinlims_$(date +%F).sql.gz
+  pg_dump -U clinlims -n clinlims clinlims | gzip > ~/backup_clinlims_$(date +%F).sql.gz
 ```
 
-### Restauration
+### Restauration (procédure testée)
+> ⚠️ Ne **jamais** restaurer par-dessus une base vivante : le dump ne contient pas
+> de `DROP`, on obtiendrait des erreurs `duplicate key` / `relation already exists`
+> et une base incohérente. Il faut **repartir d'un schéma propre**.
+
 ```bash
-gunzip -c backup_clinlims_YYYY-MM-DD.sql.gz | \
+# 1) Arrêter les applications qui écrivent dans la base (garder la DB up)
+cd /var/lib/openelis-global   # dossier du docker-compose... ou le dossier installer
+sudo docker stop openelisglobal-webapp external-fhir-api
+
+# 2) Repartir d'un schéma clinlims vierge
+docker exec -i openelisglobal-database \
+  psql -U clinlims -d clinlims -c "DROP SCHEMA clinlims CASCADE; CREATE SCHEMA clinlims;"
+
+# 3) Restaurer le dump
+gunzip -c ~/backup_clinlims_YYYY-MM-DD.sql.gz | \
   docker exec -i openelisglobal-database psql -U clinlims -d clinlims
+
+# 4) Redémarrer les applications (HAPI recrée les tables FHIR vides au boot)
+sudo docker start openelisglobal-webapp external-fhir-api
 ```
 
-> ℹ️ L'envoi hors-site (FTP) est **désactivé par défaut** — l'activer via
-> `backup.conf` (voir plus haut). Le bug historique du mode "host DB"
-> (`else if` → `elsif`) est **corrigé**.
+> 💡 **Tester le restore régulièrement** (ex. mensuellement) sur une instance
+> jetable : un backup jamais restauré n'est pas un backup prouvé.
+
+> ℹ️ **Suivi des backups** : chaque exécution écrit un journal horodaté
+> `backups/backup.log` et, en cas de succès, met à jour `backups/LAST_BACKUP_OK`.
+> Si ce fichier n'a pas été mis à jour depuis > 24 h, **le backup ne fonctionne
+> plus** — vérifier `backup.log`. L'envoi hors-site (FTP) est désactivé par défaut
+> (activer via `backup.conf`).
 
 ---
 
