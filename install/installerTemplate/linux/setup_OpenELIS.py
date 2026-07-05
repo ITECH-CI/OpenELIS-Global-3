@@ -766,14 +766,16 @@ def install_backup_script():
     template_file.close()
     staging_file.close()
 
+    # 0o700 : ces dossiers contiennent des dumps de données patients. Un dossier
+    # a besoin du bit x pour être traversable (0o640 était invalide).
     if not os.path.exists(DB_BACKUPS_DIR):
-        os.makedirs(DB_BACKUPS_DIR, 0o640)
+        os.makedirs(DB_BACKUPS_DIR, 0o700)
     if not os.path.exists(DB_BACKUPS_DIR + "daily"):
-        os.makedirs(DB_BACKUPS_DIR + "daily", 0o640)
+        os.makedirs(DB_BACKUPS_DIR + "daily", 0o700)
     if not os.path.exists(DB_BACKUPS_DIR + "cumulative"):
-        os.makedirs(DB_BACKUPS_DIR + "cumulative", 0o640)
+        os.makedirs(DB_BACKUPS_DIR + "cumulative", 0o700)
     if not os.path.exists(DB_BACKUPS_DIR + "transmissionQueue"):
-        os.makedirs(DB_BACKUPS_DIR + "transmissionQueue", 0o640)
+        os.makedirs(DB_BACKUPS_DIR + "transmissionQueue", 0o700)
 
     shutil.copy(INSTALLER_STAGING_DIR + BACKUP_SCRIPT_NAME, DB_BACKUPS_DIR + BACKUP_SCRIPT_NAME)
     os.chmod(DB_BACKUPS_DIR + BACKUP_SCRIPT_NAME, 0o744)
@@ -1272,7 +1274,7 @@ def find_backup_password():
 
 def get_stored_user_values():
     ensure_dir_exists(CONFIG_DIR)
-    os.chmod(CONFIG_DIR, 0o640) 
+    os.chmod(CONFIG_DIR, 0o700)   # répertoire de secrets : traversable root-only (pas 0o640 = sans bit x)
     get_set_site_id()
     get_set_deploy_mode()
     if DEPLOY_MODE == 'online':
@@ -1537,6 +1539,7 @@ def set_keystore_password():
     k_password = ''.join(random.SystemRandom().choice(string.ascii_letters + string.digits) for _ in range(16))
     with open(CONFIG_DIR + 'KEYSTORE_PASSWORD', mode='wt') as file:
         file.write(k_password)
+    os.chmod(CONFIG_DIR + 'KEYSTORE_PASSWORD', 0o600)
     
     
 def is_truststore_password_set():
@@ -1580,6 +1583,7 @@ def set_encryption_key():
     e_key = ''.join(random.SystemRandom().choice(string.ascii_letters + string.digits) for _ in range(32))
     with open(CONFIG_DIR + 'ENCRYPTION_KEY', mode='wt') as file:
         file.write(e_key)
+    os.chmod(CONFIG_DIR + 'ENCRYPTION_KEY', 0o600)
     print("""
     ============================================================
     A data encryption key has been generated automatically.
