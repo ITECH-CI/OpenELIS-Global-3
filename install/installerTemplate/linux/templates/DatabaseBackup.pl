@@ -74,9 +74,38 @@ open my $fh, '<', $postgres_pwd_filepath or die "Can't open file $!";
 read $fh, my $postgres_pwd, -s $fh;
 my $keepFileDays  = 30;
 my $siteId = '[% siteId %]';
-#my $upLoadtargetURL = 'sftp://192.168.1.1/EFI/backup';
-#my $upLoadUserName = 'ftpuser';
-#my $upLoadPassword = '12345678';
+
+# --- Configuration optionnelle externe (backup.conf) --------------------------
+# L'opérateur peut créer un fichier backup.conf À CÔTÉ de ce script pour
+# configurer, SANS éditer ce Perl :
+#   EXTERNAL_BACKUP_DIR=/media/oeserver/USB0/Backup   # copie sur disque externe/USB
+#   FTP_ENABLED=true                                  # activer l'envoi hors-site
+#   FTP_TARGET_URL=ftp://serveur/dossier/             # doit finir par '/'
+#   FTP_USERNAME=ftpuser
+#   FTP_PASSWORD=motdepasse
+# Lignes vides et commentaires (#) ignorés. Valeurs par défaut ci-dessous.
+my %conf = (
+    EXTERNAL_BACKUP_DIR => '/media/USB0/Backup',   # défaut historique (compat)
+    FTP_ENABLED         => 'false',
+    FTP_TARGET_URL      => '',
+    FTP_USERNAME        => '',
+    FTP_PASSWORD        => '',
+);
+{
+    # backup.conf est cherché dans le dossier des backups (chemin absolu injecté
+    # à l'install), indépendamment du répertoire courant.
+    my $conf_path = '[% db_backups_dir %]backup.conf';
+    if (open my $cfh, '<', $conf_path) {
+        while (my $line = <$cfh>) {
+            $line =~ s/^\s+|\s+$//g;
+            next if $line eq '' || $line =~ /^#/ || $line !~ /=/;
+            my ($k, $v) = split /=/, $line, 2;
+            $k =~ s/^\s+|\s+$//g; $v =~ s/^\s+|\s+$//g;
+            $conf{$k} = $v;
+        }
+        close $cfh;
+    }
+}
 
 
 my $snapShotFileBase     = 'lastSnapshot_' . $siteId; 
@@ -105,7 +134,7 @@ my $zipCmd = 'gzip -f ' .  $snapShotFileName;
 #my $backBaseDir          = cwd();
 my $backBaseDir          = '[% db_backups_dir %]';
 my $baseFileName         = '[% installName %]';
-my $mountedBackup        = "/media/USB0/Backup";
+my $mountedBackup        = $conf{EXTERNAL_BACKUP_DIR};   # configurable via backup.conf
 my $dailyDir             = "$backBaseDir/daily";
 my $cumulativeDir        = "$backBaseDir/cumulative";
 my $queueDir             = "$backBaseDir/transmissionQueue";
@@ -135,4 +164,12 @@ if (-d $mountedBackup) {
 
 deleteOverAgedBackups ($maxTimeSpan, $cumulativeDir);
 
-#sendOffsite($queueDir, $upLoadtargetURL, $upLoadUserName, $upLoadPassword) or die "File cannot be copied on FTP server.";
+# Envoi hors-site (FTP) — activé seulement si FTP_ENABLED=true dans backup.conf
+# ET que l'URL/identifiants sont renseignés. sendOffsite retire de la file les
+# fichiers envoyés avec succès (les autres restent pour un prochain essai).
+if ( lc($conf{FTP_ENABLED}) eq 'true'
+     && $conf{FTP_TARGET_URL} ne '' && $conf{FTP_USERNAME} ne '' ) {
+    my $url = $conf{FTP_TARGET_URL};
+    $url .= '/' unless $url =~ m{/$};   # garantir le '/' final (append du nom de fichier)
+    sendOffsite($queueDir, $url, $conf{FTP_USERNAME}, $conf{FTP_PASSWORD});
+}

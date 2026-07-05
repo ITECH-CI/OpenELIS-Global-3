@@ -776,9 +776,17 @@ def install_backup_script():
         os.makedirs(DB_BACKUPS_DIR + "transmissionQueue", 0o640)
 
     shutil.copy(INSTALLER_STAGING_DIR + BACKUP_SCRIPT_NAME, DB_BACKUPS_DIR + BACKUP_SCRIPT_NAME)
-    os.chmod(DB_BACKUPS_DIR + BACKUP_SCRIPT_NAME, 0o744)    
-    
-    
+    os.chmod(DB_BACKUPS_DIR + BACKUP_SCRIPT_NAME, 0o744)
+
+    # Déposer backup.conf (support externe/USB + FTP configurables) SANS écraser
+    # un fichier déjà édité par l'opérateur (préserve ses réglages aux updates).
+    backup_conf_template = INSTALLER_TEMPLATE_DIR + "backup.conf"
+    backup_conf_dest = DB_BACKUPS_DIR + "backup.conf"
+    if os.path.exists(backup_conf_template) and not os.path.exists(backup_conf_dest):
+        shutil.copy(backup_conf_template, backup_conf_dest)
+        os.chmod(backup_conf_dest, 0o600)
+
+
 def install_log_cleanup_script():
     ensure_dir_exists(LIBRARY_DIR)
     shutil.copy(INSTALLER_SCRIPTS_DIR + CLEANUP_SCRIPT_NAME, LIBRARY_DIR)
