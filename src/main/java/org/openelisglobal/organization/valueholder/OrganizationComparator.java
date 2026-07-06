@@ -37,12 +37,24 @@ public class OrganizationComparator implements Comparable<Organization> {
 
     public static final Comparator<Organization> SHORTNAME_NUMERIC_COMPARATOR = new Comparator<Organization>() {
         public int compare(Organization o1, Organization o2) {
-            try {
-                Integer num1 = Integer.valueOf(o1.getShortName());
-                Integer num2 = Integer.valueOf(o2.getShortName());
+            Integer num1 = tryParseInt(o1.getShortName());
+            Integer num2 = tryParseInt(o2.getShortName());
+            if (num1 != null && num2 != null) {
                 return num1.compareTo(num2);
-            } catch (NumberFormatException e) {
+            } else if (num1 != null) {
+                return -1;
+            } else if (num2 != null) {
+                return 1;
+            } else {
                 return o1.getShortName().compareTo(o2.getShortName());
+            }
+        }
+
+        private Integer tryParseInt(String s) {
+            try {
+                return Integer.valueOf(s);
+            } catch (NumberFormatException e) {
+                return null;
             }
         }
     };

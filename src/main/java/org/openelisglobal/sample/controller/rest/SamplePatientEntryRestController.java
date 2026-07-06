@@ -5,9 +5,13 @@ import jakarta.validation.constraints.Pattern;
 import java.lang.reflect.InvocationTargetException;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import org.apache.commons.lang3.StringUtils;
@@ -42,11 +46,22 @@ import org.openelisglobal.notifications.entity.Notification;
 import org.openelisglobal.organization.service.OrganizationService;
 import org.openelisglobal.organization.util.OrganizationTypeList;
 import org.openelisglobal.organization.valueholder.Organization;
+import org.openelisglobal.observationhistory.service.ObservationHistoryService;
+import org.openelisglobal.observationhistory.valueholder.ObservationHistory;
+import org.openelisglobal.observationhistorytype.ObservationHistoryTypeMap;
 import org.openelisglobal.patient.action.IPatientUpdate;
 import org.openelisglobal.patient.action.IPatientUpdate.PatientUpdateStatus;
 import org.openelisglobal.patient.action.bean.PatientManagementInfo;
 import org.openelisglobal.patient.action.bean.PatientSearch;
 import org.openelisglobal.patient.saving.ISampleEntry;
+import org.openelisglobal.patient.saving.ISampleEntryUpdate;
+import org.openelisglobal.patient.service.PatientService;
+import org.openelisglobal.samplehuman.service.SampleHumanService;
+import org.openelisglobal.sampleitem.service.SampleItemService;
+import org.openelisglobal.sampleitem.valueholder.SampleItem;
+import org.openelisglobal.sampleorganization.service.SampleOrganizationService;
+import org.openelisglobal.sampleorganization.valueholder.SampleOrganization;
+import org.openelisglobal.sample.valueholder.Sample;
 import org.openelisglobal.patient.saving.ISampleEntryAfterPatientEntry;
 import org.openelisglobal.patient.saving.ISampleSecondEntry;
 import org.openelisglobal.provider.service.ProviderService;
@@ -270,6 +285,21 @@ public class SamplePatientEntryRestController extends BaseSampleEntryController 
     @Autowired
     private ApplicationEventPublisher eventPublisher;
 
+    @Autowired
+    private PatientService patientService;
+
+    @Autowired
+    private SampleHumanService sampleHumanService;
+
+    @Autowired
+    private ObservationHistoryService observationHistoryService;
+
+    @Autowired
+    private SampleItemService sampleItemService;
+
+    @Autowired
+    private SampleOrganizationService sampleOrganizationService;
+
     @InitBinder
     public void initBinder(WebDataBinder binder) {
         binder.setAllowedFields(ALLOWED_FIELDS);
@@ -315,6 +345,128 @@ public class SamplePatientEntryRestController extends BaseSampleEntryController 
     private void setupReferralOption(SamplePatientEntryForm form) {
         form.setReferralOrganizations(DisplayListService.getInstance().getList(ListType.REFERRAL_ORGANIZATIONS));
         form.setReferralReasons(DisplayListService.getInstance().getList(ListType.REFERRAL_REASONS));
+    }
+
+    private static final String[] MULTI_OBSERVATION_TYPES = { "priorARVTreatmentINNs", "futureARVTreatmentINNs",
+            "arvTreatmentAdvEffGrd", "arvTreatmentAdvEffType", "cotrimoxazoleTreatAdvEffGrd",
+            "cotrimoxazoleTreatAdvEffType", "currentARVTreatmentINNs" };
+
+    private static final String[] KEY_VL_OBSERVATION_FIELDS = {
+            "hivStatus", "currentARVTreatment", "arvTreatmentInitDate", "arvTreatmentRegime",
+            "vlReasonForRequest", "vlOtherReasonForRequest",
+            "initcd4Count", "initcd4Percent", "initcd4Date",
+            "demandcd4Count", "demandcd4Percent", "demandcd4Date",
+            "vlBenefit", "priorVLValue", "priorVLDate", "vlPregnancy", "vlSuckle",
+            "nameOfDoctor", "nameOfSampler", "nameOfRequestor", "projectFormName",
+            "underInvestigation" };
+
+    @GetMapping(value = "SampleEntryByProjectStudyViralLoad", produces = MediaType.APPLICATION_JSON_VALUE)
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> getPatientStudyData(
+            @RequestParam(value = "patientId", required = true) String patientId) {
+
+        org.openelisglobal.patient.valueholder.Patient patient = patientService.get(patientId);
+        if (patient == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        List<Sample> samples = sampleHumanService.getSamplesForPatient(patientId);
+        Sample mostRecentSample = null;
+        if (!samples.isEmpty()) {
+            mostRecentSample = samples.stream()
+                    .filter(s -> s.getCollectionDate() != null)
+                    .max(java.util.Comparator.comparing(Sample::getCollectionDate))
+                    .orElse(samples.get(samples.size() - 1));
+        }
+
+        Map<String, Object> result = new LinkedHashMap<>();
+
+        org.openelisglobal.person.valueholder.Person person = patient.getPerson();
+        result.put("patientPK", patient.getId());
+        result.put("firstName", person != null ? person.getFirstName() : "");
+        result.put("lastName", person != null ? person.getLastName() : "");
+        result.put("gender", patient.getGender());
+        result.put("dob", patient.getBirthDateForDisplay());
+        result.put("nationalId", patient.getNationalId());
+        result.put("externalId", patient.getExternalId());
+
+        if (mostRecentSample != null) {
+            result.put("samplePK", mostRecentSample.getId());
+            result.put("labNo", mostRecentSample.getAccessionNumber());
+            result.put("receivedDateForDisplay", mostRecentSample.getReceivedDateForDisplay());
+        }
+
+        ObservationHistoryTypeMap ohTypeMap = ObservationHistoryTypeMap.getInstance();
+        Set<String> multiTypeSet = new HashSet<>(Arrays.asList(MULTI_OBSERVATION_TYPES));
+        Map<String, Object> observations = new LinkedHashMap<>();
+        Map<String, Object> projectData = new LinkedHashMap<>();
+
+        if (mostRecentSample != null) {
+            List<ObservationHistory> histories = observationHistoryService.getAll(patient, mostRecentSample);
+            for (ObservationHistory history : histories) {
+                String typeName = ohTypeMap.getTypeFromId(history.getObservationHistoryTypeId());
+                if (typeName == null || multiTypeSet.contains(typeName)
+                        || "SampleRecordStatus".equals(typeName) || "PatientRecordStatus".equals(typeName)) {
+                    continue;
+                }
+                observations.put(typeName, history.getValue());
+            }
+
+            for (String multiType : MULTI_OBSERVATION_TYPES) {
+                String typeId = ohTypeMap.getIDForType(multiType);
+                if (typeId == null) continue;
+                List<ObservationHistory> multiHistories = observationHistoryService.getAll(patient, mostRecentSample, typeId);
+                if (!multiHistories.isEmpty()) {
+                    multiHistories.sort(java.util.Comparator.comparing(ObservationHistory::getId));
+                    List<String> values = new ArrayList<>();
+                    for (ObservationHistory h : multiHistories) {
+                        values.add(h.getValue());
+                    }
+                    observations.put(multiType, values);
+                }
+            }
+
+            // Explicit lookup for key VL fields — bypasses getTypeFromId mapping issues
+            for (String field : KEY_VL_OBSERVATION_FIELDS) {
+                if (observations.containsKey(field)) continue;
+                String typeId = ohTypeMap.getIDForType(field);
+                if (typeId == null) continue;
+                List<ObservationHistory> list = observationHistoryService.getAll(patient, mostRecentSample, typeId);
+                if (!list.isEmpty()) {
+                    observations.put(field, list.get(0).getValue());
+                }
+            }
+
+            List<SampleItem> sampleItems = sampleItemService.getSampleItemsBySampleId(mostRecentSample.getId());
+            boolean dbsvlTaken = false;
+            boolean pscvlTaken = false;
+            boolean dryTubeTaken = false;
+            boolean edtaTubeTaken = false;
+            for (SampleItem item : sampleItems) {
+                if (item.getTypeOfSample() != null) {
+                    String sampleTypeName = item.getTypeOfSample().getDescription();
+                    if ("DBS".equalsIgnoreCase(sampleTypeName)) dbsvlTaken = true;
+                    if ("PSC".equalsIgnoreCase(sampleTypeName)) pscvlTaken = true;
+                    if ("Dry Tube".equalsIgnoreCase(sampleTypeName)) dryTubeTaken = true;
+                    if ("EDTA Tube".equalsIgnoreCase(sampleTypeName)) edtaTubeTaken = true;
+                }
+            }
+            projectData.put("dbsvlTaken", dbsvlTaken);
+            projectData.put("pscvlTaken", pscvlTaken);
+            projectData.put("dryTubeTaken", dryTubeTaken);
+            projectData.put("edtaTubeTaken", edtaTubeTaken);
+
+            SampleOrganization sampleOrg = sampleOrganizationService.getDataBySample(mostRecentSample);
+            if (sampleOrg != null && sampleOrg.getOrganization() != null) {
+                Organization org = sampleOrg.getOrganization();
+                projectData.put("ARVcenterCode", org.getId());
+                projectData.put("ARVcenterName", org.getOrganizationName());
+            }
+        }
+
+        result.put("observations", observations);
+        result.put("projectData", projectData);
+        return ResponseEntity.ok(result);
     }
 
     @PostMapping(value = "SamplePatientEntry", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -542,6 +694,27 @@ public class SamplePatientEntryRestController extends BaseSampleEntryController 
         } catch (Exception e) {
             LogEvent.logError(this.getClass().getSimpleName(), "saveForm (ISampleEntryAfterPatientEntry)",
                     e.getMessage());
+        }
+
+        // Tentative de modification d'un échantillon existant (samplePK présent dans le formulaire)
+        try {
+            ISampleEntryUpdate sampleEntryUpdate = SpringContext.getBean(ISampleEntryUpdate.class);
+            sampleEntryUpdate.setFieldsFromForm(form);
+            sampleEntryUpdate.setSysUserId(getSysUserId(request));
+            sampleEntryUpdate.setRequest(request);
+            if (sampleEntryUpdate.canAccession()) {
+                String forward = handleSave(request, sampleEntryUpdate, form);
+                if (forward != null) {
+                    populateDisplayLists(form);
+                    if (FWD_SUCCESS_INSERT.equals(forward)) {
+                        return ResponseEntity.ok(form);
+                    } else {
+                        return ResponseEntity.badRequest().body(form);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            LogEvent.logError(this.getClass().getSimpleName(), "saveForm (ISampleEntryUpdate)", e.getMessage());
         }
 
         LogEvent.logError(this.getClass().getSimpleName(), "saveForm",

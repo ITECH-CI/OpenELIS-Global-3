@@ -93,6 +93,10 @@
         file="site_information_defaults_3_2_3_13.xml" />
     <include relativeToChangelogFile="true"
         file="add_serology_control_site_info.xml" />
+    <include relativeToChangelogFile="true"
+file="add_study_modifier_menu.xml" />
+    <include relativeToChangelogFile="true"
+        file="fix_hiv_status_dictionary_labels.xml" />
 
 
 </databaseChangeLog>

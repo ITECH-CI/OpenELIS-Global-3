@@ -45,6 +45,10 @@ export const StudyReports = (props) => {
         <ReportByDateCSV report="Trends" id="header.label.study.vlloadtrends" />
       )}
 
+      {type === "patient" && report === "EIDTrends" && (
+        <ReportByDateCSV report="EIDTrends" id="header.label.study.eidtrends" />
+      )}
+
       {type === "patient" && report === "patientARVFollowup1" && (
         <ReportByLabNo
           report="patientARVFollowup1"
@@ -202,6 +206,7 @@ const StudyIndex = () => {
     study_auditTrail: "reports.auditTrail",
     patient_CIStudyExport: "reports.label.cistudyexport",
     patient_Trends: "reports.label.trends",
+    patient_EIDTrends: "reports.label.eidtrends",
   };
 
   useEffect(() => {

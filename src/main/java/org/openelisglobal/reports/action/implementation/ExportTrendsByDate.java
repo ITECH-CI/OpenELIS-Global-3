@@ -23,6 +23,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
+import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.validator.GenericValidator;
 import org.jfree.util.Log;
 import org.openelisglobal.internationalization.MessageUtil;
@@ -105,20 +106,12 @@ public class ExportTrendsByDate extends CSVSampleExportReport implements IReport
         return dateRange.validateHighLowDate("report.error.message.date.received.missing") && validateProject();
     }
 
-    /**
-     * @return true, if location is not blank or "0" is is found in the DB; false
-     *         otherwise
-     */
     private boolean validateProject() {
-        if (isBlankOrNull(projectStr) || "0".equals(Integer.getInteger(projectStr))) {
+        if (isBlankOrNull(projectStr)) {
             add1LineErrorMessage("report.error.message.project.missing");
             return false;
         }
         project = SpringContext.getBean(ProjectService.class).getProjectById(projectStr);
-        if (project == null) {
-            add1LineErrorMessage("report.error.message.project.missing");
-            return false;
-        }
         return true;
     }
 
@@ -147,14 +140,13 @@ public class ExportTrendsByDate extends CSVSampleExportReport implements IReport
                 merge(splitBase, splitLine);
             } else {
                 if (currentAccessionNumber != null && writeAble(splitBase[16].trim())) {
-
                     writeConsolidatedBaseToBuffer(buffer, splitBase);
                 }
                 splitBase = splitLine;
                 currentAccessionNumber = splitBase[0];
             }
         }
-        if (writeAble(splitBase[16].trim())) {
+        if (ObjectUtils.isNotEmpty(splitBase) && writeAble(splitBase[16].trim())) {
             writeConsolidatedBaseToBuffer(buffer, splitBase);
         }
     }

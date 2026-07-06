@@ -16,10 +16,7 @@ public class AltYearAccessionValidator extends BaseSiteYearAccessionValidator im
 
     @Override
     public String getInvalidMessage(ValidationResults results) {
-        String suggestedAccessionNumber = getNextAvailableAccessionNumber(null, false);
-
-        return MessageUtil.getMessage("sample.entry.invalid.accession.number.suggestion") + " "
-                + suggestedAccessionNumber;
+        return MessageUtil.getMessage("sample.entry.invalid.accession.number.suggestion");
     }
 
     @Override

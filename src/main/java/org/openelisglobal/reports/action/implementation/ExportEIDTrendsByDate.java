@@ -37,6 +37,7 @@ import org.openelisglobal.project.valueholder.Project;
 import org.openelisglobal.reports.action.implementation.reportBeans.CSVColumnBuilder;
 import org.openelisglobal.reports.action.implementation.reportBeans.StudyEIDColumnBuilder;
 import org.openelisglobal.reports.form.ReportForm;
+import org.openelisglobal.reports.form.ReportForm.DateType;
 import org.openelisglobal.spring.util.SpringContext;
 
 public class ExportEIDTrendsByDate extends CSVSampleExportReport implements IReportParameterSetter, IReportCreator {
@@ -105,20 +106,12 @@ public class ExportEIDTrendsByDate extends CSVSampleExportReport implements IRep
         return dateRange.validateHighLowDate("report.error.message.date.received.missing") && validateProject();
     }
 
-    /**
-     * @return true, if location is not blank or "0" is is found in the DB; false
-     *         otherwise
-     */
     private boolean validateProject() {
-        if (isBlankOrNull(projectStr) || "0".equals(Integer.getInteger(projectStr))) {
+        if (isBlankOrNull(projectStr)) {
             add1LineErrorMessage("report.error.message.project.missing");
             return false;
         }
         project = SpringContext.getBean(ProjectService.class).getProjectById(projectStr);
-        if (project == null) {
-            add1LineErrorMessage("report.error.message.project.missing");
-            return false;
-        }
         return true;
     }
 
@@ -210,7 +203,7 @@ public class ExportEIDTrendsByDate extends CSVSampleExportReport implements IRep
     }
 
     private CSVColumnBuilder getColumnBuilder(String projectId) {
-        return new StudyEIDColumnBuilder(dateRange, projectStr);
+        return new StudyEIDColumnBuilder(dateRange, projectStr, DateType.RESULT_DATE);
 
     }
 
@@ -220,7 +213,7 @@ public class ExportEIDTrendsByDate extends CSVSampleExportReport implements IRep
      *
      * @return a list of the correct projects for display
      */
-    protected List<Project> getProjectList() {
+    public List<Project> getProjectList() {
         List<Project> projects = new ArrayList<>();
 
         try {

@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+    <!-- The "HIV Status" dictionary entries were seeded with long descriptive
+         text (e.g. "HIV Status HIV-1 infection") instead of the short label
+         shown on reports (e.g. the VL result report), causing the value to be
+         truncated to "HIV Status" wherever it is displayed. -->
+    <changeSet author="CIV developer Group" id="2026070601">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="1"><![CDATA[
+SELECT count(*) FROM clinlims.dictionary
+                WHERE dictionary_category_id = (SELECT id FROM clinlims.dictionary_category WHERE name = 'HIV Status')
+                AND dict_entry = 'HIV Status HIV-1 infection'
+]]></sqlCheck>
+        </preConditions>
+        <update tableName="dictionary" schemaName="clinlims">
+            <column name="dict_entry" value="VIH1" />
+            <where>dictionary_category_id = (SELECT id FROM clinlims.dictionary_category WHERE name = 'HIV Status') AND dict_entry = 'HIV Status HIV-1 infection'</where>
+        </update>
+    </changeSet>
+    <changeSet author="CIV developer Group" id="2026070602">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="1"><![CDATA[
+SELECT count(*) FROM clinlims.dictionary
+                WHERE dictionary_category_id = (SELECT id FROM clinlims.dictionary_category WHERE name = 'HIV Status')
+                AND dict_entry = 'HIV Status HIV-2 infection'
+]]></sqlCheck>
+        </preConditions>
+        <update tableName="dictionary" schemaName="clinlims">
+            <column name="dict_entry" value="VIH2" />
+            <where>dictionary_category_id = (SELECT id FROM clinlims.dictionary_category WHERE name = 'HIV Status') AND dict_entry = 'HIV Status HIV-2 infection'</where>
+        </update>
+    </changeSet>
+    <changeSet author="CIV developer Group" id="2026070603">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="1"><![CDATA[
+SELECT count(*) FROM clinlims.dictionary
+                WHERE dictionary_category_id = (SELECT id FROM clinlims.dictionary_category WHERE name = 'HIV Status')
+                AND dict_entry = 'HIV Status HIV-1 and HIV-2'
+]]></sqlCheck>
+        </preConditions>
+        <update tableName="dictionary" schemaName="clinlims">
+            <column name="dict_entry" value="VIH 1+2" />
+            <where>dictionary_category_id = (SELECT id FROM clinlims.dictionary_category WHERE name = 'HIV Status') AND dict_entry = 'HIV Status HIV-1 and HIV-2'</where>
+        </update>
+    </changeSet>
+</databaseChangeLog>
