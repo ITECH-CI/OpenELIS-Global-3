@@ -4,8 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Data model specifically designed for bacteriology reports.
- * Represents a hierarchical structure: Sections > Subsections > Tests > Results
+ * Data model specifically designed for bacteriology reports. Represents a
+ * hierarchical structure: Sections > Subsections > Tests > Results
  */
 public class BacteriologyReportData {
 
@@ -103,7 +103,8 @@ public class BacteriologyReportData {
     }
 
     /**
-     * Represents a main section in the bacteriology report (e.g., Macroscopie, Microscopie, Culture)
+     * Represents a main section in the bacteriology report (e.g., Macroscopie,
+     * Microscopie, Culture)
      */
     public static class BacteriologySection {
         private String sectionName;

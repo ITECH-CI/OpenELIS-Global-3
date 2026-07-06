@@ -62,8 +62,7 @@ public class BacteriologyFloraRestController extends ControllerUtills {
             // of the sample (e.g. the primary one), so widen the lookup to the sample
             // item so callers find every saved flora row consistently.
             List<BacteriologyFlora> floraList = new ArrayList<>();
-            org.openelisglobal.analysis.valueholder.Analysis primary = analysisService
-                    .get(String.valueOf(analysisId));
+            org.openelisglobal.analysis.valueholder.Analysis primary = analysisService.get(String.valueOf(analysisId));
             if (primary != null && primary.getSampleItem() != null) {
                 List<org.openelisglobal.analysis.valueholder.Analysis> siblings = analysisService
                         .getAnalysesBySampleItem(primary.getSampleItem());

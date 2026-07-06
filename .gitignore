@@ -48,3 +48,22 @@ fix_*.sql
 scripts/
 docs/BACTERIOLOGY_*.md
 docs/VERIFY_BACTERIOLOGY_TABLES.sql
+
+# Ad-hoc dev SQL scripts at root
+debug_*.sql
+test_*.sql
+quick_fix_*.sql
+find_missing_*.sql
+insert_test_*.sql
+update_*.sql
+tb_mapping_results.txt
+
+# JRXML/Jasper report backups
+*.jrxml.backup
+* copie.jrxml
+src/main/resources/reports/backups/
+
+# Local build/export artifacts (no CI/CD yet)
+oe-build-export.sh
+oe-build-export.txt
+*.tar.gz

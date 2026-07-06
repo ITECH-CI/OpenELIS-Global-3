@@ -86,10 +86,9 @@ import org.openelisglobal.role.service.RoleService;
 import org.openelisglobal.sample.service.SampleService;
 import org.openelisglobal.sample.valueholder.OrderPriority;
 import org.openelisglobal.sample.valueholder.Sample;
-import org.openelisglobal.sampleitem.valueholder.SampleItem;
-import org.openelisglobal.test.service.TestService;
 import org.openelisglobal.samplehuman.service.SampleHumanService;
 import org.openelisglobal.sampleitem.service.SampleItemService;
+import org.openelisglobal.sampleitem.valueholder.SampleItem;
 import org.openelisglobal.search.service.SearchResultsService;
 import org.openelisglobal.spring.util.SpringContext;
 import org.openelisglobal.statusofsample.util.StatusRules;
@@ -97,6 +96,7 @@ import org.openelisglobal.systemuser.service.SystemUserService;
 import org.openelisglobal.systemuser.service.UserService;
 import org.openelisglobal.test.beanItems.TestResultItem;
 import org.openelisglobal.test.service.TestSectionService;
+import org.openelisglobal.test.service.TestService;
 import org.openelisglobal.test.valueholder.TestSection;
 import org.openelisglobal.typeoftestresult.service.TypeOfTestResultServiceImpl;
 import org.openelisglobal.userrole.service.UserRoleService;
@@ -621,8 +621,7 @@ public class LogbookResultsRestController extends LogbookResultsBaseController {
                 item.setAnalysisId(newAnalysis.getId());
             } catch (RuntimeException e) {
                 LogEvent.logError("LogbookResultsRestController", "materializeVirtualChildAnalyses",
-                        "Failed to create analysis for virtual child test " + item.getTestId() + ": "
-                                + e.getMessage());
+                        "Failed to create analysis for virtual child test " + item.getTestId() + ": " + e.getMessage());
                 LogEvent.logError(e);
             }
         }

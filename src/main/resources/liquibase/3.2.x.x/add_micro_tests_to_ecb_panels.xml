@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+    <!--
+        Ajoute des tests microscopiques manquants à plusieurs panels ECB.
+        Tous les inserts sont idempotents (NOT EXISTS) : ils ne créent les
+        lignes panel_item que si le couple (panel_id, test_id) n'existe pas
+        déjà. Les tests doivent exister par ailleurs ; ils sont seedés dans
+        add_bacteriology_tests_others.xml.
+    -->
+
+    <changeSet id="add-micro-tests-to-ecb-pus-panel" author="pkomena">
+        <comment>
+            ECB-Pus : Hématies, Leucocytes (Etat frais Quantitatif),
+            Nombre de flore (Gram)
+        </comment>
+        <sql dbms="postgresql"><![CDATA[
+            INSERT INTO clinlims.panel_item (id, panel_id, lastupdated, test_id)
+            SELECT nextval('panel_item_seq'), p.id, now(), t.id
+            FROM clinlims.panel p
+            JOIN clinlims.test t ON t.name IN (
+                'Microscopie - Etat frais Quantitatif - Hématies',
+                'Microscopie - Etat frais Quantitatif - Leucocytes',
+                'Microscopie - Frottis Coloration Gram - Bactéries - Nombre de flore'
+            )
+            WHERE p.name = 'ECB-Pus'
+              AND NOT EXISTS (
+                  SELECT 1 FROM clinlims.panel_item pi
+                  WHERE pi.panel_id = p.id AND pi.test_id = t.id
+              );
+        ]]></sql>
+    </changeSet>
+
+    <changeSet id="add-gram-polynucleaires-to-urines-lp-pus-panels" author="pkomena">
+        <comment>
+            ECBU, ECB-LP, ECB-Pus : Microscopie - Frottis Coloration Gram -
+            Polynucléaires (le test est déjà rattaché à ECB-Crachat).
+        </comment>
+        <sql dbms="postgresql"><![CDATA[
+            INSERT INTO clinlims.panel_item (id, panel_id, lastupdated, test_id)
+            SELECT nextval('panel_item_seq'), p.id, now(), t.id
+            FROM clinlims.panel p
+            JOIN clinlims.test t
+              ON t.name = 'Microscopie - Frottis Coloration Gram - Polynucléaires'
+            WHERE p.name IN ('ECBU', 'ECB-LP', 'ECB-Pus')
+              AND NOT EXISTS (
+                  SELECT 1 FROM clinlims.panel_item pi
+                  WHERE pi.panel_id = p.id AND pi.test_id = t.id
+              );
+        ]]></sql>
+    </changeSet>
+
+    <changeSet id="add-micro-tests-to-ecb-sperme-panel" author="pkomena">
+        <comment>
+            ECB-Sperme : Hématies, Leucocytes (Etat frais Quantitatif),
+            Nombre de flore (Gram)
+        </comment>
+        <sql dbms="postgresql"><![CDATA[
+            INSERT INTO clinlims.panel_item (id, panel_id, lastupdated, test_id)
+            SELECT nextval('panel_item_seq'), p.id, now(), t.id
+            FROM clinlims.panel p
+            JOIN clinlims.test t ON t.name IN (
+                'Microscopie - Etat frais Quantitatif - Hématies',
+                'Microscopie - Etat frais Quantitatif - Leucocytes',
+                'Microscopie - Frottis Coloration Gram - Bactéries - Nombre de flore'
+            )
+            WHERE p.name = 'ECB-Sperme'
+              AND NOT EXISTS (
+                  SELECT 1 FROM clinlims.panel_item pi
+                  WHERE pi.panel_id = p.id AND pi.test_id = t.id
+              );
+        ]]></sql>
+    </changeSet>
+
+    <changeSet id="add-nombre-de-flore-to-ecb-materiel-panel" author="pkomena">
+        <comment>
+            ECB-Materiel : Microscopie - Frottis Coloration Gram - Bactéries
+            - Nombre de flore
+        </comment>
+        <sql dbms="postgresql"><![CDATA[
+            INSERT INTO clinlims.panel_item (id, panel_id, lastupdated, test_id)
+            SELECT nextval('panel_item_seq'), p.id, now(), t.id
+            FROM clinlims.panel p
+            JOIN clinlims.test t
+              ON t.name = 'Microscopie - Frottis Coloration Gram - Bactéries - Nombre de flore'
+            WHERE p.name = 'ECB-Materiel'
+              AND NOT EXISTS (
+                  SELECT 1 FROM clinlims.panel_item pi
+                  WHERE pi.panel_id = p.id AND pi.test_id = t.id
+              );
+        ]]></sql>
+    </changeSet>
+
+</databaseChangeLog>

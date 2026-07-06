@@ -190,6 +190,11 @@ public class SampleOrderService {
                     .getProgrammeSampleBySample(Integer.valueOf(sample.getId()), programName);
             if (programSample != null) {
                 sampleOrder.setProgramId(programSample.getProgram().getId());
+                // Le frontend (AddOrder/ModifyOrder) lit programCode pour activer
+                // les sections conditionnelles bactério ('RTN_BACTER') / TB ('TB').
+                // Sans cette ligne, le code n'était pas remonté au load et la modif
+                // d'un ordre ne ré-affichait pas les champs spécifiques au programme.
+                sampleOrder.setProgramCode(programSample.getProgram().getCode());
                 if (programSample.getQuestionnaireResponseUuid() != null) {
                     sampleOrder.setAdditionalQuestions(
                             fhirUtil.getLocalFhirClient().read().resource(QuestionnaireResponse.class)

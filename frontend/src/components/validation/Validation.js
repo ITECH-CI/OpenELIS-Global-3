@@ -268,7 +268,9 @@ const Validation = (props) => {
   const isBacteriologyResult = (result) => {
     if (!result) return false;
     const testName = result.testName || "";
-    const testSectionName = result.testSection || "";
+    // The result payload exposes the section as testSectionName; keep testSection
+    // as a fallback for any caller that still sets the older field.
+    const testSectionName = result.testSectionName || result.testSection || "";
 
     // Log for debugging
     console.log("[Validation] Checking result:", {
@@ -278,14 +280,24 @@ const Validation = (props) => {
       testId: result.testId,
     });
 
-    // Check if test section contains "Bacteriology" or test name indicates bacteriology
+    // A result belongs to the bacteriology workflow when either its test section
+    // is a bacteriology section, or its name carries a macro/micro/culture
+    // keyword. Chemistry tests (Glucose, Protéine) belong to bacteriology too but
+    // their names ("Glucose", "Protéine") are also common standalone biochemistry
+    // tests — so they only count as bacteriology when the SECTION is bacteriology,
+    // never on the name alone (otherwise a routine serum Glucose would be pulled
+    // out of the standard validation grid).
+    const lowerSection = testSectionName.toLowerCase();
+    const lowerTestName = testName.toLowerCase();
+    const isBacterioSection =
+      lowerSection.includes("bacteriology") ||
+      lowerSection.includes("bactériologie") ||
+      lowerSection.includes("routine bacteriology");
     const isBacterio =
-      testSectionName.toLowerCase().includes("bacteriology") ||
-      testSectionName.toLowerCase().includes("bactériologie") ||
-      testSectionName.toLowerCase().includes("routine bacteriology") ||
-      testName.toLowerCase().includes("macroscopie") ||
-      testName.toLowerCase().includes("microscopie") ||
-      testName.toLowerCase().includes("culture");
+      isBacterioSection ||
+      lowerTestName.includes("macroscopie") ||
+      lowerTestName.includes("microscopie") ||
+      lowerTestName.includes("culture");
 
     console.log("[Validation] Is bacteriology?", isBacterio);
     return isBacterio;
@@ -750,52 +762,52 @@ const Validation = (props) => {
                           sample.accessionNumber.split("-")[0] ===
                             props.searchedAccessionNumber.split("-")[0];
                         return (
-                        <div
-                          key={sample.sampleId}
-                          style={{
-                            marginBottom: "15px",
-                            padding: "10px",
-                            borderRadius: "4px",
-                            ...(isSearched && {
-                              backgroundColor: "#fff3cd",
-                              borderLeft: "4px solid #f0ad4e",
-                              animation: "labno-pulse 1.6s ease-in-out 3",
-                            }),
-                          }}
-                        >
-                          <label
+                          <div
+                            key={sample.sampleId}
                             style={{
-                              display: "block",
-                              marginBottom: "5px",
-                              fontWeight: "500",
+                              marginBottom: "15px",
+                              padding: "10px",
+                              borderRadius: "4px",
+                              ...(isSearched && {
+                                backgroundColor: "#fff3cd",
+                                borderLeft: "4px solid #f0ad4e",
+                                animation: "labno-pulse 1.6s ease-in-out 3",
+                              }),
                             }}
                           >
-                            {intl.formatMessage({
-                              id: "column.name.sampleInfo",
-                            })}
-                            :{" "}
-                            {configurationProperties.AccessionFormat ===
-                            "ALPHANUM"
-                              ? convertAlphaNumLabNumForDisplay(
-                                  sample.accessionNumber,
-                                )
-                              : sample.accessionNumber}
-                          </label>
-                          <TextArea
-                            id={`interpretation-${sample.sampleId}`}
-                            labelText=""
-                            maxCount={200}
-                            placeholder={intl.formatMessage({
-                              id: "validation.sampleInterpretation.placeholder",
-                            })}
-                            value={sample.sampleInterpretation || ""}
-                            onChange={(e) =>
-                              handleInterpretationChange(e, sample.sampleId)
-                            }
-                            rows={3}
-                            style={{ width: "100%" }}
-                          />
-                        </div>
+                            <label
+                              style={{
+                                display: "block",
+                                marginBottom: "5px",
+                                fontWeight: "500",
+                              }}
+                            >
+                              {intl.formatMessage({
+                                id: "column.name.sampleInfo",
+                              })}
+                              :{" "}
+                              {configurationProperties.AccessionFormat ===
+                              "ALPHANUM"
+                                ? convertAlphaNumLabNumForDisplay(
+                                    sample.accessionNumber,
+                                  )
+                                : sample.accessionNumber}
+                            </label>
+                            <TextArea
+                              id={`interpretation-${sample.sampleId}`}
+                              labelText=""
+                              maxCount={200}
+                              placeholder={intl.formatMessage({
+                                id: "validation.sampleInterpretation.placeholder",
+                              })}
+                              value={sample.sampleInterpretation || ""}
+                              onChange={(e) =>
+                                handleInterpretationChange(e, sample.sampleId)
+                              }
+                              rows={3}
+                              style={{ width: "100%" }}
+                            />
+                          </div>
                         );
                       })}
                     </Column>

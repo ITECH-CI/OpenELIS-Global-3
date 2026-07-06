@@ -161,6 +161,13 @@ public class SiteInformation extends BaseObject<String> {
 
     @Override
     protected String getDefaultLocalizedName() {
+        // The "localization" association is not mapped for SiteInformation, so it
+        // is effectively always null here. Guard against the NPE and fall back to
+        // the raw name (callers that have a nameKey still get the localized label
+        // from BaseObject.getLocalizedName(); this is only the default message).
+        if (localization == null) {
+            return getName();
+        }
         return localization.getLocalizedValue(Locale.ENGLISH);
     }
 }

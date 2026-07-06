@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+     http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+    <!--
+        Correctifs (rejoués sur toutes les bases via un nouvel id de changeset) :
+
+        1) Ré-associer 'Microscopie - Frottis Coloration Gram - Polynucléaires'
+           au type d'échantillon 'Crachat/Expectoration'. La migration
+           précédente (add-gram-polynucleaires-crachat-sampletype-1) a été
+           marquée EXECUTED alors qu'elle n'avait rien inséré sur certaines
+           bases (le test n'existait pas encore avec ce nom au moment de son
+           exécution). On refait l'association ici, idempotente.
+
+        2) Fixer l'unité de mesure à 'num/champ' pour :
+           - Microscopie - Frottis Coloration Gram - Polynucléaires
+           - Microscopie - Etat frais Quantitatif - Sécrétion vaginale - Hématies
+           - Microscopie - Etat frais Quantitatif - Sécrétion vaginale - Leucocytes
+
+        Aucun id codé en dur : résolution par name / description.
+    -->
+
+    <changeSet author="pkomena" id="fix-gram-polynucleaires-crachat-assoc-1">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <sqlCheck expectedResult="1">SELECT count(*) FROM
+                    clinlims.type_of_sample WHERE description = 'Crachat/Expectoration'</sqlCheck>
+                <sqlCheck expectedResult="1">SELECT count(*) FROM
+                    clinlims.test WHERE name = 'Microscopie - Frottis Coloration Gram - Polynucléaires'</sqlCheck>
+            </and>
+        </preConditions>
+        <comment>Ré-associer Polynucléaires (Gram) au type d'échantillon Crachat/Expectoration</comment>
+        <sql><![CDATA[
+            INSERT INTO clinlims.sampletype_test (id, sample_type_id, test_id)
+            SELECT
+                nextval('clinlims.sample_type_test_seq'),
+                tos.id,
+                t.id
+            FROM clinlims.type_of_sample tos
+            CROSS JOIN clinlims.test t
+            WHERE tos.description = 'Crachat/Expectoration'
+              AND t.name = 'Microscopie - Frottis Coloration Gram - Polynucléaires'
+              AND NOT EXISTS (
+                  SELECT 1 FROM clinlims.sampletype_test st
+                  WHERE st.sample_type_id = tos.id AND st.test_id = t.id
+              );
+        ]]></sql>
+    </changeSet>
+
+    <changeSet author="pkomena" id="fix-num-champ-uom-microscopy-tests-1">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="1">SELECT count(*) FROM
+                clinlims.unit_of_measure WHERE name = 'num/champ'</sqlCheck>
+        </preConditions>
+        <comment>Fixer l'unité 'num/champ' pour Polynucléaires (Gram) et Hématies/Leucocytes des Sécrétions vaginales</comment>
+        <sql><![CDATA[
+            UPDATE clinlims.test
+            SET uom_id = (SELECT id FROM clinlims.unit_of_measure WHERE name = 'num/champ' LIMIT 1),
+                lastupdated = now()
+            WHERE name IN (
+                'Microscopie - Frottis Coloration Gram - Polynucléaires',
+                'Microscopie - Etat frais Quantitatif - Sécrétion vaginale - Hématies',
+                'Microscopie - Etat frais Quantitatif - Sécrétion vaginale - Leucocytes'
+            );
+        ]]></sql>
+    </changeSet>
+
+</databaseChangeLog>

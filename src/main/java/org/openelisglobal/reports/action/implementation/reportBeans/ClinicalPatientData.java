@@ -116,15 +116,23 @@ public final class ClinicalPatientData {
     private String abgInterpretation;
     private String abgDiameter;
     private String abgMic;
-    // Per-flora details rendered as a small table under a "Nombre de flore" test row
+    // Per-flora details rendered as a small table under a "Nombre de flore" test
+    // row
     private String floraNumber;
     private String floraGramType;
     private String floraGroupingMode;
     private String floraOtherCharacteristic;
-    // Identifies the parent culture analysis a row belongs to (for the Culture section).
-    // Used by the report layout to group root TEST, "Nombre de germes", organisms and
+    // Identifies the parent culture analysis a row belongs to (for the Culture
+    // section).
+    // Used by the report layout to group root TEST, "Nombre de germes", organisms
+    // and
     // their antibiograms together for the same culture. Not displayed.
     private String cultureKey;
+
+    // Type d'organisme sur les lignes ORGANISM ('BACTERIA' / 'YEAST'). Permet à
+    // reorderCultureSection() de compter séparément bactéries et levures pour
+    // composer la ligne "Nombre de germes : X bactérie(s), Y levure(s)".
+    private String organismType;
 
     public String getCultureKey() {
         return cultureKey;
@@ -132,6 +140,14 @@ public final class ClinicalPatientData {
 
     public void setCultureKey(String cultureKey) {
         this.cultureKey = cultureKey;
+    }
+
+    public String getOrganismType() {
+        return organismType;
+    }
+
+    public void setOrganismType(String organismType) {
+        this.organismType = organismType;
     }
 
     public ClinicalPatientData() {
@@ -226,6 +242,7 @@ public final class ClinicalPatientData {
         floraGroupingMode = data.getFloraGroupingMode();
         floraOtherCharacteristic = data.getFloraOtherCharacteristic();
         cultureKey = data.getCultureKey();
+        organismType = data.getOrganismType();
     }
 
     public String getReferralRefRange() {
@@ -922,14 +939,14 @@ public final class ClinicalPatientData {
         // Set clinicalInformation for backward compatibility with JRXML
         this.clinicalInformation = clinicalInfo;
     }
-    
-	public boolean getIsBacterioParentTest() {
-		return isBacterioParentTest;
-	}
 
-	public void setIsBacterioParentTest(boolean isBacterioParentTest) {
-		this.isBacterioParentTest = isBacterioParentTest;
-	}
+    public boolean getIsBacterioParentTest() {
+        return isBacterioParentTest;
+    }
+
+    public void setIsBacterioParentTest(boolean isBacterioParentTest) {
+        this.isBacterioParentTest = isBacterioParentTest;
+    }
 
     public String getBacterioRowType() {
         return bacterioRowType;

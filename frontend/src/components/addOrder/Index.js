@@ -616,6 +616,48 @@ const Index = () => {
     if (isSubmitting) {
       return;
     }
+
+    // Enforce the patient identifier required flags here (mirrors the backend
+    // site_information config) so we never POST an incomplete NEW patient that the
+    // backend would reject with an opaque error. Skip this for an already-existing
+    // patient (selected via search, so patientPK/guid is set): such a patient is
+    // already persisted and may legitimately predate the required-field policy —
+    // blocking the order for them would be wrong.
+    const patient = orderFormValues.patientProperties || {};
+    const isBlank = (v) => v == null || String(v).trim() === "";
+    const isExistingPatient = !isBlank(patient.patientPK) || !isBlank(patient.guid);
+    const missingRequiredPatientIds = [];
+    if (
+      String(configurationProperties?.PATIENT_SUBJECT_NUMBER_REQUIRED) ===
+        "true" &&
+      isBlank(patient.subjectNumber)
+    ) {
+      missingRequiredPatientIds.push(
+        intl.formatMessage({ id: "patient.subject.number" }),
+      );
+    }
+    if (
+      String(configurationProperties?.PATIENT_NATIONAL_ID_REQUIRED) === "true" &&
+      isBlank(patient.nationalId)
+    ) {
+      missingRequiredPatientIds.push(
+        intl.formatMessage({ id: "patient.natioanalid" }),
+      );
+    }
+    if (!isExistingPatient && missingRequiredPatientIds.length > 0) {
+      addNotification({
+        title: intl.formatMessage({ id: "notification.title" }),
+        message:
+          intl.formatMessage({
+            id: "patient.required.fields.missing",
+            defaultMessage: "Champ(s) obligatoire(s) manquant(s) : ",
+          }) + missingRequiredPatientIds.join(", "),
+        kind: NotificationKinds.error,
+      });
+      setNotificationVisible(true);
+      return;
+    }
+
     setIsSubmitting(true);
     if ("years" in orderFormValues.patientProperties) {
       delete orderFormValues.patientProperties.years;

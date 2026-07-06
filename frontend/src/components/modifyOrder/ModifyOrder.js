@@ -43,6 +43,12 @@ const ModifyOrder = () => {
 
   const intl = useIntl();
 
+  // Codes programme, identiques à ceux d'addOrder/Index.js. Servent à activer
+  // l'affichage conditionnel des sections bactério / TB sur la modification,
+  // exactement comme à la création.
+  const BACTERIOLOGY_PROGRAM_CODE = "RTN_BACTER";
+  const TB_PROGRAM_CODE = "TB";
+
   const firstPageNumber = 0;
   const lastPageNumber = 3;
   const programPageNumber = firstPageNumber + 0;
@@ -100,7 +106,37 @@ const ModifyOrder = () => {
   const loadOrderValues = (data) => {
     if (componentMounted.current) {
       data.sampleOrderItems.referringSiteName = "";
+      // Le backend renvoie patientRoutineBacterioInfo/patientTbInfo à null
+      // quand aucun bloc n'avait été saisi. On retombe sur les valeurs par
+      // défaut de ModifyOrderFormValues pour que les sous-formulaires
+      // (multi-select bactério, dropdowns TB...) n'aient pas à gérer le cas
+      // "objet entier manquant" — ils s'attendent à un objet présent avec
+      // des champs vides.
+      if (!data.patientRoutineBacterioInfo) {
+        data.patientRoutineBacterioInfo =
+          ModifyOrderFormValues.patientRoutineBacterioInfo;
+      }
+      if (!data.patientTbInfo) {
+        data.patientTbInfo = ModifyOrderFormValues.patientTbInfo;
+      }
+      if (!data.patientProperties) {
+        data.patientProperties = ModifyOrderFormValues.patientProperties;
+      }
       setOrderFormValues(data);
+
+      // SampleType lit ses valeurs TB initiales via sample.tbData (state local
+      // par échantillon). Pour pré-remplir les champs TB en édition, on injecte
+      // patientTbInfo du backend dans samples[0].tbData. Symétrie inverse de
+      // l'agrégation faite dans attacheSamplesToFormValues : sample.tbData
+      // -> patientTbInfo au save / patientTbInfo -> samples[0].tbData au load.
+      if (data.patientTbInfo) {
+        setSamples((prev) => {
+          if (!prev || prev.length === 0) return prev;
+          const next = [...prev];
+          next[0] = { ...next[0], tbData: data.patientTbInfo };
+          return next;
+        });
+      }
     }
   };
 
@@ -224,11 +260,26 @@ const ModifyOrder = () => {
         sampleXmlString += "</samples>";
       }
     }
+
+    // Agrégation TB symétrique à AddOrder : SampleType saisit tbData localement
+    // sur chaque sample (sampleItem.tbData). Pour la modification, on remonte la
+    // première valeur non-null vers orderFormValues.patientTbInfo, qui est ensuite
+    // envoyé au backend dans le POST /rest/SampleEdit (cf. SampleEditServiceImpl.
+    // replaceTbObservations qui prend le relais côté persistance).
+    let tbData = null;
+    for (let sampleItem of samples) {
+      if (sampleItem.tbData) {
+        tbData = sampleItem.tbData;
+        break;
+      }
+    }
+
     setOrderFormValues({
       ...orderFormValues,
       // useReferral: true,
       sampleXML: sampleXmlString,
       // referralItems: referralItems,
+      patientTbInfo: tbData || orderFormValues.patientTbInfo,
     });
   };
 
@@ -307,6 +358,14 @@ const ModifyOrder = () => {
                   setSamples={setSamples}
                   samples={samples}
                   error={elementError}
+                  isBacterio={
+                    orderFormValues.sampleOrderItems.programCode ===
+                    BACTERIOLOGY_PROGRAM_CODE
+                  }
+                  isTb={
+                    orderFormValues.sampleOrderItems.programCode ===
+                    TB_PROGRAM_CODE
+                  }
                 />
               )}
               {page === orderPageNumber && (
@@ -318,6 +377,10 @@ const ModifyOrder = () => {
                   isModifyOrder={true}
                   changed={changed}
                   setChanged={setChanged}
+                  isBacterio={
+                    orderFormValues.sampleOrderItems.programCode ===
+                    BACTERIOLOGY_PROGRAM_CODE
+                  }
                 />
               )}
 

@@ -21,7 +21,8 @@ public class BacteriologyOrganism extends BaseObject<Integer> {
     /**
      * Display-only name resolved from organismNameDictId; populated server-side for
      * consumers that need the human-readable label (e.g. validation page) without
-     * polluting organismNameText (which is the user-typed free text). Not persisted.
+     * polluting organismNameText (which is the user-typed free text). Not
+     * persisted.
      */
     private transient String resolvedOrganismName;
 

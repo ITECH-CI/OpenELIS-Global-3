@@ -38,6 +38,25 @@ public class BacteriologyAntibiogramDAOImpl extends BaseDAOImpl<BacteriologyAnti
 
     @Override
     @Transactional(readOnly = true)
+    public List<BacteriologyAntibiogram> getAntibiogramsByOrganismIds(List<Integer> organismIds) {
+        if (organismIds == null || organismIds.isEmpty()) {
+            return new java.util.ArrayList<>();
+        }
+        try {
+            String hql = "FROM BacteriologyAntibiogram ba WHERE ba.organismId IN (:organismIds) "
+                    + "AND ba.isActive = true";
+            Query<BacteriologyAntibiogram> query = entityManager.unwrap(Session.class).createQuery(hql,
+                    BacteriologyAntibiogram.class);
+            query.setParameterList("organismIds", organismIds);
+            return query.list();
+        } catch (RuntimeException e) {
+            LogEvent.logError(e);
+            throw new LIMSRuntimeException("Error in getAntibiogramsByOrganismIds", e);
+        }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public BacteriologyAntibiogram getByOrganismAndAntibiotic(Integer organismId, Integer antibioticDictId) {
         try {
             String hql = "FROM BacteriologyAntibiogram ba WHERE ba.organismId = :organismId "

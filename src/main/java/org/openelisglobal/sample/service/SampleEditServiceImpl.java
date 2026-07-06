@@ -103,6 +103,8 @@ public class SampleEditServiceImpl implements SampleEditService {
     UserRoleService userRoleService;
     @Autowired
     NoteService noteService;
+    @Autowired
+    SamplePatientEntryService samplePatientEntryService;
 
     @Transactional
     @Override
@@ -292,6 +294,20 @@ public class SampleEditServiceImpl implements SampleEditService {
             sampleRequesterService.delete(orderArtifacts.getDeletableSampleOrganizationRequester());
         }
 
+        // Bactério / TB : écraser intégralement le bloc d'observations existant
+        // pour ce sample et le reconstruire à partir du form. Sans ça, chaque
+        // modification ajoutait N nouvelles lignes observation_history (doublons),
+        // et les multi-sélections cumulaient les anciennes valeurs.
+        if (form.getPatientRoutineBacterioInfo() != null) {
+            samplePatientEntryService.replaceBacterioObservations(form.getPatientRoutineBacterioInfo(),
+                    form.getPatientProperties(), form.getSampleOrderItems(), updatedSample.getId(), patient.getId(),
+                    sysUserId);
+        }
+        if (form.getPatientTbInfo() != null) {
+            samplePatientEntryService.replaceTbObservations(form.getPatientTbInfo(), updatedSample.getId(),
+                    patient.getId(), sysUserId);
+        }
+
         request.getSession().setAttribute("lastAccessionNumber", updatedSample.getAccessionNumber());
         request.getSession().setAttribute("lastPatientId", patient.getId());
     }
@@ -459,10 +475,10 @@ public class SampleEditServiceImpl implements SampleEditService {
     }
 
     /**
-     * Resolve the Analysis to use when an "add" edit item is processed.
-     * Returns null when an active (non-canceled) analysis already exists for the
-     * same (sampleItem, test) pair, so the caller can skip the insert and preserve
-     * the existing result.
+     * Resolve the Analysis to use when an "add" edit item is processed. Returns
+     * null when an active (non-canceled) analysis already exists for the same
+     * (sampleItem, test) pair, so the caller can skip the insert and preserve the
+     * existing result.
      */
     private Analysis newOrExistingAnalysisForAdd(SampleEditItem sampleEditItem) {
         SampleItem sampleItem = sampleItemService.get(sampleEditItem.getSampleItemId());
@@ -470,8 +486,7 @@ public class SampleEditServiceImpl implements SampleEditService {
 
         Analysis canceledMatch = null;
         for (Analysis analysis : existing) {
-            if (analysis.getTest() == null
-                    || !sampleEditItem.getTestId().equals(analysis.getTest().getId())) {
+            if (analysis.getTest() == null || !sampleEditItem.getTestId().equals(analysis.getTest().getId())) {
                 continue;
             }
             if (CANCELED_TEST_STATUS_ID.equals(analysis.getStatusId())) {

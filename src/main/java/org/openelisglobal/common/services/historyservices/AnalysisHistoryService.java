@@ -51,7 +51,13 @@ public class AnalysisHistoryService extends AbstractHistoryService {
             newValueMap.put(STATUS_ATTRIBUTE,
                     SpringContext.getBean(IStatusService.class).getStatusNameFromId(analysis.getStatusId()));
 
-            identifier = TestServiceImpl.getLocalizedTestNameWithType(analysis.getTest()) + " - "
+            // Utilise le sample type de l'échantillon courant pour le suffixe
+            // (sinon TestServiceImpl prend le PREMIER type associé au test —
+            // souvent erroné quand un test est lié à plusieurs sample types).
+            String typeOfSampleId = analysis.getSampleItem() != null
+                    ? analysis.getSampleItem().getTypeOfSampleId()
+                    : null;
+            identifier = TestServiceImpl.getLocalizedTestNameWithType(analysis.getTest(), typeOfSampleId) + " - "
                     + analysis.getAnalysisType();
         } else {
             historyList = new ArrayList<History>();

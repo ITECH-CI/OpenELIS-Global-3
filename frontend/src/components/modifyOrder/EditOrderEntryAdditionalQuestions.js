@@ -108,6 +108,88 @@ const EditOrderEntryAdditionalQuestions = ({
     }
   }
 
+  // Symétrique à OrderEntryAdditionalQuestions.answerChange : sans ce callback
+  // le Questionnaire affichait les valeurs en lecture seule et toute édition
+  // sur la page de modification était silencieusement perdue (additionalQuestions
+  // n'était jamais mis à jour). On reconstruit la même mécanique : mise à jour
+  // de questionnaireResponse + propagation dans orderFormValues.sampleOrderItems.
+  const answerChange = (e) => {
+    const { id, value } = e.target;
+
+    var updatedQuestionnaireResponse = { ...questionnaireResponse };
+    var responseItem = updatedQuestionnaireResponse.item.find(
+      (item) => item.linkId === id,
+    );
+    var questionnaireItem = questionnaire.item.find(
+      (item) => item.linkId === id,
+    );
+    responseItem.answer = [];
+    if (value !== "") {
+      switch (questionnaireItem.type) {
+        case "boolean":
+          responseItem.answer.push({ valueBoolean: value });
+          break;
+        case "decimal":
+          responseItem.answer.push({ valueDecimal: value });
+          break;
+        case "integer":
+          responseItem.answer.push({ valueInteger: value });
+          break;
+        case "date":
+          responseItem.answer.push({ valueDate: value });
+          break;
+        case "time":
+          responseItem.answer.push({ valueTime: value });
+          break;
+        case "string":
+        case "text":
+          responseItem.answer.push({ valueString: value });
+          break;
+        case "quantity":
+          responseItem.answer.push({ valueQuantity: value });
+          break;
+        case "choice":
+          // Pour réutiliser la même mécanique entre single/multi select on
+          // normalise la valeur en tableau.
+          var items = value;
+          if (!Array.isArray(items)) {
+            items = [{ value: value }];
+          }
+          for (var i = 0; i < items.length; i++) {
+            var curValue = items[i].value;
+            var option = questionnaireItem?.answerOption?.find(
+              (option) => option?.valueCoding?.code === curValue,
+            );
+            if (option) {
+              responseItem.answer.push({ valueCoding: option.valueCoding });
+            } else {
+              option = questionnaireItem?.answerOption?.find(
+                (option) => option.valueString === curValue,
+              );
+              if (option) {
+                responseItem.answer.push({ valueString: option.valueString });
+              } else {
+                console.error(
+                  "couldn't find a matching questionnaire answer for '" +
+                    curValue +
+                    "'",
+                );
+              }
+            }
+          }
+          break;
+      }
+    }
+    setQuestionnaireResponse(updatedQuestionnaireResponse);
+    setOrderFormValues({
+      ...orderFormValues,
+      sampleOrderItems: {
+        ...orderFormValues.sampleOrderItems,
+        additionalQuestions: updatedQuestionnaireResponse,
+      },
+    });
+  };
+
   const getAnswer = (linkId) => {
     var responseItem = questionnaireResponse?.item?.find(
       (item) => item.linkId === linkId,
@@ -155,7 +237,11 @@ const EditOrderEntryAdditionalQuestions = ({
             setOrderFormValues={setOrderFormValues}
             editable={true}
           />
-          <Questionnaire questionnaire={questionnaire} getAnswer={getAnswer} />
+          <Questionnaire
+            questionnaire={questionnaire}
+            onAnswerChange={answerChange}
+            getAnswer={getAnswer}
+          />
           {questionnaireResponse && (
             <input
               type="hidden"

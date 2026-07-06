@@ -371,7 +371,7 @@ public class DictionaryRestController extends BaseController {
 
             List<Dictionary> dictionaries = dictionaryService.getDictionaryEntriesByCategoryId(category.getId());
             List<IdValueNameKey> result = new ArrayList<>();
-            
+
             for (Dictionary dict : dictionaries) {
                 if ("Y".equals(dict.getIsActive())) {
                     result.add(new IdValueNameKey(dict.getId(), dict.getDictEntry(), dict.getNameKey()));

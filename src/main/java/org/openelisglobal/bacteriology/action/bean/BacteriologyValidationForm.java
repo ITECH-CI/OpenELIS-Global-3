@@ -8,7 +8,10 @@ public class BacteriologyValidationForm {
     private String sysUserId;
     private ValidatedItems validated;
     private RejectedItems rejected;
-    /** Biologist's interpretation note for the sample (persisted as observation history). */
+    /**
+     * Biologist's interpretation note for the sample (persisted as observation
+     * history).
+     */
     private String sampleInterpretation;
 
     public Integer getAnalysisId() {
@@ -55,6 +58,7 @@ public class BacteriologyValidationForm {
         private List<String> macroscopy;
         private List<String> microscopy;
         private List<String> culture;
+        private List<String> chemistry;
         private List<String> organisms;
 
         public List<String> getMacroscopy() {
@@ -79,6 +83,14 @@ public class BacteriologyValidationForm {
 
         public void setCulture(List<String> culture) {
             this.culture = culture;
+        }
+
+        public List<String> getChemistry() {
+            return chemistry;
+        }
+
+        public void setChemistry(List<String> chemistry) {
+            this.chemistry = chemistry;
         }
 
         public List<String> getOrganisms() {
@@ -94,6 +106,7 @@ public class BacteriologyValidationForm {
         private List<String> macroscopy;
         private List<String> microscopy;
         private List<String> culture;
+        private List<String> chemistry;
         private List<String> organisms;
 
         public List<String> getMacroscopy() {
@@ -118,6 +131,14 @@ public class BacteriologyValidationForm {
 
         public void setCulture(List<String> culture) {
             this.culture = culture;
+        }
+
+        public List<String> getChemistry() {
+            return chemistry;
+        }
+
+        public void setChemistry(List<String> chemistry) {
+            this.chemistry = chemistry;
         }
 
         public List<String> getOrganisms() {

@@ -1,21 +1,61 @@
-import { Column, Grid, Section } from "@carbon/react";
-import { useMemo } from "react";
+import { Column, Grid, Section, Select, SelectItem } from "@carbon/react";
+import { useMemo, useState } from "react";
 import { FormattedMessage } from "react-intl";
 import BacteriologyResultField from "../common/BacteriologyResultField";
 import ConditionalTestGroup from "../ConditionalTestGroup";
 import FloraList from "../FloraList";
 
+// Tests for which the user may switch the unit of measure between mm³ and
+// num/champ at result entry time are identified BY NAME, not by id: test ids
+// are sequence-generated and differ between databases (a hardcoded id list
+// silently attached the unit picker to the wrong tests in prod). These are the
+// "Microscopie - Etat frais Quantitatif - Hématies/Leucocytes" tests (with or
+// without a sample-type suffix like "Sécrétion vaginale").
+const isUomSelectableTest = (testName) => {
+  if (!testName) return false;
+  const normalized = testName
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+  // The "S\u00e9cr\u00e9tion vaginale" variants keep a fixed unit (num/champ) and must NOT
+  // offer the mm\u00b3 / num-champ picker \u2014 only the generic Etat frais Quantitatif
+  // H\u00e9maties/Leucocytes tests do.
+  if (normalized.includes("secretion vaginale")) {
+    return false;
+  }
+  return (
+    normalized.includes("etat frais quantitatif") &&
+    (normalized.includes("hematies") || normalized.includes("leucocytes"))
+  );
+};
+
 const MicroscopySection = ({
   accessionNumber,
   testResults = [],
   microscopyResults = {},
+  microscopyUoms = {},
+  microscopyUomOptions = [],
   floraData = {},
   onChange,
+  onUomChange,
   onFloraChange,
   disabled = false,
 }) => {
   const handleFieldChange = (testId, value) => {
     onChange({ ...microscopyResults, [testId]: value });
+  };
+
+  // Local fallback if the parent doesn't yet handle UoM state (Phase 1).
+  const [localUoms, setLocalUoms] = useState({});
+  const effectiveUoms =
+    Object.keys(microscopyUoms || {}).length > 0 ? microscopyUoms : localUoms;
+
+  const handleUomChange = (testId, uomId) => {
+    if (onUomChange) {
+      onUomChange({ ...(microscopyUoms || {}), [testId]: uomId });
+    } else {
+      setLocalUoms((prev) => ({ ...prev, [testId]: uomId }));
+    }
   };
 
   // IMPORTANT: both callbacks below MUST use the functional updater form because
@@ -168,6 +208,36 @@ const MicroscopySection = ({
               const isMultiSelect = test.resultType === "M";
               const uniqueKey = `${test.analysisId}-${test.testId}`;
               const cleanedName = cleanTestName(test.testName);
+              const uomSelectable =
+                isUomSelectableTest(test.testName) &&
+                microscopyUomOptions.length > 0;
+              const selectedUomId =
+                effectiveUoms[test.testId] != null
+                  ? String(effectiveUoms[test.testId])
+                  : "";
+              const labelWithUom =
+                !uomSelectable && test.unitsOfMeasure
+                  ? `${cleanedName} (${test.unitsOfMeasure})`
+                  : cleanedName;
+
+              const field = (
+                <BacteriologyResultField
+                  id={`micro_${test.testId}`}
+                  label={labelWithUom}
+                  type={
+                    isDictionary || isMultiSelect
+                      ? "select"
+                      : test.resultType === "N"
+                        ? "number"
+                        : "text"
+                  }
+                  value={microscopyResults[test.testId] ?? ""}
+                  onChange={(value) => handleFieldChange(test.testId, value)}
+                  options={test.dictionaryResults || []}
+                  disabled={disabled}
+                  required={false}
+                />
+              );
 
               return (
                 <Column
@@ -177,26 +247,39 @@ const MicroscopySection = ({
                   sm={4}
                   style={{ marginBottom: "1.5rem" }}
                 >
-                  <BacteriologyResultField
-                    id={`micro_${test.testId}`}
-                    label={
-                      test.unitsOfMeasure
-                        ? `${cleanedName} (${test.unitsOfMeasure})`
-                        : cleanedName
-                    }
-                    type={
-                      isDictionary || isMultiSelect
-                        ? "select"
-                        : test.resultType === "N"
-                          ? "number"
-                          : "text"
-                    }
-                    value={microscopyResults[test.testId] ?? ""}
-                    onChange={(value) => handleFieldChange(test.testId, value)}
-                    options={test.dictionaryResults || []}
-                    disabled={disabled}
-                    required={false}
-                  />
+                  {uomSelectable ? (
+                    <div
+                      style={{
+                        display: "flex",
+                        gap: "0.5rem",
+                        alignItems: "flex-end",
+                      }}
+                    >
+                      <div style={{ flex: 2 }}>{field}</div>
+                      <div style={{ flex: 1, minWidth: "9rem" }}>
+                        <Select
+                          id={`micro_uom_${test.testId}`}
+                          labelText="Unité"
+                          value={selectedUomId}
+                          onChange={(e) =>
+                            handleUomChange(test.testId, e.target.value)
+                          }
+                          disabled={disabled}
+                        >
+                          <SelectItem value="" text="Choisir..." />
+                          {microscopyUomOptions.map((opt) => (
+                            <SelectItem
+                              key={opt.id}
+                              value={String(opt.id)}
+                              text={opt.label}
+                            />
+                          ))}
+                        </Select>
+                      </div>
+                    </div>
+                  ) : (
+                    field
+                  )}
                 </Column>
               );
             })}

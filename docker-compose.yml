@@ -37,9 +37,9 @@ services:
             retries: 10 
             
     oe.openelis.org:
-        container_name: openelisglobal-webapp 
-        image: itechuw/openelis-global-2:develop   
-        platform: linux/amd64 
+        container_name: openelisglobal-webapp
+        image: openelis-global-itechciv-oe.openelis.org:latest
+        platform: linux/amd64
         depends_on:
             - database
             - certs
@@ -103,7 +103,7 @@ services:
 
          
     frontend.openelis.org:
-        image: itechuw/openelis-global-2-frontend:develop
+        image: openelisglobal-frontend:latest
         container_name: openelisglobal-front-end
         platform: linux/amd64
         networks:

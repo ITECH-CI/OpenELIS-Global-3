@@ -189,6 +189,8 @@ const SpecializedCultureSection = ({
                 organisms={organisms}
                 onChange={onOrganismsChange}
                 disabled={disabled}
+                cultureTestName={cultureTest?.testName}
+                cultureTestId={cultureTest?.testId}
               />
             </div>
           )}

@@ -97,6 +97,28 @@
 file="add_study_modifier_menu.xml" />
     <include relativeToChangelogFile="true"
         file="fix_hiv_status_dictionary_labels.xml" />
+    <include relativeToChangelogFile="true"
+        file="add_leucorrhees_to_ecb_panels.xml" />
+    <include relativeToChangelogFile="true"
+        file="update_uom_to_num_champ_for_bacterio_tests.xml" />
+    <include relativeToChangelogFile="true"
+        file="rename_secretion_cervical_to_cervicale.xml" />
+    <include relativeToChangelogFile="true"
+        file="add_yeasts_dictionary_and_uom_per_result.xml" />
+    <include relativeToChangelogFile="true"
+        file="add_gram_giemsa_tests_to_ecb_crachat_panel.xml" />
+    <include relativeToChangelogFile="true"
+        file="add_glucose_proteine_to_chimie_lcr_panel.xml" />
+    <include relativeToChangelogFile="true"
+        file="add_micro_tests_to_ecb_panels.xml" />
+    <include relativeToChangelogFile="true"
+        file="add_nombre_de_flore_to_pus_materiel_sampletypes.xml" />
+    <include relativeToChangelogFile="true"
+        file="add_microscopy_quant_tests_to_pus_sampletype.xml" />
+    <include relativeToChangelogFile="true"
+        file="add_gram_polynucleaires_to_crachat_sampletype.xml" />
+    <include relativeToChangelogFile="true"
+        file="fix_polynucleaires_crachat_and_num_champ_uom.xml" />
 
 
 </databaseChangeLog>

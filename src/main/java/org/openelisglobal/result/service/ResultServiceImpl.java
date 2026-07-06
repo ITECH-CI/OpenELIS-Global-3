@@ -87,6 +87,12 @@ public class ResultServiceImpl extends AuditableBaseObjectServiceImpl<Result, St
         return baseObjectDAO.getAllMatchingOrdered("analysis.id", analysis.getId(), "id", false);
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public String getUomIdForResult(String resultId) {
+        return baseObjectDAO.getUomIdForResult(resultId);
+    }
+
     @Transactional(readOnly = true)
     public String getLabSectionName(Result result) {
         return result.getAnalysis().getTestSection().getName();
@@ -102,8 +108,17 @@ public class ResultServiceImpl extends AuditableBaseObjectServiceImpl<Result, St
     @Override
     @Transactional(readOnly = true)
     public String getTestDescription(Result result) {
-        Test test = result.getAnalysis() != null ? result.getAnalysis().getTest() : null;
-        return TestServiceImpl.getLocalizedTestNameWithType(test);
+        if (result.getAnalysis() == null) {
+            return TestServiceImpl.getLocalizedTestNameWithType((Test) null);
+        }
+        Test test = result.getAnalysis().getTest();
+        String typeOfSampleId = result.getAnalysis().getSampleItem() != null
+                ? result.getAnalysis().getSampleItem().getTypeOfSampleId()
+                : null;
+        // Préfère le sample type du sample item courant (sinon le premier sample
+        // type associé au test l'emporte — incorrect quand un test couvre
+        // plusieurs types).
+        return TestServiceImpl.getLocalizedTestNameWithType(test, typeOfSampleId);
     }
 
     @Transactional(readOnly = true)

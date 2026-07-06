@@ -35,8 +35,13 @@ public class StringToOrderPriorityListConverter implements Converter<String, Lis
             return result;
         }
 
-        // Handle common invalid values from browsers
-        if (source.equals("u=0") || source.equals("undefined") || source.equals("null")) {
+        // Neutralise les valeurs du header HTTP RFC 9218 "Priority: u=N[, i]"
+        // que Firefox envoie automatiquement (pas Chrome). Spring matche le
+        // nom de header sur l'attribut form "priority" et tente de le convertir
+        // ici. Trimmed startsWith couvre "u=0", "u=3, i", "u=7", etc.
+        String trimmedSource = source.trim();
+        if (trimmedSource.startsWith("u=") || "undefined".equals(trimmedSource)
+                || "null".equals(trimmedSource)) {
             return result;
         }
 

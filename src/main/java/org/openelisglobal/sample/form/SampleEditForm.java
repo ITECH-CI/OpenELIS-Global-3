@@ -10,8 +10,10 @@ import org.openelisglobal.common.util.ConfigurationProperties.Property;
 import org.openelisglobal.common.util.IdValuePair;
 import org.openelisglobal.common.util.validator.CustomDateValidator.DateRelation;
 import org.openelisglobal.common.validator.ValidationHelper;
+import org.openelisglobal.patient.action.bean.PatientManagementInfo;
 import org.openelisglobal.patient.action.bean.PatientRoutineBacterioInfo;
 import org.openelisglobal.patient.action.bean.PatientSearch;
+import org.openelisglobal.patient.action.bean.PatientTbInfo;
 import org.openelisglobal.sample.bean.SampleEditItem;
 import org.openelisglobal.sample.bean.SampleOrderItem;
 import org.openelisglobal.sample.util.AccessionNumberUtil;
@@ -114,6 +116,14 @@ public class SampleEditForm extends BaseForm {
 
     @Valid
     private PatientRoutineBacterioInfo patientRoutineBacterioInfo;
+
+    @Valid
+    private PatientTbInfo patientTbInfo;
+
+    // Propriétés "patient" (grossesse...) — alimente le bloc bactério côté
+    // persistance, identique à SamplePatientEntryForm.patientProperties.
+    @Valid
+    private PatientManagementInfo patientProperties;
 
     private boolean customNotificationLogic;
     private List<String> patientEmailNotificationTestIds;
@@ -403,5 +413,21 @@ public class SampleEditForm extends BaseForm {
 
     public void setPatientRoutineBacterioInfo(PatientRoutineBacterioInfo patientRoutineBacterioInfo) {
         this.patientRoutineBacterioInfo = patientRoutineBacterioInfo;
+    }
+
+    public PatientTbInfo getPatientTbInfo() {
+        return patientTbInfo;
+    }
+
+    public void setPatientTbInfo(PatientTbInfo patientTbInfo) {
+        this.patientTbInfo = patientTbInfo;
+    }
+
+    public PatientManagementInfo getPatientProperties() {
+        return patientProperties;
+    }
+
+    public void setPatientProperties(PatientManagementInfo patientProperties) {
+        this.patientProperties = patientProperties;
     }
 }

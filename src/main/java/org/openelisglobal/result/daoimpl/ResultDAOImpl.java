@@ -120,6 +120,27 @@ public class ResultDAOImpl extends BaseDAOImpl<Result, String> implements Result
         }
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public String getUomIdForResult(String resultId) throws LIMSRuntimeException {
+        // Projection on the FK column only: reads result.uom_id without
+        // initializing the lazy "uom" association, so it works outside the
+        // loading transaction (e.g. when rendering a report). Returns null when
+        // the result has no per-result UoM override.
+        if (resultId == null) {
+            return null;
+        }
+        try {
+            String hql = "select r.uom.id from Result r where r.id = :id";
+            Query<String> query = entityManager.unwrap(Session.class).createQuery(hql, String.class);
+            query.setParameter("id", Integer.parseInt(resultId));
+            return query.uniqueResult();
+        } catch (RuntimeException e) {
+            LogEvent.logError(e);
+            throw new LIMSRuntimeException("Error in Result getUomIdForResult()", e);
+        }
+    }
+
     /*
      * (non-Javadoc)
      *

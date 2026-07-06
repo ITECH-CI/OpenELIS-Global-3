@@ -123,6 +123,14 @@ const SampleType = (props) => {
     isBacterio = false,
     orderFormValues,
     setOrderFormValues,
+    // En modif d'ordonnance, EditSample affiche déjà le bloc bactério au-dessus
+    // (cf. EditSample.js ligne 624). On ne veut pas le dupliquer ici, sinon :
+    //  - les RadioButtonGroup des deux instances partageraient le même 'name'
+    //    HTML → conflit DOM, le radio nécessite 2 clics pour devenir coché ;
+    //  - éditer une zone met aussi à jour l'autre via le state partagé, ce qui
+    //    crée une impression de duplication.
+    // EditSample passe hideBacterioSection={true} pour faire taire ce rendu.
+    hideBacterioSection = false,
   } = props;
 
   const [sampleTypes, setSampleTypes] = useState([]);
@@ -893,14 +901,21 @@ const SampleType = (props) => {
     };
   }, []);
 
+  // IMPORTANT : forme fonctionnelle obligatoire — les handlers Oui/Non
+  // appellent setBacterioField deux fois consécutivement (changement de la
+  // valeur booléenne PUIS reset du champ associé). Sans la forme fonctionnelle,
+  // le second setBacterioField utilisait l'orderFormValues capturé par closure
+  // au début de l'événement et écrasait le premier changement, ce qui faisait
+  // que cliquer sur "Non" semblait sans effet (le champ conditionnel restait
+  // visible et il fallait deux clics pour synchroniser).
   const setBacterioField = (field, value) => {
-    setOrderFormValues({
-      ...orderFormValues,
+    setOrderFormValues((prev) => ({
+      ...prev,
       patientRoutineBacterioInfo: {
-        ...orderFormValues.patientRoutineBacterioInfo,
+        ...prev.patientRoutineBacterioInfo,
         [field]: value,
       },
-    });
+    }));
   };
 
   useEffect(() => {
@@ -1491,7 +1506,7 @@ const SampleType = (props) => {
             })}
         </div>
 
-        {isBacterio && orderFormValues && (
+        {isBacterio && orderFormValues && !hideBacterioSection && (
           <div className="orderLegendBody" style={{ marginTop: "1rem" }}>
             <Grid>
               <Column lg={8} md={4} sm={4}>
@@ -1513,8 +1528,16 @@ const SampleType = (props) => {
                     if (!boolVal) setBacterioField("roomNumber", "");
                   }}
                 >
-                  <RadioButton id="currentHospYes" value="true" labelText="Oui" />
-                  <RadioButton id="currentHospNo" value="false" labelText="Non" />
+                  <RadioButton
+                    id="currentHospYes"
+                    value="true"
+                    labelText="Oui"
+                  />
+                  <RadioButton
+                    id="currentHospNo"
+                    value="false"
+                    labelText="Non"
+                  />
                 </RadioButtonGroup>
               </Column>
               <Column lg={8} md={4} sm={4}>
@@ -1561,7 +1584,9 @@ const SampleType = (props) => {
                   onChange={(changes) =>
                     setBacterioField(
                       "clinicalInformations",
-                      changes.selectedItems.map((item) => item.id || item.value),
+                      changes.selectedItems.map(
+                        (item) => item.id || item.value,
+                      ),
                     )
                   }
                   selectionFeedback="top-after-reopen"
@@ -1855,7 +1880,9 @@ const SampleType = (props) => {
                   onChange={(changes) =>
                     setBacterioField(
                       "recentInvasiveGestures",
-                      changes.selectedItems.map((item) => item.id || item.value),
+                      changes.selectedItems.map(
+                        (item) => item.id || item.value,
+                      ),
                     )
                   }
                   selectionFeedback="top-after-reopen"
@@ -1879,20 +1906,24 @@ const SampleType = (props) => {
                   items={indwellingDeviceOptions}
                   itemToString={(item) => (item ? item.value : "")}
                   selectedItems={buildSelectedItems(
-                    orderFormValues.patientRoutineBacterioInfo?.indwellingDevice,
+                    orderFormValues.patientRoutineBacterioInfo
+                      ?.indwellingDevice,
                     indwellingDeviceOptions,
                   )}
                   onChange={(changes) =>
                     setBacterioField(
                       "indwellingDevice",
-                      changes.selectedItems.map((item) => item.id || item.value),
+                      changes.selectedItems.map(
+                        (item) => item.id || item.value,
+                      ),
                     )
                   }
                   selectionFeedback="top-after-reopen"
                 />
                 {renderSelectedTags(
                   buildSelectedItems(
-                    orderFormValues.patientRoutineBacterioInfo?.indwellingDevice,
+                    orderFormValues.patientRoutineBacterioInfo
+                      ?.indwellingDevice,
                     indwellingDeviceOptions,
                   ),
                   "indwellingDeviceTags",

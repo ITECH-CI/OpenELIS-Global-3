@@ -17,9 +17,16 @@ public class IdValueNameKey implements Serializable {
         this.nameKey = nameKey;
     }
 
-    public String getId() { return id; }
-    public String getValue() { return value; }
+    public String getId() {
+        return id;
+    }
+
+    public String getValue() {
+        return value;
+    }
 
     @JsonProperty("displayKey")
-    public String getNameKey() { return nameKey; }
+    public String getNameKey() {
+        return nameKey;
+    }
 }

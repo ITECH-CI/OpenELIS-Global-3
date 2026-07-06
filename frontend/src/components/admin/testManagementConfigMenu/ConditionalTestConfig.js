@@ -123,7 +123,8 @@ const ConditionalTestConfig = () => {
         title: intl.formatMessage({ id: "notification.title" }),
         message: intl.formatMessage({
           id: "conditional.test.sameParentChild",
-          defaultMessage: "Le test parent et le test enfant doivent être différents.",
+          defaultMessage:
+            "Le test parent et le test enfant doivent être différents.",
         }),
       });
       setNotificationVisible(true);
@@ -132,7 +133,11 @@ const ConditionalTestConfig = () => {
     setSaving(true);
     postToOpenElisServerJsonResponse(
       "/rest/conditional-test/mapping",
-      JSON.stringify({ parentTestId: parentId, childTestId: childId, triggerValue }),
+      JSON.stringify({
+        parentTestId: parentId,
+        childTestId: childId,
+        triggerValue,
+      }),
       (res) => {
         setSaving(false);
         if (res && res.status === "ok") {
@@ -151,7 +156,9 @@ const ConditionalTestConfig = () => {
           addNotification({
             kind: NotificationKinds.error,
             title: intl.formatMessage({ id: "notification.title" }),
-            message: (res && res.error) || intl.formatMessage({ id: "server.error.msg" }),
+            message:
+              (res && res.error) ||
+              intl.formatMessage({ id: "server.error.msg" }),
           });
         }
         setNotificationVisible(true);
@@ -179,7 +186,9 @@ const ConditionalTestConfig = () => {
           addNotification({
             kind: NotificationKinds.error,
             title: intl.formatMessage({ id: "notification.title" }),
-            message: (res && res.error) || intl.formatMessage({ id: "server.error.msg" }),
+            message:
+              (res && res.error) ||
+              intl.formatMessage({ id: "server.error.msg" }),
           });
         }
         setNotificationVisible(true);
@@ -194,10 +203,14 @@ const ConditionalTestConfig = () => {
       itemToString={(t) => (t ? `${t.name} (#${t.id})` : "")}
       shouldFilterItem={({ item, inputValue }) => {
         if (!inputValue) return true;
-        return (item.name || "").toLowerCase().includes(inputValue.toLowerCase());
+        return (item.name || "")
+          .toLowerCase()
+          .includes(inputValue.toLowerCase());
       }}
       selectedItem={tests.find((t) => t.id === value) || null}
-      onChange={({ selectedItem }) => onChange(selectedItem ? selectedItem.id : "")}
+      onChange={({ selectedItem }) =>
+        onChange(selectedItem ? selectedItem.id : "")
+      }
       titleText={label}
       placeholder={intl.formatMessage({
         id: "conditional.test.searchPlaceholder",
@@ -228,7 +241,9 @@ const ConditionalTestConfig = () => {
         <br />
 
         {loading ? (
-          <InlineLoading description={intl.formatMessage({ id: "loading.message" })} />
+          <InlineLoading
+            description={intl.formatMessage({ id: "loading.message" })}
+          />
         ) : (
           <>
             <Grid fullWidth={true}>
@@ -250,9 +265,13 @@ const ConditionalTestConfig = () => {
                   itemToString={(t) => (t ? t.label : "")}
                   shouldFilterItem={({ item, inputValue }) => {
                     if (!inputValue) return true;
-                    return (item.label || "").toLowerCase().includes(inputValue.toLowerCase());
+                    return (item.label || "")
+                      .toLowerCase()
+                      .includes(inputValue.toLowerCase());
                   }}
-                  selectedItem={triggerValues.find((t) => t.id === triggerValue) || null}
+                  selectedItem={
+                    triggerValues.find((t) => t.id === triggerValue) || null
+                  }
                   onChange={({ selectedItem }) =>
                     setTriggerValue(selectedItem ? selectedItem.id : "")
                   }
@@ -288,7 +307,10 @@ const ConditionalTestConfig = () => {
               <Column lg={1} md={8} sm={4}>
                 <div style={{ marginTop: "1.5rem" }}>
                   <Button onClick={handleSave} disabled={saving}>
-                    <FormattedMessage id="label.button.save" defaultMessage="Enregistrer" />
+                    <FormattedMessage
+                      id="label.button.save"
+                      defaultMessage="Enregistrer"
+                    />
                   </Button>
                 </div>
               </Column>
@@ -339,14 +361,23 @@ const ConditionalTestConfig = () => {
                     }}
                   >
                     <div>
-                      <Tag type="blue">{parent ? parent.name : `#${m.parentTestId}`}</Tag>
+                      <Tag type="blue">
+                        {parent ? parent.name : `#${m.parentTestId}`}
+                      </Tag>
                       <span style={{ margin: "0 0.5rem" }}>=</span>
                       <Tag type="green">{triggerLabel}</Tag>
                       <span style={{ margin: "0 0.5rem" }}>→</span>
                       <Tag type="purple">{m.name}</Tag>
                     </div>
-                    <Button kind="danger--tertiary" onClick={() => handleClear(m)} disabled={saving}>
-                      <FormattedMessage id="label.button.delete" defaultMessage="Supprimer" />
+                    <Button
+                      kind="danger--tertiary"
+                      onClick={() => handleClear(m)}
+                      disabled={saving}
+                    >
+                      <FormattedMessage
+                        id="label.button.delete"
+                        defaultMessage="Supprimer"
+                      />
                     </Button>
                   </div>
                 );

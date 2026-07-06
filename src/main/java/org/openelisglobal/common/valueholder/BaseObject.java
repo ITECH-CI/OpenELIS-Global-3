@@ -161,17 +161,23 @@ public abstract class BaseObject<PK extends Serializable> implements Serializabl
     @JsonIgnore
     public String getLocalizedName() {
         if (nameKey != null) {
-            String localizedName = MessageUtil.getContextualMessage(nameKey.trim());
-
-            if (localizedName == null || localizedName.equals(nameKey.trim())) {
-                return getDefaultLocalizedName();
-                // return "bo:gln:143:name:" + nameKey;
-            } else {
-                return localizedName;
+            String trimmedKey = nameKey.trim();
+            // Lookup explicite avec la locale courante + defaultMessage =
+            // getDefaultLocalizedName() pour que le pipeline ne retombe pas
+            // silencieusement sur "key" quand le bundle est introuvable. Cf.
+            // dictionary.patient.clinical_infos.* où getContextualMessage
+            // renvoyait "Cough"/"Diarrhea" (dict_entry brut) au lieu du
+            // libellé FR alors que les bundles message_fr.properties contiennent
+            // bien les traductions.
+            String defaultName = getDefaultLocalizedName();
+            String localizedName = MessageUtil.getMessage(trimmedKey, null, defaultName,
+                    org.springframework.context.i18n.LocaleContextHolder.getLocale());
+            if (localizedName == null || localizedName.equals(trimmedKey)) {
+                return defaultName;
             }
+            return localizedName;
         } else {
             return getDefaultLocalizedName();
-            // return "bo:gln:149:name:" + nameKey;
         }
     }
 

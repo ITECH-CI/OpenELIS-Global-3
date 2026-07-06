@@ -1394,9 +1394,7 @@ export function SearchResults(props) {
               const allowed = methodsByTest[String(data.testId)];
               const filtered =
                 allowed && allowed.length > 0
-                  ? methods.filter((m) =>
-                      allowed.includes(String(m.id)),
-                    )
+                  ? methods.filter((m) => allowed.includes(String(m.id)))
                   : methods;
               return filtered.map((method, method_index) => (
                 <SelectItem
@@ -1846,31 +1844,65 @@ export function SearchResults(props) {
           />
         ) : (
           <>
-            <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "8px", width: "100%" }}>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "flex-end",
+                marginBottom: "8px",
+                width: "100%",
+              }}
+            >
               <div style={{ width: "250px" }}>
                 <div style={{ position: "relative" }}>
                   <TextInput
                     id="labNoFilter"
                     labelText=""
-                    placeholder={intl.formatMessage({ id: "search.label.accession" })}
+                    placeholder={intl.formatMessage({
+                      id: "search.label.accession",
+                    })}
                     value={labNoFilter}
                     onChange={(e) => setLabNoFilter(e.target.value)}
                   />
                   {isFilterLoading && (
-                    <div style={{ position: "absolute", right: "8px", top: "50%", transform: "translateY(-50%)", display: "flex", alignItems: "center" }}>
+                    <div
+                      style={{
+                        position: "absolute",
+                        right: "8px",
+                        top: "50%",
+                        transform: "translateY(-50%)",
+                        display: "flex",
+                        alignItems: "center",
+                      }}
+                    >
                       <Loading small withOverlay={false} active />
                     </div>
                   )}
                 </div>
                 {isFilterLoading && (
-                  <InlineLoading description="Recherche en cours..." status="active" style={{ marginTop: "4px" }} />
+                  <InlineLoading
+                    description="Recherche en cours..."
+                    status="active"
+                    style={{ marginTop: "4px" }}
+                  />
                 )}
-                {!isFilterLoading && filteredResults !== null && filteredResults.testResult?.length === 0 && (
-                  <div style={{ display: "flex", alignItems: "center", gap: "4px", marginTop: "4px", color: "#da1e28" }}>
-                    <ErrorFilled size={16} />
-                    <span style={{ fontSize: "12px" }}>Aucun résultat trouvé</span>
-                  </div>
-                )}
+                {!isFilterLoading &&
+                  filteredResults !== null &&
+                  filteredResults.testResult?.length === 0 && (
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "4px",
+                        marginTop: "4px",
+                        color: "#da1e28",
+                      }}
+                    >
+                      <ErrorFilled size={16} />
+                      <span style={{ fontSize: "12px" }}>
+                        Aucun résultat trouvé
+                      </span>
+                    </div>
+                  )}
               </div>
             </div>
             <Formik
@@ -1893,137 +1925,149 @@ export function SearchResults(props) {
                 >
                   <DataTable
                     data={(() => {
-                      const all = (filteredResults ?? props.results)?.testResult || [];
-                    // Hide conditional child rows whose parent (same sample item)
-                    // has not yet received the triggering result.
-                    const visible = all.filter((row) => {
-                      if (!row.parentTestId) return true;
-                      const parent = all.find(
-                        (p) =>
-                          String(p.testId) === String(row.parentTestId) &&
-                          p.accessionNumber === row.accessionNumber &&
-                          String(p.sequenceNumber) === String(row.sequenceNumber),
-                      );
-                      if (!parent) return true;
-                      const expected = parent.parentTriggerValue;
-                      if (!expected) return true;
-                      const current = parent.resultValue;
-                      return current != null && String(current) === String(expected);
-                    });
-                    // Reorder so each visible conditional child appears
-                    // immediately AFTER its parent row.
-                    const ordered = [];
-                    const placedIds = new Set();
-                    const childrenByParent = new Map();
-                    visible.forEach((row) => {
-                      if (row.parentTestId) {
-                        const parent = visible.find(
+                      const all =
+                        (filteredResults ?? props.results)?.testResult || [];
+                      // Hide conditional child rows whose parent (same sample item)
+                      // has not yet received the triggering result.
+                      const visible = all.filter((row) => {
+                        if (!row.parentTestId) return true;
+                        const parent = all.find(
                           (p) =>
                             String(p.testId) === String(row.parentTestId) &&
                             p.accessionNumber === row.accessionNumber &&
-                            String(p.sequenceNumber) === String(row.sequenceNumber),
+                            String(p.sequenceNumber) ===
+                              String(row.sequenceNumber),
                         );
-                        if (parent) {
-                          const key = parent.id;
-                          if (!childrenByParent.has(key)) {
-                            childrenByParent.set(key, []);
+                        if (!parent) return true;
+                        const expected = parent.parentTriggerValue;
+                        if (!expected) return true;
+                        const current = parent.resultValue;
+                        return (
+                          current != null &&
+                          String(current) === String(expected)
+                        );
+                      });
+                      // Reorder so each visible conditional child appears
+                      // immediately AFTER its parent row.
+                      const ordered = [];
+                      const placedIds = new Set();
+                      const childrenByParent = new Map();
+                      visible.forEach((row) => {
+                        if (row.parentTestId) {
+                          const parent = visible.find(
+                            (p) =>
+                              String(p.testId) === String(row.parentTestId) &&
+                              p.accessionNumber === row.accessionNumber &&
+                              String(p.sequenceNumber) ===
+                                String(row.sequenceNumber),
+                          );
+                          if (parent) {
+                            const key = parent.id;
+                            if (!childrenByParent.has(key)) {
+                              childrenByParent.set(key, []);
+                            }
+                            childrenByParent.get(key).push(row);
+                            return;
                           }
-                          childrenByParent.get(key).push(row);
-                          return;
-                        }
-                      }
-                    });
-                    visible.forEach((row) => {
-                      if (placedIds.has(row.id)) return;
-                      if (row.parentTestId) {
-                        // Children are inserted after their parent below; if a child has
-                        // no parent in the visible set (edge case), append it as-is.
-                        const hasParent = visible.some(
-                          (p) =>
-                            String(p.testId) === String(row.parentTestId) &&
-                            p.accessionNumber === row.accessionNumber &&
-                            String(p.sequenceNumber) === String(row.sequenceNumber),
-                        );
-                        if (hasParent) return;
-                      }
-                      ordered.push(row);
-                      placedIds.add(row.id);
-                      const kids = childrenByParent.get(row.id) || [];
-                      kids.forEach((kid) => {
-                        if (!placedIds.has(kid.id)) {
-                          ordered.push(kid);
-                          placedIds.add(kid.id);
                         }
                       });
-                    });
-                    // Append orphan children (no matching parent in visible set)
-                    visible.forEach((row) => {
-                      if (!placedIds.has(row.id)) {
+                      visible.forEach((row) => {
+                        if (placedIds.has(row.id)) return;
+                        if (row.parentTestId) {
+                          // Children are inserted after their parent below; if a child has
+                          // no parent in the visible set (edge case), append it as-is.
+                          const hasParent = visible.some(
+                            (p) =>
+                              String(p.testId) === String(row.parentTestId) &&
+                              p.accessionNumber === row.accessionNumber &&
+                              String(p.sequenceNumber) ===
+                                String(row.sequenceNumber),
+                          );
+                          if (hasParent) return;
+                        }
                         ordered.push(row);
                         placedIds.add(row.id);
-                      }
-                    });
-                    return ordered.slice((page - 1) * pageSize, page * pageSize);
-                  })()}
-                  columns={columns}
-                  isSortable
-                  expandableRows
-                  expandableRowsComponent={renderReferral}
-                ></DataTable>
-                <Pagination
-                  onChange={handlePageChange}
-                  page={page}
-                  pageSize={pageSize}
-                  pageSizes={[10, 20, 30, 50, 100]}
-                  totalItems={props.results?.testResult?.length}
-                  forwardText={intl.formatMessage({ id: "pagination.forward" })}
-                  backwardText={intl.formatMessage({
-                    id: "pagination.backward",
-                  })}
-                  itemRangeText={(min, max, total) =>
-                    intl.formatMessage(
-                      { id: "pagination.item-range" },
-                      { min: min, max: max, total: total },
-                    )
-                  }
-                  itemsPerPageText={intl.formatMessage({
-                    id: "pagination.items-per-page",
-                  })}
-                  itemText={(min, max) =>
-                    intl.formatMessage(
-                      { id: "pagination.item" },
-                      { min: min, max: max },
-                    )
-                  }
-                  pageNumberText={intl.formatMessage({
-                    id: "pagination.page-number",
-                  })}
-                  pageRangeText={(_current, total) =>
-                    intl.formatMessage(
-                      { id: "pagination.page-range" },
-                      { total: total },
-                    )
-                  }
-                  pageText={(page, pagesUnknown) =>
-                    intl.formatMessage(
-                      { id: "pagination.page" },
-                      { page: pagesUnknown ? "" : page },
-                    )
-                  }
-                />
+                        const kids = childrenByParent.get(row.id) || [];
+                        kids.forEach((kid) => {
+                          if (!placedIds.has(kid.id)) {
+                            ordered.push(kid);
+                            placedIds.add(kid.id);
+                          }
+                        });
+                      });
+                      // Append orphan children (no matching parent in visible set)
+                      visible.forEach((row) => {
+                        if (!placedIds.has(row.id)) {
+                          ordered.push(row);
+                          placedIds.add(row.id);
+                        }
+                      });
+                      return ordered.slice(
+                        (page - 1) * pageSize,
+                        page * pageSize,
+                      );
+                    })()}
+                    columns={columns}
+                    isSortable
+                    expandableRows
+                    expandableRowsComponent={renderReferral}
+                  ></DataTable>
+                  <Pagination
+                    onChange={handlePageChange}
+                    page={page}
+                    pageSize={pageSize}
+                    pageSizes={[10, 20, 30, 50, 100]}
+                    totalItems={props.results?.testResult?.length}
+                    forwardText={intl.formatMessage({
+                      id: "pagination.forward",
+                    })}
+                    backwardText={intl.formatMessage({
+                      id: "pagination.backward",
+                    })}
+                    itemRangeText={(min, max, total) =>
+                      intl.formatMessage(
+                        { id: "pagination.item-range" },
+                        { min: min, max: max, total: total },
+                      )
+                    }
+                    itemsPerPageText={intl.formatMessage({
+                      id: "pagination.items-per-page",
+                    })}
+                    itemText={(min, max) =>
+                      intl.formatMessage(
+                        { id: "pagination.item" },
+                        { min: min, max: max },
+                      )
+                    }
+                    pageNumberText={intl.formatMessage({
+                      id: "pagination.page-number",
+                    })}
+                    pageRangeText={(_current, total) =>
+                      intl.formatMessage(
+                        { id: "pagination.page-range" },
+                        { total: total },
+                      )
+                    }
+                    pageText={(page, pagesUnknown) =>
+                      intl.formatMessage(
+                        { id: "pagination.page" },
+                        { page: pagesUnknown ? "" : page },
+                      )
+                    }
+                  />
 
-                <Button
-                  type="button"
-                  id="saveResults"
-                  onClick={handleSave}
-                  style={{ marginTop: "16px" }}
-                  disabled={isSubmitting}
-                >
-                  <FormattedMessage id="label.button.save" />
-                </Button>
-              </Form>
-            )}
-          </Formik>
+                  <Button
+                    type="button"
+                    id="saveResults"
+                    onClick={handleSave}
+                    style={{ marginTop: "16px" }}
+                    disabled={isSubmitting}
+                  >
+                    <FormattedMessage id="label.button.save" />
+                  </Button>
+                </Form>
+              )}
+            </Formik>
           </>
         )}
       </>

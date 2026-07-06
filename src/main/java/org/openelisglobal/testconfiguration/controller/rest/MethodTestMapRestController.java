@@ -103,8 +103,8 @@ public class MethodTestMapRestController extends BaseRestController {
     public ResponseEntity<Map<String, List<String>>> allMappings() {
         try {
             @SuppressWarnings("unchecked")
-            List<Object[]> rows = entityManager.createNativeQuery(
-                    "SELECT test_id, method_id FROM clinlims.test_method WHERE is_active = 'Y'")
+            List<Object[]> rows = entityManager
+                    .createNativeQuery("SELECT test_id, method_id FROM clinlims.test_method WHERE is_active = 'Y'")
                     .getResultList();
             Map<String, List<String>> out = new HashMap<>();
             for (Object[] row : rows) {
@@ -127,8 +127,7 @@ public class MethodTestMapRestController extends BaseRestController {
             List<Object> rows = entityManager
                     .createNativeQuery(
                             "SELECT method_id FROM clinlims.test_method WHERE test_id = :tid AND is_active = 'Y'")
-                    .setParameter("tid", Integer.parseInt(testId))
-                    .getResultList();
+                    .setParameter("tid", Integer.parseInt(testId)).getResultList();
             List<String> ids = new ArrayList<>(rows.size());
             for (Object o : rows) {
                 ids.add(String.valueOf(o));
@@ -151,8 +150,7 @@ public class MethodTestMapRestController extends BaseRestController {
             List<Object> rows = entityManager
                     .createNativeQuery(
                             "SELECT test_id FROM clinlims.test_method WHERE method_id = :mid AND is_active = 'Y'")
-                    .setParameter("mid", Integer.parseInt(methodId))
-                    .getResultList();
+                    .setParameter("mid", Integer.parseInt(methodId)).getResultList();
             List<String> ids = new ArrayList<>(rows.size());
             for (Object o : rows) {
                 ids.add(String.valueOf(o));
@@ -165,10 +163,10 @@ public class MethodTestMapRestController extends BaseRestController {
     }
 
     /**
-     * Replace the set of methods assigned to a given test. Body: {testId, methodIds: [...]}.
+     * Replace the set of methods assigned to a given test. Body: {testId,
+     * methodIds: [...]}.
      */
-    @PostMapping(value = "/save-for-test", consumes = MediaType.APPLICATION_JSON_VALUE,
-            produces = MediaType.APPLICATION_JSON_VALUE)
+    @PostMapping(value = "/save-for-test", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     @Transactional
     public ResponseEntity<Map<String, String>> saveForTest(HttpServletRequest request,
             @RequestBody Map<String, Object> body) {
@@ -176,8 +174,7 @@ public class MethodTestMapRestController extends BaseRestController {
             String testIdStr = String.valueOf(body.get("testId"));
             Object raw = body.get("methodIds");
             if (testIdStr == null || testIdStr.isBlank() || "null".equals(testIdStr) || !(raw instanceof List)) {
-                return ResponseEntity.badRequest()
-                        .body(Map.of("error", "testId and methodIds (array) are required"));
+                return ResponseEntity.badRequest().body(Map.of("error", "testId and methodIds (array) are required"));
             }
             int testId = Integer.parseInt(testIdStr);
             List<Integer> methodIds = parseIds(raw);
@@ -195,10 +192,10 @@ public class MethodTestMapRestController extends BaseRestController {
     }
 
     /**
-     * Replace the set of tests assigned to a given method. Body: {methodId, testIds: [...]}.
+     * Replace the set of tests assigned to a given method. Body: {methodId,
+     * testIds: [...]}.
      */
-    @PostMapping(value = "/save-for-method", consumes = MediaType.APPLICATION_JSON_VALUE,
-            produces = MediaType.APPLICATION_JSON_VALUE)
+    @PostMapping(value = "/save-for-method", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     @Transactional
     public ResponseEntity<Map<String, String>> saveForMethod(HttpServletRequest request,
             @RequestBody Map<String, Object> body) {
@@ -206,8 +203,7 @@ public class MethodTestMapRestController extends BaseRestController {
             String methodIdStr = String.valueOf(body.get("methodId"));
             Object raw = body.get("testIds");
             if (methodIdStr == null || methodIdStr.isBlank() || "null".equals(methodIdStr) || !(raw instanceof List)) {
-                return ResponseEntity.badRequest()
-                        .body(Map.of("error", "methodId and testIds (array) are required"));
+                return ResponseEntity.badRequest().body(Map.of("error", "methodId and testIds (array) are required"));
             }
             int methodId = Integer.parseInt(methodIdStr);
             List<Integer> testIds = parseIds(raw);
@@ -228,7 +224,8 @@ public class MethodTestMapRestController extends BaseRestController {
         List<Object> rawList = (List<Object>) raw;
         List<Integer> out = new ArrayList<>(rawList.size());
         for (Object o : rawList) {
-            if (o == null) continue;
+            if (o == null)
+                continue;
             out.add(Integer.parseInt(String.valueOf(o)));
         }
         return out;
@@ -241,16 +238,15 @@ public class MethodTestMapRestController extends BaseRestController {
         if (methodIds == null || methodIds.isEmpty()) {
             return;
         }
-        entityManager.createNativeQuery(
-                "UPDATE clinlims.method SET is_active = 'Y' "
+        entityManager
+                .createNativeQuery("UPDATE clinlims.method SET is_active = 'Y' "
                         + "WHERE id IN (:ids) AND (is_active IS NULL OR is_active <> 'Y')")
-                .setParameter("ids", methodIds)
-                .executeUpdate();
+                .setParameter("ids", methodIds).executeUpdate();
     }
 
     /**
-     * Deactivate any active assignment for the given pivot ID that's not in the new set,
-     * then insert (or reactivate) each desired pair.
+     * Deactivate any active assignment for the given pivot ID that's not in the new
+     * set, then insert (or reactivate) each desired pair.
      *
      * @param pivotCol the side held constant (e.g. "test_id")
      * @param otherCol the side being replaced (e.g. "method_id")
@@ -258,36 +254,29 @@ public class MethodTestMapRestController extends BaseRestController {
     private void replaceAssignments(String pivotCol, String otherCol, int pivotId, List<Integer> otherIds) {
         // Deactivate rows not in the new set
         if (otherIds.isEmpty()) {
-            entityManager.createNativeQuery(
-                    "UPDATE clinlims.test_method SET is_active = 'N', lastupdated = now() "
+            entityManager
+                    .createNativeQuery("UPDATE clinlims.test_method SET is_active = 'N', lastupdated = now() "
                             + "WHERE " + pivotCol + " = :pid AND is_active = 'Y'")
-                    .setParameter("pid", pivotId)
-                    .executeUpdate();
+                    .setParameter("pid", pivotId).executeUpdate();
         } else {
-            entityManager.createNativeQuery(
-                    "UPDATE clinlims.test_method SET is_active = 'N', lastupdated = now() "
-                            + "WHERE " + pivotCol + " = :pid AND " + otherCol + " NOT IN (:oids) "
-                            + "AND is_active = 'Y'")
-                    .setParameter("pid", pivotId)
-                    .setParameter("oids", otherIds)
-                    .executeUpdate();
+            entityManager
+                    .createNativeQuery(
+                            "UPDATE clinlims.test_method SET is_active = 'N', lastupdated = now() " + "WHERE "
+                                    + pivotCol + " = :pid AND " + otherCol + " NOT IN (:oids) " + "AND is_active = 'Y'")
+                    .setParameter("pid", pivotId).setParameter("oids", otherIds).executeUpdate();
         }
 
         for (Integer otherId : otherIds) {
-            int updated = entityManager.createNativeQuery(
-                    "UPDATE clinlims.test_method SET is_active = 'Y', lastupdated = now() "
+            int updated = entityManager
+                    .createNativeQuery("UPDATE clinlims.test_method SET is_active = 'Y', lastupdated = now() "
                             + "WHERE " + pivotCol + " = :pid AND " + otherCol + " = :oid")
-                    .setParameter("pid", pivotId)
-                    .setParameter("oid", otherId)
-                    .executeUpdate();
+                    .setParameter("pid", pivotId).setParameter("oid", otherId).executeUpdate();
             if (updated == 0) {
-                entityManager.createNativeQuery(
-                        "INSERT INTO clinlims.test_method (id, " + pivotCol + ", " + otherCol
+                entityManager
+                        .createNativeQuery("INSERT INTO clinlims.test_method (id, " + pivotCol + ", " + otherCol
                                 + ", is_active, lastupdated) "
                                 + "VALUES (nextval('clinlims.test_method_seq'), :pid, :oid, 'Y', now())")
-                        .setParameter("pid", pivotId)
-                        .setParameter("oid", otherId)
-                        .executeUpdate();
+                        .setParameter("pid", pivotId).setParameter("oid", otherId).executeUpdate();
             }
         }
     }

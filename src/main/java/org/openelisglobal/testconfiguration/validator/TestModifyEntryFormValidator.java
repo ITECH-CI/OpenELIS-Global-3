@@ -85,8 +85,8 @@ public class TestModifyEntryFormValidator implements Validator {
                     for (int i = 0; i < dictionaries.size(); ++i) {
                         JSONObject dictionary = JSONUtils.getAsObject(dictionaries.get(i));
 
-                        ValidationHelper.validateIdField(StringUtil.nullSafeToString(dictionary.get("id")),
-                                "JsonWad", "dictionary[" + i + "] id", errors, true);
+                        ValidationHelper.validateIdField(StringUtil.nullSafeToString(dictionary.get("id")), "JsonWad",
+                                "dictionary[" + i + "] id", errors, true);
 
                         ValidationHelper.validateYNField(StringUtil.nullSafeToString(dictionary.get("qualified")),
                                 "JsonWad", "dictionary[" + i + "] qualified", errors);

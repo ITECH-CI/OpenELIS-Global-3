@@ -19,9 +19,12 @@ package org.openelisglobal.reports.action.implementation;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import liquibase.repackaged.org.apache.commons.lang3.ObjectUtils;
 import net.sf.jasperreports.engine.JRDataSource;
 import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
 import org.apache.commons.validator.GenericValidator;
@@ -50,8 +53,6 @@ import org.openelisglobal.spring.util.SpringContext;
 import org.openelisglobal.test.service.TestServiceImpl;
 import org.openelisglobal.test.valueholder.Test;
 
-import liquibase.repackaged.org.apache.commons.lang3.ObjectUtils;
-
 /**
  * Bacteriology Patient Report Organizes results by test type: Macroscopy,
  * Microscopy, and Culture
@@ -66,24 +67,30 @@ public class BacterioPatientReport extends PatientReport implements IReportCreat
     private static final int TYPE_ORDER_MACROSCOPY = 1;
     private static final int TYPE_ORDER_MICROSCOPY = 2;
     private static final int TYPE_ORDER_CULTURE = 3;
+    // Chemistry (Glucose, Protéine) is rendered after culture.
+    private static final int TYPE_ORDER_CHEMISTRY = 4;
     private static final int TYPE_ORDER_OTHER = 99;
+
+    // Chemistry test names (case-insensitive) used to route Glucose/Protéine to
+    // the dedicated "Chimie" section in the report.
+    private static boolean isChemistryName(String name) {
+        if (name == null) {
+            return false;
+        }
+        String n = name.toLowerCase();
+        return n.contains("glucose") || n.contains("protéine") || n.contains("proteine");
+    }
 
     static {
         analysisStatusIds = new HashSet<>();
-        analysisStatusIds.add(Integer
-                .parseInt(SpringContext.getBean(IStatusService.class).getStatusID(AnalysisStatus.BiologistRejected)));
-        analysisStatusIds.add(
-                Integer.parseInt(SpringContext.getBean(IStatusService.class).getStatusID(AnalysisStatus.Finalized)));
-        analysisStatusIds.add(Integer.parseInt(
-                SpringContext.getBean(IStatusService.class).getStatusID(AnalysisStatus.NonConforming_depricated)));
-        analysisStatusIds.add(
-                Integer.parseInt(SpringContext.getBean(IStatusService.class).getStatusID(AnalysisStatus.NotStarted)));
-        analysisStatusIds.add(Integer
-                .parseInt(SpringContext.getBean(IStatusService.class).getStatusID(AnalysisStatus.TechnicalAcceptance)));
-        analysisStatusIds.add(
-                Integer.parseInt(SpringContext.getBean(IStatusService.class).getStatusID(AnalysisStatus.Canceled)));
-        analysisStatusIds.add(Integer
-                .parseInt(SpringContext.getBean(IStatusService.class).getStatusID(AnalysisStatus.TechnicalRejected)));
+        IStatusService statusService = SpringContext.getBean(IStatusService.class);
+        analysisStatusIds.add(Integer.parseInt(statusService.getStatusID(AnalysisStatus.BiologistRejected)));
+        analysisStatusIds.add(Integer.parseInt(statusService.getStatusID(AnalysisStatus.Finalized)));
+        analysisStatusIds.add(Integer.parseInt(statusService.getStatusID(AnalysisStatus.NonConforming_depricated)));
+        analysisStatusIds.add(Integer.parseInt(statusService.getStatusID(AnalysisStatus.NotStarted)));
+        analysisStatusIds.add(Integer.parseInt(statusService.getStatusID(AnalysisStatus.TechnicalAcceptance)));
+        analysisStatusIds.add(Integer.parseInt(statusService.getStatusID(AnalysisStatus.Canceled)));
+        analysisStatusIds.add(Integer.parseInt(statusService.getStatusID(AnalysisStatus.TechnicalRejected)));
     }
 
     static final String configName = ConfigurationProperties.getInstance().getPropertyValue(Property.configurationName);
@@ -153,8 +160,7 @@ public class BacterioPatientReport extends PatientReport implements IReportCreat
                 if (analysisDate == null) {
                     analysisDate = analysis.getReleasedDate();
                 }
-                if (analysisDate != null
-                        && (maxCompletionDate == null || analysisDate.after(maxCompletionDate))) {
+                if (analysisDate != null && (maxCompletionDate == null || analysisDate.after(maxCompletionDate))) {
                     maxCompletionDate = analysisDate;
                 }
                 boolean hasParentResult = analysis.getParentResult() != null;
@@ -181,8 +187,7 @@ public class BacterioPatientReport extends PatientReport implements IReportCreat
                         } else {
                             labelKey = null;
                         }
-                        resultsData.setLabOrderType(
-                                labelKey != null ? MessageUtil.getMessage(labelKey) : rawOrderType);
+                        resultsData.setLabOrderType(labelKey != null ? MessageUtil.getMessage(labelKey) : rawOrderType);
                     } else {
                         // No bacterio-specific order type — clear the parent's PROGRAM value
                         // so the report doesn't display "Routine Bacteriology Testing".
@@ -220,7 +225,7 @@ public class BacterioPatientReport extends PatientReport implements IReportCreat
                         displayTestName = "    " + displayTestName; // 4 spaces indentation for conditional tests
                     }
                     resultsData.setTestName(displayTestName);
-                    
+
                     resultsData.setIsBacterioParentTest(ObjectUtils.isNotEmpty(test.getParentTriggerValue()));
 
                     // Look up the referring site via sample_requester (where the UI stores
@@ -252,6 +257,12 @@ public class BacterioPatientReport extends PatientReport implements IReportCreat
                     }
                     resultsData.setBacterioRowType("TEST");
 
+                    // UoM par résultat : si le résultat porte un override (result.uom_id,
+                    // utilisé par exemple pour "Etat frais Quantitatif" mm³/num-champ), on
+                    // remplace l'UoM par défaut héritée du test. Puis on concatène l'unité
+                    // à la valeur affichée pour que le rapport montre p.ex. "350 mm³".
+                    appendUomToResult(resultsData, analysis);
+
                     // Flora-count tests (e.g. "Nombre de flore") store their value in
                     // bacteriology_flora, not in the result table — so the standard
                     // pipeline left resultsData.result at "En cours". If the analysis is
@@ -267,7 +278,8 @@ public class BacterioPatientReport extends PatientReport implements IReportCreat
                                 Integer aid = Integer.valueOf(analysis.getId());
                                 Integer tid = Integer.valueOf(test.getId());
                                 org.openelisglobal.bacteriology.service.BacteriologyFloraService floraSvc = SpringContext
-                                        .getBean(org.openelisglobal.bacteriology.service.BacteriologyFloraService.class);
+                                        .getBean(
+                                                org.openelisglobal.bacteriology.service.BacteriologyFloraService.class);
                                 org.openelisglobal.bacteriology.valueholder.BacteriologyFlora flora = floraSvc
                                         .getByAnalysisIdAndTestId(aid, tid);
                                 if (flora != null && flora.getFloraCount() != null
@@ -297,15 +309,14 @@ public class BacterioPatientReport extends PatientReport implements IReportCreat
                         DictionaryService dictSvc = SpringContext.getBean(DictionaryService.class);
                         List<org.openelisglobal.bacteriology.valueholder.BacteriologyFloraDetail> sorted = new ArrayList<>(
                                 finalizedFlora.getDetails());
-                        sorted.sort(Comparator.comparing(
-                                d -> d.getFloraNumber() != null ? d.getFloraNumber() : Integer.MAX_VALUE));
+                        sorted.sort(Comparator
+                                .comparing(d -> d.getFloraNumber() != null ? d.getFloraNumber() : Integer.MAX_VALUE));
                         for (org.openelisglobal.bacteriology.valueholder.BacteriologyFloraDetail detail : sorted) {
                             ClinicalPatientData floraRow = new ClinicalPatientData(resultsData);
                             floraRow.setBacterioRowType("FLORA_ROW");
                             floraRow.setSeparator(false);
-                            floraRow.setFloraNumber(detail.getFloraNumber() != null
-                                    ? String.valueOf(detail.getFloraNumber())
-                                    : "");
+                            floraRow.setFloraNumber(
+                                    detail.getFloraNumber() != null ? String.valueOf(detail.getFloraNumber()) : "");
                             floraRow.setFloraGramType(resolveDictLabel(dictSvc, detail.getGramTypeDictId()));
                             floraRow.setFloraGroupingMode(resolveDictLabel(dictSvc, detail.getGroupingModeDictId()));
                             floraRow.setFloraOtherCharacteristic(
@@ -333,23 +344,23 @@ public class BacterioPatientReport extends PatientReport implements IReportCreat
     /**
      * Add organisms and antibiograms for culture tests
      *
-     * @param analysis The culture analysis
-     * @param mainSection The main section name (CULTURE)
-     * @param patientTemplate A test row already populated with patient/order identity fields,
-     *                       used to propagate those onto organism/antibiogram rows
-     * @param reportItems The global report items list
+     * @param analysis                 The culture analysis
+     * @param mainSection              The main section name (CULTURE)
+     * @param patientTemplate          A test row already populated with
+     *                                 patient/order identity fields, used to
+     *                                 propagate those onto organism/antibiogram
+     *                                 rows
+     * @param reportItems              The global report items list
      * @param currentSampleReportItems The current sample report items list
      */
-    private void addOrganismsAndAntibiograms(Analysis analysis, String mainSection,
-            ClinicalPatientData patientTemplate,
+    private void addOrganismsAndAntibiograms(Analysis analysis, String mainSection, ClinicalPatientData patientTemplate,
             List<ClinicalPatientData> reportItems, List<ClinicalPatientData> currentSampleReportItems) {
 
         // Suppress organisms and antibiogram rendering until the culture analysis has
         // been biologically validated. While the culture is still "En cours" we don't
         // surface preliminary identifications on the printed report. The "Nombre de
         // germes" row already handles the parent-row label separately.
-        String finalizedStatusId = SpringContext.getBean(IStatusService.class)
-                .getStatusID(AnalysisStatus.Finalized);
+        String finalizedStatusId = SpringContext.getBean(IStatusService.class).getStatusID(AnalysisStatus.Finalized);
         if (finalizedStatusId != null && !finalizedStatusId.equals(analysis.getStatusId())) {
             return;
         }
@@ -368,7 +379,6 @@ public class BacterioPatientReport extends PatientReport implements IReportCreat
 
         List<BacteriologyOrganism> organisms = organismService.getOrganismsByAnalysisId(analysisIdInt);
 
-
         if (organisms == null || organisms.isEmpty()) {
             return; // No organisms to display
         }
@@ -376,13 +386,29 @@ public class BacterioPatientReport extends PatientReport implements IReportCreat
         // Sort organisms by organism number
         organisms.sort(Comparator.comparing(BacteriologyOrganism::getOrganismNumber));
 
+        // Batch-fetch antibiograms for all organisms of this analysis in a single
+        // query and group them by organism id, instead of one query per organism
+        // (N+1) inside the loop.
+        List<Integer> organismIds = new ArrayList<>();
+        for (BacteriologyOrganism organism : organisms) {
+            organismIds.add(organism.getId());
+        }
+        Map<Integer, List<BacteriologyAntibiogram>> antibiogramsByOrganism = new HashMap<>();
+        List<BacteriologyAntibiogram> allAntibiograms = antibiogramService.getAntibiogramsByOrganismIds(organismIds);
+        if (allAntibiograms != null) {
+            for (BacteriologyAntibiogram abg : allAntibiograms) {
+                antibiogramsByOrganism.computeIfAbsent(abg.getOrganismId(), k -> new ArrayList<>()).add(abg);
+            }
+        }
+
         for (BacteriologyOrganism organism : organisms) {
 
             if (!organism.getIsActive()) {
                 continue; // Skip inactive organisms
             }
 
-            // Create organism display item, copying patient/order identity from the culture test row
+            // Create organism display item, copying patient/order identity from the culture
+            // test row
             ClinicalPatientData organismData = new ClinicalPatientData(patientTemplate);
             organismData.setTestSection(mainSection);
             organismData.setAccessionNumber(accessionNumber);
@@ -403,45 +429,43 @@ public class BacterioPatientReport extends PatientReport implements IReportCreat
                 }
             }
 
-            // Build organism details
+            // 'Type de Gram' et 'Mode de regroupement' sont masqués sur le rapport
+            // (présents dans le formulaire de saisie seulement). On ne garde que
+            // la mention "Capsule présente" comme information annexe sur la ligne
+            // d'organisme.
             StringBuilder organismDetails = new StringBuilder();
-            if (organism.getGramType() != null && !organism.getGramType().isEmpty()) {
-                organismDetails.append(organism.getGramType());
-            }
-            if (organism.getGroupingMode() != null && !organism.getGroupingMode().isEmpty()) {
-                if (organismDetails.length() > 0) {
-                    organismDetails.append(", ");
-                }
-                organismDetails.append(organism.getGroupingMode());
-            }
             if (organism.getCapsulePresence() != null && organism.getCapsulePresence()) {
-                if (organismDetails.length() > 0) {
-                    organismDetails.append(", ");
-                }
                 organismDetails.append("Capsule présente");
             }
 
             organismData.setTestName("Organisme " + organism.getOrganismNumber() + " : " + organismName);
             organismData.setResult(organismDetails.length() > 0 ? organismDetails.toString() : "");
+            // 'BACTERIA' / 'YEAST' (cf. ORGANISM_TYPES côté frontend). Propagé jusqu'à
+            // reorderCultureSection() pour composer "Nombre de germes : X bactérie(s), Y
+            // levure(s)".
+            organismData.setOrganismType(organism.getOrganismType());
             organismData.setParentMarker(false);
 
             reportItems.add(organismData);
             currentSampleReportItems.add(organismData);
 
-            // Get antibiograms for this organism
-            List<BacteriologyAntibiogram> antibiograms = antibiogramService.getAntibiogramsByOrganismId(organism.getId());
+            // Get antibiograms for this organism from the pre-grouped batch
+            List<BacteriologyAntibiogram> antibiograms = antibiogramsByOrganism.get(organism.getId());
 
             if (antibiograms != null && !antibiograms.isEmpty()) {
                 // Sort antibiograms alphabetically by antibiotic name
                 antibiograms.sort((a1, a2) -> {
                     String name1 = a1.getAntibioticNameText();
                     String name2 = a2.getAntibioticNameText();
-                    if (name1 == null) name1 = "";
-                    if (name2 == null) name2 = "";
+                    if (name1 == null)
+                        name1 = "";
+                    if (name2 == null)
+                        name2 = "";
                     return name1.compareToIgnoreCase(name2);
                 });
 
-                // Add antibiogram table header (one row, will render as table column titles in JRXML)
+                // Add antibiogram table header (one row, will render as table column titles in
+                // JRXML)
                 ClinicalPatientData antibiogramHeader = new ClinicalPatientData(patientTemplate);
                 antibiogramHeader.setTestSection(mainSection);
                 antibiogramHeader.setPanelName(null);
@@ -450,7 +474,8 @@ public class BacterioPatientReport extends PatientReport implements IReportCreat
                 antibiogramHeader.setParentMarker(false);
                 antibiogramHeader.setAccessionNumber(accessionNumber);
                 antibiogramHeader.setSampleType(analysis.getSampleTypeName());
-                antibiogramHeader.setSampleId(analysis.getSampleItem() != null ? analysis.getSampleItem().getId() : null);
+                antibiogramHeader
+                        .setSampleId(analysis.getSampleItem() != null ? analysis.getSampleItem().getId() : null);
                 antibiogramHeader.setBacterioRowType("ANTIBIOGRAM_HEADER");
                 antibiogramHeader.setCultureKey(analysis.getId());
 
@@ -601,6 +626,10 @@ public class BacterioPatientReport extends PatientReport implements IReportCreat
             return MessageUtil.getMessage("bacteriology.section.culture");
         }
 
+        if (isChemistryName(keyword)) {
+            return MessageUtil.getMessage("bacteriology.section.chemistry");
+        }
+
         return MessageUtil.getMessage("bacteriology.section.other");
     }
 
@@ -635,6 +664,11 @@ public class BacterioPatientReport extends PatientReport implements IReportCreat
             return MessageUtil.getMessage("bacteriology.section.culture");
         }
 
+        // Check for Chemistry tests (Glucose, Protéine)
+        if (isChemistryName(combinedName)) {
+            return MessageUtil.getMessage("bacteriology.section.chemistry");
+        }
+
         return MessageUtil.getMessage("bacteriology.section.other");
     }
 
@@ -650,6 +684,7 @@ public class BacterioPatientReport extends PatientReport implements IReportCreat
         String macroscopy = MessageUtil.getMessage("bacteriology.section.macroscopy");
         String microscopy = MessageUtil.getMessage("bacteriology.section.microscopy");
         String culture = MessageUtil.getMessage("bacteriology.section.culture");
+        String chemistry = MessageUtil.getMessage("bacteriology.section.chemistry");
 
         if (testSection.equals(macroscopy)) {
             return TYPE_ORDER_MACROSCOPY;
@@ -657,6 +692,8 @@ public class BacterioPatientReport extends PatientReport implements IReportCreat
             return TYPE_ORDER_MICROSCOPY;
         } else if (testSection.equals(culture)) {
             return TYPE_ORDER_CULTURE;
+        } else if (testSection.equals(chemistry)) {
+            return TYPE_ORDER_CHEMISTRY;
         }
 
         return TYPE_ORDER_OTHER;
@@ -843,31 +880,34 @@ public class BacterioPatientReport extends PatientReport implements IReportCreat
                     .setCorrectedResult(sampleCorrectedMap.get(reportItem.getAccessionNumber().split("_")[0]) != null);
         }
 
-        // Re-order culture section: root TEST rows -> "Nombre de germes" -> ORGANISM+ANTIBIOGRAM_* grouped
+        // Re-order culture section: root TEST rows -> "Nombre de germes" ->
+        // ORGANISM+ANTIBIOGRAM_* grouped
         // Also appends a LEGEND row at the end so JRXML can render the S/I/R legend.
         reportItems = reorderCultureSection(reportItems);
 
-        // Propagate the most recent test completion date onto every row (max across all rows).
+        // Propagate the most recent test completion date onto every row (max across all
+        // rows).
         // The JRXML reads testCompletedDate to display "Date de réalisation".
         propagateMaxCompletionDate(reportItems);
 
-        // Final step: pair up consecutive TEST rows in Macroscopy/Microscopy to render two tests per line
+        // Final step: pair up consecutive TEST rows in Macroscopy/Microscopy to render
+        // two tests per line
         reportItems = pairMacroMicroTests(reportItems);
     }
 
     /**
-     * Find the most recent testCompletedDate among all rows and assign it back to every row
-     * so the JRXML can show a single "Date de réalisation" value. Dates are compared as the
-     * String produced by DateUtil.convertSqlDateToStringDate(), which uses the configured
-     * locale format. Since all rows share the same format, lexicographic compare on dd/MM/yyyy
-     * would be wrong, so we parse and pick the latest by epoch order.
+     * Find the most recent testCompletedDate among all rows and assign it back to
+     * every row so the JRXML can show a single "Date de réalisation" value. Dates
+     * are compared as the String produced by DateUtil.convertSqlDateToStringDate(),
+     * which uses the configured locale format. Since all rows share the same
+     * format, lexicographic compare on dd/MM/yyyy would be wrong, so we parse and
+     * pick the latest by epoch order.
      */
     private void propagateMaxCompletionDate(List<ClinicalPatientData> items) {
         if (maxCompletionDate == null) {
             return;
         }
-        String maxDate = new java.text.SimpleDateFormat(
-                org.openelisglobal.common.util.DateUtil.getDateFormat())
+        String maxDate = new java.text.SimpleDateFormat(org.openelisglobal.common.util.DateUtil.getDateFormat())
                 .format(maxCompletionDate);
         for (ClinicalPatientData item : items) {
             item.setTestCompletedDate(maxDate);
@@ -875,10 +915,11 @@ public class BacterioPatientReport extends PatientReport implements IReportCreat
     }
 
     /**
-     * For the Culture section, ensure that simple TEST rows (the root culture tests like
-     * "Sécrétions vaginales : Positive") appear BEFORE any ORGANISM / ANTIBIOGRAM rows,
-     * and inject a synthetic "Nombre de germes : N" row right after the last culture TEST row.
-     * Other sections (Macroscopy/Microscopy) are untouched.
+     * For the Culture section, ensure that simple TEST rows (the root culture tests
+     * like "Sécrétions vaginales : Positive") appear BEFORE any ORGANISM /
+     * ANTIBIOGRAM rows, and inject a synthetic "Nombre de germes : N" row right
+     * after the last culture TEST row. Other sections (Macroscopy/Microscopy) are
+     * untouched.
      */
     private List<ClinicalPatientData> reorderCultureSection(List<ClinicalPatientData> items) {
         String culture = MessageUtil.getMessage("bacteriology.section.culture");
@@ -934,7 +975,8 @@ public class BacterioPatientReport extends PatientReport implements IReportCreat
         }
 
         // Build the ordered culture output: for each culture key in TEST-appearance
-        // order, emit: [root TEST rows] -> [Nombre de germes] -> [organisms+antibiograms]
+        // order, emit: [root TEST rows] -> [Nombre de germes] ->
+        // [organisms+antibiograms]
         List<ClinicalPatientData> orderedCulture = new ArrayList<>();
         java.util.Set<String> emittedKeys = new java.util.LinkedHashSet<>();
         boolean firstCultureBlock = true;
@@ -945,9 +987,18 @@ public class BacterioPatientReport extends PatientReport implements IReportCreat
             ClinicalPatientData template = firstRootByKey.get(key);
             List<ClinicalPatientData> organisms = organismsByKey.getOrDefault(key, java.util.Collections.emptyList());
             int organismCount = 0;
+            int bacteriaCount = 0;
+            int yeastCount = 0;
             for (ClinicalPatientData o : organisms) {
                 if ("ORGANISM".equals(o.getBacterioRowType())) {
                     organismCount++;
+                    if ("YEAST".equalsIgnoreCase(o.getOrganismType())) {
+                        yeastCount++;
+                    } else {
+                        // tout ce qui n'est pas explicitement YEAST tombe en bactérie
+                        // (couvre BACTERIA et les anciennes saisies sans type explicite)
+                        bacteriaCount++;
+                    }
                 }
             }
 
@@ -979,7 +1030,8 @@ public class BacterioPatientReport extends PatientReport implements IReportCreat
             countRow.setParentMarker(false);
             countRow.setTestName("Nombre de germes");
             boolean cultureInProgress = inProgressMsg != null && inProgressMsg.equals(template.getResult());
-            countRow.setResult(cultureInProgress ? inProgressMsg : String.valueOf(organismCount));
+            countRow.setResult(
+                    cultureInProgress ? inProgressMsg : formatOrganismCount(organismCount, bacteriaCount, yeastCount));
             countRow.setSeparator(false);
             countRow.setCultureKey(key);
             orderedCulture.add(countRow);
@@ -994,7 +1046,8 @@ public class BacterioPatientReport extends PatientReport implements IReportCreat
         }
         // Any organisms whose cultureKey didn't match a root TEST (defensive)
         for (java.util.Map.Entry<String, List<ClinicalPatientData>> entry : organismsByKey.entrySet()) {
-            if (emittedKeys.contains(entry.getKey())) continue;
+            if (emittedKeys.contains(entry.getKey()))
+                continue;
             orderedCulture.addAll(entry.getValue());
         }
 
@@ -1020,10 +1073,10 @@ public class BacterioPatientReport extends PatientReport implements IReportCreat
     }
 
     /**
-     * Pair consecutive simple TEST rows (Macroscopy / Microscopy only) sharing the same
-     * section, subsection and accession into a single TEST_PAIR row, so the JRXML can
-     * render two tests per line. Tests with parent triggers, parent markers, or in the
-     * Culture section stay as single rows.
+     * Pair consecutive simple TEST rows (Macroscopy / Microscopy only) sharing the
+     * same section, subsection and accession into a single TEST_PAIR row, so the
+     * JRXML can render two tests per line. Tests with parent triggers, parent
+     * markers, or in the Culture section stay as single rows.
      */
     private List<ClinicalPatientData> pairMacroMicroTests(List<ClinicalPatientData> items) {
         List<ClinicalPatientData> paired = new ArrayList<>(items.size());
@@ -1033,13 +1086,14 @@ public class BacterioPatientReport extends PatientReport implements IReportCreat
         int i = 0;
         while (i < items.size()) {
             ClinicalPatientData current = items.get(i);
-            // Pairable = simple TEST in Macro/Micro, not a parent (has subtests), not a parent marker,
-            // not a conditional subtest (those have parentResult != null and must stay aligned).
+            // Pairable = simple TEST in Macro/Micro, not a parent (has subtests), not a
+            // parent marker,
+            // not a conditional subtest (those have parentResult != null and must stay
+            // aligned).
             // separator flag is ignored: first item of a subsection is still pairable.
             boolean isPairable = "TEST".equals(current.getBacterioRowType())
                     && (macroscopy.equals(current.getTestSection()) || microscopy.equals(current.getTestSection()))
-                    && !current.getIsBacterioParentTest()
-                    && !current.getParentMarker()
+                    && !current.getIsBacterioParentTest() && !current.getParentMarker()
                     && current.getParentResult() == null;
 
             if (!isPairable) {
@@ -1049,7 +1103,8 @@ public class BacterioPatientReport extends PatientReport implements IReportCreat
             }
 
             // Look ahead for a partner with matching section/subsection/accession.
-            // The partner must also not be a separator (start of a new subsection) — that would
+            // The partner must also not be a separator (start of a new subsection) — that
+            // would
             // visually break the layout. So here separator IS respected for the partner.
             ClinicalPatientData partner = null;
             int j = i + 1;
@@ -1059,10 +1114,8 @@ public class BacterioPatientReport extends PatientReport implements IReportCreat
                         && current.getTestSection().equals(candidate.getTestSection())
                         && java.util.Objects.equals(current.getPanelName(), candidate.getPanelName())
                         && current.getAccessionNumber().equals(candidate.getAccessionNumber())
-                        && !candidate.getIsBacterioParentTest()
-                        && !candidate.getParentMarker()
-                        && candidate.getParentResult() == null
-                        && !Boolean.TRUE.equals(candidate.getSeparator());
+                        && !candidate.getIsBacterioParentTest() && !candidate.getParentMarker()
+                        && candidate.getParentResult() == null && !Boolean.TRUE.equals(candidate.getSeparator());
                 if (candidatePairable) {
                     partner = candidate;
                 }
@@ -1125,6 +1178,103 @@ public class BacterioPatientReport extends PatientReport implements IReportCreat
     @Override
     protected boolean useReportingDescription() {
         return true;
+    }
+
+    /**
+     * Concatène l'unité de mesure à la valeur affichée du résultat sur les lignes
+     * TEST. Préfère l'UoM portée par le Result (result.uom_id, utilisée p.ex. quand
+     * l'utilisateur a basculé "Etat frais Quantitatif" entre mm³ et num/champ),
+     * sinon retombe sur l'UoM par défaut du test déjà posée par PatientReport via
+     * setNormalRange().
+     *
+     * Concaténer dans data.result reste compatible avec le JRXML existant
+     * (TEST_PAIR/TEST/Nombre de germes) sans toucher au template ni au bean.
+     */
+    private void appendUomToResult(ClinicalPatientData data, Analysis analysis) {
+        if (data == null || analysis == null) {
+            return;
+        }
+        String value = data.getResult();
+        if (value == null || value.trim().isEmpty()) {
+            return;
+        }
+        // Skip placeholders comme "En cours" / "Échec" pour ne pas tagger "En cours
+        // mm³".
+        String trimmed = value.trim();
+        if (!isNumericLike(trimmed)) {
+            return;
+        }
+
+        // Lookup the most recent Result for this analysis; prefer its UoM override.
+        // The override id is read via a FK projection (getUomIdForResult) instead
+        // of the lazy r.getUom*(): the latter returns null here because the result
+        // is detached when the report renders, which is why the report previously
+        // always fell back to the test's default unit (e.g. always "/mm3").
+        String uom = data.getUom();
+        try {
+            List<Result> results = analysisService.getResults(analysis);
+            if (results != null && !results.isEmpty()) {
+                Result r = results.get(0);
+                String overrideUomId = SpringContext.getBean(ResultService.class).getUomIdForResult(r.getId());
+                if (overrideUomId != null && !overrideUomId.trim().isEmpty()) {
+                    org.openelisglobal.unitofmeasure.valueholder.UnitOfMeasure overrideUom = SpringContext
+                            .getBean(org.openelisglobal.unitofmeasure.service.UnitOfMeasureService.class)
+                            .getUnitOfMeasureById(overrideUomId);
+                    if (overrideUom != null && overrideUom.getUnitOfMeasureName() != null
+                            && !overrideUom.getUnitOfMeasureName().trim().isEmpty()) {
+                        uom = overrideUom.getUnitOfMeasureName();
+                    }
+                }
+            }
+        } catch (RuntimeException ignored) {
+            // Lecture défensive : on retombe sur l'UoM héritée du test.
+        }
+
+        if (uom != null && !uom.trim().isEmpty()) {
+            data.setResult(value + " " + uom.trim());
+            data.setUom(uom);
+        }
+    }
+
+    /**
+     * Heuristique : considérer le résultat comme numérique si une fois trimé il
+     * commence par un chiffre. Couvre "10", "10.5", "10,5", ">100" est exclu — on
+     * évite de coller une unité sur du texte ("Présence", "Absence", etc.).
+     */
+    private boolean isNumericLike(String v) {
+        if (v == null || v.isEmpty()) {
+            return false;
+        }
+        char c = v.charAt(0);
+        return c >= '0' && c <= '9';
+    }
+
+    /**
+     * Formate la ligne "Nombre de germes" en distinguant bactéries et levures.
+     * Exemples : - 0 organisme -> "0" - 2 bactéries -> "2 (2 bactérie(s))" - 1
+     * bactérie + 1 levure -> "2 (1 bactérie(s), 1 levure(s))" - 1 levure -> "1 (1
+     * levure(s))"
+     */
+    private String formatOrganismCount(int total, int bacteria, int yeast) {
+        if (total == 0) {
+            return "0";
+        }
+        StringBuilder sb = new StringBuilder();
+        sb.append(total);
+        StringBuilder details = new StringBuilder();
+        if (bacteria > 0) {
+            details.append(bacteria).append(" bactérie(s)");
+        }
+        if (yeast > 0) {
+            if (details.length() > 0) {
+                details.append(", ");
+            }
+            details.append(yeast).append(" levure(s)");
+        }
+        if (details.length() > 0) {
+            sb.append(" (").append(details).append(")");
+        }
+        return sb.toString();
     }
 
     /**

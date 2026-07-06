@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+     http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+    <!--
+        Associer le test 'Microscopie - Frottis Coloration Gram - Polynucléaires'
+        au type d'échantillon 'Crachat/Expectoration'.
+        Aucun id codé en dur : résolution par name / description.
+    -->
+    <changeSet author="pkomena" id="add-gram-polynucleaires-crachat-sampletype-1">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="1">SELECT count(*) FROM
+                clinlims.type_of_sample WHERE description = 'Crachat/Expectoration'</sqlCheck>
+        </preConditions>
+        <comment>Associer 'Frottis Coloration Gram - Polynucléaires' au type d'échantillon Crachat/Expectoration (sampletype_test)</comment>
+        <sql><![CDATA[
+            INSERT INTO clinlims.sampletype_test (id, sample_type_id, test_id)
+            SELECT
+                nextval('clinlims.sample_type_test_seq'),
+                tos.id,
+                t.id
+            FROM clinlims.type_of_sample tos
+            CROSS JOIN clinlims.test t
+            WHERE tos.description = 'Crachat/Expectoration'
+              AND t.name = 'Microscopie - Frottis Coloration Gram - Polynucléaires'
+              AND NOT EXISTS (
+                  SELECT 1 FROM clinlims.sampletype_test st
+                  WHERE st.sample_type_id = tos.id AND st.test_id = t.id
+              );
+        ]]></sql>
+    </changeSet>
+
+</databaseChangeLog>

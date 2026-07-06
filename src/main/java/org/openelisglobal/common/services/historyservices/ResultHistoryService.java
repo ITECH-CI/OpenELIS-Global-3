@@ -48,7 +48,12 @@ public class ResultHistoryService extends AbstractHistoryService {
             newValueMap = new HashMap<>();
             newValueMap.put(VALUE_ATTRIBUTE, getViewableValue(result.getValue(), result));
 
-            identifier = TestServiceImpl.getLocalizedTestNameWithType(analysis.getTest()) + " - "
+            // Cf. AnalysisHistoryService : on prend le sample type du sample
+            // item courant pour le suffixe, pas le premier associé au test.
+            String typeOfSampleId = analysis.getSampleItem() != null
+                    ? analysis.getSampleItem().getTypeOfSampleId()
+                    : null;
+            identifier = TestServiceImpl.getLocalizedTestNameWithType(analysis.getTest(), typeOfSampleId) + " - "
                     + analysis.getAnalysisType();
         } else {
             historyList = new ArrayList<>();

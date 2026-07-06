@@ -320,8 +320,7 @@ public class BacteriologyColumnBuilder extends RoutineColumnBuilder {
         query.append("\n   FROM clinlims.bacteriology_flora_detail bfd");
         query.append("\n   LEFT JOIN clinlims.dictionary d_gram ON d_gram.id = bfd.gram_type_dict_id");
         query.append("\n   LEFT JOIN clinlims.dictionary d_grouping ON d_grouping.id = bfd.grouping_mode_dict_id");
-        query.append(
-                "\n   LEFT JOIN clinlims.dictionary d_other ON d_other.id = bfd.other_characteristic_dict_id");
+        query.append("\n   LEFT JOIN clinlims.dictionary d_other ON d_other.id = bfd.other_characteristic_dict_id");
         query.append("\n   WHERE bfd.flora_id = inner_bf.id");
         query.append("\n )) as flora_details");
         query.append("\n FROM clinlims.sample inner_s");
