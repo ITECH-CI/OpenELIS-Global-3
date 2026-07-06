@@ -139,6 +139,8 @@ public class ReportImplementationFactory {
                 return new TBOrderReport();
             } else if (report.equals("Trends")) {
                 return new ExportTrendsByDate();
+            } else if (report.equals("EIDTrends")) {
+                return new ExportEIDTrendsByDate();
             } else if (report.equals("ExportWHONETReportByDate")) {
                 return new WHONETExportRoutineByDate();
             } else if (report.equals("covidResultsReport")) {
@@ -277,6 +279,8 @@ public class ReportImplementationFactory {
                 return new ExportStudyProjectByDate();
             } else if (report.equals("Trends")) {
                 return new ExportTrendsByDate();
+            } else if (report.equals("EIDTrends")) {
+                return new ExportEIDTrendsByDate();
             } else if (report.equals("TBOrderExport")) {
                 return new ExportTBOrdersByDate();
             } else if (report.equals("bacteriologyCSV")) {

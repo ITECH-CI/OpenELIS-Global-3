@@ -111,15 +111,26 @@ public abstract class CIStudyColumnBuilder extends CSVColumnBuilder {
             Date highDatePostgres, String byDate) {
         appendCrosstabPreamble(aOhTypeName);
 
-        query.append(" crosstab( ' SELECT s.id as s_id, type, value FROM Sample AS s  LEFT JOIN ( SELECT"
+        // byDate may reference the analysis alias (e.g. "a.released_date"), which
+        // otherwise isn't in scope in this self-contained crosstab query string. The
+        // inner subquery joins sample_item/analysis to bring "a" into scope (same
+        // join used in appendObservationHistoryCrosstab); it stays de-duplicated
+        // because the SELECT DISTINCT is keyed on oh.id, so a sample matching
+        // several analyses in range does not produce duplicate rows. The identical
+        // filter that used to also sit on the outer query is dropped rather than
+        // given the same join, since re-joining analysis there (outside the
+        // DISTINCT) would multiply each repeatCols row per matching analysis; the
+        // inner subquery's own filtering already leaves non-matching samples with no
+        // repeatCols entry (i.e. NULLs), so the outer filter was redundant.
+        query.append(" crosstab( ' SELECT s.id as s_id, type, value FROM Sample AS s LEFT JOIN ( SELECT"
                 + " DISTINCT s.id as s_id , oh.observation_history_type_id AS type, oh.value AS value,"
-                + " oh.id  FROM Sample as s, Observation_History AS oh, document_track as dt WHERE"
-                + " oh.sample_id = s.id AND dt.row_id = s.id AND " + byDate + " >= date(''" + lowDatePostgres + "'') "
+                + " oh.id  FROM Sample as s, Observation_History AS oh, document_track as dt, sample_item as si, analysis as a WHERE"
+                + " oh.sample_id = s.id AND dt.row_id = s.id AND s.id = si.samp_id AND si.id = a.sampitem_id AND "
+                + byDate + " >= date(''" + lowDatePostgres + "'') "
                 + " AND " + byDate + " <= date(''" + highDatePostgres
                 + "'') AND oh.observation_history_type_id = (select id FROM observation_history_type"
                 + " WHERE type_name = ''" + aOhTypeName + "'')  ORDER by 1,2, oh.id desc ) AS repeatCols"
-                + " ON s.id = repeatCols.s_id" + " WHERE " + byDate + " >= date(''" + lowDatePostgres + "'') " + " AND "
-                + byDate + " <= date(''" + highDatePostgres + "'')" + "' )" + " AS " + aOhTypeName
+                + " ON s.id = repeatCols.s_id" + "' )" + " AS " + aOhTypeName
                 + " ( s_id NUMERIC(10) ");
         for (int col = 1; col <= maxCols; col++) {
             query.append(", \"").append(aOhTypeName).append(col).append("\" VARCHAR(100)");

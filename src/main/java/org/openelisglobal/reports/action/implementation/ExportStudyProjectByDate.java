@@ -107,12 +107,8 @@ public class ExportStudyProjectByDate extends CSVSampleExportReport implements I
         return dateRange.validateHighLowDate("report.error.message.date.received.missing") && validateProject();
     }
 
-    /**
-     * @return true, if location is not blank or "0" is is found in the DB; false
-     *         otherwise
-     */
     private boolean validateProject() {
-        if (isBlankOrNull(projectStr) || "0".equals(Integer.getInteger(projectStr))) {
+        if (isBlankOrNull(projectStr)) {
             add1LineErrorMessage("report.error.message.project.missing");
             return false;
         }

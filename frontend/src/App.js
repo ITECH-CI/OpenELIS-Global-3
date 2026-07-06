@@ -42,6 +42,7 @@ import ResultSearch from "./components/resultPage/ResultSearch";
 import ReferredOutTests from "./components/resultPage/resultsReferredOut/ReferredOutTests.js";
 import Aliquot from "./components/sample/Aliquot";
 import ViralLoadEntry from "./components/viralLoad/ViralLoadEntry";
+import ViralLoadModify from "./components/viralLoad/ViralLoadModify";
 import { SecureRoute } from "./components/security";
 import { getFromOpenElisServer, Roles } from "./components/utils/Utils";
 import StudyValidation from "./components/validation/Index";
@@ -333,6 +334,12 @@ export default function App() {
                   path="/SampleEntryByProject"
                   exact
                   component={() => <ViralLoadEntry />}
+                  role={Roles.RECEPTION}
+                />
+                <SecureRoute
+                  path="/SampleModify"
+                  exact
+                  component={() => <ViralLoadModify />}
                   role={Roles.RECEPTION}
                 />
                 <SecureRoute
