@@ -192,10 +192,7 @@ public class AlphanumAccessionValidator implements IAccessionNumberGenerator {
 
     @Override
     public String getInvalidMessage(ValidationResults results) {
-        String suggestedAccessionNumber = getNextAvailableAccessionNumber(null, false);
-
-        return MessageUtil.getMessage("sample.entry.invalid.accession.number.suggestion") + " "
-                + suggestedAccessionNumber;
+        return MessageUtil.getMessage("sample.entry.invalid.accession.number.suggestion");
     }
 
     private String incrementAccessionNumber() throws IllegalArgumentException {

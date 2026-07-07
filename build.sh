@@ -42,7 +42,7 @@ PROJECT_DIR="${BUILD_SCRIPT_DIR}"
 
 if [ $createInstaller == true ]
 then
-    cd ${CALL_DIR}
+    cd "${CALL_DIR}"
 
     if [ -d "${INSTALLER_CREATION_DIR}" ]
     then
@@ -58,7 +58,7 @@ then
     fi
 fi
 
-cd ${PROJECT_DIR}
+cd "${PROJECT_DIR}"
 echo Will build from $branch
 #cd source/openelisglobal-core
 #git checkout -- app/src/build.properties
@@ -84,13 +84,13 @@ git submodule update --recursive
 #git rev-list HEAD | tac | nl | tail -n 1 | sed 's/\t/ hash-/g'  |sed 's/\s\{2,\}/revision-/g' > ../../version.txt
 #cd ../..
 #sed '2!d' source/openelisglobal-core/app/src/build.properties  > build.txt
-cd ${CALL_DIR}
+cd "${CALL_DIR}"
 
 echo "creating docker images"
 
 #create data import docker image
-#bash ${INSTALL_DIR}/buildProject.sh -dl ${CONSOLIDATED_SERVER_DIR}
-bash ${INSTALL_DIR}/buildProject.sh -dl ${PROJECT_DIR}/fhir -t hapi-fhir-jpaserver
+#bash "${INSTALL_DIR}/buildProject.sh" -dl "${CONSOLIDATED_SERVER_DIR}"
+bash "${INSTALL_DIR}/buildProject.sh" -dl "${PROJECT_DIR}/fhir" -t hapi-fhir-jpaserver
 SUCCESS=$?
 if [ $SUCCESS != 0 ]
 then
@@ -99,7 +99,7 @@ then
     exit $SUCCESS
 fi
 #create the frontend docker image
-bash ${INSTALL_DIR}/buildProject.sh -dl ${PROJECT_DIR}/frontend -t openelisglobal-frontend
+bash "${INSTALL_DIR}/buildProject.sh" -dl "${PROJECT_DIR}/frontend" -t openelisglobal-frontend
 SUCCESS=$?
 if [ $SUCCESS != 0 ]
 then
@@ -108,7 +108,7 @@ then
     exit $SUCCESS
 fi
 #create the frontend docker image
-bash ${INSTALL_DIR}/buildProject.sh -dl ${PROJECT_DIR}/nginx-proxy -t nginx-proxy
+bash "${INSTALL_DIR}/buildProject.sh" -dl "${PROJECT_DIR}/nginx-proxy" -t nginx-proxy
 SUCCESS=$?
 if [ $SUCCESS != 0 ]
 then
@@ -117,7 +117,7 @@ then
     exit $SUCCESS
 fi
 #create the docker image
-bash ${INSTALL_DIR}/buildProject.sh -dl ${PROJECT_DIR} -t openelisglobal
+bash "${INSTALL_DIR}/buildProject.sh" -dl "${PROJECT_DIR}" -t openelisglobal
 SUCCESS=$?
 if [ $SUCCESS != 0 ]
 then
@@ -132,34 +132,34 @@ createLinuxInstaller() {
     installerName="${context}_${projectVersion}_Installer"
 
     echo "creating installer for context ${context}"
-    mkdir -p ${INSTALLER_CREATION_DIR}/linux/${installerName}
-    cp -r ${INSTALL_DIR}/installerTemplate/linux/* ${INSTALLER_CREATION_DIR}/linux/${installerName}
-    cp OpenELIS-Global_DockerImage.tar.gz ${INSTALLER_CREATION_DIR}/linux/${installerName}/dockerImage/${context}-${projectVersion}.tar.gz
-    cp Postgres_DockerImage.tar.gz ${INSTALLER_CREATION_DIR}/linux/${installerName}/dockerImage/Postgres_DockerImage.tar.gz
-    cp JPAServer_DockerImage.tar.gz ${INSTALLER_CREATION_DIR}/linux/${installerName}/dockerImage/JPAServer_DockerImage.tar.gz
-    cp AutoHeal_DockerImage.tar.gz ${INSTALLER_CREATION_DIR}/linux/${installerName}/dockerImage/AutoHeal_DockerImage.tar.gz
-    cp NGINX_DockerImage.tar.gz ${INSTALLER_CREATION_DIR}/linux/${installerName}/dockerImage/NGINX_DockerImage.tar.gz
-    cp ReactFrontend_DockerImage.tar.gz ${INSTALLER_CREATION_DIR}/linux/${installerName}/dockerImage/ReactFrontend_DockerImage.tar.gz
+    mkdir -p "${INSTALLER_CREATION_DIR}/linux/${installerName}"
+    cp -r "${INSTALL_DIR}/installerTemplate/linux/." "${INSTALLER_CREATION_DIR}/linux/${installerName}"
+    cp OpenELIS-Global_DockerImage.tar.gz "${INSTALLER_CREATION_DIR}/linux/${installerName}/dockerImage/${context}-${projectVersion}.tar.gz"
+    cp Postgres_DockerImage.tar.gz "${INSTALLER_CREATION_DIR}/linux/${installerName}/dockerImage/Postgres_DockerImage.tar.gz"
+    cp JPAServer_DockerImage.tar.gz "${INSTALLER_CREATION_DIR}/linux/${installerName}/dockerImage/JPAServer_DockerImage.tar.gz"
+    cp AutoHeal_DockerImage.tar.gz "${INSTALLER_CREATION_DIR}/linux/${installerName}/dockerImage/AutoHeal_DockerImage.tar.gz"
+    cp NGINX_DockerImage.tar.gz "${INSTALLER_CREATION_DIR}/linux/${installerName}/dockerImage/NGINX_DockerImage.tar.gz"
+    cp ReactFrontend_DockerImage.tar.gz "${INSTALLER_CREATION_DIR}/linux/${installerName}/dockerImage/ReactFrontend_DockerImage.tar.gz"
 
 
-    chmod +x ${INSTALLER_CREATION_DIR}/linux/${installerName}/scripts/*.sh
+    chmod +x "${INSTALLER_CREATION_DIR}/linux/${installerName}/scripts/"*.sh
 
-    cd ${INSTALLER_CREATION_DIR}/linux
-    tar -cf ${installerName}.tar ${installerName}
-    gzip ${installerName}.tar
-    cd ${CALL_DIR}
+    cd "${INSTALLER_CREATION_DIR}/linux"
+    tar -cf "${installerName}.tar" "${installerName}"
+    gzip "${installerName}.tar"
+    cd "${CALL_DIR}"
 }
 
 if [ $createInstaller == true ]
 then
-    cd ${PROJECT_DIR}
+    cd "${PROJECT_DIR}"
     #get useful info from the maven project
     output=$({ echo 'ARTIFACT_ID=${project.artifactId}';\
         echo 'PROJECT_VERSION=${project.version}'; } \
       | mvn help:evaluate --non-recursive )
     artifactId=$(echo "$output" | grep '^ARTIFACT_ID' | cut -d = -f 2)
     projectVersion=$(echo "$output" | grep '^PROJECT_VERSION' | cut -d = -f 2)
-    cd ${CALL_DIR}
+    cd "${CALL_DIR}"
 
     echo "saving docker image as OpenELIS-Global_DockerImage.tar.gz"
     docker save openelisglobal:latest | gzip > OpenELIS-Global_DockerImage.tar.gz

@@ -1,4 +1,5 @@
 import { useContext, useEffect, useRef, useState } from "react";
+import { useLocation } from "react-router-dom";
 import { FormattedMessage, useIntl } from "react-intl";
 import {
   Button,
@@ -238,8 +239,9 @@ const computeAgeMonths = (birthDate) => {
 };
 
 // ─── Composant principal ──────────────────────────────────────────────────────
-const ViralLoadEntry = () => {
+const ViralLoadEntry = ({ initialPatientData = null, embedded = false, onSuccess = null } = {}) => {
   const intl = useIntl();
+  const location = useLocation();
   const componentMounted = useRef(false);
   const { configurationProperties } = useContext(ConfigurationContext);
   const { notificationVisible, addNotification, setNotificationVisible } =
@@ -458,6 +460,60 @@ const ViralLoadEntry = () => {
       componentMounted.current = false;
     };
   }, []);
+
+  // ─── Pré-remplissage depuis la page Modifier (prop ou router state) ──────────
+  useEffect(() => {
+    const pd = initialPatientData ?? location?.state?.patientData;
+    const isModify = initialPatientData != null || location?.state?.modifyMode;
+    if (!isModify || !pd) return;
+
+    const obs = pd.observations || {};
+    const pd_projectData = pd.projectData || {};
+    const inns = obs.currentARVTreatmentINNs;
+    const innsList = Array.isArray(inns)
+      ? [...inns, "", "", "", ""].slice(0, 4)
+      : ["", "", "", ""];
+
+    setForm((prev) => {
+      const resolvedProject = pd.project || pd.studyId || prev.project || "VL_Id";
+      return {
+        ...prev,
+        project: resolvedProject,
+        viralLoadTest: true,
+        patientPK: pd.patientPK || prev.patientPK,
+        samplePK: pd.samplePK || prev.samplePK || "",
+        subjectNumber: pd.subjectNumber || prev.subjectNumber,
+        siteSubjectNumber:
+          pd.siteSubjectNumber || pd.nationalId || prev.siteSubjectNumber,
+        patientUpdateStatus: pd.patientPK ? "UPDATE" : "ADD",
+        gender: pd.gender || prev.gender,
+        birthDateForDisplay: pd.dob || prev.birthDateForDisplay,
+        labNo: pd.labNo || prev.labNo || "",
+        receivedDateForDisplay:
+          pd.receivedDateForDisplay || prev.receivedDateForDisplay || "",
+        projectData: {
+          ...prev.projectData,
+          ...pd_projectData,
+          // viralLoadTest doit être true pour que getEDTATubeTests/getPSCTests
+          // incluent le test "Viral Load" (sinon l'exception "Mis-match" cause un 400).
+          viralLoadTest: resolvedProject === "VL_Id",
+        },
+        observations: {
+          ...prev.observations,
+          ...obs,
+          // Garantit que projectFormName est toujours défini — le backend l'utilise
+          // pour sélectionner le bon form mapper (findProjectFormName).
+          projectFormName: obs.projectFormName || resolvedProject,
+          currentARVTreatmentINNsList: innsList,
+        },
+      };
+    });
+    if (pd.subjectNumber) setVlSearchSubjectNumber(pd.subjectNumber);
+    const siteNo = pd.siteSubjectNumber || pd.nationalId || "";
+    if (siteNo) setVlSearchSiteSubjectNumber(siteNo);
+    setVlPatientSearchDone(true);
+    setPatientLookupStatus("found");
+  }, [initialPatientData]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ─── Date/heure par défaut ───────────────────────────────────────────────────
   useEffect(() => {
@@ -846,6 +902,7 @@ const ViralLoadEntry = () => {
         if (res.status === 200) {
           setSavedLabNo(labNoToSave);
           setShowSuccess(true);
+          if (onSuccess) onSuccess();
           setSerologyStatus("idle");
           setVlPatientSearchDone(false);
           setVlSearchSubjectNumber("");
@@ -1299,8 +1356,11 @@ const ViralLoadEntry = () => {
               }}
               onBlur={() => {
                 if (displayDigits.length === 5 && resolvedPrefix) {
+                  const isModify = !!form.samplePK;
                   getFromOpenElisServer(
-                    "/rest/SampleEntryAccessionNumberValidation?ignoreYear=false&ignoreUsage=false&field=labNo&accessionNumber=" +
+                    "/rest/SampleEntryAccessionNumberValidation?ignoreYear=false&ignoreUsage=" +
+                      isModify +
+                      "&field=labNo&accessionNumber=" +
                       encodeURIComponent(resolvedPrefix + displayDigits),
                     (res) => {
                       if (res && res.status === false) {
@@ -3966,7 +4026,7 @@ const ViralLoadEntry = () => {
             defaultMessage="Enregistrement réussi"
           />
         </h4>
-        {savedLabNo && (
+        {!embedded && savedLabNo && (
           <div style={{ marginTop: "12px" }}>
             <Button
               onClick={() =>
@@ -3982,14 +4042,16 @@ const ViralLoadEntry = () => {
             </Button>
           </div>
         )}
-        <div style={{ marginTop: "12px" }}>
-          <Button kind="tertiary" onClick={() => setShowSuccess(false)}>
-            <FormattedMessage
-              id="label.newentry"
-              defaultMessage="Nouvelle saisie"
-            />
-          </Button>
-        </div>
+        {!embedded && (
+          <div style={{ marginTop: "12px" }}>
+            <Button
+              kind="tertiary"
+              onClick={() => setShowSuccess(false)}
+            >
+              <FormattedMessage id="label.newentry" defaultMessage="Nouvelle saisie" />
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -4064,7 +4126,7 @@ const ViralLoadEntry = () => {
   return (
     <div style={S.page}>
       {notificationVisible && <AlertDialog />}
-      <PageBreadCrumb breadcrumbs={breadcrumbs} />
+      {!embedded && <PageBreadCrumb breadcrumbs={breadcrumbs} />}
 
       {/* ── Sélection de l'étude ───────────────────────────────────────────── */}
       {!showSuccess && (

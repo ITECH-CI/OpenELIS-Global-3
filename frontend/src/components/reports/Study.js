@@ -179,6 +179,10 @@ export const RoutineReportsMenu = {
           link: "/StudyReport?type=patient&report=Trends",
           label: <FormattedMessage id="sideNav.label.viralloaddataexport" />,
         },
+        {
+          link: "/StudyReport?type=patient&report=EIDTrends",
+          label: <FormattedMessage id="sideNav.label.eidexport" />,
+        },
       ],
     },
     {

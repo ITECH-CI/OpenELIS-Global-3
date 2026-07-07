@@ -22,7 +22,7 @@ while getopts :dl:t: opt; do
 done
 
 if [ -d "$DIR" ]; then
-    cd ${DIR}
+    cd "${DIR}"
     echo "building in ${DIR}"
 else
     echo "could not find directory '${DIR}' to build"
@@ -41,9 +41,9 @@ then
     fi
     if [ -z "${TAG}" ]
     then
-        docker build --file ${dockerfile} .
+        docker build --no-cache --platform linux/amd64 --file "${dockerfile}" .
     else
-        docker build --file ${dockerfile} -t ${TAG} .
+        docker build --no-cache --platform linux/amd64 --file "${dockerfile}" -t "${TAG}" .
     fi
 else
     mvn clean install -DskipTests

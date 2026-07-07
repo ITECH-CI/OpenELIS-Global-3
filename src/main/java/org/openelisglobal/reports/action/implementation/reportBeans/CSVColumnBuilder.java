@@ -685,9 +685,9 @@ abstract public class CSVColumnBuilder {
         // ... )
         query.append(" as demo ( " + " \"s_id\"                           numeric(10) ");
         for (ObservationHistoryType oht : allObHistoryTypes) {
-            // this is sql injection safe as users currently have no way of modifying fields
-            // in ObservationHistoryTypes
-            query.append("\n," + oht.getTypeName() + " varchar(100) ");
+            // quoted because some type names (e.g. "Bacterial Count") contain spaces,
+            // which is not valid in an unquoted column identifier
+            query.append("\n, " + prepareColumnName(oht.getTypeName()) + " varchar(100) ");
         }
         query.append(" ) \n");
         appendCrosstabPostfix(lowDate, highDate, listName);

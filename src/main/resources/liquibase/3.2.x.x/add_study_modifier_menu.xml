@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+     http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+    <!-- Ancien changeset conservé (déjà MARK_RAN en production) -->
+    <changeSet author="CIV devs" id="add-study-modify-menu">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <sqlCheck expectedResult="0">
+                    SELECT COUNT(*) FROM clinlims.menu WHERE element_id = 'menu_study_modifier'
+                </sqlCheck>
+                <sqlCheck expectedResult="1">
+                    SELECT COUNT(*) FROM clinlims.menu WHERE element_id = 'menu_sample_create'
+                </sqlCheck>
+            </and>
+        </preConditions>
+        <comment>Ajouter le sous-menu Modifier sous le menu Étude (menu_sample_create)</comment>
+        <insert tableName="menu" schemaName="clinlims">
+            <column name="id" valueSequenceNext="menu_seq"/>
+            <column name="parent_id" valueComputed="(SELECT id FROM clinlims.menu WHERE element_id = 'menu_sample_create')"/>
+            <column name="presentation_order" value="10"/>
+            <column name="element_id" value="menu_study_modifier"/>
+            <column name="action_url" value="/SampleModify?type=readwrite"/>
+            <column name="display_key" value="banner.menu.study.modifier"/>
+            <column name="tool_tip_key" value="banner.menu.study.modifier"/>
+            <column name="new_window" valueBoolean="false"/>
+            <column name="is_active" valueBoolean="true"/>
+        </insert>
+    </changeSet>
+
+    <!-- Nouveau changeset : recherche dynamique du parent (Étude), indépendant de menu_sample_create -->
+    <changeSet author="CIV devs" id="add-study-modifier-menu-2026">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">
+                SELECT COUNT(*) FROM clinlims.menu WHERE element_id = 'menu_study_modifier'
+            </sqlCheck>
+        </preConditions>
+        <comment>Ajouter le sous-menu Modifier sous le menu Étude — recherche dynamique du parent</comment>
+        <sql>
+            INSERT INTO clinlims.menu(
+                id, parent_id, presentation_order, element_id,
+                action_url, display_key, tool_tip_key, new_window, is_active
+            )
+            SELECT
+                nextval('clinlims.menu_seq'),
+                COALESCE(
+                    /* 1. Parent du menu Saisie (item pointant vers SampleEntryByProject) */
+                    (SELECT parent_id FROM clinlims.menu
+                     WHERE action_url LIKE '%SampleEntryByProject%'
+                     LIMIT 1),
+                    /* 2. menu_patient_create (menu Étude standard) */
+                    (SELECT id FROM clinlims.menu
+                     WHERE element_id = 'menu_sample_create'
+                     LIMIT 1),
+                    /* 3. menu_sample_create (alternative) */
+                    (SELECT id FROM clinlims.menu
+                     WHERE element_id = 'menu_sample_create'
+                     LIMIT 1)
+                ),
+                10,
+                'menu_study_modifier',
+                '/SampleModify?type=readwrite',
+                'banner.menu.study.modifier',
+                'banner.menu.study.modifier',
+                false,
+                true;
+
+            /* Réactiver le menu parent si désactivé */
+            UPDATE clinlims.menu
+            SET is_active = true
+            WHERE id = (
+                SELECT parent_id FROM clinlims.menu
+                WHERE element_id = 'menu_study_modifier'
+            )
+            AND is_active = false;
+        </sql>
+    </changeSet>
+
+</databaseChangeLog>

@@ -45,6 +45,7 @@ import org.openelisglobal.project.service.ProjectService;
 import org.openelisglobal.project.valueholder.Project;
 import org.openelisglobal.provider.service.ProviderService;
 import org.openelisglobal.provider.valueholder.Provider;
+import org.openelisglobal.reports.action.implementation.ExportEIDTrendsByDate;
 import org.openelisglobal.reports.action.implementation.ExportTrendsByDate;
 import org.openelisglobal.role.service.RoleService;
 import org.openelisglobal.role.valueholder.Role;
@@ -147,8 +148,8 @@ public class DisplayListController extends BaseRestController {
         return regex;
     }
 
-    // Manually create an instance of ExportTrendsByDate
     private ExportTrendsByDate exportTrendsByDate = new ExportTrendsByDate();
+    private ExportEIDTrendsByDate exportEIDTrendsByDate = new ExportEIDTrendsByDate();
 
     @Autowired
     private ProjectService projectService; // Inject the ProjectService
@@ -171,8 +172,18 @@ public class DisplayListController extends BaseRestController {
     @GetMapping(value = "trendsprojects", produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
     public List<IdValuePair> getTempProjects() {
-        // Use the manually created instance of ExportTrendsByDate
         List<Project> projects = exportTrendsByDate.getProjectList();
+        List<IdValuePair> projectList = new ArrayList<>();
+        projects.forEach(project -> {
+            projectList.add(new IdValuePair(project.getId(), project.getProjectName()));
+        });
+        return projectList;
+    }
+
+    @GetMapping(value = "eidprojects", produces = MediaType.APPLICATION_JSON_VALUE)
+    @ResponseBody
+    public List<IdValuePair> getEIDProjects() {
+        List<Project> projects = exportEIDTrendsByDate.getProjectList();
         List<IdValuePair> projectList = new ArrayList<>();
         projects.forEach(project -> {
             projectList.add(new IdValuePair(project.getId(), project.getProjectName()));
