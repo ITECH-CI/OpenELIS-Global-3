@@ -65,7 +65,6 @@ tb_mapping_results.txt
 src/main/resources/reports/backups/
 
 # Local build/export artifacts (no CI/CD yet)
-oe-build-export.sh
 oe-build-export.txt
 *.tar.gz
 
