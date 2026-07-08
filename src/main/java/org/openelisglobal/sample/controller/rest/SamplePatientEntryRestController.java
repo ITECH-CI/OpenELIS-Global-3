@@ -374,7 +374,9 @@ public class SamplePatientEntryRestController extends BaseSampleEntryController 
         result.put("lastName", person != null ? person.getLastName() : "");
         result.put("gender", patient.getGender());
         result.put("dob", patient.getBirthDateForDisplay());
-        result.put("nationalId", patient.getNationalId());
+        String subjectNumber = patientService.getSubjectNumber(patient);
+        result.put("nationalId",
+                !GenericValidator.isBlankOrNull(subjectNumber) ? subjectNumber : patient.getNationalId());
         result.put("externalId", patient.getExternalId());
 
         if (mostRecentSample != null) {

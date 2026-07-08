@@ -784,6 +784,15 @@ const ViralLoadEntry = ({ initialPatientData = null, embedded = false, onSuccess
       if (!val) errors.push(`${label} est obligatoire.`);
     };
 
+    // Grossesse/Allaitement obligatoires dès que le sexe du patient est
+    // féminin (non pertinent pour EID/HPV, cf. fldPregnancyAndSuckle).
+    const reqPregnancySuckleIfFemale = () => {
+      if (isFemale) {
+        req(form.observations.vlPregnancy, "Grossesse en cours");
+        req(form.observations.vlSuckle, "Allaitement en cours");
+      }
+    };
+
     // Champs communs à toutes les études
     req(form.receivedDateForDisplay, "Date de Réception");
     req(form.interviewDate, "Date de Prélèvements");
@@ -818,6 +827,7 @@ const ViralLoadEntry = ({ initialPatientData = null, embedded = false, onSuccess
         req(form.projectData.ARVcenterCode, "Code du Centre");
         req(form.gender, "Sexe");
         req(form.birthDateForDisplay, "Date de Naissance");
+        reqPregnancySuckleIfFemale();
         if (!form.subjectNumber && !form.siteSubjectNumber)
           errors.push("Numéro Sujet ou Numéro Site Sujet est requis.");
         break;
@@ -825,6 +835,7 @@ const ViralLoadEntry = ({ initialPatientData = null, embedded = false, onSuccess
         req(form.labNo, "N° Lab");
         req(form.gender, "Sexe");
         req(form.birthDateForDisplay, "Date de Naissance");
+        reqPregnancySuckleIfFemale();
         break;
       case "EID_Id":
         req(form.gender, "Sexe");
@@ -835,18 +846,21 @@ const ViralLoadEntry = ({ initialPatientData = null, embedded = false, onSuccess
         req(form.projectData.INDsiteName, "Nom du Centre");
         req(form.gender, "Sexe");
         req(form.birthDateForDisplay, "Date de Naissance");
+        reqPregnancySuckleIfFemale();
         if (!form.subjectNumber && !form.siteSubjectNumber)
           errors.push("Numéro Sujet ou Numéro Site Sujet est requis.");
         break;
       case "Special_Request_Id":
         req(form.labNo, "N° Lab");
         req(form.gender, "Sexe");
+        reqPregnancySuckleIfFemale();
         if (!form.subjectNumber && !form.siteSubjectNumber)
           errors.push("Numéro Sujet ou Numéro Site Sujet est requis.");
         break;
       case "VL_Id":
         req(form.gender, "Sexe");
         req(form.birthDateForDisplay, "Date de Naissance");
+        reqPregnancySuckleIfFemale();
         if (serologyControlEnabled && serologyStatus === "notfound") {
           if (!form.projectData.serologyHIVTest) {
             errors.push(
@@ -867,6 +881,7 @@ const ViralLoadEntry = ({ initialPatientData = null, embedded = false, onSuccess
         req(form.siteSubjectNumber, "Numéro Recency");
         req(form.gender, "Sexe");
         req(form.birthDateForDisplay, "Date de Naissance");
+        reqPregnancySuckleIfFemale();
         break;
       case "HPV_Id":
         req(form.projectData.ARVcenterCode, "Code du Centre");
@@ -1092,6 +1107,71 @@ const ViralLoadEntry = ({ initialPatientData = null, embedded = false, onSuccess
       </Select>
     </Row>
   );
+  // Champs Grossesse/Allaitement affichés (et obligatoires) dès que le sexe
+  // du patient est féminin. Partagés entre les études qui gèrent un patient
+  // adulte (pas pertinent pour EID, dont le sexe est celui de l'enfant, ni
+  // pour HPV, qui n'a pas de champ sexe).
+  const fldPregnancyAndSuckle = (idPrefix) =>
+    isFemale && (
+      <>
+        <Row
+          required
+          label={intl.formatMessage({
+            id: "sample.project.vlPregnancy",
+            defaultMessage: "Grossesse en cours",
+          })}
+        >
+          <Select
+            id={`${idPrefix}_pregnancy`}
+            hideLabel
+            labelText=""
+            value={form.observations.vlPregnancy}
+            onChange={(e) => setObs("vlPregnancy", e.target.value)}
+            style={{ maxWidth: "200px" }}
+          >
+            <SelectItem value="" text={placeholder} />
+            {(dictionaryLists.YES_NO || []).map((d) => (
+              <SelectItem
+                key={d.id}
+                value={d.id}
+                text={intl.formatMessage({
+                  id: d.displayKey,
+                  defaultMessage: d.value,
+                })}
+              />
+            ))}
+          </Select>
+        </Row>
+        <Row
+          required
+          label={intl.formatMessage({
+            id: "sample.project.vlSuckle",
+            defaultMessage: "Allaitement en cours",
+          })}
+        >
+          <Select
+            id={`${idPrefix}_suckle`}
+            hideLabel
+            labelText=""
+            value={form.observations.vlSuckle}
+            onChange={(e) => setObs("vlSuckle", e.target.value)}
+            style={{ maxWidth: "200px" }}
+          >
+            <SelectItem value="" text={placeholder} />
+            {(dictionaryLists.YES_NO || []).map((d) => (
+              <SelectItem
+                key={d.id}
+                value={d.id}
+                text={intl.formatMessage({
+                  id: d.displayKey,
+                  defaultMessage: d.value,
+                })}
+              />
+            ))}
+          </Select>
+        </Row>
+      </>
+    );
   const fldBirthDate = () => (
     <Row
       required
@@ -1347,7 +1427,6 @@ const ViralLoadEntry = ({ initialPatientData = null, embedded = false, onSuccess
               style={{ maxWidth: "100px" }}
               value={displayDigits}
               invalid={!!labNoError}
-              invalidText={labNoError}
               onChange={(e) => {
                 const digits = e.target.value.replace(/\D/g, "").slice(0, 5);
                 setLabNoError("");
@@ -1392,6 +1471,22 @@ const ViralLoadEntry = ({ initialPatientData = null, embedded = false, onSuccess
                   pointerEvents: "none",
                 }}
               />
+            )}
+            {labNoError && (
+              <span
+                style={{
+                  position: "absolute",
+                  left: "calc(100% + 6px)",
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  fontSize: "12px",
+                  color: "#da1e28",
+                  fontWeight: "600",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {labNoError}
+              </span>
             )}
           </div>
         </div>
@@ -1840,6 +1935,7 @@ const ViralLoadEntry = ({ initialPatientData = null, embedded = false, onSuccess
       {fldSiteSubjectNumber(false, true)}
       {fldLabNo(LAB_PREFIXES.InitialARV_Id)}
       {fldGender()}
+      {fldPregnancyAndSuckle("iarv")}
       {fldBirthDate()}
       {fldAge(false, false)}
       {fldDryTubeSpecimens()}
@@ -1869,6 +1965,7 @@ const ViralLoadEntry = ({ initialPatientData = null, embedded = false, onSuccess
       {fldSiteSubjectNumber(false, true)}
       {fldLabNo(LAB_PREFIXES.FollowUpARV_Id)}
       {fldGender()}
+      {fldPregnancyAndSuckle("farv")}
       {fldBirthDate()}
       {fldAge(false, false)}
       {fldHivStatus("HIV_STATUSES")}
@@ -1896,6 +1993,7 @@ const ViralLoadEntry = ({ initialPatientData = null, embedded = false, onSuccess
       {fldBirthDate()}
       {fldAge(true, false)}
       {fldGender()}
+      {fldPregnancyAndSuckle("rtn")}
       {fldLabNo(LAB_PREFIXES.RTN_Id)}
       <div style={S.subHeader}>
         <FormattedMessage
@@ -2499,6 +2597,7 @@ const ViralLoadEntry = ({ initialPatientData = null, embedded = false, onSuccess
       {fldSiteSubjectNumber(false, true)}
       {fldLabNo(LAB_PREFIXES.Indeterminate_Id)}
       {fldGender()}
+      {fldPregnancyAndSuckle("ind")}
       {fldBirthDate()}
       {fldAge()}
       <div style={S.subHeader}>
@@ -2687,6 +2786,7 @@ const ViralLoadEntry = ({ initialPatientData = null, embedded = false, onSuccess
       {fldBirthDate()}
       {fldAge()}
       {fldGender()}
+      {fldPregnancyAndSuckle("sr")}
       {fldLabNo(LAB_PREFIXES.Special_Request_Id)}
       <Row
         label={intl.formatMessage({
@@ -3010,69 +3110,12 @@ const ViralLoadEntry = ({ initialPatientData = null, embedded = false, onSuccess
           {fldReceivedDate()}
           {fldReceivedTime()}
           {fldSubjectNumber(7)}
-          {fldSiteSubjectNumber(false, false)}
+          {fldSiteSubjectNumber(false, true)}
           {fldLabNo(LAB_PREFIXES.VL_Id)}
           {fldBirthDate()}
           {fldAge(true, false)}
           {fldGender()}
-          {isFemale && (
-            <>
-              <Row
-                label={intl.formatMessage({
-                  id: "sample.project.vlPregnancy",
-                  defaultMessage: "Grossesse en cours",
-                })}
-              >
-                <Select
-                  id="vl_pregnancy"
-                  hideLabel
-                  labelText=""
-                  value={form.observations.vlPregnancy}
-                  onChange={(e) => setObs("vlPregnancy", e.target.value)}
-                  style={{ maxWidth: "200px" }}
-                >
-                  <SelectItem value="" text={placeholder} />
-                  {(dictionaryLists.YES_NO || []).map((d) => (
-                    <SelectItem
-                      key={d.id}
-                      value={d.id}
-                      text={intl.formatMessage({
-                        id: d.displayKey,
-                        defaultMessage: d.value,
-                      })}
-                    />
-                  ))}
-                </Select>
-              </Row>
-              <Row
-                label={intl.formatMessage({
-                  id: "sample.project.vlSuckle",
-                  defaultMessage: "Allaitement en cours",
-                })}
-              >
-                <Select
-                  id="vl_suckle"
-                  hideLabel
-                  labelText=""
-                  value={form.observations.vlSuckle}
-                  onChange={(e) => setObs("vlSuckle", e.target.value)}
-                  style={{ maxWidth: "200px" }}
-                >
-                  <SelectItem value="" text={placeholder} />
-                  {(dictionaryLists.YES_NO || []).map((d) => (
-                    <SelectItem
-                      key={d.id}
-                      value={d.id}
-                      text={intl.formatMessage({
-                        id: d.displayKey,
-                        defaultMessage: d.value,
-                      })}
-                    />
-                  ))}
-                </Select>
-              </Row>
-            </>
-          )}
+          {fldPregnancyAndSuckle("vl")}
           {serologyControlEnabled ? (
             <Row
               required
@@ -3729,50 +3772,7 @@ const ViralLoadEntry = ({ initialPatientData = null, embedded = false, onSuccess
       {fldBirthDate()}
       {fldAge()}
       {fldGender()}
-      {isFemale && (
-        <>
-          <Row
-            label={intl.formatMessage({
-              id: "sample.project.vlPregnancy",
-              defaultMessage: "Grossesse en cours",
-            })}
-          >
-            <Select
-              id="rt_pregnancy"
-              hideLabel
-              labelText=""
-              value={form.observations.vlPregnancy}
-              onChange={(e) => setObs("vlPregnancy", e.target.value)}
-              style={{ maxWidth: "200px" }}
-            >
-              <SelectItem value="" text={placeholder} />
-              {(dictionaryLists.YES_NO || []).map((d) => (
-                <SelectItem key={d.id} value={d.id} text={d.dictEntry} />
-              ))}
-            </Select>
-          </Row>
-          <Row
-            label={intl.formatMessage({
-              id: "sample.project.vlSuckle",
-              defaultMessage: "Allaitement en cours",
-            })}
-          >
-            <Select
-              id="rt_suckle"
-              hideLabel
-              labelText=""
-              value={form.observations.vlSuckle}
-              onChange={(e) => setObs("vlSuckle", e.target.value)}
-              style={{ maxWidth: "200px" }}
-            >
-              <SelectItem value="" text={placeholder} />
-              {(dictionaryLists.YES_NO || []).map((d) => (
-                <SelectItem key={d.id} value={d.id} text={d.dictEntry} />
-              ))}
-            </Select>
-          </Row>
-        </>
-      )}
+      {fldPregnancyAndSuckle("rt")}
       <div style={S.subHeader}>
         <FormattedMessage
           id="sample.entry.project.title.sample"

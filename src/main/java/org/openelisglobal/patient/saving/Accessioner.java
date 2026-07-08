@@ -537,12 +537,31 @@ public abstract class Accessioner implements IAccessioner {
     private Patient findPatientByIndentifiers() {
         Patient aPatient;
         if (patientIdentifier != "") {
-            aPatient = patientService.getPatientByNationalId(patientIdentifier);
+            // Le code patient est désormais enregistré dans patient_identity (type
+            // SUBJECT, cf. populatePatientData()) plutôt que patient.national_id ;
+            // on cherche donc là en priorité pour retrouver un patient existant, avec
+            // un repli sur national_id pour les patients créés avant cette migration.
+            aPatient = findPatientBySubjectIdentity(patientIdentifier);
+            if (aPatient == null) {
+                aPatient = patientService.getPatientByNationalId(patientIdentifier);
+            }
         } else {
             String externalId = projectFormMapper.getSiteSubjectNumber();
             aPatient = patientService.getPatientByExternalId(externalId);
         }
         return aPatient;
+    }
+
+    private Patient findPatientBySubjectIdentity(String value) {
+        if (GenericValidator.isBlankOrNull(value)) {
+            return null;
+        }
+        String subjectTypeId = PatientIdentityTypeMap.getInstance().getIDForType("SUBJECT");
+        List<PatientIdentity> identities = identityService.getPatientIdentitiesByValueAndType(value, subjectTypeId);
+        if (identities.isEmpty()) {
+            return null;
+        }
+        return patientService.get(identities.get(0).getPatientId());
     }
 
     /**
@@ -826,8 +845,12 @@ public abstract class Accessioner implements IAccessioner {
         Person person = patientInDB.getPerson();
         PropertyUtils.copyProperties(person, form);
 
-        patientInDB.setNationalId(convertEmptyToNull(form.getSubjectNumber()));
-        patientInDB.setExternalId(convertEmptyToNull(form.getSiteSubjectNumber()));
+        String subjectNumber = convertEmptyToNull(form.getSubjectNumber());
+        String siteSubjectNumber = convertEmptyToNull(form.getSiteSubjectNumber());
+        // Whichever "patient code" field was actually filled (Sujet No. or Site Sujet
+        // No.) is the one saved as the SUBJECT patient_identity, mirroring addOrder.
+        addPatientIdentity("SUBJECT", subjectNumber != null ? subjectNumber : siteSubjectNumber);
+        patientInDB.setExternalId(siteSubjectNumber);
         if (ObjectUtils.isNotEmpty(form.getPatientFhirUuid())) {
             patientInDB.setFhirUuid(UUID.fromString(form.getPatientFhirUuid()));
         }
@@ -1106,7 +1129,15 @@ public abstract class Accessioner implements IAccessioner {
         for (PatientIdentity identity : patientIdentities) {
             identity.setPatientId(patientInDB.getId());
             identity.setSysUserId(sysUserId);
-            identityService.insert(identity);
+            PatientIdentity existingIdentity = identityService.getPatitentIdentityForPatientAndType(
+                    patientInDB.getId(), identity.getIdentityTypeId());
+            if (existingIdentity != null) {
+                existingIdentity.setIdentityData(identity.getIdentityData());
+                existingIdentity.setSysUserId(sysUserId);
+                identityService.update(existingIdentity);
+            } else {
+                identityService.insert(identity);
+            }
         }
     }
 
