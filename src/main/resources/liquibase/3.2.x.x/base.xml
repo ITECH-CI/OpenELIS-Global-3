@@ -119,6 +119,10 @@ file="add_study_modifier_menu.xml" />
         file="add_gram_polynucleaires_to_crachat_sampletype.xml" />
     <include relativeToChangelogFile="true"
         file="fix_polynucleaires_crachat_and_num_champ_uom.xml" />
+    <include relativeToChangelogFile="true"
+        file="remove_culture_urethrales_from_urines_sampletype.xml" />
+    <include relativeToChangelogFile="true"
+        file="add_gram_polynucleaires_to_urethrales_sperme_sampletypes.xml" />
 
 
 </databaseChangeLog>

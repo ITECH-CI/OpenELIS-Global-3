@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+     http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+    <!--
+        Associer le test 'Microscopie - Frottis Coloration Gram - Polynucléaires'
+        aux types d'échantillon 'Sécrétions urétrales' et 'Sperme'.
+        Ces associations existaient en local (ajoutées via l'UI) mais n'avaient
+        jamais été capturées dans une migration, donc absentes en ligne.
+        Résolution par name / description — aucun id codé en dur. Idempotent
+        (NOT EXISTS) : sans effet si l'association est déjà présente.
+    -->
+    <changeSet author="pkomena" id="add-gram-polynucleaires-urethrales-sperme-1">
+        <comment>Associer 'Frottis Coloration Gram - Polynucléaires' aux types Sécrétions urétrales et Sperme (sampletype_test)</comment>
+        <sql><![CDATA[
+            INSERT INTO clinlims.sampletype_test (id, sample_type_id, test_id)
+            SELECT
+                nextval('clinlims.sample_type_test_seq'),
+                tos.id,
+                t.id
+            FROM clinlims.type_of_sample tos
+            CROSS JOIN clinlims.test t
+            WHERE tos.description IN ('Sécrétions urétrales', 'Sperme')
+              AND t.name = 'Microscopie - Frottis Coloration Gram - Polynucléaires'
+              AND NOT EXISTS (
+                  SELECT 1 FROM clinlims.sampletype_test st
+                  WHERE st.sample_type_id = tos.id AND st.test_id = t.id
+              );
+        ]]></sql>
+    </changeSet>
+
+</databaseChangeLog>
