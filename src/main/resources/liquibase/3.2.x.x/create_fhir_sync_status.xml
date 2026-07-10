@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+     http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+    <!--
+        Table de suivi des transformations/persistances FHIR (Lot 2 fondation FHIR).
+        Une ligne par ÉVÉNEMENT de transformation (order entry, results, validation,
+        patient…). Rend visibles les échecs (aujourd'hui silencieux car @Async) et
+        permet le retry ciblé + un job programmé.
+        Idempotent (preConditions) : ne recrée pas si déjà présent.
+    -->
+    <changeSet author="pkomena" id="create-fhir-sync-status-seq-1">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <sequenceExists schemaName="clinlims" sequenceName="fhir_sync_status_seq" />
+            </not>
+        </preConditions>
+        <createSequence schemaName="clinlims" sequenceName="fhir_sync_status_seq"
+            startValue="1" incrementBy="1" />
+        <rollback>
+            <dropSequence schemaName="clinlims" sequenceName="fhir_sync_status_seq" />
+        </rollback>
+    </changeSet>
+
+    <changeSet author="pkomena" id="create-fhir-sync-status-table-1">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists schemaName="clinlims" tableName="fhir_sync_status" />
+            </not>
+        </preConditions>
+        <createTable schemaName="clinlims" tableName="fhir_sync_status">
+            <column name="id" type="BIGINT">
+                <constraints primaryKey="true" nullable="false" />
+            </column>
+            <column name="trigger_type" type="VARCHAR(50)">
+                <constraints nullable="false" />
+            </column>
+            <column name="target_type" type="VARCHAR(50)">
+                <constraints nullable="true" />
+            </column>
+            <column name="target_id" type="VARCHAR(50)">
+                <constraints nullable="true" />
+            </column>
+            <column name="status" type="VARCHAR(20)" defaultValue="PENDING">
+                <constraints nullable="false" />
+            </column>
+            <column name="attempt_count" type="INTEGER" defaultValueNumeric="0">
+                <constraints nullable="false" />
+            </column>
+            <column name="last_attempt_at" type="TIMESTAMP">
+                <constraints nullable="true" />
+            </column>
+            <column name="error_message" type="VARCHAR(2000)">
+                <constraints nullable="true" />
+            </column>
+            <column name="lastupdated" type="TIMESTAMP">
+                <constraints nullable="true" />
+            </column>
+        </createTable>
+
+        <!-- Index sur status : le retry et le monitoring filtrent par statut. -->
+        <createIndex schemaName="clinlims" tableName="fhir_sync_status"
+            indexName="idx_fhir_sync_status_status">
+            <column name="status" />
+        </createIndex>
+        <!-- Index sur (target_type, target_id) : dédup / lookup d'un événement existant. -->
+        <createIndex schemaName="clinlims" tableName="fhir_sync_status"
+            indexName="idx_fhir_sync_status_target">
+            <column name="target_type" />
+            <column name="target_id" />
+        </createIndex>
+
+        <rollback>
+            <dropTable schemaName="clinlims" tableName="fhir_sync_status" />
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

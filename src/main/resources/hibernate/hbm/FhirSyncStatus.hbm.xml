@@ -1,0 +1,49 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping>
+    <class
+        name="org.openelisglobal.dataexchange.fhir.valueholder.FhirSyncStatus"
+        table="fhir_sync_status" optimistic-lock="version"
+        dynamic-update="true">
+        <id name="id"
+            type="org.openelisglobal.hibernate.resources.usertype.LIMSStringNumberUserType">
+            <column name="ID" precision="10" scale="0" />
+            <generator
+                class="org.openelisglobal.hibernate.resources.StringSequenceGenerator">
+                <param name="sequence_name">fhir_sync_status_seq</param>
+            </generator>
+        </id>
+        <version name="lastupdated" column="LASTUPDATED"
+            type="timestamp" access="field" />
+
+        <property name="triggerType" type="java.lang.String">
+            <column name="trigger_type" length="50" not-null="true" />
+        </property>
+
+        <property name="targetType" type="java.lang.String">
+            <column name="target_type" length="50" not-null="false" />
+        </property>
+
+        <property name="targetId" type="java.lang.String">
+            <column name="target_id" length="50" not-null="false" />
+        </property>
+
+        <property name="status" type="java.lang.String">
+            <column name="status" length="20" not-null="true" />
+        </property>
+
+        <property name="attemptCount" type="java.lang.Integer">
+            <column name="attempt_count" not-null="true" />
+        </property>
+
+        <property name="lastAttemptAt" type="timestamp">
+            <column name="last_attempt_at" not-null="false" />
+        </property>
+
+        <property name="errorMessage" type="java.lang.String">
+            <column name="error_message" length="2000" not-null="false" />
+        </property>
+    </class>
+</hibernate-mapping>

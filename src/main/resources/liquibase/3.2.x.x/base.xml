@@ -123,6 +123,8 @@ file="add_study_modifier_menu.xml" />
         file="remove_culture_urethrales_from_urines_sampletype.xml" />
     <include relativeToChangelogFile="true"
         file="add_gram_polynucleaires_to_urethrales_sperme_sampletypes.xml" />
+    <include relativeToChangelogFile="true"
+        file="create_fhir_sync_status.xml" />
 
 
 </databaseChangeLog>
