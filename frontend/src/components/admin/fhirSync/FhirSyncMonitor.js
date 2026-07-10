@@ -18,6 +18,7 @@ import {
   TableCell,
   TableContainer,
   Pagination,
+  InlineLoading,
 } from "@carbon/react";
 import CustomDatePicker from "../../common/CustomDatePicker.js";
 import { Renew } from "@carbon/icons-react";
@@ -56,6 +57,11 @@ function FhirSyncMonitor() {
   const [replayStart, setReplayStart] = useState("");
   const [replayEnd, setReplayEnd] = useState("");
   const [replaying, setReplaying] = useState(false);
+  const [expandedErrors, setExpandedErrors] = useState({});
+
+  const toggleError = (id) => {
+    setExpandedErrors((prev) => ({ ...prev, [id]: !prev[id] }));
+  };
 
   const loadSummary = () => {
     getFromOpenElisServer("/rest/fhir-sync/summary", (res) => {
@@ -260,17 +266,22 @@ function FhirSyncMonitor() {
           </Column>
           <Column lg={4} md={2} sm={4}>
             <div style={{ marginTop: "1.5rem" }}>
-              <Button
-                kind="tertiary"
-                size="md"
-                disabled={replaying}
-                onClick={onReplay}
-              >
-                <FormattedMessage
-                  id="fhir.sync.replay.button"
-                  defaultMessage="Rejouer la période"
+              {replaying ? (
+                <InlineLoading
+                  status="active"
+                  description={intl.formatMessage({
+                    id: "fhir.sync.replay.running",
+                    defaultMessage: "Rejeu en cours…",
+                  })}
                 />
-              </Button>
+              ) : (
+                <Button kind="tertiary" size="md" onClick={onReplay}>
+                  <FormattedMessage
+                    id="fhir.sync.replay.button"
+                    defaultMessage="Rejouer la période"
+                  />
+                </Button>
+              )}
             </div>
           </Column>
         </Grid>
@@ -318,15 +329,60 @@ function FhirSyncMonitor() {
                         <TableCell>{statusTag(row.status)}</TableCell>
                         <TableCell>{row.attemptCount}</TableCell>
                         <TableCell>{row.lastAttemptAt}</TableCell>
-                        <TableCell
-                          style={{
-                            maxWidth: "24rem",
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                          }}
-                          title={row.errorMessage}
-                        >
-                          {row.errorMessage}
+                        <TableCell style={{ maxWidth: "28rem" }}>
+                          {row.errorMessage ? (
+                            expandedErrors[row.id] ? (
+                              <div>
+                                <div
+                                  style={{
+                                    whiteSpace: "pre-wrap",
+                                    wordBreak: "break-word",
+                                    fontSize: "0.75rem",
+                                  }}
+                                >
+                                  {row.errorMessage}
+                                </div>
+                                <Button
+                                  kind="ghost"
+                                  size="sm"
+                                  onClick={() => toggleError(row.id)}
+                                >
+                                  <FormattedMessage
+                                    id="fhir.sync.error.less"
+                                    defaultMessage="Réduire"
+                                  />
+                                </Button>
+                              </div>
+                            ) : (
+                              <div>
+                                <span
+                                  style={{
+                                    display: "inline-block",
+                                    maxWidth: "22rem",
+                                    overflow: "hidden",
+                                    textOverflow: "ellipsis",
+                                    whiteSpace: "nowrap",
+                                    verticalAlign: "middle",
+                                  }}
+                                  title={row.errorMessage}
+                                >
+                                  {row.errorMessage}
+                                </span>
+                                <Button
+                                  kind="ghost"
+                                  size="sm"
+                                  onClick={() => toggleError(row.id)}
+                                >
+                                  <FormattedMessage
+                                    id="fhir.sync.error.more"
+                                    defaultMessage="Voir plus"
+                                  />
+                                </Button>
+                              </div>
+                            )
+                          ) : (
+                            ""
+                          )}
                         </TableCell>
                         <TableCell>
                           <Button
