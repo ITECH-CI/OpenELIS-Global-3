@@ -17,9 +17,13 @@ package org.openelisglobal.dataexchange.fhir.service;
 
 import java.sql.Timestamp;
 import java.time.Instant;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import org.openelisglobal.common.log.LogEvent;
 import org.openelisglobal.common.service.BaseObjectServiceImpl;
+import org.openelisglobal.dataexchange.fhir.FhirSyncConstants;
 import org.openelisglobal.dataexchange.fhir.dao.FhirSyncStatusDAO;
 import org.openelisglobal.dataexchange.fhir.valueholder.FhirSyncStatus;
 import org.openelisglobal.dataexchange.fhir.valueholder.FhirSyncStatus.SyncStatus;
@@ -74,6 +78,44 @@ public class FhirSyncStatusServiceImpl extends BaseObjectServiceImpl<FhirSyncSta
             // Le traçage ne doit jamais faire échouer la transformation.
             LogEvent.logError("FhirSyncStatusServiceImpl", "recordPending", e.toString());
             return null;
+        }
+    }
+
+    @Override
+    public Map<String, String> recordPendingForSamples(String triggerType, Collection<String> sampleIds) {
+        Map<String, String> result = new HashMap<>();
+        if (sampleIds == null) {
+            return result;
+        }
+        for (String sampleId : sampleIds) {
+            if (sampleId == null) {
+                continue;
+            }
+            String syncId = recordPending(triggerType, FhirSyncConstants.TARGET_SAMPLE, sampleId);
+            if (syncId != null) {
+                result.put(sampleId, syncId);
+            }
+        }
+        return result;
+    }
+
+    @Override
+    public void markSuccessForAll(Collection<String> syncStatusIds) {
+        if (syncStatusIds == null) {
+            return;
+        }
+        for (String id : syncStatusIds) {
+            markSuccess(id);
+        }
+    }
+
+    @Override
+    public void markFailedForAll(Collection<String> syncStatusIds, String errorMessage) {
+        if (syncStatusIds == null) {
+            return;
+        }
+        for (String id : syncStatusIds) {
+            markFailed(id, errorMessage);
         }
     }
 

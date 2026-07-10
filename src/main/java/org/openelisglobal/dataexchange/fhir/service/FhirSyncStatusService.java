@@ -15,7 +15,9 @@
  */
 package org.openelisglobal.dataexchange.fhir.service;
 
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import org.openelisglobal.common.service.BaseObjectService;
 import org.openelisglobal.dataexchange.fhir.valueholder.FhirSyncStatus;
 
@@ -28,6 +30,18 @@ public interface FhirSyncStatusService extends BaseObjectService<FhirSyncStatus,
      * Retourne l'id de l'événement.
      */
     String recordPending(String triggerType, String targetType, String targetId);
+
+    /**
+     * Trace un lot : une ligne PENDING par sampleId (cible SAMPLE), rejouable
+     * individuellement. Retourne sampleId -> syncStatusId.
+     */
+    Map<String, String> recordPendingForSamples(String triggerType, Collection<String> sampleIds);
+
+    /** Marque plusieurs événements SUCCESS. */
+    void markSuccessForAll(Collection<String> syncStatusIds);
+
+    /** Marque plusieurs événements FAILED avec le même message. */
+    void markFailedForAll(Collection<String> syncStatusIds, String errorMessage);
 
     /** Marque un événement SUCCESS (efface l'erreur). */
     void markSuccess(String syncStatusId);
