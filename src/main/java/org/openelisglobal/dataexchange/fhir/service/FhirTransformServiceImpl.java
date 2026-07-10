@@ -649,7 +649,7 @@ public class FhirTransformServiceImpl implements FhirTransformService {
             task.setStatus(TaskStatus.NULL);
         }
         task.setAuthoredOn(sample.getEnteredDate());
-        task.setPriority(TaskPriority.ROUTINE);
+        task.setPriority(mapTaskPriority(sample.getPriority()));
         task.addIdentifier(
                 this.createIdentifier(fhirConfig.getOeFhirSystem() + "/order_uuid", sample.getFhirUuidAsString()));
         task.addIdentifier(this.createIdentifier(fhirConfig.getOeFhirSystem() + "/order_accessionNumber",
@@ -948,7 +948,8 @@ public class FhirTransformServiceImpl implements FhirTransformService {
         if (program != null && !GenericValidator.isBlankOrNull(program.getValue())) {
             serviceRequest.addCategory(transformSampleProgramToCodeableConcept(program));
         }
-        serviceRequest.setPriority(ServiceRequestPriority.ROUTINE);
+        serviceRequest.setPriority(
+                mapServiceRequestPriority(analysis.getSampleItem().getSample().getPriority()));
         serviceRequest.setCode(transformTestToCodeableConcept(test.getId()));
         serviceRequest.setAuthoredOn(new Date());
         for (Note note : noteService.getNotes(analysis)) {
@@ -1614,6 +1615,46 @@ public class FhirTransformServiceImpl implements FhirTransformService {
             return null;
         }
         return createReferenceFor(ResourceType.Patient, patient.getFhirUuidAsString());
+    }
+
+    // Mappe la priorité métier OE (OrderPriority) vers la priorité FHIR. OE
+    // produit une vraie priorité (ROUTINE/ASAP/STAT/TIMED/FUTURE_STAT) qui était
+    // ignorée (ROUTINE en dur).
+    private ServiceRequestPriority mapServiceRequestPriority(
+            org.openelisglobal.sample.valueholder.OrderPriority p) {
+        if (p == null) {
+            return ServiceRequestPriority.ROUTINE;
+        }
+        switch (p) {
+        case STAT:
+        case FUTURE_STAT:
+            return ServiceRequestPriority.STAT;
+        case ASAP:
+            return ServiceRequestPriority.ASAP;
+        case TIMED:
+            return ServiceRequestPriority.URGENT;
+        case ROUTINE:
+        default:
+            return ServiceRequestPriority.ROUTINE;
+        }
+    }
+
+    private TaskPriority mapTaskPriority(org.openelisglobal.sample.valueholder.OrderPriority p) {
+        if (p == null) {
+            return TaskPriority.ROUTINE;
+        }
+        switch (p) {
+        case STAT:
+        case FUTURE_STAT:
+            return TaskPriority.STAT;
+        case ASAP:
+            return TaskPriority.ASAP;
+        case TIMED:
+            return TaskPriority.URGENT;
+        case ROUTINE:
+        default:
+            return TaskPriority.ROUTINE;
+        }
     }
 
     // Construit un CodeableConcept à partir d'un Dictionary (valeur de résultat) :
