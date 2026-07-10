@@ -18,9 +18,12 @@ public class SampleTypeTestAssignForm extends BaseForm {
     @Pattern(regexp = ValidationHelper.ID_REGEX)
     private String testId = "";
 
-    @NotBlank
     @Pattern(regexp = ValidationHelper.ID_REGEX)
     private String sampleTypeId = "";
+
+    // Multi-type assignment : liste complète des types d'échantillon voulus pour
+    // le test (sync : le backend ajoute les nouveaux et retire les absents).
+    private List<String> sampleTypeIds;
 
     @Pattern(regexp = ValidationHelper.ID_REGEX)
     private String deactivateSampleTypeId = "";
@@ -67,5 +70,13 @@ public class SampleTypeTestAssignForm extends BaseForm {
 
     public void setDeactivateSampleTypeId(String deactivateSampleTypeId) {
         this.deactivateSampleTypeId = deactivateSampleTypeId;
+    }
+
+    public List<String> getSampleTypeIds() {
+        return sampleTypeIds;
+    }
+
+    public void setSampleTypeIds(List<String> sampleTypeIds) {
+        this.sampleTypeIds = sampleTypeIds;
     }
 }

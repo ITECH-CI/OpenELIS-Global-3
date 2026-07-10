@@ -1,35 +1,23 @@
-import React, { useContext, useState, useEffect, useRef } from "react";
+import React, {
+  useContext,
+  useState,
+  useEffect,
+  useRef,
+  useMemo,
+} from "react";
 import {
-  Form,
   Heading,
-  Button,
   Loading,
   Grid,
   Column,
   Section,
-  DataTable,
-  Table,
-  TableHead,
-  TableRow,
-  TableBody,
-  TableHeader,
-  TableCell,
-  TableSelectRow,
-  TableSelectAll,
-  TableContainer,
-  Pagination,
-  Search,
-  Select,
-  SelectItem,
-  Stack,
   ClickableTile,
   Modal,
+  FilterableMultiSelect,
+  Tag,
 } from "@carbon/react";
 import {
   getFromOpenElisServer,
-  postToOpenElisServer,
-  postToOpenElisServerFormData,
-  postToOpenElisServerFullResponse,
   postToOpenElisServerJsonResponse,
 } from "../../utils/Utils.js";
 import { NotificationContext } from "../../layout/Layout.js";
@@ -39,8 +27,6 @@ import {
 } from "../../common/CustomNotification.js";
 import { FormattedMessage, injectIntl, useIntl } from "react-intl";
 import PageBreadCrumb from "../../common/PageBreadCrumb.js";
-import CustomCheckBox from "../../common/CustomCheckBox.js";
-import ActionPaginationButtonType from "../../common/ActionPaginationButtonType.js";
 
 let breadcrumbs = [
   { label: "home.label", link: "/" },
@@ -65,18 +51,15 @@ function SampleTypeTestAssign() {
 
   const intl = useIntl();
   const [isLoading, setIsLoading] = useState(false);
-  const [confirmation, setConfirmation] = useState(false);
   const [sampleTypeTestAssignModal, setSampleTypeTestAssignModal] =
     useState(false);
   const [sampleTypeTestAssign, setSampleTypeTestAssign] = useState({});
-  const [sampleTypeTestAssignPost, setSampleTypeTestAssignPost] = useState({
-    testId: "",
-    testValue: "",
-    sampleTypeIdNew: "",
-    sampleTypeNameNew: "",
-    sampleTypeIdOld: "",
-    sampleTypeNameOld: "",
-  });
+  // Test en cours d'édition + types d'échantillon sélectionnés (multi).
+  const [selectedTest, setSelectedTest] = useState({ id: "", value: "" });
+  const [selectedSampleTypes, setSelectedSampleTypes] = useState([]);
+  // Clé incrémentée à chaque ouverture -> force le remount du multi-select pour
+  // que sa présélection (initialSelectedItems) soit ré-appliquée à chaque fois.
+  const [modalKey, setModalKey] = useState(0);
   const componentMounted = useRef(false);
 
   const handleSampleTypeTestAssignList = (res) => {
@@ -87,36 +70,58 @@ function SampleTypeTestAssign() {
     }
   };
 
-  const handlePostSampleTypeTestAssignListCall = () => {
-    if (
-      !sampleTypeTestAssignPost.testId ||
-      !sampleTypeTestAssignPost.sampleTypeIdNew
-    ) {
+  // Options du multi-select : liste stable de tous les types d'échantillon actifs.
+  // useMemo -> même RÉFÉRENCE d'objets entre les renders : indispensable pour que
+  // Carbon FilterableMultiSelect reconnaisse les items présélectionnés.
+  const sampleTypeOptions = useMemo(
+    () => sampleTypeTestAssign?.sampleTypeList?.filter((item) => item.id) || [],
+    [sampleTypeTestAssign],
+  );
+
+  const openAssignModal = (test) => {
+    setSelectedTest({ id: test.id, value: test.value });
+    setSelectedSampleTypes([]);
+    // Récupérer les types déjà associés à ce test pour les présélectionner.
+    getFromOpenElisServer(
+      `/rest/SampleTypeTestAssign/test/${test.id}`,
+      (assignedIds) => {
+        const ids = (assignedIds || []).map((v) => String(v));
+        // Retourner les MÊMES objets que sampleTypeOptions (comparaison par id,
+        // types normalisés en String).
+        const preselected = sampleTypeOptions.filter((opt) =>
+          ids.includes(String(opt.id)),
+        );
+        setSelectedSampleTypes(preselected);
+        setModalKey((k) => k + 1);
+        setSampleTypeTestAssignModal(true);
+      },
+    );
+  };
+
+  const handleSaveAssignments = () => {
+    if (!selectedTest.id) {
       window.location.reload();
       return;
     }
     postToOpenElisServerJsonResponse(
       "/rest/SampleTypeTestAssign",
       JSON.stringify({
-        testId: sampleTypeTestAssignPost.testId,
-        sampleTypeId: sampleTypeTestAssignPost.sampleTypeIdNew,
-        deactivateSampleTypeId: "", // TODO: need to chemk
+        testId: selectedTest.id,
+        sampleTypeIds: selectedSampleTypes.map((item) => item.id),
       }),
       (res) => {
-        handlePostSampleTypeTestAssignListCallBack(res);
+        handleSaveAssignmentsCallBack(res);
       },
     );
   };
 
-  const handlePostSampleTypeTestAssignListCallBack = (res) => {
+  const handleSaveAssignmentsCallBack = (res) => {
     if (res) {
       setIsLoading(false);
       addNotification({
-        title: intl.formatMessage({
-          id: "notification.title",
-        }),
+        title: intl.formatMessage({ id: "notification.title" }),
         message: intl.formatMessage({
-          id: "notification.user.post.delete.success",
+          id: "notification.user.post.save.success",
         }),
         kind: NotificationKinds.success,
       });
@@ -178,13 +183,9 @@ function SampleTypeTestAssign() {
           <Grid fullWidth={true}>
             <Column lg={16} md={8} sm={4}>
               <Section>
-                <Section>
-                  <Section>
-                    <Heading>
-                      <FormattedMessage id="configuration.panel.assign" />
-                    </Heading>
-                  </Section>
-                </Section>
+                <Heading>
+                  <FormattedMessage id="configuration.panel.assign" />
+                </Heading>
               </Section>
             </Column>
           </Grid>
@@ -194,15 +195,9 @@ function SampleTypeTestAssign() {
           <Grid fullWidth={true}>
             <Column lg={16} md={8} sm={4}>
               <Section>
-                <Section>
-                  <Section>
-                    <Section>
-                      <Heading>
-                        <FormattedMessage id="configuration.sampleType.assign.explain" />
-                      </Heading>
-                    </Section>
-                  </Section>
-                </Section>
+                <Heading>
+                  <FormattedMessage id="configuration.sampleType.assign.explain" />
+                </Heading>
               </Section>
             </Column>
           </Grid>
@@ -231,17 +226,7 @@ function SampleTypeTestAssign() {
                             md={4}
                             sm={4}
                           >
-                            <ClickableTile
-                              onClick={() => {
-                                setSampleTypeTestAssignModal(true),
-                                  setSampleTypeTestAssignPost({
-                                    testId: test.id,
-                                    testValue: test.value,
-                                    sampleTypeNameOld: sectionName,
-                                    sampleTypeIdOld: sectionId,
-                                  });
-                              }}
-                            >
+                            <ClickableTile onClick={() => openAssignModal(test)}>
                               {test.value}
                             </ClickableTile>
                           </Column>
@@ -261,138 +246,61 @@ function SampleTypeTestAssign() {
       <Modal
         open={sampleTypeTestAssignModal}
         size="md"
-        modalHeading={
-          confirmation
-            ? `${intl.formatMessage({
-                id: "uom.create.heading.confirmation",
-              })}`
-            : `${intl.formatMessage({
-                id: "banner.menu.patientEdit",
-              })}`
-        }
-        primaryButtonText={
-          confirmation
-            ? intl.formatMessage({ id: "accept.action.button" })
-            : intl.formatMessage({ id: "label.button.save" })
-        }
-        secondaryButtonText={
-          confirmation
-            ? intl.formatMessage({ id: "reject.action.button" })
-            : intl.formatMessage({ id: "label.button.cancel" })
-        }
+        modalHeading={intl.formatMessage({ id: "banner.menu.patientEdit" })}
+        primaryButtonText={intl.formatMessage({ id: "label.button.save" })}
+        secondaryButtonText={intl.formatMessage({ id: "label.button.cancel" })}
         onRequestSubmit={() => {
-          if (confirmation) {
-            setSampleTypeTestAssignModal(false);
-            handlePostSampleTypeTestAssignListCall();
-          } else {
-            setConfirmation(true);
-          }
+          setSampleTypeTestAssignModal(false);
+          handleSaveAssignments();
         }}
         onRequestClose={() => {
           setSampleTypeTestAssignModal(false);
           window.location.reload();
         }}
         preventCloseOnClickOutside={true}
-        shouldSubmitOnEnter={true}
       >
         <Grid fullWidth={true}>
           <Column lg={16} md={8} sm={4}>
             <Section>
-              <Section>
-                <Heading>
-                  <FormattedMessage id="configuration.panel.assign" />
-                </Heading>
-              </Section>
+              <Heading>
+                <FormattedMessage id="Test" /> : {selectedTest?.value}
+              </Heading>
             </Section>
             <br />
-            <Section>
-              <Section>
-                <Section>
-                  <Heading>
-                    <FormattedMessage id="Test" /> :{" "}
-                    {sampleTypeTestAssignPost?.testValue}
-                  </Heading>
-                </Section>
-              </Section>
-            </Section>
-            <br />
-            <Section>
-              {sampleTypeTestAssign?.sampleTypeList &&
-              sampleTypeTestAssign?.sampleTypeList?.length > 0 ? (
-                <Select
-                  size="sm"
-                  id="sampleTypeListSelect"
-                  labelText={
-                    <span style={{ fontSize: "1.2rem", fontWeight: 500 }}>
-                      {`${intl.formatMessage({ id: "configuration.sampleType.assign.new.type" })} : `}
-                    </span>
-                  }
-                  onChange={(e) => {
-                    const selectedOption = e.target.selectedOptions[0];
-                    const selectedId = selectedOption.value;
-                    const selectedValue = selectedOption.dataset.value;
-
-                    setSampleTypeTestAssignPost((prev) => ({
-                      ...prev,
-                      sampleTypeIdNew: selectedId,
-                      sampleTypeNameNew: selectedValue,
-                    }));
+            {/* minHeight : réserve la place pour que le menu déroulant du
+                multi-select reste visible dans le modal. */}
+            <div style={{ minHeight: "22rem" }}>
+              {sampleTypeOptions.length > 0 && (
+                <FilterableMultiSelect
+                  key={modalKey}
+                  id="sampleTypeMultiSelect"
+                  titleText={intl.formatMessage({
+                    id: "configuration.sampleType.assign.types",
+                    defaultMessage: "Types d'échantillon assignés",
+                  })}
+                  items={sampleTypeOptions}
+                  itemToString={(item) => (item ? item.value : "")}
+                  initialSelectedItems={selectedSampleTypes}
+                  onChange={(changes) => {
+                    setSelectedSampleTypes(changes.selectedItems || []);
                   }}
-                >
-                  {sampleTypeTestAssign?.sampleTypeList.map((item) => (
-                    <SelectItem
-                      key={item.id}
-                      value={item.id}
-                      text={item.value}
-                      data-value={item.value}
-                    />
+                />
+              )}
+              {/* Récapitulatif des types sélectionnés, sous le champ */}
+              {selectedSampleTypes.length > 0 && (
+                <div style={{ marginTop: "0.75rem" }}>
+                  {selectedSampleTypes.map((item) => (
+                    <Tag
+                      key={`selected-${item.id}`}
+                      type="blue"
+                      style={{ marginRight: "0.25rem", marginBottom: "0.25rem" }}
+                    >
+                      {item.value}
+                    </Tag>
                   ))}
-                </Select>
-              ) : (
-                ""
+                </div>
               )}
-            </Section>
-            <br />
-            {confirmation &&
-              sampleTypeTestAssignPost &&
-              sampleTypeTestAssignPost?.testValue &&
-              sampleTypeTestAssignPost?.sampleTypeNameOld &&
-              sampleTypeTestAssignPost?.sampleTypeNameNew && (
-                <Section>
-                  <Section>
-                    <Section>
-                      <Heading>
-                        <span
-                          style={{
-                            fontWeight: "bold",
-                            textDecoration: "underline",
-                          }}
-                        >
-                          {sampleTypeTestAssignPost?.testValue}
-                        </span>{" "}
-                        {"will be moved from"}{" "}
-                        <span
-                          style={{
-                            fontWeight: "bold",
-                            textDecoration: "underline",
-                          }}
-                        >
-                          {sampleTypeTestAssignPost?.sampleTypeNameOld}
-                        </span>{" "}
-                        {"to"}{" "}
-                        <span
-                          style={{
-                            fontWeight: "bold",
-                            textDecoration: "underline",
-                          }}
-                        >
-                          {sampleTypeTestAssignPost?.sampleTypeNameNew}
-                        </span>
-                      </Heading>
-                    </Section>
-                  </Section>
-                </Section>
-              )}
+            </div>
           </Column>
         </Grid>
       </Modal>
