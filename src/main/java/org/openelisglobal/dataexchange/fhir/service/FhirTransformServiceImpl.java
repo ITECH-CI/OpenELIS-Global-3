@@ -170,6 +170,10 @@ public class FhirTransformServiceImpl implements FhirTransformService {
     private OrganizationService organizationService;
     @Autowired
     private FhirUtil fhirUtil;
+    @Autowired
+    private org.openelisglobal.bacteriology.service.BacteriologyOrganismService bacteriologyOrganismService;
+    @Autowired
+    private org.openelisglobal.bacteriology.service.BacteriologyAntibiogramService bacteriologyAntibiogramService;
 
     private String ADDRESS_PART_VILLAGE_ID;
     private String ADDRESS_PART_COMMUNE_ID;
@@ -352,6 +356,15 @@ public class FhirTransformServiceImpl implements FhirTransformService {
                             // "transformPersistObjectsUnderSamples",
                             // "diagnosticReport collision with id: "
                             // + diagnosticReport.getIdElement().getIdPart());
+                        }
+                        // Bactériologie : ajoute les Observations isolat + antibiogramme
+                        // (dérivées de la culture) et les rattache au DiagnosticReport.
+                        // Ancre culture = 1re Observation de résultat de l'analyse si présente.
+                        Reference cultureAnchor = firstResultObservationRef(analysis);
+                        for (Observation bacterioObs : buildBacteriologyObservations(analysis, cultureAnchor)) {
+                            observations.put(bacterioObs.getIdElement().getIdPart(), bacterioObs);
+                            diagnosticReport.addResult(
+                                    createReferenceFor(ResourceType.Observation, bacterioObs.getIdElement().getIdPart()));
                         }
                         diagnosticReports.put(analysis.getFhirUuidAsString(), diagnosticReport);
                     }
@@ -1385,6 +1398,270 @@ public class FhirTransformServiceImpl implements FhirTransformService {
             }
         }
         return observation;
+    }
+
+    // ====================================================================
+    // Bactériologie classique : mapping FHIR des organismes identifiés et
+    // des antibiogrammes. Ces données ne vivent pas dans la table `result`
+    // (transformResultToObservation ne les voit donc pas) mais dans les
+    // tables bacteriology_organism / bacteriology_antibiogram. On produit
+    // des Observations dérivées, reliées à la culture par derivedFrom, et
+    // toutes rattachées au DiagnosticReport de l'analyse.
+    // ====================================================================
+
+    // Codes LOINC génériques (fallback quand le dictionnaire n'en porte pas).
+    private static final String LOINC_BACTERIA_IDENTIFIED = "634-6"; // Bacteria identified
+    private static final String LOINC_SUSCEPTIBILITY = "18769-0"; // Microbial susceptibility
+
+    /**
+     * UUID déterministe à partir d'une clé métier stable. Garantit l'idempotence
+     * du rejeu (même resource id à chaque passage) pour les entités bactério qui
+     * n'ont pas de colonne fhir_uuid persistée. La clé inclut le fhirUuid de
+     * l'analyse pour éviter toute collision entre analyses.
+     */
+    private String deterministicFhirId(String key) {
+        return UUID.nameUUIDFromBytes(key.getBytes(java.nio.charset.StandardCharsets.UTF_8)).toString();
+    }
+
+    /**
+     * Construit les Observations bactério (isolats + antibiogrammes) pour une
+     * analyse donnée. Retourne une liste vide si l'analyse ne porte aucun organisme
+     * (analyse non bactério, ou culture négative) — comportement neutre.
+     *
+     * @param analysis     l'analyse (déjà pourvue d'un fhirUuid)
+     * @param cultureAnchor référence FHIR de l'Observation "culture" dont dérivent
+     *                      les isolats (le premier Result de l'analyse), ou null →
+     *                      on retombe sur le ServiceRequest de l'analyse.
+     */
+    private List<Observation> buildBacteriologyObservations(Analysis analysis, Reference cultureAnchor) {
+        List<Observation> out = new ArrayList<>();
+        int analysisIdInt;
+        try {
+            analysisIdInt = Integer.parseInt(analysis.getId());
+        } catch (NumberFormatException e) {
+            return out;
+        }
+
+        List<org.openelisglobal.bacteriology.valueholder.BacteriologyOrganism> organisms = bacteriologyOrganismService
+                .getOrganismsByAnalysisId(analysisIdInt);
+        if (organisms == null || organisms.isEmpty()) {
+            return out;
+        }
+
+        SampleItem sampleItem = analysis.getSampleItem();
+        Patient patient = sampleItem != null ? sampleHumanService.getPatientForSample(sampleItem.getSample()) : null;
+        Reference patientRef = patientReferenceOrNull(patient);
+        Reference specimenRef = (sampleItem != null && sampleItem.getFhirUuid() != null)
+                ? createReferenceFor(ResourceType.Specimen, sampleItem.getFhirUuidAsString())
+                : null;
+        Reference serviceRequestRef = createReferenceFor(ResourceType.ServiceRequest, analysis.getFhirUuidAsString());
+        // Ancre de dérivation des isolats : l'Observation culture si fournie, sinon
+        // le ServiceRequest de l'analyse.
+        Reference isolateDerivedFrom = cultureAnchor != null ? cultureAnchor : serviceRequestRef;
+
+        boolean finalized = statusService.matches(analysis.getStatusId(), AnalysisStatus.Finalized);
+        ObservationStatus obsStatus = finalized ? ObservationStatus.FINAL : ObservationStatus.PRELIMINARY;
+
+        for (org.openelisglobal.bacteriology.valueholder.BacteriologyOrganism organism : organisms) {
+            String isolateId = deterministicFhirId(
+                    analysis.getFhirUuidAsString() + "/bacteriology_organism/" + organism.getId());
+            Observation isolate = new Observation();
+            isolate.setId(isolateId);
+            isolate.addIdentifier(createIdentifier(fhirConfig.getOeFhirSystem() + "/bacteriology_organism",
+                    String.valueOf(organism.getId())));
+            isolate.setStatus(obsStatus);
+            isolate.setCode(buildBacteriaIdentifiedCode());
+            isolate.setValue(buildOrganismCodeableConcept(organism));
+            if (isolateDerivedFrom != null) {
+                isolate.addDerivedFrom(isolateDerivedFrom);
+            }
+            isolate.addBasedOn(serviceRequestRef);
+            if (specimenRef != null) {
+                isolate.setSpecimen(specimenRef);
+            }
+            if (patientRef != null) {
+                isolate.setSubject(patientRef);
+            }
+            if (analysis.getReleasedDate() != null) {
+                isolate.setEffective(new DateTimeType(analysis.getReleasedDate()));
+                isolate.setIssued(analysis.getReleasedDate());
+            }
+            // Caractéristiques de l'organisme en composants (données réellement
+            // produites par OE) : type de germe, présence de capsule.
+            addOrganismComponents(isolate, organism);
+            out.add(isolate);
+
+            // Antibiogramme : une Observation "sensibilité" par couple organisme ×
+            // antibiotique, dérivée de l'Observation isolat.
+            Reference isolateRef = createReferenceFor(ResourceType.Observation, isolateId);
+            List<org.openelisglobal.bacteriology.valueholder.BacteriologyAntibiogram> antibiograms = bacteriologyAntibiogramService
+                    .getAntibiogramsByOrganismId(organism.getId());
+            if (antibiograms != null) {
+                for (org.openelisglobal.bacteriology.valueholder.BacteriologyAntibiogram abg : antibiograms) {
+                    Observation susceptibility = buildSusceptibilityObservation(analysis, abg, obsStatus, isolateRef,
+                            specimenRef, patientRef);
+                    if (susceptibility != null) {
+                        out.add(susceptibility);
+                    }
+                }
+            }
+        }
+        return out;
+    }
+
+    /**
+     * Référence FHIR de la 1re Observation de résultat de l'analyse (ancre de
+     * dérivation des isolats), ou null si l'analyse n'a pas de Result exploitable.
+     * Utilise le fhirUuid déjà attribué au Result par la boucle appelante.
+     */
+    private Reference firstResultObservationRef(Analysis analysis) {
+        List<Result> results = resultService.getResultsByAnalysis(analysis);
+        if (results != null) {
+            for (Result r : results) {
+                if (r.getFhirUuid() != null) {
+                    return createReferenceFor(ResourceType.Observation, r.getFhirUuidAsString());
+                }
+            }
+        }
+        return null;
+    }
+
+    private CodeableConcept buildBacteriaIdentifiedCode() {
+        CodeableConcept code = new CodeableConcept();
+        code.addCoding(new Coding("http://loinc.org", LOINC_BACTERIA_IDENTIFIED, "Bacteria identified"));
+        return code;
+    }
+
+    // Valeur de l'Observation isolat = l'organisme. Priorité au dictionnaire
+    // (avec son éventuel LOINC/SNOMED référentiel), sinon texte libre saisi.
+    private CodeableConcept buildOrganismCodeableConcept(
+            org.openelisglobal.bacteriology.valueholder.BacteriologyOrganism organism) {
+        if (organism.getOrganismNameDictId() != null) {
+            Dictionary dictionary = dictionaryService.getDataForId(String.valueOf(organism.getOrganismNameDictId()));
+            if (dictionary != null) {
+                return buildDictionaryCodeableConcept(dictionary);
+            }
+        }
+        String text = !GenericValidator.isBlankOrNull(organism.getResolvedOrganismName())
+                ? organism.getResolvedOrganismName()
+                : organism.getOrganismNameText();
+        CodeableConcept code = new CodeableConcept();
+        if (!GenericValidator.isBlankOrNull(text)) {
+            code.setText(text);
+        } else {
+            code.addCoding(new Coding("http://terminology.hl7.org/CodeSystem/data-absent-reason", "unknown", "Unknown"));
+        }
+        return code;
+    }
+
+    private void addOrganismComponents(Observation isolate,
+            org.openelisglobal.bacteriology.valueholder.BacteriologyOrganism organism) {
+        if (!GenericValidator.isBlankOrNull(organism.getOrganismType())) {
+            Observation.ObservationComponentComponent typeComp = isolate.addComponent();
+            typeComp.setCode(new CodeableConcept()
+                    .addCoding(new Coding(fhirConfig.getOeFhirSystem() + "/bacteriology", "organism_type", "Germ type")));
+            typeComp.setValue(new CodeableConcept().addCoding(new Coding(
+                    fhirConfig.getOeFhirSystem() + "/bacteriology_organism_type", organism.getOrganismType(),
+                    organism.getOrganismType())));
+        }
+        if (organism.getCapsulePresence() != null) {
+            Observation.ObservationComponentComponent capsuleComp = isolate.addComponent();
+            capsuleComp.setCode(new CodeableConcept().addCoding(
+                    new Coding(fhirConfig.getOeFhirSystem() + "/bacteriology", "capsule_presence", "Capsule present")));
+            capsuleComp.setValue(new org.hl7.fhir.r4.model.BooleanType(organism.getCapsulePresence()));
+        }
+    }
+
+    private Observation buildSusceptibilityObservation(Analysis analysis,
+            org.openelisglobal.bacteriology.valueholder.BacteriologyAntibiogram abg, ObservationStatus obsStatus,
+            Reference isolateRef, Reference specimenRef, Reference patientRef) {
+        String susceptId = deterministicFhirId(
+                analysis.getFhirUuidAsString() + "/bacteriology_antibiogram/" + abg.getId());
+        Observation obs = new Observation();
+        obs.setId(susceptId);
+        obs.addIdentifier(createIdentifier(fhirConfig.getOeFhirSystem() + "/bacteriology_antibiogram",
+                String.valueOf(abg.getId())));
+        obs.setStatus(obsStatus);
+        obs.setCode(buildAntibioticCode(abg));
+        // value[x] = interprétation S/I/R (donnée clinique principale).
+        if (!GenericValidator.isBlankOrNull(abg.getResult())) {
+            obs.setValue(buildSirCodeableConcept(abg.getResult()));
+        } else {
+            obs.setDataAbsentReason(new CodeableConcept().addCoding(
+                    new Coding("http://terminology.hl7.org/CodeSystem/data-absent-reason", "unknown", "Unknown")));
+        }
+        // L'antibiogramme dérive de l'isolat (organisme).
+        if (isolateRef != null) {
+            obs.addDerivedFrom(isolateRef);
+        }
+        if (specimenRef != null) {
+            obs.setSpecimen(specimenRef);
+        }
+        if (patientRef != null) {
+            obs.setSubject(patientRef);
+        }
+        if (analysis.getReleasedDate() != null) {
+            obs.setEffective(new DateTimeType(analysis.getReleasedDate()));
+            obs.setIssued(analysis.getReleasedDate());
+        }
+        // Composants quantitatifs : diamètre d'inhibition (mm) et CMI.
+        if (abg.getDiameterMm() != null) {
+            Observation.ObservationComponentComponent diamComp = obs.addComponent();
+            diamComp.setCode(new CodeableConcept()
+                    .addCoding(new Coding("http://loinc.org", "27196-9", "Zone of inhibition")));
+            diamComp.setValue(new Quantity().setValue(abg.getDiameterMm()).setUnit("mm"));
+        }
+        if (!GenericValidator.isBlankOrNull(abg.getMicValue())) {
+            Observation.ObservationComponentComponent micComp = obs.addComponent();
+            micComp.setCode(new CodeableConcept()
+                    .addCoding(new Coding("http://loinc.org", "20578-1", "Minimum inhibitory concentration")));
+            micComp.setValue(new StringType(abg.getMicValue()));
+        }
+        return obs;
+    }
+
+    // Code de l'antibiotique testé : dictionnaire OE (avec LOINC/SNOMED référentiel
+    // si présent), sinon texte résolu.
+    private CodeableConcept buildAntibioticCode(
+            org.openelisglobal.bacteriology.valueholder.BacteriologyAntibiogram abg) {
+        if (abg.getAntibioticDictId() != null) {
+            Dictionary dictionary = dictionaryService.getDataForId(String.valueOf(abg.getAntibioticDictId()));
+            if (dictionary != null) {
+                CodeableConcept code = buildDictionaryCodeableConcept(dictionary);
+                code.addCoding(new Coding("http://loinc.org", LOINC_SUSCEPTIBILITY, "Microbial susceptibility"));
+                return code;
+            }
+        }
+        CodeableConcept code = new CodeableConcept();
+        if (!GenericValidator.isBlankOrNull(abg.getAntibioticNameText())) {
+            code.setText(abg.getAntibioticNameText());
+        }
+        code.addCoding(new Coding("http://loinc.org", LOINC_SUSCEPTIBILITY, "Microbial susceptibility"));
+        return code;
+    }
+
+    // S/I/R vers le CodeSystem HL7 d'interprétation de sensibilité.
+    private CodeableConcept buildSirCodeableConcept(String sir) {
+        String system = "http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation";
+        String code;
+        String display;
+        switch (sir.toUpperCase()) {
+        case "S":
+            code = "S";
+            display = "Susceptible";
+            break;
+        case "I":
+            code = "I";
+            display = "Intermediate";
+            break;
+        case "R":
+            code = "R";
+            display = "Resistant";
+            break;
+        default:
+            return new CodeableConcept().setText(sir);
+        }
+        return new CodeableConcept().addCoding(new Coding(system, code, display));
     }
 
     @Override
