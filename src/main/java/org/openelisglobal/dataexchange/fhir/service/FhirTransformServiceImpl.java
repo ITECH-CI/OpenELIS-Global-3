@@ -905,13 +905,16 @@ public class FhirTransformServiceImpl implements FhirTransformService {
                 this.createIdentifier(fhirConfig.getOeFhirSystem() + "/analysis_uuid", analysis.getFhirUuidAsString()));
         serviceRequest.setRequisition(this.createIdentifier(fhirConfig.getOeFhirSystem() + "/samp_labNo",
                 analysis.getSampleItem().getSample().getAccessionNumber()));
-        if (organization != null) {
+        // Référence typée Organization (et non Location) : ce sont des Organizations
+        // OE, produites comme telles ; typer 'Location/<uuid>' donnait une référence
+        // non résolue (aucune ressource Location de cet UUID n'existe).
+        if (organization != null && organization.getFhirUuid() != null) {
             serviceRequest.addLocationReference(
-                    this.createReferenceFor(ResourceType.Location, organization.getFhirUuidAsString()));
+                    this.createReferenceFor(ResourceType.Organization, organization.getFhirUuidAsString()));
         }
-        if (organizationDepartment != null) {
+        if (organizationDepartment != null && organizationDepartment.getFhirUuid() != null) {
             serviceRequest.addLocationReference(
-                    this.createReferenceFor(ResourceType.Location, organizationDepartment.getFhirUuidAsString()));
+                    this.createReferenceFor(ResourceType.Organization, organizationDepartment.getFhirUuidAsString()));
         }
 
         List<ElectronicOrder> eOrders = electronicOrderService.getElectronicOrdersByExternalId(sample.getReferringId());
@@ -998,8 +1001,16 @@ public class FhirTransformServiceImpl implements FhirTransformService {
                 "transformTestToCodeableConcept test called");
 
         CodeableConcept codeableConcept = new CodeableConcept();
-        codeableConcept
-                .addCoding(new Coding("http://loinc.org", test.getLoinc(), test.getLocalizedTestName().getEnglish()));
+        String display = test.getLocalizedTestName() == null ? test.getName()
+                : test.getLocalizedTestName().getEnglish();
+        // Coding LOINC seulement si le test a un code LOINC (sinon on produisait un
+        // Coding système LOINC avec code null = CodeableConcept invalide).
+        if (!GenericValidator.isBlankOrNull(test.getLoinc())) {
+            codeableConcept.addCoding(new Coding("http://loinc.org", test.getLoinc(), display));
+        }
+        // Coding local OE : identifie toujours le test, même sans LOINC.
+        codeableConcept.addCoding(new Coding(fhirConfig.getOeFhirSystem() + "/test", test.getId(), display));
+        codeableConcept.setText(display);
         return codeableConcept;
     }
 
@@ -1474,7 +1485,9 @@ public class FhirTransformServiceImpl implements FhirTransformService {
             fhirOrganization.addIdentifier(new Identifier().setSystem(fhirConfig.getOeFhirSystem() + "/org_code")
                     .setValue(organization.getCode()));
         }
-        if (!GenericValidator.isBlankOrNull(organization.getCode())) {
+        // Garde sur l'UUID (et non sur getCode() — copier-coller du bloc précédent) :
+        // sinon une organisation avec UUID mais sans code perdait son identifiant org_uuid.
+        if (organization.getFhirUuid() != null) {
             fhirOrganization.addIdentifier(new Identifier().setSystem(fhirConfig.getOeFhirSystem() + "/org_uuid")
                     .setValue(organization.getFhirUuidAsString()));
         }
