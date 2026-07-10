@@ -43,10 +43,14 @@ public class FhirSyncMonitorRestController {
     private FhirSyncStatusService fhirSyncStatusService;
 
     @Autowired
-    private FhirTransformService fhirTransformService;
-
-    @Autowired
     private org.openelisglobal.sample.service.SampleService sampleService;
+
+    // Résolution paresseuse : FhirTransformService participe à une référence
+    // circulaire (fhirTransformServiceImpl <-> fhirReferralServiceImpl) ; l'injecter
+    // en champ dans un controller peut empêcher le démarrage du contexte.
+    private FhirTransformService fhirTransformService() {
+        return org.openelisglobal.spring.util.SpringContext.getBean(FhirTransformService.class);
+    }
 
     private static final java.text.SimpleDateFormat DISPLAY_FORMAT = new java.text.SimpleDateFormat(
             "dd/MM/yyyy HH:mm");
@@ -128,7 +132,7 @@ public class FhirSyncMonitorRestController {
             try {
                 syncStatusId = fhirSyncStatusService.recordPending(FhirSyncConstants.TRIGGER_VALIDATION,
                         FhirSyncConstants.TARGET_SAMPLE, sampleId);
-                fhirTransformService.transformPersistObjectsUnderSamples(Arrays.asList(sampleId)).get();
+                fhirTransformService().transformPersistObjectsUnderSamples(Arrays.asList(sampleId)).get();
                 if (syncStatusId != null) {
                     fhirSyncStatusService.markSuccess(syncStatusId);
                 }
@@ -166,7 +170,7 @@ public class FhirSyncMonitorRestController {
             return result;
         }
         try {
-            fhirTransformService.transformPersistObjectsUnderSamples(Arrays.asList(event.getTargetId())).get();
+            fhirTransformService().transformPersistObjectsUnderSamples(Arrays.asList(event.getTargetId())).get();
             fhirSyncStatusService.markSuccess(id);
             result.put("success", true);
         } catch (Exception e) {

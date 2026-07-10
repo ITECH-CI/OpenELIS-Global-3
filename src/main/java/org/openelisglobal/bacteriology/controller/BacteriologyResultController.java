@@ -86,12 +86,6 @@ public class BacteriologyResultController extends BaseController {
     @Autowired
     private org.openelisglobal.unitofmeasure.service.UnitOfMeasureService unitOfMeasureService;
 
-    @Autowired
-    private org.openelisglobal.dataexchange.fhir.service.FhirTransformService fhirTransformService;
-
-    @Autowired
-    private org.openelisglobal.dataexchange.fhir.service.FhirSyncStatusService fhirSyncStatusService;
-
     /**
      * Get all antibiotics from dictionary
      */
@@ -1472,6 +1466,13 @@ public class BacteriologyResultController extends BaseController {
         if (sampleId == null) {
             return;
         }
+        // Résolution paresseuse via SpringContext : injecter FhirTransformService en
+        // champ crée une référence circulaire (fhirTransformServiceImpl <-> fhirReferral)
+        // qui empêche le démarrage du contexte.
+        org.openelisglobal.dataexchange.fhir.service.FhirSyncStatusService fhirSyncStatusService = SpringContext
+                .getBean(org.openelisglobal.dataexchange.fhir.service.FhirSyncStatusService.class);
+        org.openelisglobal.dataexchange.fhir.service.FhirTransformService fhirTransformService = SpringContext
+                .getBean(org.openelisglobal.dataexchange.fhir.service.FhirTransformService.class);
         String syncStatusId = null;
         try {
             syncStatusId = fhirSyncStatusService.recordPending(
