@@ -38,8 +38,9 @@ public class FhirSyncStatusDAOImpl extends BaseDAOImpl<FhirSyncStatus, String> i
     @Transactional(readOnly = true)
     public List<FhirSyncStatus> getByStatus(String status, int maxResults) {
         try {
+            // Plus récent en tête (desc) pour le monitoring.
             String hql = "from FhirSyncStatus f where f.status = :status"
-                    + " order by f.lastAttemptAt asc nulls first";
+                    + " order by f.lastAttemptAt desc nulls last";
             Query<FhirSyncStatus> query = entityManager.unwrap(Session.class).createQuery(hql, FhirSyncStatus.class);
             query.setParameter("status", status);
             if (maxResults > 0) {

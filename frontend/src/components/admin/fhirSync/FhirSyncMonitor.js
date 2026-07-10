@@ -17,7 +17,9 @@ import {
   TableBody,
   TableCell,
   TableContainer,
+  Pagination,
 } from "@carbon/react";
+import CustomDatePicker from "../../common/CustomDatePicker.js";
 import { Renew } from "@carbon/icons-react";
 import {
   getFromOpenElisServer,
@@ -49,6 +51,11 @@ function FhirSyncMonitor() {
   const [summary, setSummary] = useState({});
   const [statusFilter, setStatusFilter] = useState("FAILED");
   const [rows, setRows] = useState([]);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [replayStart, setReplayStart] = useState("");
+  const [replayEnd, setReplayEnd] = useState("");
+  const [replaying, setReplaying] = useState(false);
 
   const loadSummary = () => {
     getFromOpenElisServer("/rest/fhir-sync/summary", (res) => {
@@ -62,6 +69,7 @@ function FhirSyncMonitor() {
       `/rest/fhir-sync/list?status=${status}&max=200`,
       (res) => {
         setRows(Array.isArray(res) ? res : []);
+        setPage(1);
         setLoading(false);
       },
     );
@@ -95,6 +103,60 @@ function FhirSyncMonitor() {
           addNotification({
             title: intl.formatMessage({ id: "notification.title" }),
             message: res && res.message ? res.message : "retry failed",
+            kind: NotificationKinds.error,
+          });
+        }
+        setNotificationVisible(true);
+        refresh();
+      },
+    );
+  };
+
+  const onReplay = () => {
+    if (!replayStart) {
+      addNotification({
+        title: intl.formatMessage({ id: "notification.title" }),
+        message: intl.formatMessage({
+          id: "fhir.sync.replay.needStart",
+          defaultMessage: "Veuillez indiquer une date de début.",
+        }),
+        kind: NotificationKinds.warning,
+      });
+      setNotificationVisible(true);
+      return;
+    }
+    setReplaying(true);
+    const params = new URLSearchParams({ dateStart: replayStart });
+    if (replayEnd) params.append("dateEnd", replayEnd);
+    postToOpenElisServerJsonResponse(
+      `/rest/fhir-sync/replay?${params.toString()}`,
+      JSON.stringify({}),
+      (res) => {
+        setReplaying(false);
+        if (res && res.success) {
+          addNotification({
+            title: intl.formatMessage({ id: "notification.title" }),
+            message: intl.formatMessage(
+              {
+                id: "fhir.sync.replay.done",
+                defaultMessage:
+                  "Rejeu terminé : {succeeded} réussi(s), {failed} échec(s) sur {total}.",
+              },
+              {
+                succeeded: res.succeeded,
+                failed: res.failed,
+                total: res.total,
+              },
+            ),
+            kind:
+              res.failed > 0
+                ? NotificationKinds.warning
+                : NotificationKinds.success,
+          });
+        } else {
+          addNotification({
+            title: intl.formatMessage({ id: "notification.title" }),
+            message: res && res.message ? res.message : "replay failed",
             kind: NotificationKinds.error,
           });
         }
@@ -158,6 +220,61 @@ function FhirSyncMonitor() {
           </Column>
         </Grid>
         <br />
+        {/* Rejeu historique par date de réception (PUT idempotent) */}
+        <Grid fullWidth>
+          <Column lg={16} md={8} sm={4}>
+            <Section>
+              <Heading>
+                <FormattedMessage
+                  id="fhir.sync.replay.title"
+                  defaultMessage="Rejeu des données historiques"
+                />
+              </Heading>
+            </Section>
+          </Column>
+        </Grid>
+        <Grid fullWidth>
+          <Column lg={4} md={3} sm={4}>
+            <CustomDatePicker
+              id="fhirReplayStart"
+              labelText={intl.formatMessage({
+                id: "fhir.sync.replay.start",
+                defaultMessage: "Date de début",
+              })}
+              value={replayStart}
+              disallowFutureDate={true}
+              onChange={(d) => setReplayStart(d)}
+            />
+          </Column>
+          <Column lg={4} md={3} sm={4}>
+            <CustomDatePicker
+              id="fhirReplayEnd"
+              labelText={intl.formatMessage({
+                id: "fhir.sync.replay.end",
+                defaultMessage: "Date de fin (optionnelle)",
+              })}
+              value={replayEnd}
+              disallowFutureDate={true}
+              onChange={(d) => setReplayEnd(d)}
+            />
+          </Column>
+          <Column lg={4} md={2} sm={4}>
+            <div style={{ marginTop: "1.5rem" }}>
+              <Button
+                kind="tertiary"
+                size="md"
+                disabled={replaying}
+                onClick={onReplay}
+              >
+                <FormattedMessage
+                  id="fhir.sync.replay.button"
+                  defaultMessage="Rejouer la période"
+                />
+              </Button>
+            </div>
+          </Column>
+        </Grid>
+        <br />
         <Grid fullWidth>
           <Column lg={4} md={4} sm={4}>
             <Select
@@ -179,24 +296,25 @@ function FhirSyncMonitor() {
         {loading ? (
           <Loading />
         ) : (
-          <DataTable rows={rows.map((r) => ({ ...r })) } headers={headers}>
-            {({ getTableProps, getHeaderProps }) => (
-              <TableContainer>
-                <Table {...getTableProps()}>
-                  <TableHead>
-                    <TableRow>
-                      {headers.map((h) => (
-                        <TableHeader key={h.key} {...getHeaderProps({ header: h })}>
-                          {h.header}
-                        </TableHeader>
-                      ))}
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {rows.map((row) => (
+          <>
+            <TableContainer>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    {headers.map((h) => (
+                      <TableHeader key={h.key}>{h.header}</TableHeader>
+                    ))}
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {rows
+                    .slice((page - 1) * pageSize, page * pageSize)
+                    .map((row) => (
                       <TableRow key={row.id}>
                         <TableCell>{row.triggerType}</TableCell>
-                        <TableCell>{row.targetId}</TableCell>
+                        <TableCell>
+                          {row.accessionNumber || row.targetId}
+                        </TableCell>
                         <TableCell>{statusTag(row.status)}</TableCell>
                         <TableCell>{row.attemptCount}</TableCell>
                         <TableCell>{row.lastAttemptAt}</TableCell>
@@ -224,11 +342,20 @@ function FhirSyncMonitor() {
                         </TableCell>
                       </TableRow>
                     ))}
-                  </TableBody>
-                </Table>
-              </TableContainer>
-            )}
-          </DataTable>
+                </TableBody>
+              </Table>
+            </TableContainer>
+            <Pagination
+              page={page}
+              pageSize={pageSize}
+              pageSizes={[10, 25, 50, 100]}
+              totalItems={rows.length}
+              onChange={({ page: p, pageSize: ps }) => {
+                setPage(p);
+                setPageSize(ps);
+              }}
+            />
+          </>
         )}
       </div>
     </>

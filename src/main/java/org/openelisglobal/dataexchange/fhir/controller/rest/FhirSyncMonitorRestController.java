@@ -45,6 +45,26 @@ public class FhirSyncMonitorRestController {
     @Autowired
     private FhirTransformService fhirTransformService;
 
+    @Autowired
+    private org.openelisglobal.sample.service.SampleService sampleService;
+
+    private static final java.text.SimpleDateFormat DISPLAY_FORMAT = new java.text.SimpleDateFormat(
+            "dd/MM/yyyy HH:mm");
+
+    // Résout le numéro labo (accession number) depuis le sampleId. Best-effort :
+    // renvoie null si le sample n'existe pas (id historique, supprimé…).
+    private String resolveAccessionNumber(String targetType, String targetId) {
+        if (!FhirSyncConstants.TARGET_SAMPLE.equals(targetType) || targetId == null) {
+            return null;
+        }
+        try {
+            org.openelisglobal.sample.valueholder.Sample sample = sampleService.get(targetId);
+            return sample != null ? sample.getAccessionNumber() : null;
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
     /** Compteurs par statut (résumé pour un bandeau/dashboard). */
     @GetMapping("/summary")
     public Map<String, Long> summary() {
@@ -67,13 +87,67 @@ public class FhirSyncMonitorRestController {
             row.put("triggerType", item.getTriggerType());
             row.put("targetType", item.getTargetType());
             row.put("targetId", item.getTargetId());
+            // Numéro labo lisible en plus de l'id technique.
+            row.put("accessionNumber", resolveAccessionNumber(item.getTargetType(), item.getTargetId()));
             row.put("status", item.getStatus());
             row.put("attemptCount", item.getAttemptCount());
-            row.put("lastAttemptAt", item.getLastAttemptAt());
+            // Date formatée (jj/mm/aaaa hh:mm) au lieu du timestamp epoch.
+            row.put("lastAttemptAt",
+                    item.getLastAttemptAt() != null ? DISPLAY_FORMAT.format(item.getLastAttemptAt()) : null);
             row.put("errorMessage", item.getErrorMessage());
             out.add(row);
         }
         return out;
+    }
+
+    /**
+     * Rejeu historique des samples reçus dans une plage de dates (dateEnd optionnel,
+     * défaut = aujourd'hui côté service). Régénère le FHIR complet de chaque sample
+     * en PUT idempotent (pas de doublon). Trace chaque sample dans le monitoring.
+     * Format de date attendu = format d'affichage local (ex FR : jj/mm/aaaa).
+     */
+    @PostMapping("/replay")
+    public Map<String, Object> replaySince(@RequestParam String dateStart,
+            @RequestParam(required = false) String dateEnd) {
+        Map<String, Object> result = new HashMap<>();
+        List<org.openelisglobal.sample.valueholder.Sample> samples;
+        try {
+            samples = sampleService.getSamplesReceivedInDateRange(dateStart, dateEnd);
+        } catch (Exception e) {
+            result.put("success", false);
+            result.put("message", "invalid date range: " + e.getMessage());
+            return result;
+        }
+
+        int total = samples != null ? samples.size() : 0;
+        int success = 0;
+        int failed = 0;
+        for (org.openelisglobal.sample.valueholder.Sample sample : samples) {
+            String sampleId = sample.getId();
+            String syncStatusId = null;
+            try {
+                syncStatusId = fhirSyncStatusService.recordPending(FhirSyncConstants.TRIGGER_VALIDATION,
+                        FhirSyncConstants.TARGET_SAMPLE, sampleId);
+                fhirTransformService.transformPersistObjectsUnderSamples(Arrays.asList(sampleId)).get();
+                if (syncStatusId != null) {
+                    fhirSyncStatusService.markSuccess(syncStatusId);
+                }
+                success++;
+            } catch (Exception e) {
+                Throwable cause = e.getCause() != null ? e.getCause() : e;
+                LogEvent.logWarn("FhirSyncMonitorRestController", "replaySince",
+                        "replay failed for sample " + sampleId + ": " + cause);
+                if (syncStatusId != null) {
+                    fhirSyncStatusService.markFailed(syncStatusId, cause.toString());
+                }
+                failed++;
+            }
+        }
+        result.put("success", true);
+        result.put("total", total);
+        result.put("succeeded", success);
+        result.put("failed", failed);
+        return result;
     }
 
     /** Rejeu manuel d'un événement (bouton du monitoring). Rejoue le sample cible. */
