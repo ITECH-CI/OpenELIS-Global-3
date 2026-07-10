@@ -35,13 +35,21 @@ public class HttpClientConfig {
     @Value("${server.ssl.key-password:}")
     private String keyPassword;
 
-    @Value("${org.openelisglobal.httpclient.connectionRequestTimeout:0}")
+    // Timeouts (ms) NON NULS par défaut. Ce httpClient est branché sur le
+    // FhirContext HAPI (voir FhirConfig.configureFhirHttpClient), donc ces
+    // timeouts protègent les appels vers le store FHIR : sans eux (ancien défaut
+    // 0 = infini), un HAPI lent/down bloquait les threads de transformation
+    // indéfiniment -> saturation du pool async -> crash serveur. Surchargeables.
+    // - connectionRequestTimeout : attente d'une connexion depuis le pool HTTP.
+    // - connectionTimeout : établissement de la connexion TCP.
+    // - socketTimeout : inactivité entre deux paquets (réponse lente du serveur).
+    @Value("${org.openelisglobal.httpclient.connectionRequestTimeout:5000}")
     private Integer connectionRequestTimeout;
 
-    @Value("${org.openelisglobal.httpclient.connectionTimeout:0}")
+    @Value("${org.openelisglobal.httpclient.connectionTimeout:10000}")
     private Integer connectionTimeout;
 
-    @Value("${org.openelisglobal.httpclient.socketTimeout:0}")
+    @Value("${org.openelisglobal.httpclient.socketTimeout:30000}")
     private Integer socketTimeout;
 
     @Bean
