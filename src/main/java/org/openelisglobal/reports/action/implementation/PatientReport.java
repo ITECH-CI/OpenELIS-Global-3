@@ -575,8 +575,8 @@ public abstract class PatientReport extends Report {
                     // fallback explicite sur dict_entry quand la clé est absente
                     // des resource bundles.
                     try {
-                        org.openelisglobal.dictionary.valueholder.Dictionary dict =
-                                dictionaryService.getDataForId(value);
+                        org.openelisglobal.dictionary.valueholder.Dictionary dict = dictionaryService
+                                .getDataForId(value);
                         if (dict == null) {
                             continue;
                         }

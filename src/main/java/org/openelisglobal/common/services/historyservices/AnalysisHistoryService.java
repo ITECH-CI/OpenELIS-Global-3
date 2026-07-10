@@ -54,8 +54,7 @@ public class AnalysisHistoryService extends AbstractHistoryService {
             // Utilise le sample type de l'échantillon courant pour le suffixe
             // (sinon TestServiceImpl prend le PREMIER type associé au test —
             // souvent erroné quand un test est lié à plusieurs sample types).
-            String typeOfSampleId = analysis.getSampleItem() != null
-                    ? analysis.getSampleItem().getTypeOfSampleId()
+            String typeOfSampleId = analysis.getSampleItem() != null ? analysis.getSampleItem().getTypeOfSampleId()
                     : null;
             identifier = TestServiceImpl.getLocalizedTestNameWithType(analysis.getTest(), typeOfSampleId) + " - "
                     + analysis.getAnalysisType();

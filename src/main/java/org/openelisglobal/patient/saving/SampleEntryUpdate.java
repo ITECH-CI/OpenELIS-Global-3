@@ -5,8 +5,8 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
 /**
- * Handles updating an existing sample entry (modify flow).
- * Unlike SampleSecondEntry, this preserves the existing record status.
+ * Handles updating an existing sample entry (modify flow). Unlike
+ * SampleSecondEntry, this preserves the existing record status.
  */
 @Service
 @Scope("prototype")

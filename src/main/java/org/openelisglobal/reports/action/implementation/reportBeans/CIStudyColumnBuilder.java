@@ -126,12 +126,10 @@ public abstract class CIStudyColumnBuilder extends CSVColumnBuilder {
                 + " DISTINCT s.id as s_id , oh.observation_history_type_id AS type, oh.value AS value,"
                 + " oh.id  FROM Sample as s, Observation_History AS oh, document_track as dt, sample_item as si, analysis as a WHERE"
                 + " oh.sample_id = s.id AND dt.row_id = s.id AND s.id = si.samp_id AND si.id = a.sampitem_id AND "
-                + byDate + " >= date(''" + lowDatePostgres + "'') "
-                + " AND " + byDate + " <= date(''" + highDatePostgres
-                + "'') AND oh.observation_history_type_id = (select id FROM observation_history_type"
+                + byDate + " >= date(''" + lowDatePostgres + "'') " + " AND " + byDate + " <= date(''"
+                + highDatePostgres + "'') AND oh.observation_history_type_id = (select id FROM observation_history_type"
                 + " WHERE type_name = ''" + aOhTypeName + "'')  ORDER by 1,2, oh.id desc ) AS repeatCols"
-                + " ON s.id = repeatCols.s_id" + "' )" + " AS " + aOhTypeName
-                + " ( s_id NUMERIC(10) ");
+                + " ON s.id = repeatCols.s_id" + "' )" + " AS " + aOhTypeName + " ( s_id NUMERIC(10) ");
         for (int col = 1; col <= maxCols; col++) {
             query.append(", \"").append(aOhTypeName).append(col).append("\" VARCHAR(100)");
         }

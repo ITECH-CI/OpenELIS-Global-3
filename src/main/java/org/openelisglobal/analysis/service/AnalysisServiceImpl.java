@@ -93,9 +93,7 @@ public class AnalysisServiceImpl extends AuditableBaseObjectServiceImpl<Analysis
         }
         Test test = getTest(analysis);
         // Préfère le sample type du sample item courant pour le suffixe.
-        String typeOfSampleId = analysis.getSampleItem() != null
-                ? analysis.getSampleItem().getTypeOfSampleId()
-                : null;
+        String typeOfSampleId = analysis.getSampleItem() != null ? analysis.getSampleItem().getTypeOfSampleId() : null;
         String name = TestServiceImpl.getLocalizedTestNameWithType(test, typeOfSampleId);
         if (analysis.getSampleItem().getTypeOfSampleId().equals(
                 SpringContext.getBean(TypeOfSampleService.class).getTypeOfSampleIdForLocalAbbreviation("Variable"))) {

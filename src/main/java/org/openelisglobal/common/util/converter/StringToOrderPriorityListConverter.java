@@ -40,8 +40,7 @@ public class StringToOrderPriorityListConverter implements Converter<String, Lis
         // nom de header sur l'attribut form "priority" et tente de le convertir
         // ici. Trimmed startsWith couvre "u=0", "u=3, i", "u=7", etc.
         String trimmedSource = source.trim();
-        if (trimmedSource.startsWith("u=") || "undefined".equals(trimmedSource)
-                || "null".equals(trimmedSource)) {
+        if (trimmedSource.startsWith("u=") || "undefined".equals(trimmedSource) || "null".equals(trimmedSource)) {
             return result;
         }
 
