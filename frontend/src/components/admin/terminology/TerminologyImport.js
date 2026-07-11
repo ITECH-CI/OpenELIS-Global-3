@@ -1,5 +1,4 @@
 import React, { useContext, useState, useEffect } from "react";
-import config from "../../../config.json";
 import {
   Grid,
   Column,
@@ -24,7 +23,10 @@ import {
   Modal,
   Checkbox,
 } from "@carbon/react";
-import { getFromOpenElisServer } from "../../utils/Utils.js";
+import {
+  getFromOpenElisServer,
+  postToOpenElisServerJsonResponse,
+} from "../../utils/Utils.js";
 import { NotificationContext } from "../../layout/Layout.js";
 import {
   AlertDialog,
@@ -79,29 +81,29 @@ function TerminologyImport() {
       ? intl.formatMessage({ id: TARGET_LABELS[t], defaultMessage: t })
       : t;
 
-  // Le CSV part en text/csv dans le body : postToOpenElisServerJsonResponse
-  // force application/json, on utilise donc fetch() directement, avec la même
-  // stratégie CSRF (X-CSRF-Token depuis localStorage) que Utils.js.
+  // Requête JSON {target, overwrite, csv} via le helper standard du projet
+  // (application/json + CSRF), plutôt qu'un body text/plain qui posait problème.
   const postCsv = (mode) => {
     const setLoading = mode === "apply" ? setApplying : setPreviewing;
     setLoading(true);
-    fetch(
-      `${config.serverBaseUrl}/rest/terminology-import/${mode}?target=${encodeURIComponent(
-        target,
-      )}&overwrite=${overwrite}`,
-      {
-        credentials: "include",
-        method: "POST",
-        headers: {
-          "Content-Type": "text/plain;charset=UTF-8",
-          "X-CSRF-Token": localStorage.getItem("CSRF"),
-        },
-        body: csvContent,
-      },
-    )
-      .then((response) => response.json())
-      .then((json) => {
+    const payload = JSON.stringify({ target, overwrite, csv: csvContent });
+    postToOpenElisServerJsonResponse(
+      `/rest/terminology-import/${mode}`,
+      payload,
+      (json) => {
         setLoading(false);
+        if (!json) {
+          addNotification({
+            title: intl.formatMessage({ id: "notification.title" }),
+            message: intl.formatMessage({
+              id: "terminology.import.error",
+              defaultMessage: "Erreur lors de l'import terminologique.",
+            }),
+            kind: NotificationKinds.error,
+          });
+          setNotificationVisible(true);
+          return;
+        }
         setReport(json);
         setPage(1);
         addNotification({
@@ -119,20 +121,8 @@ function TerminologyImport() {
           kind: NotificationKinds.success,
         });
         setNotificationVisible(true);
-      })
-      .catch((error) => {
-        console.error(error);
-        setLoading(false);
-        addNotification({
-          title: intl.formatMessage({ id: "notification.title" }),
-          message: intl.formatMessage({
-            id: "terminology.import.error",
-            defaultMessage: "Erreur lors de l'import terminologique.",
-          }),
-          kind: NotificationKinds.error,
-        });
-        setNotificationVisible(true);
-      });
+      },
+    );
   };
 
   const onCsvNotEmpty = () => csvContent && csvContent.trim().length > 0;

@@ -26,13 +26,14 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
  * API d'import terminologique (LOINC / SNOMED CT) depuis CSV. Deux étapes : /preview
- * (dry-run, n'écrit rien) puis /apply (persiste). Le CSV est reçu en corps de
- * requête brut (text/plain ou text/csv). Voir README terminology pour le format.
+ * (dry-run, n'écrit rien) puis /apply (persiste). La requête est un JSON
+ * {@code { target, overwrite, csv }} (application/json, comme les autres POST du
+ * projet — évite les soucis de converter/CSRF sur text/plain). Voir le README
+ * terminology pour le format du CSV lui-même.
  */
 @RestController
 @RequestMapping("/rest/terminology-import")
@@ -40,6 +41,37 @@ public class TerminologyImportRestController {
 
     @Autowired
     private TerminologyImportService terminologyImportService;
+
+    /** Corps JSON de la requête d'import (preview/apply). */
+    public static class ImportRequest {
+        private String target;
+        private boolean overwrite;
+        private String csv;
+
+        public String getTarget() {
+            return target;
+        }
+
+        public void setTarget(String target) {
+            this.target = target;
+        }
+
+        public boolean isOverwrite() {
+            return overwrite;
+        }
+
+        public void setOverwrite(boolean overwrite) {
+            this.overwrite = overwrite;
+        }
+
+        public String getCsv() {
+            return csv;
+        }
+
+        public void setCsv(String csv) {
+            this.csv = csv;
+        }
+    }
 
     /** Liste des cibles disponibles (pour peupler un select côté UI). */
     @GetMapping("/targets")
@@ -53,35 +85,29 @@ public class TerminologyImportRestController {
 
     /**
      * Dry-run : analyse le CSV et renvoie le rapport sans rien écrire en base.
-     *
-     * @param overwrite si true, les codes différents d'un existant sortent en
-     *                  WOULD_UPDATE (écraseraient) ; si false (défaut), en CONFLICT.
+     * overwrite=true → les codes différents d'un existant sortent en WOULD_UPDATE ;
+     * false (défaut) → en CONFLICT.
      */
     @PostMapping(value = "/preview")
-    public ResponseEntity<TerminologyImportReport> preview(@RequestParam("target") String target,
-            @RequestParam(value = "overwrite", defaultValue = "false") boolean overwrite,
-            @RequestBody String csvContent) {
-        TerminologyTarget parsed = TerminologyTarget.fromString(target);
+    public ResponseEntity<TerminologyImportReport> preview(@RequestBody ImportRequest request) {
+        TerminologyTarget parsed = TerminologyTarget.fromString(request.getTarget());
         if (parsed == null) {
             return ResponseEntity.badRequest().build();
         }
-        return ResponseEntity.ok(terminologyImportService.preview(parsed, csvContent, overwrite));
+        return ResponseEntity.ok(terminologyImportService.preview(parsed, request.getCsv(), request.isOverwrite()));
     }
 
     /**
      * Application : met à jour les entités et renvoie le rapport. Idempotent.
-     *
-     * @param overwrite si true, écrase les codes existants différents ; si false
-     *                  (défaut), les laisse intacts et les signale en CONFLICT.
+     * overwrite=true → écrase les codes existants différents ; false (défaut) → les
+     * laisse intacts et les signale en CONFLICT.
      */
     @PostMapping(value = "/apply")
-    public ResponseEntity<TerminologyImportReport> apply(@RequestParam("target") String target,
-            @RequestParam(value = "overwrite", defaultValue = "false") boolean overwrite,
-            @RequestBody String csvContent) {
-        TerminologyTarget parsed = TerminologyTarget.fromString(target);
+    public ResponseEntity<TerminologyImportReport> apply(@RequestBody ImportRequest request) {
+        TerminologyTarget parsed = TerminologyTarget.fromString(request.getTarget());
         if (parsed == null) {
             return ResponseEntity.badRequest().build();
         }
-        return ResponseEntity.ok(terminologyImportService.apply(parsed, csvContent, overwrite));
+        return ResponseEntity.ok(terminologyImportService.apply(parsed, request.getCsv(), request.isOverwrite()));
     }
 }
