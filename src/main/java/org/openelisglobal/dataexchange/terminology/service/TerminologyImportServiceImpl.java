@@ -74,6 +74,8 @@ public class TerminologyImportServiceImpl implements TerminologyImportService {
         }
 
         List<String> rows = splitLines(csvContent);
+        LogEvent.logDebug(this.getClass().getSimpleName(), "process", "import terminologique: cible=" + target
+                + ", csvLen=" + (csvContent == null ? "null" : csvContent.length()) + ", lignes=" + rows.size());
         Map<String, Integer> columns = null;
 
         for (String rawLine : rows) {

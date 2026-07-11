@@ -21,7 +21,6 @@ import org.openelisglobal.dataexchange.terminology.service.TerminologyImportRepo
 import org.openelisglobal.dataexchange.terminology.service.TerminologyImportService;
 import org.openelisglobal.dataexchange.terminology.service.TerminologyTarget;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -58,7 +57,7 @@ public class TerminologyImportRestController {
      * @param overwrite si true, les codes différents d'un existant sortent en
      *                  WOULD_UPDATE (écraseraient) ; si false (défaut), en CONFLICT.
      */
-    @PostMapping(value = "/preview", consumes = { MediaType.TEXT_PLAIN_VALUE, "text/csv" })
+    @PostMapping(value = "/preview")
     public ResponseEntity<TerminologyImportReport> preview(@RequestParam("target") String target,
             @RequestParam(value = "overwrite", defaultValue = "false") boolean overwrite,
             @RequestBody String csvContent) {
@@ -75,7 +74,7 @@ public class TerminologyImportRestController {
      * @param overwrite si true, écrase les codes existants différents ; si false
      *                  (défaut), les laisse intacts et les signale en CONFLICT.
      */
-    @PostMapping(value = "/apply", consumes = { MediaType.TEXT_PLAIN_VALUE, "text/csv" })
+    @PostMapping(value = "/apply")
     public ResponseEntity<TerminologyImportReport> apply(@RequestParam("target") String target,
             @RequestParam(value = "overwrite", defaultValue = "false") boolean overwrite,
             @RequestBody String csvContent) {

@@ -93,7 +93,7 @@ function TerminologyImport() {
         credentials: "include",
         method: "POST",
         headers: {
-          "Content-Type": "text/csv",
+          "Content-Type": "text/plain;charset=UTF-8",
           "X-CSRF-Token": localStorage.getItem("CSRF"),
         },
         body: csvContent,
