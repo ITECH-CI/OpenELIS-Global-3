@@ -1,0 +1,901 @@
+# Codage des tests. Cle: test_name (=description) + sample_type (optionnel).
+# La colonne loinc reprend la valeur EXISTANTE en base (a conserver/corriger).
+# status: proposed|validated. Passer a validated apres verification.
+test_name;sample_type;loinc;snomed;status
+Acide urique(Serum);Serum;;;proposed
+Actin Smooth Muscle;Immunohistochemistry specimen;;;proposed
+Actin Smooth Muscle;Tissue antemortem;;;proposed
+Actin Smooth Muscle;Tissue post mortem;;;proposed
+AH(Serum);Serum;;;proposed
+Albumine recherche miction(Urines);Urines;;;proposed
+AMACR (p504 s);Immunohistochemistry specimen;;;proposed
+AMACR (p504 s);Tissue antemortem;;;proposed
+AMACR (p504 s);Tissue post mortem;;;proposed
+Amylase(Serum);Serum;;;proposed
+Anti-CD10;Immunohistochemistry specimen;;;proposed
+Anti-CD10;Tissue antemortem;;;proposed
+Anti-CD10;Tissue post mortem;;;proposed
+Anti-CD15;Immunohistochemistry specimen;;;proposed
+Anti-CD15;Tissue antemortem;;;proposed
+Anti-CD15;Tissue post mortem;;;proposed
+Anti-CD20;Immunohistochemistry specimen;;;proposed
+Anti-CD20;Tissue antemortem;;;proposed
+Anti-CD20;Tissue post mortem;;;proposed
+Anti-CD22;Immunohistochemistry specimen;;;proposed
+Anti-CD22;Tissue antemortem;;;proposed
+Anti-CD22;Tissue post mortem;;;proposed
+Anti-CD 3;Immunohistochemistry specimen;;;proposed
+Anti-CD 3;Tissue antemortem;;;proposed
+Anti-CD 3;Tissue post mortem;;;proposed
+Anti-CD30;Immunohistochemistry specimen;;;proposed
+Anti-CD30;Tissue antemortem;;;proposed
+Anti-CD30;Tissue post mortem;;;proposed
+Anti-CD34;Immunohistochemistry specimen;;;proposed
+Anti-CD34;Tissue antemortem;;;proposed
+Anti-CD34;Tissue post mortem;;;proposed
+Anti-CD45;Immunohistochemistry specimen;;;proposed
+Anti-CD45;Tissue antemortem;;;proposed
+Anti-CD45;Tissue post mortem;;;proposed
+Anti-CD 5;Immunohistochemistry specimen;;;proposed
+Anti-CD 5;Tissue antemortem;;;proposed
+Anti-CD 5;Tissue post mortem;;;proposed
+Anti-CD56;Immunohistochemistry specimen;;;proposed
+Anti-CD56;Tissue antemortem;;;proposed
+Anti-CD56;Tissue post mortem;;;proposed
+Anti-CD7;Immunohistochemistry specimen;;;proposed
+Anti-CD7;Tissue antemortem;;;proposed
+Anti-CD7;Tissue post mortem;;;proposed
+Anti-CD79a;Immunohistochemistry specimen;;;proposed
+Anti-CD79a;Tissue antemortem;;;proposed
+Anti-CD79a;Tissue post mortem;;;proposed
+Anti-CD99 (O13);Immunohistochemistry specimen;;;proposed
+Anti-CD99 (O13);Tissue antemortem;;;proposed
+Anti-CD99 (O13);Tissue post mortem;;;proposed
+Anti-CDX-2 (EPR2764Y);Immunohistochemistry specimen;;;proposed
+Anti-CDX-2 (EPR2764Y);Tissue antemortem;;;proposed
+Anti-CDX-2 (EPR2764Y);Tissue post mortem;;;proposed
+Anti-Chromogranin A;Immunohistochemistry specimen;;;proposed
+Anti-Chromogranin A;Tissue antemortem;;;proposed
+Anti-Chromogranin A;Tissue post mortem;;;proposed
+Anti-Cyclin D1 (SP4-R);Immunohistochemistry specimen;;;proposed
+Anti-Cyclin D1 (SP4-R);Tissue antemortem;;;proposed
+Anti-Cyclin D1 (SP4-R);Tissue post mortem;;;proposed
+Anti-Cytokeratin 20;Immunohistochemistry specimen;;;proposed
+Anti-Cytokeratin 20;Tissue antemortem;;;proposed
+Anti-Cytokeratin 20;Tissue post mortem;;;proposed
+Anti-Cytokeratin 5/6;Immunohistochemistry specimen;;;proposed
+Anti-Cytokeratin 5/6;Tissue antemortem;;;proposed
+Anti-Cytokeratin 5/6;Tissue post mortem;;;proposed
+Anti-Cytokeratin 7;Immunohistochemistry specimen;;;proposed
+Anti-Cytokeratin 7;Tissue antemortem;;;proposed
+Anti-Cytokeratin 7;Tissue post mortem;;;proposed
+Anti-Desmin;Immunohistochemistry specimen;;;proposed
+Anti-Desmin;Tissue antemortem;;;proposed
+Anti-Desmin;Tissue post mortem;;;proposed
+Anti-E-Cadherin;Immunohistochemistry specimen;;;proposed
+Anti-E-Cadherin;Tissue antemortem;;;proposed
+Anti-E-Cadherin;Tissue post mortem;;;proposed
+Anti-EMA (E29);Immunohistochemistry specimen;;;proposed
+Anti-EMA (E29);Tissue antemortem;;;proposed
+Anti-EMA (E29);Tissue post mortem;;;proposed
+Anti-ER;Immunohistochemistry specimen;;;proposed
+Anti-ER;Tissue antemortem;;;proposed
+Anti-ER;Tissue post mortem;;;proposed
+Anti-Gata 3;Immunohistochemistry specimen;;;proposed
+Anti-Gata 3;Tissue antemortem;;;proposed
+Anti-Gata 3;Tissue post mortem;;;proposed
+Anti-hepatocyte Specific Antigen (Hep Par-1);Immunohistochemistry specimen;;;proposed
+Anti-hepatocyte Specific Antigen (Hep Par-1);Tissue antemortem;;;proposed
+Anti-hepatocyte Specific Antigen (Hep Par-1);Tissue post mortem;;;proposed
+Anti-HER2;Immunohistochemistry specimen;;;proposed
+Anti-HER2;Tissue antemortem;;;proposed
+Anti-HER2;Tissue post mortem;;;proposed
+Anti-Ki67;Immunohistochemistry specimen;;;proposed
+Anti-Ki67;Tissue antemortem;;;proposed
+Anti-Ki67;Tissue post mortem;;;proposed
+Anti-melanosome (HMB45);Immunohistochemistry specimen;;;proposed
+Anti-melanosome (HMB45);Tissue antemortem;;;proposed
+Anti-melanosome (HMB45);Tissue post mortem;;;proposed
+Anti-MUC2;Immunohistochemistry specimen;;;proposed
+Anti-MUC2;Tissue antemortem;;;proposed
+Anti-MUC2;Tissue post mortem;;;proposed
+Anti-MUM1;Immunohistochemistry specimen;;;proposed
+Anti-MUM1;Tissue antemortem;;;proposed
+Anti-MUM1;Tissue post mortem;;;proposed
+Anti-p40 (BC28);Immunohistochemistry specimen;;;proposed
+Anti-p40 (BC28);Tissue antemortem;;;proposed
+Anti-p40 (BC28);Tissue post mortem;;;proposed
+Anti-p63 (4A4);Immunohistochemistry specimen;;;proposed
+Anti-p63 (4A4);Tissue antemortem;;;proposed
+Anti-p63 (4A4);Tissue post mortem;;;proposed
+Anti-Pan Keratin;Immunohistochemistry specimen;;;proposed
+Anti-Pan Keratin;Tissue antemortem;;;proposed
+Anti-Pan Keratin;Tissue post mortem;;;proposed
+Anti-PR;Immunohistochemistry specimen;;;proposed
+Anti-PR;Tissue antemortem;;;proposed
+Anti-PR;Tissue post mortem;;;proposed
+Anti-S100;Immunohistochemistry specimen;;;proposed
+Anti-S100;Tissue antemortem;;;proposed
+Anti-S100;Tissue post mortem;;;proposed
+Anti-Synaptophysin (SP11);Immunohistochemistry specimen;;;proposed
+Anti-Synaptophysin (SP11);Tissue antemortem;;;proposed
+Anti-Synaptophysin (SP11);Tissue post mortem;;;proposed
+Anti-Thyroid Transcription Factor;Immunohistochemistry specimen;;;proposed
+Anti-Thyroid Transcription Factor;Tissue antemortem;;;proposed
+Anti-Thyroid Transcription Factor;Tissue post mortem;;;proposed
+Anti-Vimentin;Immunohistochemistry specimen;;;proposed
+Anti-Vimentin;Tissue antemortem;;;proposed
+Anti-Vimentin;Tissue post mortem;;;proposed
+AO(Serum);Serum;;;proposed
+Asante HIV-1 Rapid Recency(Plasma);Plasma;;;proposed
+Asante HIV-1 Rapid Recency(Serum);Serum;;;proposed
+Autre HPV HR;Prélèvement cervico-vaginal;;;proposed
+Bacilloscopie Auramine;LCR;;;proposed
+Bacilloscopie Auramine;Liquide articulaire;;;proposed
+Bacilloscopie Auramine;Liquide d’ascite;;;proposed
+Bacilloscopie Auramine;Liquide d’aspiration broncho-alvéolaire;;;proposed
+Bacilloscopie Auramine;Liquide d’aspiration gastrique;;;proposed
+Bacilloscopie Auramine;Liquide de ponction péricardique;;;proposed
+Bacilloscopie Auramine;Liquide pleural;;;proposed
+Bacilloscopie Auramine;Pus ganglionnaires;;;proposed
+Bacilloscopie Auramine;Selles;;;proposed
+Bacilloscopie Auramine;Sputum;;;proposed
+Bacilloscopie Auramine;Urines;;;proposed
+Bacilloscopie Ziehl-Neelsen;LCR;;;proposed
+Bacilloscopie Ziehl-Neelsen;Liquide articulaire;;;proposed
+Bacilloscopie Ziehl-Neelsen;Liquide d’ascite;;;proposed
+Bacilloscopie Ziehl-Neelsen;Liquide d’aspiration broncho-alvéolaire;;;proposed
+Bacilloscopie Ziehl-Neelsen;Liquide d’aspiration gastrique;;;proposed
+Bacilloscopie Ziehl-Neelsen;Liquide de ponction péricardique;;;proposed
+Bacilloscopie Ziehl-Neelsen;Liquide pleural;;;proposed
+Bacilloscopie Ziehl-Neelsen;Pus ganglionnaires;;;proposed
+Bacilloscopie Ziehl-Neelsen;Selles;;;proposed
+Bacilloscopie Ziehl-Neelsen;Sputum;;;proposed
+Bacilloscopie Ziehl-Neelsen;Urines;;;proposed
+Baso %;EDTA Tube;;;proposed
+BCL 2;Immunohistochemistry specimen;;;proposed
+BCL 2;Tissue antemortem;;;proposed
+BCL 2;Tissue post mortem;;;proposed
+BCL 6;Immunohistochemistry specimen;;;proposed
+BCL 6;Tissue antemortem;;;proposed
+BCL 6;Tissue post mortem;;;proposed
+Bedaquilline;LCR;;;proposed
+Bedaquilline;Liquide articulaire;;;proposed
+Bedaquilline;Liquide d’ascite;;;proposed
+Bedaquilline;Liquide d’aspiration broncho-alvéolaire;;;proposed
+Bedaquilline;Liquide d’aspiration gastrique;;;proposed
+Bedaquilline;Liquide de ponction péricardique;;;proposed
+Bedaquilline;Liquide pleural;;;proposed
+Bedaquilline;Pus ganglionnaires;;;proposed
+Bedaquilline;Selles;;;proposed
+Bedaquilline;Sputum;;;proposed
+Bedaquilline;Urines;;;proposed
+BerEp4;Immunohistochemistry specimen;;;proposed
+BerEp4;Tissue antemortem;;;proposed
+BerEp4;Tissue post mortem;;;proposed
+BH(Serum);Serum;;;proposed
+Bilurubine Conjuguee(Serum);Serum;;;proposed
+Bilurubine Totale(Serum);Serum;;;proposed
+Bioline(Plasma);Plasma;;;proposed
+Bioline(Sang total);Sang total;;;proposed
+Bioline(Serum);Serum;;;proposed
+BO(Serum);Serum;;;proposed
+Calcium(Serum);Serum;;;proposed
+Calponin;Immunohistochemistry specimen;;;proposed
+Calponin;Tissue antemortem;;;proposed
+Calponin;Tissue post mortem;;;proposed
+Calretinin;Immunohistochemistry specimen;;;proposed
+Calretinin;Tissue antemortem;;;proposed
+Calretinin;Tissue post mortem;;;proposed
+Capreomicine;LCR;;;proposed
+Capreomicine;Liquide articulaire;;;proposed
+Capreomicine;Liquide d’ascite;;;proposed
+Capreomicine;Liquide d’aspiration broncho-alvéolaire;;;proposed
+Capreomicine;Liquide d’aspiration gastrique;;;proposed
+Capreomicine;Liquide de ponction péricardique;;;proposed
+Capreomicine;Liquide pleural;;;proposed
+Capreomicine;Pus ganglionnaires;;;proposed
+Capreomicine;Selles;;;proposed
+Capreomicine;Sputum;;;proposed
+Capreomicine;Urines;;;proposed
+CCMH;EDTA Tube;;;proposed
+CD3 percentage count;EDTA Tube;;;proposed
+CD4;EDTA Tube;;;proposed
+CD4 absolute count;EDTA Tube;;;proposed
+CD4 percentage count;EDTA Tube;;;proposed
+Chlore(Serum);Serum;;;proposed
+Cholestérol HDL(Serum);Serum;;;proposed
+Cholesterol LDL(Serum);Serum;;;proposed
+Cholestérol total(Serum);Serum;;;proposed
+CH(Serum);Serum;;;proposed
+CINtec® p16 Histology;Immunohistochemistry specimen;;;proposed
+CINtec® p16 Histology;Tissue antemortem;;;proposed
+CINtec® p16 Histology;Tissue post mortem;;;proposed
+Clofazimine;LCR;;;proposed
+Clofazimine;Liquide articulaire;;;proposed
+Clofazimine;Liquide d’ascite;;;proposed
+Clofazimine;Liquide d’aspiration broncho-alvéolaire;;;proposed
+Clofazimine;Liquide d’aspiration gastrique;;;proposed
+Clofazimine;Liquide de ponction péricardique;;;proposed
+Clofazimine;Liquide pleural;;;proposed
+Clofazimine;Pus ganglionnaires;;;proposed
+Clofazimine;Selles;;;proposed
+Clofazimine;Sputum;;;proposed
+Clofazimine;Urines;;;proposed
+Concentration Corpusculaire Moyenne en Hémoglobine(Sang total);Sang total;;;proposed
+CO(Serum);Serum;;;proposed
+COVID-19ANTIBODYIgG(Plasma);Plasma;94547-7;;validated
+COVID-19ANTIBODYIgG(Serum);Serum;94547-7;;validated
+COVID-19ANTIBODYIgM(Plasma);Plasma;94547-7;;validated
+COVID-19ANTIBODYIgM(Serum);Serum;94547-7;;validated
+COVIDPCR(Fluid);Fluid;94500-6;;validated
+COVIDPCR(Respiratory Swab);Respiratory Swab;94500-6;;validated
+COVIDPCR(Sputum);Sputum;94500-6;;validated
+Créatininémie;Dry Tube;;;proposed
+Créatinine(Serum);Serum;;;proposed
+CRP - Latex(Serum);Serum;;;proposed
+CRP - Titre(Serum);Serum;;;proposed
+Culture;Crachat/Expectoration;;;proposed
+Culture;LCR;;;proposed
+Culture;Liquide de ponction;;;proposed
+Culture;Matériels (Prothèse, Sonde, Stérilet);;;proposed
+Culture;Pus;;;proposed
+Culture;Sang (hémoculture);;;proposed
+Culture;Selles;;;proposed
+Culture;Sperme;;;proposed
+Culture;Urines;;;proposed
+Culture - Col;Sécrétions vaginales;;;proposed
+Culture Milieu LJ;LCR;;;proposed
+Culture Milieu LJ;Liquide articulaire;;;proposed
+Culture Milieu LJ;Liquide d’ascite;;;proposed
+Culture Milieu LJ;Liquide d’aspiration broncho-alvéolaire;;;proposed
+Culture Milieu LJ;Liquide d’aspiration gastrique;;;proposed
+Culture Milieu LJ;Liquide de ponction péricardique;;;proposed
+Culture Milieu LJ;Liquide pleural;;;proposed
+Culture Milieu LJ;Pus ganglionnaires;;;proposed
+Culture Milieu LJ;Selles;;;proposed
+Culture Milieu LJ;Sputum;;;proposed
+Culture Milieu LJ;Urines;;;proposed
+Culture Milieu MGIT;LCR;;;proposed
+Culture Milieu MGIT;Liquide articulaire;;;proposed
+Culture Milieu MGIT;Liquide d’ascite;;;proposed
+Culture Milieu MGIT;Liquide d’aspiration broncho-alvéolaire;;;proposed
+Culture Milieu MGIT;Liquide d’aspiration gastrique;;;proposed
+Culture Milieu MGIT;Liquide de ponction péricardique;;;proposed
+Culture Milieu MGIT;Liquide pleural;;;proposed
+Culture Milieu MGIT;Pus ganglionnaires;;;proposed
+Culture Milieu MGIT;Selles;;;proposed
+Culture Milieu MGIT;Sputum;;;proposed
+Culture Milieu MGIT;Urines;;;proposed
+Culture - Sécrétions urétrales;Sécrétions urétrales;;;proposed
+Culture - Sécrétions vaginales;Sécrétions vaginales;;;proposed
+Cyclosérine;LCR;;;proposed
+Cyclosérine;Liquide articulaire;;;proposed
+Cyclosérine;Liquide d’ascite;;;proposed
+Cyclosérine;Liquide d’aspiration broncho-alvéolaire;;;proposed
+Cyclosérine;Liquide d’aspiration gastrique;;;proposed
+Cyclosérine;Liquide de ponction péricardique;;;proposed
+Cyclosérine;Liquide pleural;;;proposed
+Cyclosérine;Pus ganglionnaires;;;proposed
+Cyclosérine;Selles;;;proposed
+Cyclosérine;Sputum;;;proposed
+Cyclosérine;Urines;;;proposed
+Delamanide;LCR;;;proposed
+Delamanide;Liquide articulaire;;;proposed
+Delamanide;Liquide d’ascite;;;proposed
+Delamanide;Liquide d’aspiration broncho-alvéolaire;;;proposed
+Delamanide;Liquide d’aspiration gastrique;;;proposed
+Delamanide;Liquide de ponction péricardique;;;proposed
+Delamanide;Liquide pleural;;;proposed
+Delamanide;Pus ganglionnaires;;;proposed
+Delamanide;Selles;;;proposed
+Delamanide;Sputum;;;proposed
+Delamanide;Urines;;;proposed
+DENGUEPCR(DBS);DBS;7855-0;;validated
+DENGUEPCR(Plasma);Plasma;7855-0;;validated
+DENGUEPCR(Serum);Serum;7855-0;;validated
+Dengue(Sang total);Sang total;;;proposed
+Dénombrement des lymphocytes CD4 (mm3)(Sang total);Sang total;;;proposed
+Dénombrement des lymphocytes  CD4 (%)(Sang total);Sang total;;;proposed
+Densite parasitaire(Sang total);Sang total;;;proposed
+Detection de la resistance aux antiretroviraux(Sang total);Sang total;;;proposed
+Determine(Plasma);Plasma;;;proposed
+Determine(Sang total);Sang total;;;proposed
+Determine(Sérum);Serum;;;proposed
+Diagnostic rapide du Adenovirus;Selles;;;proposed
+Diagnostic rapide du Rotavirus;Selles;;;proposed
+DNA PCR;EDTA Tube;;;proposed
+DOG1 (SP31);Immunohistochemistry specimen;;;proposed
+DOG1 (SP31);Tissue antemortem;;;proposed
+DOG1 (SP31);Tissue post mortem;;;proposed
+Eo %;EDTA Tube;;;proposed
+Ethambutol;LCR;;;proposed
+Ethambutol;Liquide articulaire;;;proposed
+Ethambutol;Liquide d’ascite;;;proposed
+Ethambutol;Liquide d’aspiration broncho-alvéolaire;;;proposed
+Ethambutol;Liquide d’aspiration gastrique;;;proposed
+Ethambutol;Liquide de ponction péricardique;;;proposed
+Ethambutol;Liquide pleural;;;proposed
+Ethambutol;Pus ganglionnaires;;;proposed
+Ethambutol;Selles;;;proposed
+Ethambutol;Sputum;;;proposed
+Ethambutol;Urines;;;proposed
+Ethionamide;LCR;;;proposed
+Ethionamide;Liquide articulaire;;;proposed
+Ethionamide;Liquide d’ascite;;;proposed
+Ethionamide;Liquide d’aspiration broncho-alvéolaire;;;proposed
+Ethionamide;Liquide d’aspiration gastrique;;;proposed
+Ethionamide;Liquide de ponction péricardique;;;proposed
+Ethionamide;Liquide pleural;;;proposed
+Ethionamide;Pus ganglionnaires;;;proposed
+Ethionamide;Selles;;;proposed
+Ethionamide;Sputum;;;proposed
+Ethionamide;Urines;;;proposed
+Fluoroquinolone;LCR;;;proposed
+Fluoroquinolone;Liquide articulaire;;;proposed
+Fluoroquinolone;Liquide d’ascite;;;proposed
+Fluoroquinolone;Liquide d’aspiration broncho-alvéolaire;;;proposed
+Fluoroquinolone;Liquide d’aspiration gastrique;;;proposed
+Fluoroquinolone;Liquide de ponction péricardique;;;proposed
+Fluoroquinolone;Liquide pleural;;;proposed
+Fluoroquinolone;Pus ganglionnaires;;;proposed
+Fluoroquinolone;Selles;;;proposed
+Fluoroquinolone;Sputum;;;proposed
+Fluoroquinolone;Urines;;;proposed
+Frottis Sanguin(Sang total);Sang total;;;proposed
+GB;EDTA Tube;;;proposed
+GeneXpert MTB/RIF;LCR;;;proposed
+GeneXpert MTB/RIF;Liquide articulaire;;;proposed
+GeneXpert MTB/RIF;Liquide d’ascite;;;proposed
+GeneXpert MTB/RIF;Liquide d’aspiration broncho-alvéolaire;;;proposed
+GeneXpert MTB/RIF;Liquide d’aspiration gastrique;;;proposed
+GeneXpert MTB/RIF;Liquide de ponction péricardique;;;proposed
+GeneXpert MTB/RIF;Liquide pleural;;;proposed
+GeneXpert MTB/RIF;Pus ganglionnaires;;;proposed
+GeneXpert MTB/RIF;Selles;;;proposed
+GeneXpert MTB/RIF;Sputum;;;proposed
+GeneXpert MTB/RIF;Urines;;;proposed
+Génotypage;EDTA Tube;;;proposed
+Glial Fibrillary Acidic Protein;Immunohistochemistry specimen;;;proposed
+Glial Fibrillary Acidic Protein;Tissue antemortem;;;proposed
+Glial Fibrillary Acidic Protein;Tissue post mortem;;;proposed
+Glucose;LCR;;;proposed
+Glucose(Plasma);Plasma;;;proposed
+Glycémie;Dry Tube;;;proposed
+Goutte Epaisse (GE)(Sang total);Sang total;;;proposed
+GR;EDTA Tube;;;proposed
+Granulocytes (Abs)(Sang total);Sang total;;;proposed
+Granulocytes (%)(Sang total);Sang total;;;proposed
+Groupe Sanguin(Sang total);Sang total;;;proposed
+Hb;EDTA Tube;;;proposed
+Hb A1(Sang total);Sang total;;;proposed
+Hb A2(Sang total);Sang total;;;proposed
+Hb C(Sang total);Sang total;;;proposed
+Hb F(Sang total);Sang total;;;proposed
+HBs AG (antigén australia)(Serum);Serum;;;proposed
+Hb S(Sang total);Sang total;;;proposed
+HCT;EDTA Tube;;;proposed
+Hématocrite(Sang total);Sang total;;;proposed
+Hémoglobine(Sang total);Sang total;;;proposed
+HEPATITISBVIRALLOAD(Plasma);Plasma;29615-2;;validated
+HEPATITISBVIRALLOAD(Serum);Serum;29615-2;;validated
+HEPATITISCVIRALLOAD(Plasma);Plasma;11011-4;;validated
+HEPATITISCVIRALLOAD(Serum);Serum;11011-4;;validated
+Her2 Dual ISH;Immunohistochemistry specimen;;;proposed
+Her2 Dual ISH;Tissue antemortem;;;proposed
+Her2 Dual ISH;Tissue post mortem;;;proposed
+Histopathology examination;Histopathology specimen;;;proposed
+Histopathology examination;Tissue antemortem;;;proposed
+Histopathology examination;Tissue post mortem;;;proposed
+HIVINFANTVIRALLOAD(DBS);DBS;;;proposed
+HIVINFANTVIRALLOAD(Plasma);Plasma;;;proposed
+HIVINFANTVIRALLOAD(Serum);Serum;;;proposed
+HIVVIRALLOAD(DBS);DBS;10351-5;;validated
+HIVVIRALLOAD(Plasma);Plasma;10351-5;;validated
+HIVVIRALLOAD(Serum);Serum;10351-5;;validated
+HPV 16;Prélèvement cervico-vaginal;;;proposed
+HPV 18;Prélèvement cervico-vaginal;;;proposed
+HPV 18_45;Prélèvement cervico-vaginal;;;proposed
+HPV P3;Prélèvement cervico-vaginal;;;proposed
+HPV P4;Prélèvement cervico-vaginal;;;proposed
+HPV P5;Prélèvement cervico-vaginal;;;proposed
+IgG Rubeole(Serum);Serum;;;proposed
+IgG Toxo(Serum);Serum;;;proposed
+IgM Rubeole(Serum);Serum;;;proposed
+IgM Toxo(Serum);Serum;;;proposed
+Imipenem;LCR;;;proposed
+Imipenem;Liquide articulaire;;;proposed
+Imipenem;Liquide d’ascite;;;proposed
+Imipenem;Liquide d’aspiration broncho-alvéolaire;;;proposed
+Imipenem;Liquide d’aspiration gastrique;;;proposed
+Imipenem;Liquide de ponction péricardique;;;proposed
+Imipenem;Liquide pleural;;;proposed
+Imipenem;Pus ganglionnaires;;;proposed
+Imipenem;Selles;;;proposed
+Imipenem;Sputum;;;proposed
+Imipenem;Urines;;;proposed
+Imipénème-Cilastatine;LCR;;;proposed
+Imipénème-Cilastatine;Liquide articulaire;;;proposed
+Imipénème-Cilastatine;Liquide d’ascite;;;proposed
+Imipénème-Cilastatine;Liquide d’aspiration broncho-alvéolaire;;;proposed
+Imipénème-Cilastatine;Liquide d’aspiration gastrique;;;proposed
+Imipénème-Cilastatine;Liquide de ponction péricardique;;;proposed
+Imipénème-Cilastatine;Liquide pleural;;;proposed
+Imipénème-Cilastatine;Pus ganglionnaires;;;proposed
+Imipénème-Cilastatine;Selles;;;proposed
+Imipénème-Cilastatine;Sputum;;;proposed
+Imipénème-Cilastatine;Urines;;;proposed
+Inhibin;Immunohistochemistry specimen;;;proposed
+Inhibin;Tissue antemortem;;;proposed
+Inhibin;Tissue post mortem;;;proposed
+Injectable;LCR;;;proposed
+Injectable;Liquide articulaire;;;proposed
+Injectable;Liquide d’ascite;;;proposed
+Injectable;Liquide d’aspiration broncho-alvéolaire;;;proposed
+Injectable;Liquide d’aspiration gastrique;;;proposed
+Injectable;Liquide de ponction péricardique;;;proposed
+Injectable;Liquide pleural;;;proposed
+Injectable;Pus ganglionnaires;;;proposed
+Injectable;Selles;;;proposed
+Injectable;Sputum;;;proposed
+Injectable;Urines;;;proposed
+Innolia;Dry Tube;;;proposed
+INR(Tube Bleu);Tube Bleu;;;proposed
+Integral;Dry Tube;;;proposed
+Isoniazide;LCR;;;proposed
+Isoniazide;Liquide articulaire;;;proposed
+Isoniazide;Liquide d’ascite;;;proposed
+Isoniazide;Liquide d’aspiration broncho-alvéolaire;;;proposed
+Isoniazide;Liquide d’aspiration gastrique;;;proposed
+Isoniazide;Liquide de ponction péricardique;;;proposed
+Isoniazide;Liquide pleural;;;proposed
+Isoniazide;Pus ganglionnaires;;;proposed
+Isoniazide;Selles;;;proposed
+Isoniazide;Sputum;;;proposed
+Isoniazide;Urines;;;proposed
+Kanamycine;LCR;;;proposed
+Kanamycine;Liquide articulaire;;;proposed
+Kanamycine;Liquide d’ascite;;;proposed
+Kanamycine;Liquide d’aspiration broncho-alvéolaire;;;proposed
+Kanamycine;Liquide d’aspiration gastrique;;;proposed
+Kanamycine;Liquide de ponction péricardique;;;proposed
+Kanamycine;Liquide pleural;;;proposed
+Kanamycine;Pus ganglionnaires;;;proposed
+Kanamycine;Selles;;;proposed
+Kanamycine;Sputum;;;proposed
+Kanamycine;Urines;;;proposed
+Levofloxacine;LCR;;;proposed
+Levofloxacine;Liquide articulaire;;;proposed
+Levofloxacine;Liquide d’ascite;;;proposed
+Levofloxacine;Liquide d’aspiration broncho-alvéolaire;;;proposed
+Levofloxacine;Liquide d’aspiration gastrique;;;proposed
+Levofloxacine;Liquide de ponction péricardique;;;proposed
+Levofloxacine;Liquide pleural;;;proposed
+Levofloxacine;Pus ganglionnaires;;;proposed
+Levofloxacine;Selles;;;proposed
+Levofloxacine;Sputum;;;proposed
+Levofloxacine;Urines;;;proposed
+Linezolid;LCR;;;proposed
+Linezolid;Liquide articulaire;;;proposed
+Linezolid;Liquide d’ascite;;;proposed
+Linezolid;Liquide d’aspiration broncho-alvéolaire;;;proposed
+Linezolid;Liquide d’aspiration gastrique;;;proposed
+Linezolid;Liquide de ponction péricardique;;;proposed
+Linezolid;Liquide pleural;;;proposed
+Linezolid;Pus ganglionnaires;;;proposed
+Linezolid;Selles;;;proposed
+Linezolid;Sputum;;;proposed
+Linezolid;Urines;;;proposed
+Lymph %;EDTA Tube;;;proposed
+Lymphocytes (Abs)(Sang total);Sang total;731-0;;validated
+Lymphocytes (%)(Sang total);Sang total;736-9;;validated
+Macroscopie - Aspect;Crachat/Expectoration;;;proposed
+Macroscopie - Aspect;Matériels (Prothèse, Sonde, Stérilet);;;proposed
+Macroscopie - Aspect;Sang (hémoculture);;;proposed
+Macroscopie - Aspect;Sperme;;;proposed
+Macroscopie - Autres;Liquide de ponction;;;proposed
+Macroscopie - Autres;Matériels (Prothèse, Sonde, Stérilet);;;proposed
+Macroscopie - Autres;Pus;;;proposed
+Macroscopie - Autres;Selles;;;proposed
+Macroscopie - Col - Abondance;Sécrétions vaginales;;;proposed
+Macroscopie - Col - Aspect;Sécrétions vaginales;;;proposed
+Macroscopie - Col - Autre;Sécrétions vaginales;;;proposed
+Macroscopie - Col - Condylomes;Sécrétions vaginales;;;proposed
+Macroscopie - Col - Couleur;Sécrétions vaginales;;;proposed
+Macroscopie - Col - Inflammation;Sécrétions vaginales;;;proposed
+Macroscopie - Col - Leucorrhées;Sécrétions vaginales;;;proposed
+Macroscopie - Col - Normale;Sécrétions vaginales;;;proposed
+Macroscopie - Col - Ulcération;Sécrétions vaginales;;;proposed
+Macroscopie - Consistance;Crachat/Expectoration;;;proposed
+Macroscopie - Consistance;Liquide de ponction;;;proposed
+Macroscopie - Consistance;Matériels (Prothèse, Sonde, Stérilet);;;proposed
+Macroscopie - Consistance;Pus;;;proposed
+Macroscopie - Consistance;Selles;;;proposed
+Macroscopie - Couleur;Crachat/Expectoration;;;proposed
+Macroscopie - Couleur;LCR;;;proposed
+Macroscopie - Couleur;Liquide de ponction;;;proposed
+Macroscopie - Couleur;Matériels (Prothèse, Sonde, Stérilet);;;proposed
+Macroscopie - Couleur;Pus;;;proposed
+Macroscopie - Couleur;Selles;;;proposed
+Macroscopie - Couleur;Sperme;;;proposed
+Macroscopie - Couleur;Urines;;;proposed
+Macroscopie - Ecoulement;Crachat/Expectoration;;;proposed
+Macroscopie - Ecoulement;LCR;;;proposed
+Macroscopie - Ecoulement;Sécrétions urétrales;;;proposed
+Macroscopie - Ecoulement;Sperme;;;proposed
+Macroscopie - Ecoulement;Urines;;;proposed
+Macroscopie - Gland - Abondance;Crachat/Expectoration;;;proposed
+Macroscopie - Gland - Abondance;LCR;;;proposed
+Macroscopie - Gland - Abondance;Pus;;;proposed
+Macroscopie - Gland - Abondance;Sécrétions urétrales;;;proposed
+Macroscopie - Gland - Abondance;Sperme;;;proposed
+Macroscopie - Gland - Abondance;Urines;;;proposed
+Macroscopie - Gland - Aspect;Crachat/Expectoration;;;proposed
+Macroscopie - Gland - Aspect;LCR;;;proposed
+Macroscopie - Gland - Aspect;Pus;;;proposed
+Macroscopie - Gland - Aspect;Sécrétions urétrales;;;proposed
+Macroscopie - Gland - Aspect;Sperme;;;proposed
+Macroscopie - Gland - Aspect;Urines;;;proposed
+Macroscopie - Gland - Autre;Crachat/Expectoration;;;proposed
+Macroscopie - Gland - Autre;LCR;;;proposed
+Macroscopie - Gland - Autre;Pus;;;proposed
+Macroscopie - Gland - Autre;Sécrétions urétrales;;;proposed
+Macroscopie - Gland - Autre;Sperme;;;proposed
+Macroscopie - Gland - Autre;Urines;;;proposed
+Macroscopie - Gland - Condylomes;Sécrétions urétrales;;;proposed
+Macroscopie - Gland - Couleur;Crachat/Expectoration;;;proposed
+Macroscopie - Gland - Couleur;LCR;;;proposed
+Macroscopie - Gland - Couleur;Pus;;;proposed
+Macroscopie - Gland - Couleur;Sécrétions urétrales;;;proposed
+Macroscopie - Gland - Couleur;Sperme;;;proposed
+Macroscopie - Gland - Couleur;Urines;;;proposed
+Macroscopie - Gland - Inflammation;Sécrétions urétrales;;;proposed
+Macroscopie - Gland - Normale;Sécrétions urétrales;;;proposed
+Macroscopie - Gland - Ulceration;Sécrétions urétrales;;;proposed
+Macroscopie - Muqueuse vaginale - Abondance;Sécrétions vaginales;;;proposed
+Macroscopie - Muqueuse vaginale - Aspect;Sécrétions vaginales;;;proposed
+Macroscopie - Muqueuse vaginale - Autre;Sécrétions vaginales;;;proposed
+Macroscopie - Muqueuse vaginale - Condylomes;Sécrétions vaginales;;;proposed
+Macroscopie - Muqueuse vaginale - Couleur;Sécrétions vaginales;;;proposed
+Macroscopie - Muqueuse vaginale - Inflammation;Sécrétions vaginales;;;proposed
+Macroscopie - Muqueuse vaginale - Leucorrhées;Sécrétions vaginales;;;proposed
+Macroscopie - Muqueuse vaginale - Normale;Sécrétions vaginales;;;proposed
+Macroscopie - Muqueuse vaginale - Ulcération;Sécrétions vaginales;;;proposed
+Macroscopie - Turbidité;LCR;;;proposed
+Macroscopie - Turbidité;Liquide de ponction;;;proposed
+Macroscopie - Turbidité;Pus;;;proposed
+Macroscopie - Turbidité;Selles;;;proposed
+Macroscopie - Turbidité;Urines;;;proposed
+Macroscopie - Vulve - Abondance;Sécrétions vaginales;;;proposed
+Macroscopie - Vulve - Aspect;Sécrétions vaginales;;;proposed
+Macroscopie - Vulve - Autre;Sécrétions vaginales;;;proposed
+Macroscopie - Vulve - Condylomes;Sécrétions vaginales;;;proposed
+Macroscopie - Vulve - Couleur;Sécrétions vaginales;;;proposed
+Macroscopie - Vulve - Inflammation;Sécrétions vaginales;;;proposed
+Macroscopie - Vulve - Leucorrhées;Sécrétions vaginales;;;proposed
+Macroscopie - Vulve - Normale;Sécrétions vaginales;;;proposed
+Macroscopie - Vulve - Ulcération;Sécrétions vaginales;;;proposed
+Magnesium(Serum);Serum;;;proposed
+Meropenem;LCR;;;proposed
+Meropenem;Liquide articulaire;;;proposed
+Meropenem;Liquide d’ascite;;;proposed
+Meropenem;Liquide d’aspiration broncho-alvéolaire;;;proposed
+Meropenem;Liquide d’aspiration gastrique;;;proposed
+Meropenem;Liquide de ponction péricardique;;;proposed
+Meropenem;Liquide pleural;;;proposed
+Meropenem;Pus ganglionnaires;;;proposed
+Meropenem;Selles;;;proposed
+Meropenem;Sputum;;;proposed
+Meropenem;Urines;;;proposed
+Mesure de la charge virale(Sang total);Sang total;;;proposed
+Microscopie - Etat frais Qualitatif - Bactéries;LCR;;;proposed
+Microscopie - Etat frais Qualitatif - Bactéries;Liquide de ponction;;;proposed
+Microscopie - Etat frais Qualitatif - Bactéries;Pus;;;proposed
+Microscopie - Etat frais Qualitatif - Bactéries;Sang (hémoculture);;;proposed
+Microscopie - Etat frais Qualitatif - Bactéries;Selles;;;proposed
+Microscopie - Etat frais Qualitatif - Bactéries;Sperme;;;proposed
+Microscopie - Etat frais Qualitatif - Bactéries;Urines;;;proposed
+Microscopie - Etat frais Qualitatif - Cellules;LCR;;;proposed
+Microscopie - Etat frais Qualitatif - Cellules;Selles;;;proposed
+Microscopie - Etat frais Qualitatif - Cellules;Sperme;;;proposed
+Microscopie - Etat frais Qualitatif - Cellules épithéaliales;Crachat/Expectoration;;;proposed
+Microscopie - Etat frais Qualitatif - Cristaux;Matériels (Prothèse, Sonde, Stérilet);;;proposed
+Microscopie - Etat frais Qualitatif - Cristaux;Urines;;;proposed
+Microscopie - Etat frais Qualitatif - Cylindre;Urines;;;proposed
+Microscopie - Etat frais Qualitatif - Encre de chine Cryptocoque;LCR;;;proposed
+Microscopie - Etat frais Qualitatif - Flagellés;Selles;;;proposed
+Microscopie - Etat frais Qualitatif - Hématies;Crachat/Expectoration;;;proposed
+Microscopie - Etat frais Qualitatif - Hématies;LCR;;;proposed
+Microscopie - Etat frais Qualitatif - Hématies;Liquide de ponction;;;proposed
+Microscopie - Etat frais Qualitatif - Hématies;Matériels (Prothèse, Sonde, Stérilet);;;proposed
+Microscopie - Etat frais Qualitatif - Hématies;Pus;;;proposed
+Microscopie - Etat frais Qualitatif - Hématies;Selles;;;proposed
+Microscopie - Etat frais Qualitatif - Hématies;Sperme;;;proposed
+Microscopie - Etat frais Qualitatif - Hématies;Urines;;;proposed
+Microscopie - Etat frais Qualitatif - Kystes;Selles;;;proposed
+Microscopie - Etat frais Qualitatif - Larves;Selles;;;proposed
+Microscopie - Etat frais Qualitatif - Leucocytes;Crachat/Expectoration;;;proposed
+Microscopie - Etat frais Qualitatif - Leucocytes;LCR;;;proposed
+Microscopie - Etat frais Qualitatif - Leucocytes;Liquide de ponction;;;proposed
+Microscopie - Etat frais Qualitatif - Leucocytes;Matériels (Prothèse, Sonde, Stérilet);;;proposed
+Microscopie - Etat frais Qualitatif - Leucocytes;Pus;;;proposed
+Microscopie - Etat frais Qualitatif - Leucocytes;Selles;;;proposed
+Microscopie - Etat frais Qualitatif - Leucocytes;Sperme;;;proposed
+Microscopie - Etat frais Qualitatif - Leucocytes;Urines;;;proposed
+Microscopie - Etat frais Qualitatif - Levures;LCR;;;proposed
+Microscopie - Etat frais Qualitatif - Levures;Matériels (Prothèse, Sonde, Stérilet);;;proposed
+Microscopie - Etat frais Qualitatif - Levures;Sang (hémoculture);;;proposed
+Microscopie - Etat frais Qualitatif - Levures;Selles;;;proposed
+Microscopie - Etat frais Qualitatif - Levures;Sperme;;;proposed
+Microscopie - Etat frais Qualitatif - Oeufs;Selles;;;proposed
+Microscopie - Etat frais Qualitatif - Oeufs;Urines;;;proposed
+Microscopie - Etat frais Qualitatif - Parasites;LCR;;;proposed
+Microscopie - Etat frais Qualitatif - Parasites;Matériels (Prothèse, Sonde, Stérilet);;;proposed
+Microscopie - Etat frais Qualitatif - Parasites;Selles;;;proposed
+Microscopie - Etat frais Qualitatif - Parasites;Sperme;;;proposed
+Microscopie - Etat frais Qualitatif - Parasites;Urines;;;proposed
+Microscopie - Etat Frais Qualitatif - Sécrétion - Cellules épithéliales;Sécrétions vaginales;;;proposed
+Microscopie - Etat Frais Qualitatif - Sécrétion - Hématies;Sécrétions vaginales;;;proposed
+Microscopie - Etat Frais Qualitatif - Sécrétion - Leucocytes;Sécrétions vaginales;;;proposed
+Microscopie - Etat Frais Qualitatif - Sécrétion - Lévures/Filaments mycéliens;Sécrétions vaginales;;;proposed
+Microscopie - Etat Frais Qualitatif - Sécrétion - Spermatozoïdes;Sécrétions vaginales;;;proposed
+Microscopie - Etat Frais Qualitatif - Sécrétion - Trichomonas vaginalis;Sécrétions vaginales;;;proposed
+Microscopie - Etat frais Qualitatif - Spermatozoides;Sperme;;;proposed
+Microscopie - Etat frais Qualitatif - Spores;LCR;;;proposed
+Microscopie - Etat frais Quantitatif - Hématies;Crachat/Expectoration;;;proposed
+Microscopie - Etat frais Quantitatif - Hématies;LCR;;;proposed
+Microscopie - Etat frais Quantitatif - Hématies;Liquide de ponction;;;proposed
+Microscopie - Etat frais Quantitatif - Hématies;Pus;;;proposed
+Microscopie - Etat frais Quantitatif - Hématies;Sperme;;;proposed
+Microscopie - Etat frais Quantitatif - Hématies;Urines;;;proposed
+Microscopie - Etat frais Quantitatif - Leucocytes;Crachat/Expectoration;;;proposed
+Microscopie - Etat frais Quantitatif - Leucocytes;LCR;;;proposed
+Microscopie - Etat frais Quantitatif - Leucocytes;Liquide de ponction;;;proposed
+Microscopie - Etat frais Quantitatif - Leucocytes;Pus;;;proposed
+Microscopie - Etat frais Quantitatif - Leucocytes;Sperme;;;proposed
+Microscopie - Etat frais Quantitatif - Leucocytes;Urines;;;proposed
+Microscopie - Etat frais Quantitatif - Sécrétion vaginale - Hématies;Sécrétions vaginales;;;proposed
+Microscopie - Etat frais Quantitatif - Sécrétion vaginale - Leucocytes;Sécrétions vaginales;;;proposed
+Microscopie - Etat frais Quantitatif - Volume;Urines;;;proposed
+Microscopie - Frotis Coloration Gram - Autres - Sécrétion vaginale - Levure;Sécrétions vaginales;;;proposed
+Microscopie - Frottis Coloration Giemsa - Lymphocytes;Crachat/Expectoration;;;proposed
+Microscopie - Frottis Coloration Giemsa - Lymphocytes;LCR;;;proposed
+Microscopie - Frottis Coloration Giemsa - Lymphocytes;Liquide de ponction;;;proposed
+Microscopie - Frottis Coloration Giemsa - Lymphocytes;Sperme;;;proposed
+Microscopie - Frottis Coloration Giemsa - Lymphocytes;Urines;;;proposed
+Microscopie - Frottis Coloration Giemsa - Polynucléaires;Crachat/Expectoration;;;proposed
+Microscopie - Frottis Coloration Giemsa - Polynucléaires;LCR;;;proposed
+Microscopie - Frottis Coloration Giemsa - Polynucléaires;Liquide de ponction;;;proposed
+Microscopie - Frottis Coloration Giemsa - Polynucléaires;Sperme;;;proposed
+Microscopie - Frottis Coloration Giemsa - Polynucléaires;Urines;;;proposed
+Microscopie - Frottis Coloration Gram - Autre - Lévures;Sécrétions urétrales;;;proposed
+Microscopie - Frottis Coloration Gram - Bactéries;Liquide de ponction;;;proposed
+Microscopie - Frottis Coloration Gram - Bactéries;Matériels (Prothèse, Sonde, Stérilet);;;proposed
+Microscopie - Frottis Coloration Gram - Bactéries;Sang (hémoculture);;;proposed
+Microscopie - Frottis Coloration Gram - Bactéries;Sperme;;;proposed
+Microscopie - Frottis Coloration Gram - Bactéries;Urines;;;proposed
+Microscopie - Frottis Coloration Gram - Bactéries - Autre caractère;Crachat/Expectoration;;;proposed
+Microscopie - Frottis Coloration Gram - Bactéries - Autre caractère;LCR;;;proposed
+Microscopie - Frottis Coloration Gram - Bactéries - Autre caractère;Pus;;;proposed
+Microscopie - Frottis Coloration Gram - Bactéries - Autre caractère;Sperme;;;proposed
+Microscopie - Frottis Coloration Gram - Bactéries - Autre caractère;Urines;;;proposed
+Microscopie - Frottis Coloration Gram - Bactéries - Flore Bactérienne;Selles;;;proposed
+Microscopie - Frottis Coloration Gram - Bactéries - Mode de regroupement;Crachat/Expectoration;;;proposed
+Microscopie - Frottis Coloration Gram - Bactéries - Mode de regroupement;LCR;;;proposed
+Microscopie - Frottis Coloration Gram - Bactéries - Mode de regroupement;Pus;;;proposed
+Microscopie - Frottis Coloration Gram - Bactéries - Mode de regroupement;Sperme;;;proposed
+Microscopie - Frottis Coloration Gram - Bactéries - Mode de regroupement;Urines;;;proposed
+Microscopie - Frottis Coloration Gram - Bactéries - Nombre de flore;Crachat/Expectoration;;;proposed
+Microscopie - Frottis Coloration Gram - Bactéries - Nombre de flore;LCR;;;proposed
+Microscopie - Frottis Coloration Gram - Bactéries - Nombre de flore;Liquide de ponction;;;proposed
+Microscopie - Frottis Coloration Gram - Bactéries - Nombre de flore;Matériels (Prothèse, Sonde, Stérilet);;;proposed
+Microscopie - Frottis Coloration Gram - Bactéries - Nombre de flore;Pus;;;proposed
+Microscopie - Frottis Coloration Gram - Bactéries - Nombre de flore;Sang (hémoculture);;;proposed
+Microscopie - Frottis Coloration Gram - Bactéries - Nombre de flore;Sécrétions urétrales;;;proposed
+Microscopie - Frottis Coloration Gram - Bactéries - Nombre de flore;Sperme;;;proposed
+Microscopie - Frottis Coloration Gram - Bactéries - Nombre de flore;Urines;;;proposed
+Microscopie - Frottis Coloration Gram - Bactéries - Sécrétion cervicale - Polynucléaires;Sécrétions vaginales;;;proposed
+Microscopie - Frottis Coloration Gram - Bactéries - Sécrétion cervicale - Type de Gram;Sécrétions vaginales;;;proposed
+Microscopie - Frottis Coloration Gram - Bactéries - Sécrétion vaginale - clue cells;Sécrétions vaginales;;;proposed
+Microscopie - Frottis Coloration Gram - Bactéries - Sécrétion vaginale - Flore Bactérienne;Sécrétions vaginales;;;proposed
+Microscopie - Frottis Coloration Gram - Bactéries - Sécrétion vaginale - Gardnerella vaginalis;Sécrétions vaginales;;;proposed
+Microscopie - Frottis Coloration Gram - Bactéries - Sécrétion vaginale - Lactobacillus;Sécrétions vaginales;;;proposed
+Microscopie - Frottis Coloration Gram - Bactéries - Sécrétion vaginale - Mobiluncus;Sécrétions vaginales;;;proposed
+Microscopie - Frottis Coloration Gram - Bactéries - Sécrétion vaginale - Polynucléaires;Sécrétions vaginales;;;proposed
+Microscopie - Frottis Coloration Gram - Bactéries - Sécrétion vaginale - Score de Nugent;Sécrétions vaginales;;;proposed
+Microscopie - Frottis Coloration Gram - Bactéries - Sécrétion vaginale - Type de flore;Sécrétions vaginales;;;proposed
+Microscopie - Frottis Coloration Gram - Bactéries - Type de Gram;Crachat/Expectoration;;;proposed
+Microscopie - Frottis Coloration Gram - Bactéries - Type de Gram;LCR;;;proposed
+Microscopie - Frottis Coloration Gram - Bactéries - Type de Gram;Pus;;;proposed
+Microscopie - Frottis Coloration Gram - Bactéries - Type de Gram;Sperme;;;proposed
+Microscopie - Frottis Coloration Gram - Bactéries - Type de Gram;Urines;;;proposed
+Microscopie - Frottis Coloration Gram - Polynucléaires;Crachat/Expectoration;;;proposed
+Microscopie - Frottis Coloration Gram - Polynucléaires;Sécrétions urétrales;;;proposed
+Microscopie - Frottis Coloration Gram - Polynucléaires;Sperme;;;proposed
+Microscopie - Qualitatif - Recherche Antigènes solubles Escherichia coli k1;LCR;;;proposed
+Microscopie - Qualitatif - Recherche Antigènes solubles Hemophilus Influenzae B;LCR;;;proposed
+Microscopie - Qualitatif - Recherche Antigènes solubles Neisseria meningitidis A;LCR;;;proposed
+Microscopie - Qualitatif - Recherche Antigènes solubles Neisseria meningitidis B;LCR;;;proposed
+Microscopie - Qualitatif - Recherche Antigènes solubles Neisseria meningitidis C;LCR;;;proposed
+Microscopie - Qualitatif - Recherche Antigènes solubles Neisseria meningitidis Y/W135;LCR;;;proposed
+Microscopie - Qualitatif - Recherche Antigènes solubles Streptoccus B;LCR;;;proposed
+Microscopie - Qualitatif - Recherche Antigènes solubles Streptococcus pneumoniae;LCR;;;proposed
+Mono %;EDTA Tube;;;proposed
+Monocytes (Abs)(Sang total);Sang total;742-7;;validated
+Monocytes (%)(Sang total);Sang total;5905-5;;validated
+Moxifloxacine;LCR;;;proposed
+Moxifloxacine;Liquide articulaire;;;proposed
+Moxifloxacine;Liquide d’ascite;;;proposed
+Moxifloxacine;Liquide d’aspiration broncho-alvéolaire;;;proposed
+Moxifloxacine;Liquide d’aspiration gastrique;;;proposed
+Moxifloxacine;Liquide de ponction péricardique;;;proposed
+Moxifloxacine;Liquide pleural;;;proposed
+Moxifloxacine;Pus ganglionnaires;;;proposed
+Moxifloxacine;Selles;;;proposed
+Moxifloxacine;Sputum;;;proposed
+Moxifloxacine;Urines;;;proposed
+Murex;Dry Tube;;;proposed
+Murex(Plasma);Plasma;;;proposed
+Murex(Serum);Serum;;;proposed
+Myogenin (F5D);Immunohistochemistry specimen;;;proposed
+Myogenin (F5D);Tissue antemortem;;;proposed
+Myogenin (F5D);Tissue post mortem;;;proposed
+Napsin A (MRQ-60);Immunohistochemistry specimen;;;proposed
+Napsin A (MRQ-60);Tissue antemortem;;;proposed
+Napsin A (MRQ-60);Tissue post mortem;;;proposed
+Neut %;EDTA Tube;;;proposed
+Numération des globules blancs(Sang total);Sang total;;;proposed
+Numération des globules rouges(Sang total);Sang total;;;proposed
+P24 Ag(Plasma);Plasma;;;proposed
+P24 Ag(Serum);Serum;;;proposed
+P 53;Immunohistochemistry specimen;;;proposed
+P 53;Tissue antemortem;;;proposed
+P 53;Tissue post mortem;;;proposed
+PAS;LCR;;;proposed
+PAS;Liquide articulaire;;;proposed
+PAS;Liquide d’ascite;;;proposed
+PAS;Liquide d’aspiration broncho-alvéolaire;;;proposed
+PAS;Liquide d’aspiration gastrique;;;proposed
+PAS;Liquide de ponction péricardique;;;proposed
+PAS;Liquide pleural;;;proposed
+PAS;Pus ganglionnaires;;;proposed
+PAS;Selles;;;proposed
+PAS;Sputum;;;proposed
+PAS;Urines;;;proposed
+Pax 5;Immunohistochemistry specimen;;;proposed
+Pax 5;Tissue antemortem;;;proposed
+Pax 5;Tissue post mortem;;;proposed
+Pax 8;Immunohistochemistry specimen;;;proposed
+Pax 8;Tissue antemortem;;;proposed
+Pax 8;Tissue post mortem;;;proposed
+Plaquette(Sang total);Sang total;;;proposed
+PLQ;EDTA Tube;;;proposed
+Polynucléaires basophiles (Abs)(Sang total);Sang total;;;proposed
+Polynucléaires basophiles (%)(Sang total);Sang total;;;proposed
+Polynucléaires Eosinophiles (Abs)(Sang total);Sang total;;;proposed
+Polynucléaires Eosinophiles (%)(Sang total);Sang total;;;proposed
+Polynucléaires Neutrophiles (Abs)(Sang total);Sang total;;;proposed
+Polynucléaires Neutrophiles (%)(Sang total);Sang total;;;proposed
+Potassium(Plasma);Plasma;;;proposed
+Potassium(Serum);Serum;;;proposed
+Prolans (BHCG) urines de 24 h(Urines);Urines;;;proposed
+Protéine;LCR;;;proposed
+Protéinurie sur bandelette(Urine);Urines;;;proposed
+Prothionamide;LCR;;;proposed
+Prothionamide;Liquide articulaire;;;proposed
+Prothionamide;Liquide d’ascite;;;proposed
+Prothionamide;Liquide d’aspiration broncho-alvéolaire;;;proposed
+Prothionamide;Liquide d’aspiration gastrique;;;proposed
+Prothionamide;Liquide de ponction péricardique;;;proposed
+Prothionamide;Liquide pleural;;;proposed
+Prothionamide;Pus ganglionnaires;;;proposed
+Prothionamide;Selles;;;proposed
+Prothionamide;Sputum;;;proposed
+Prothionamide;Urines;;;proposed
+PROTIDEMIE(Serum);Serum;;;proposed
+Pyrazinamide;LCR;;;proposed
+Pyrazinamide;Liquide articulaire;;;proposed
+Pyrazinamide;Liquide d’ascite;;;proposed
+Pyrazinamide;Liquide d’aspiration broncho-alvéolaire;;;proposed
+Pyrazinamide;Liquide d’aspiration gastrique;;;proposed
+Pyrazinamide;Liquide de ponction péricardique;;;proposed
+Pyrazinamide;Liquide pleural;;;proposed
+Pyrazinamide;Pus ganglionnaires;;;proposed
+Pyrazinamide;Selles;;;proposed
+Pyrazinamide;Sputum;;;proposed
+Pyrazinamide;Urines;;;proposed
+Rhesus(Sang total);Sang total;;;proposed
+Rifampicine;LCR;;;proposed
+Rifampicine;Liquide articulaire;;;proposed
+Rifampicine;Liquide d’ascite;;;proposed
+Rifampicine;Liquide d’aspiration broncho-alvéolaire;;;proposed
+Rifampicine;Liquide d’aspiration gastrique;;;proposed
+Rifampicine;Liquide de ponction péricardique;;;proposed
+Rifampicine;Liquide pleural;;;proposed
+Rifampicine;Pus ganglionnaires;;;proposed
+Rifampicine;Selles;;;proposed
+Rifampicine;Sputum;;;proposed
+Rifampicine;Urines;;;proposed
+Sodium(Plasma);Plasma;;;proposed
+Sodium(Serum);Serum;;;proposed
+Stat-Pak(Plasma);Plasma;;;proposed
+Stat-Pak(Sang total);Sang total;;;proposed
+Stat-Pak(Sérum);Serum;;;proposed
+Streptomicine;LCR;;;proposed
+Streptomicine;Liquide articulaire;;;proposed
+Streptomicine;Liquide d’ascite;;;proposed
+Streptomicine;Liquide d’aspiration broncho-alvéolaire;;;proposed
+Streptomicine;Liquide d’aspiration gastrique;;;proposed
+Streptomicine;Liquide de ponction péricardique;;;proposed
+Streptomicine;Liquide pleural;;;proposed
+Streptomicine;Pus ganglionnaires;;;proposed
+Streptomicine;Selles;;;proposed
+Streptomicine;Sputum;;;proposed
+Streptomicine;Urines;;;proposed
+TB LAMP;LCR;;;proposed
+TB LAMP;Liquide articulaire;;;proposed
+TB LAMP;Liquide d’ascite;;;proposed
+TB LAMP;Liquide d’aspiration broncho-alvéolaire;;;proposed
+TB LAMP;Liquide d’aspiration gastrique;;;proposed
+TB LAMP;Liquide de ponction péricardique;;;proposed
+TB LAMP;Liquide pleural;;;proposed
+TB LAMP;Pus ganglionnaires;;;proposed
+TB LAMP;Selles;;;proposed
+TB LAMP;Sputum;;;proposed
+TB LAMP;Urines;;;proposed
+TB LAM urinaire;LCR;;;proposed
+TB LAM urinaire;Liquide articulaire;;;proposed
+TB LAM urinaire;Liquide d’ascite;;;proposed
+TB LAM urinaire;Liquide d’aspiration broncho-alvéolaire;;;proposed
+TB LAM urinaire;Liquide d’aspiration gastrique;;;proposed
+TB LAM urinaire;Liquide de ponction péricardique;;;proposed
+TB LAM urinaire;Liquide pleural;;;proposed
+TB LAM urinaire;Pus ganglionnaires;;;proposed
+TB LAM urinaire;Selles;;;proposed
+TB LAM urinaire;Sputum;;;proposed
+TB LAM urinaire;Urines;;;proposed
+TCA / TCK(Tube Bleu);Tube Bleu;;;proposed
+TCMH;EDTA Tube;;;proposed
+Teneur Corpusculaire Moyenne en Hémoglobine(Sang total);Sang total;;;proposed
+Teridizone;LCR;;;proposed
+Teridizone;Liquide articulaire;;;proposed
+Teridizone;Liquide d’ascite;;;proposed
+Teridizone;Liquide d’aspiration broncho-alvéolaire;;;proposed
+Teridizone;Liquide d’aspiration gastrique;;;proposed
+Teridizone;Liquide de ponction péricardique;;;proposed
+Teridizone;Liquide pleural;;;proposed
+Teridizone;Pus ganglionnaires;;;proposed
+Teridizone;Selles;;;proposed
+Teridizone;Sputum;;;proposed
+Teridizone;Urines;;;proposed
+Test rapide HIV(Plasma);Plasma;;;proposed
+Test rapide HIV(Sang total);Sang total;;;proposed
+Test rapide HIV(Serum);Serum;;;proposed
+Test urinaire de grossesse(Urine);Urines;;;proposed
+TH(Serum);Serum;;;proposed
+Thyroglobulin (2H11+6E1);Immunohistochemistry specimen;;;proposed
+Thyroglobulin (2H11+6E1);Tissue antemortem;;;proposed
+Thyroglobulin (2H11+6E1);Tissue post mortem;;;proposed
+TO(Serum);Serum;;;proposed
+TPHA(Serum);Serum;;;proposed
+TP pourcentage(Tube Bleu);Tube Bleu;;;proposed
+TP temoin(Tube Bleu);Tube Bleu;;;proposed
+Transaminases ALTL;Dry Tube;;;proposed
+Transaminases ASTL;Dry Tube;;;proposed
+Transaminases G0T (37°C)(Serum);Serum;;;proposed
+Transaminases GPT (37°C)(Serum);Serum;;;proposed
+Triglycérides(Serum);Serum;;;proposed
+Uree(Serum);Serum;;;proposed
+VDRL(Serum);Serum;;;proposed
+VGM;EDTA Tube;;;proposed
+Viral Load;EDTA Tube;25836-8;;validated
+Viral Load;PSC;25836-8;;validated
+Vironostika;Dry Tube;;;proposed
+Vironostika(Plasma);Plasma;;;proposed
+Vironostika(Serum);Serum;;;proposed
+Volume Globulaire Moyen(Sang total);Sang total;;;proposed
+Western blot VIH(Plasma);Plasma;;;proposed
+Western blot VIH(Serum);Serum;;;proposed
+Wilms' tumor 1 protein (WT1);Immunohistochemistry specimen;;;proposed
+Wilms' tumor 1 protein (WT1);Tissue antemortem;;;proposed
+Wilms' tumor 1 protein (WT1);Tissue post mortem;;;proposed

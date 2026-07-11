@@ -65,6 +65,9 @@ public class Test extends EnumValueItemImpl {
 
     private String loinc;
 
+    // Code SNOMED CT de référence, complète loinc. Alimenté par l'import terminologique.
+    private String snomedCode;
+
     private String stickerRequiredFlag;
 
     private String alternateTestDisplayValue;
@@ -252,6 +255,14 @@ public class Test extends EnumValueItemImpl {
 
     public void setLoinc(String loinc) {
         this.loinc = loinc;
+    }
+
+    public String getSnomedCode() {
+        return snomedCode;
+    }
+
+    public void setSnomedCode(String snomedCode) {
+        this.snomedCode = snomedCode;
     }
 
     public String getStickerRequiredFlag() {

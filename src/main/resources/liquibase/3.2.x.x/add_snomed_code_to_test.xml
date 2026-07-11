@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+    <!-- Code SNOMED CT de référence pour un test. Complète la colonne LOINC déjà
+         existante (test.loinc). Alimenté via l'import terminologique (CSV validé). -->
+    <changeSet id="add_snomed_code_to_test" author="itechciv">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="test" columnName="snomed_code" schemaName="clinlims"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="test" schemaName="clinlims">
+            <column name="snomed_code" type="VARCHAR(20)"/>
+        </addColumn>
+    </changeSet>
+
+</databaseChangeLog>

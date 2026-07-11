@@ -1,0 +1,117 @@
+# Codage des entrees de dictionnaire (organismes, antibiotiques, levures).
+# Cle: category + dict_entry. status: proposed|validated.
+# NB: la categorie Bacteria (1545 organismes) n'est PAS incluse ici par defaut ;
+#     l'ajouter par lots valides. Ce fichier couvre antibiotiques + levures.
+category;dict_entry;loinc;snomed;status
+Bacteriology Antibiotics;Afipia sp.;;;proposed
+Bacteriology Antibiotics;Amikacin 30μg-Aminoglycosides;;;proposed
+Bacteriology Antibiotics;Amoxicillin/Clavulanic acid 20/10μg-Beta-lactam+Inhibitors;;;proposed
+Bacteriology Antibiotics;Ampicillin 10μg-Penicillins;;;proposed
+Bacteriology Antibiotics;Ampicillin 2μg-Penicillins;;;proposed
+Bacteriology Antibiotics;Azithromycin 15μg-Macrolides;;;proposed
+Bacteriology Antibiotics;Aztreonam 30μg-Monobactams;;;proposed
+Bacteriology Antibiotics;Cefepime 30μg-Cephems;;;proposed
+Bacteriology Antibiotics;Cefixime 5μg-Cephems-Oral;;;proposed
+Bacteriology Antibiotics;Cefotaxime 5μg-Cephems;;;proposed
+Bacteriology Antibiotics;Cefoxitin 30μg-Cephems;;;proposed
+Bacteriology Antibiotics;Ceftazidime 10μg-Cephems;;;proposed
+Bacteriology Antibiotics;Ceftriaxone 30μg-Cephems;;;proposed
+Bacteriology Antibiotics;Cefuroxime 30μg-Cephems;;;proposed
+Bacteriology Antibiotics;Cephalothin 30μg-Cephems;;;proposed
+Bacteriology Antibiotics;Chloramphenicol 30μg-Phenicols;;;proposed
+Bacteriology Antibiotics;Ciprofloxacin 5μg-Quinolones;;;proposed
+Bacteriology Antibiotics;Clindamycin 2μg-Lincosamides;;;proposed
+Bacteriology Antibiotics;Colistin 10μg-Lipopeptides;;;proposed
+Bacteriology Antibiotics;Doripenem 10μg-Penems;;;proposed
+Bacteriology Antibiotics;Ertapenem 10μg-Penems;;;proposed
+Bacteriology Antibiotics;Erythromycin 15μg-Macrolides;;;proposed
+Bacteriology Antibiotics;Fosfomycin 200μg-Fosfomycins;;;proposed
+Bacteriology Antibiotics;Fusidic acid 10μg-Steroidals;;;proposed
+Bacteriology Antibiotics;Gentamicin 10μg-Aminoglycosides;;;proposed
+Bacteriology Antibiotics;Gentamicin 30μg-Aminoglycosides;;;proposed
+Bacteriology Antibiotics;Imipenem 10μg-Penems;;;proposed
+Bacteriology Antibiotics;Levofloxacin 5μg-Quinolones;;;proposed
+Bacteriology Antibiotics;Mecillinam (Amdinocillin);;;proposed
+10μg-Penicillins;mecillinam;;;proposed
+Bacteriology Antibiotics;Meropenem 10μg-Penems;;;proposed
+Bacteriology Antibiotics;Metronidazole;;;proposed
+10μg-Nitroimidazoles;metronidazole;;;proposed
+Bacteriology Antibiotics;Minocycline 30μg-Tetracyclines;;;proposed
+Bacteriology Antibiotics;Moxifloxacin 5μg-Quinolones;;;proposed
+Bacteriology Antibiotics;Nalidixic acid 30μg-Quinolones;;;proposed
+Bacteriology Antibiotics;Netilmicin 10μg-Aminoglycosides;;;proposed
+Bacteriology Antibiotics;Nitrofurantoin 100μg-Nitrofurans;;;proposed
+Bacteriology Antibiotics;Nitroxoline 30μg-Quinolones;;;proposed
+Bacteriology Antibiotics;Norfloxacin 10μg-Quinolones;;;proposed
+Bacteriology Antibiotics;Ofloxacin 5μg-Quinolones;;;proposed
+Bacteriology Antibiotics;Oxacillin 1μg-Penicillins;;;proposed
+Bacteriology Antibiotics;Penicillin G 1unit-Penicillins;;;proposed
+Bacteriology Antibiotics;Piperacillin 30μg-Penicillins;;;proposed
+Bacteriology Antibiotics;Piperacillin/Tazobactam;;;proposed
+30/6μg-Beta-lactam+Inhibitors;piperacillin_tazobactam;;;proposed
+Bacteriology Antibiotics;Rifampin 5μg-Ansamycins;;;proposed
+Bacteriology Antibiotics;Spectinomycin 100μg-Aminocyclitols;;;proposed
+Bacteriology Antibiotics;Teicoplanin 30μg-Glycopeptides;;;proposed
+Bacteriology Antibiotics;Tetracycline 30μg-Tetracyclines;;;proposed
+Bacteriology Antibiotics;Ticarcillin 75μg-Penicillins;;;proposed
+Bacteriology Antibiotics;Ticarcillin/Clavulanic acid;;;proposed
+75/10-15μg-Beta-lactam+Inhibitors;ticarcillin_clavulanic_acid;;;proposed
+Bacteriology Antibiotics;Tigecycline 15μg-Tetracyclines;;;proposed
+Bacteriology Antibiotics;Tobramycin 10μg-Aminoglycosides;;;proposed
+Bacteriology Antibiotics;Trimethoprim 5μg-Folate pathway;;;proposed
+inhibitors;trimethoprim;;;proposed
+Bacteriology Antibiotics;Trimethoprim/Sulfamethoxazole;;;proposed
+1.25/23.75μg-Folate pathway inhibitors;trimethoprim_sulfamethoxazole;;;proposed
+Bacteriology Antibiotics;Vancomycin 5μg-Glycopeptides;;;proposed
+Therapeutic Antibiotics;AMIKACIN;;;proposed
+Therapeutic Antibiotics;AMOXICILLIN;;;proposed
+Therapeutic Antibiotics;AMOXICILLIN-CLAVULANIC ACID;;;proposed
+Therapeutic Antibiotics;AMPICILLIN;;;proposed
+Therapeutic Antibiotics;AZITHROMYCIN;;;proposed
+Therapeutic Antibiotics;BENZYLPENICILLIN;;;proposed
+Therapeutic Antibiotics;CEFAZOLIN;;;proposed
+Therapeutic Antibiotics;CEFEPIME;;;proposed
+Therapeutic Antibiotics;CEFIXIME;;;proposed
+Therapeutic Antibiotics;CEFOTAXIME;;;proposed
+Therapeutic Antibiotics;CEFTAZIDIME;;;proposed
+Therapeutic Antibiotics;CEFTRIAXONE;;;proposed
+Therapeutic Antibiotics;CEFUROXIME;;;proposed
+Therapeutic Antibiotics;CIPROFLOXACIN;;;proposed
+Therapeutic Antibiotics;CLARITHROMYCIN;;;proposed
+Therapeutic Antibiotics;CLINDAMYCIN;;;proposed
+Therapeutic Antibiotics;CLOXACILLIN;;;proposed
+Therapeutic Antibiotics;COLISTIN;;;proposed
+Therapeutic Antibiotics;DOXYCYCLINE;;;proposed
+Therapeutic Antibiotics;ERTAPENEM;;;proposed
+Therapeutic Antibiotics;ERYTHROMYCIN;;;proposed
+Therapeutic Antibiotics;FLUCLOXACILLIN;;;proposed
+Therapeutic Antibiotics;FOSFOMYCIN;;;proposed
+Therapeutic Antibiotics;FUSIDIC ACID;;;proposed
+Therapeutic Antibiotics;GENTAMICIN;;;proposed
+Therapeutic Antibiotics;IMIPENEM;;;proposed
+Therapeutic Antibiotics;LEVOFLOXACIN;;;proposed
+Therapeutic Antibiotics;LINEZOLID;;;proposed
+Therapeutic Antibiotics;MEROPENEM;;;proposed
+Therapeutic Antibiotics;METRONIDAZOLE;;;proposed
+Therapeutic Antibiotics;MINOCYCLINE;;;proposed
+Therapeutic Antibiotics;MOXIFLOXACIN;;;proposed
+Therapeutic Antibiotics;NETILMICIN;;;proposed
+Therapeutic Antibiotics;NITROFURANTOIN;;;proposed
+Therapeutic Antibiotics;NORFLOXACIN;;;proposed
+Therapeutic Antibiotics;OFLOXACIN;;;proposed
+Therapeutic Antibiotics;PIPERACILLIN-TAZOBACTAM;;;proposed
+Therapeutic Antibiotics;RIFAMPICIN;;;proposed
+Therapeutic Antibiotics;SPIRAMYCIN;;;proposed
+Therapeutic Antibiotics;TEICOPLANIN;;;proposed
+Therapeutic Antibiotics;TETRACYCLINE;;;proposed
+Therapeutic Antibiotics;TICARCILLIN-CLAVULANIC ACID;;;proposed
+Therapeutic Antibiotics;TOBRAMYCIN;;;proposed
+Therapeutic Antibiotics;TRIMETHOPRIM;;;proposed
+Therapeutic Antibiotics;TRIMETHOPRIM-SULFAMETHOXAZOLE;;;proposed
+Therapeutic Antibiotics;VANCOMYCIN;;;proposed
+Yeasts;Candida albicans;;53326005;proposed
+Yeasts;Candida glabrata;;;proposed
+Yeasts;Candida krusei;;;proposed
+Yeasts;Candida parapsilosis;;;proposed
+Yeasts;Candida tropicalis;;;proposed
+Yeasts;Saccharomyces cerevisiae;;;proposed

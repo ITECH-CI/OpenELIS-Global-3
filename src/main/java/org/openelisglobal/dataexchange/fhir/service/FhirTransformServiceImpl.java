@@ -1024,6 +1024,10 @@ public class FhirTransformServiceImpl implements FhirTransformService {
         if (!GenericValidator.isBlankOrNull(test.getLoinc())) {
             codeableConcept.addCoding(new Coding("http://loinc.org", test.getLoinc(), display));
         }
+        // Coding SNOMED CT si renseigné (alimenté via l'import terminologique).
+        if (!GenericValidator.isBlankOrNull(test.getSnomedCode())) {
+            codeableConcept.addCoding(new Coding("http://snomed.info/sct", test.getSnomedCode(), display));
+        }
         // Coding local OE : identifie toujours le test, même sans LOINC.
         codeableConcept.addCoding(new Coding(fhirConfig.getOeFhirSystem() + "/test", test.getId(), display));
         codeableConcept.setText(display);

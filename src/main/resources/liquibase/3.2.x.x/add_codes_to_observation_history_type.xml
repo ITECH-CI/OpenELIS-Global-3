@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+    <!-- Codes terminologiques de référence pour les types d'observation clinique
+         (aidsStage, cd4Count, etc.). LOINC pour les observables quantifiables,
+         SNOMED CT pour les concepts. Alimentés via l'import terminologique. -->
+    <changeSet id="add_loinc_code_to_observation_history_type" author="itechciv">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="observation_history_type" columnName="loinc_code" schemaName="clinlims"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="observation_history_type" schemaName="clinlims">
+            <column name="loinc_code" type="VARCHAR(20)"/>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="add_snomed_code_to_observation_history_type" author="itechciv">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="observation_history_type" columnName="snomed_code" schemaName="clinlims"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="observation_history_type" schemaName="clinlims">
+            <column name="snomed_code" type="VARCHAR(20)"/>
+        </addColumn>
+    </changeSet>
+
+</databaseChangeLog>

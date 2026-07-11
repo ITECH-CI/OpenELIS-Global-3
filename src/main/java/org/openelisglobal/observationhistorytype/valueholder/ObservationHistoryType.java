@@ -19,6 +19,9 @@ public class ObservationHistoryType extends BaseObject<String> implements Simple
     private String id;
     private String typeName;
     private String description;
+    // Codes terminologiques de référence, alimentés par l'import terminologique.
+    private String loincCode;
+    private String snomedCode;
 
     // Constructors
 
@@ -66,5 +69,21 @@ public class ObservationHistoryType extends BaseObject<String> implements Simple
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public String getLoincCode() {
+        return loincCode;
+    }
+
+    public void setLoincCode(String loincCode) {
+        this.loincCode = loincCode;
+    }
+
+    public String getSnomedCode() {
+        return snomedCode;
+    }
+
+    public void setSnomedCode(String snomedCode) {
+        this.snomedCode = snomedCode;
     }
 }
