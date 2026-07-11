@@ -98,7 +98,10 @@ public class FhirSyncMonitorRestController {
 
         boolean hasAccession = accession != null && !accession.trim().isEmpty();
         boolean hasDate = date != null && !date.trim().isEmpty();
-        boolean allStatuses = "ALL".equalsIgnoreCase(status) || hasAccession || hasDate;
+        // Le filtre statut fait toujours foi (cohérence UI) : on ne balaie tous les
+        // statuts QUE si l'utilisateur choisit explicitement ALL. Les critères
+        // accession/date s'appliquent par-dessus le statut sélectionné.
+        boolean allStatuses = "ALL".equalsIgnoreCase(status);
 
         // Récupère les événements : un statut précis, ou tous statuts confondus.
         List<FhirSyncStatus> items = new ArrayList<>();
