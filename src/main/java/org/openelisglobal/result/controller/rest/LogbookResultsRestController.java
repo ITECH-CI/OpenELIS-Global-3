@@ -516,9 +516,8 @@ public class LogbookResultsRestController extends LogbookResultsBaseController {
                     resultSampleIds.add(rs.sample.getId());
                 }
             });
-            java.util.Map<String, String> resultSyncIds = fhirSyncStatusService
-                    .recordPendingForSamples(org.openelisglobal.dataexchange.fhir.FhirSyncConstants.TRIGGER_RESULTS,
-                            resultSampleIds);
+            java.util.Map<String, String> resultSyncIds = fhirSyncStatusService.recordPendingForSamples(
+                    org.openelisglobal.dataexchange.fhir.FhirSyncConstants.TRIGGER_RESULTS, resultSampleIds);
             try {
                 fhirTransformService.transformPersistResultsEntryFhirObjects(actionDataSet);
                 fhirSyncStatusService.markSuccessForAll(resultSyncIds.values());

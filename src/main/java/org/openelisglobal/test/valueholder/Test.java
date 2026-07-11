@@ -65,7 +65,8 @@ public class Test extends EnumValueItemImpl {
 
     private String loinc;
 
-    // Code SNOMED CT de référence, complète loinc. Alimenté par l'import terminologique.
+    // Code SNOMED CT de référence, complète loinc. Alimenté par l'import
+    // terminologique.
     private String snomedCode;
 
     private String stickerRequiredFlag;

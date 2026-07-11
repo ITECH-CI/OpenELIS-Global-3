@@ -24,7 +24,9 @@ public enum TerminologyTarget {
     /** Tests : clé test_name (+ sample_type indicatif). Colonnes loinc + snomed. */
     TEST,
 
-    /** Entrées de dictionnaire : clé category + dict_entry. Colonnes loinc + snomed. */
+    /**
+     * Entrées de dictionnaire : clé category + dict_entry. Colonnes loinc + snomed.
+     */
     DICTIONARY,
 
     /** Types d'observation clinique : clé type_name. Colonnes loinc + snomed. */

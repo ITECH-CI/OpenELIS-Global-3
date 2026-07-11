@@ -17,8 +17,8 @@ package org.openelisglobal.dataexchange.terminology.service;
 
 /**
  * Service d'import de codes terminologiques (LOINC / SNOMED CT) depuis un CSV
- * (séparateur ';', UTF-8). Le matching se fait toujours par clé naturelle, jamais
- * par ID, pour rester robuste entre environnements. Voir
+ * (séparateur ';', UTF-8). Le matching se fait toujours par clé naturelle,
+ * jamais par ID, pour rester robuste entre environnements. Voir
  * src/main/resources/terminology/README.md pour le format attendu.
  */
 public interface TerminologyImportService {
@@ -37,9 +37,9 @@ public interface TerminologyImportService {
      * Applique le CSV : met à jour les entités correspondantes (les lignes
      * appliquées sortent en UPDATED). Idempotent et rejouable.
      *
-     * @param overwrite si false, les conflits (code différent d'une valeur existante)
-     *                  ne sont pas appliqués et sortent en CONFLICT ; si true, ils
-     *                  écrasent l'existant.
+     * @param overwrite si false, les conflits (code différent d'une valeur
+     *                  existante) ne sont pas appliqués et sortent en CONFLICT ; si
+     *                  true, ils écrasent l'existant.
      */
     TerminologyImportReport apply(TerminologyTarget target, String csvContent, boolean overwrite);
 }

@@ -16,8 +16,8 @@
 package org.openelisglobal.dataexchange.terminology.service;
 
 /**
- * Résultat d'import pour une ligne du CSV : clé lisible, action retenue, codes et
- * message éventuel. Sérialisé tel quel en JSON dans le rapport.
+ * Résultat d'import pour une ligne du CSV : clé lisible, action retenue, codes
+ * et message éventuel. Sérialisé tel quel en JSON dans le rapport.
  */
 public class TerminologyImportLine {
 

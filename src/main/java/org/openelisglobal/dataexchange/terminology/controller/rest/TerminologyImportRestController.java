@@ -29,11 +29,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * API d'import terminologique (LOINC / SNOMED CT) depuis CSV. Deux étapes : /preview
- * (dry-run, n'écrit rien) puis /apply (persiste). La requête est un JSON
- * {@code { target, overwrite, csv }} (application/json, comme les autres POST du
- * projet — évite les soucis de converter/CSRF sur text/plain). Voir le README
- * terminology pour le format du CSV lui-même.
+ * API d'import terminologique (LOINC / SNOMED CT) depuis CSV. Deux étapes :
+ * /preview (dry-run, n'écrit rien) puis /apply (persiste). La requête est un
+ * JSON {@code { target, overwrite, csv }} (application/json, comme les autres
+ * POST du projet — évite les soucis de converter/CSRF sur text/plain). Voir le
+ * README terminology pour le format du CSV lui-même.
  */
 @RestController
 @RequestMapping("/rest/terminology-import")

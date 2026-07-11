@@ -19,10 +19,10 @@ import java.sql.Timestamp;
 import org.openelisglobal.common.valueholder.BaseObject;
 
 /**
- * Suivi d'un ÉVÉNEMENT de transformation/persistance FHIR (une ligne par appel de
- * transformation : entrée de commande, saisie de résultats, validation, patient…).
- * Permet de rendre visibles les échecs (aujourd'hui silencieux car @Async) et de
- * les rejouer (retry ciblé + job programmé).
+ * Suivi d'un ÉVÉNEMENT de transformation/persistance FHIR (une ligne par appel
+ * de transformation : entrée de commande, saisie de résultats, validation,
+ * patient…). Permet de rendre visibles les échecs (aujourd'hui silencieux
+ * car @Async) et de les rejouer (retry ciblé + job programmé).
  */
 public class FhirSyncStatus extends BaseObject<String> {
 

@@ -21,10 +21,16 @@ import org.openelisglobal.dataexchange.fhir.valueholder.FhirSyncStatus;
 
 public interface FhirSyncStatusDAO extends BaseDAO<FhirSyncStatus, String> {
 
-    /** Événements dans un statut donné (SUCCESS/FAILED/PENDING), les plus anciens d'abord. */
+    /**
+     * Événements dans un statut donné (SUCCESS/FAILED/PENDING), les plus anciens
+     * d'abord.
+     */
     List<FhirSyncStatus> getByStatus(String status, int maxResults);
 
-    /** Échecs rejouables : status=FAILED et attempt_count < maxAttempts, plus anciens d'abord. */
+    /**
+     * Échecs rejouables : status=FAILED et attempt_count < maxAttempts, plus
+     * anciens d'abord.
+     */
     List<FhirSyncStatus> getRetryable(int maxAttempts, int maxResults);
 
     /** Dernier événement enregistré pour une cible (dédup / mise à jour d'état). */

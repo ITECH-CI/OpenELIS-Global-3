@@ -28,8 +28,8 @@ import org.springframework.stereotype.Component;
 /**
  * Rejoue périodiquement les transformations FHIR en échec (FhirSyncStatus =
  * FAILED, attemptCount < max). Rejoue via transformPersistObjectsUnderSamples,
- * qui régénère TOUT le FHIR d'un sample (order/results/validation) — donc un seul
- * point de rejeu couvre les trois déclencheurs pour une cible SAMPLE.
+ * qui régénère TOUT le FHIR d'un sample (order/results/validation) — donc un
+ * seul point de rejeu couvre les trois déclencheurs pour une cible SAMPLE.
  */
 @Component
 public class FhirSyncRetryTask {
@@ -40,7 +40,8 @@ public class FhirSyncRetryTask {
     @Autowired
     private FhirTransformService fhirTransformService;
 
-    // Activé par défaut. Désactivable (org.openelisglobal.fhir.retry.enabled=false).
+    // Activé par défaut. Désactivable
+    // (org.openelisglobal.fhir.retry.enabled=false).
     @Value("${org.openelisglobal.fhir.retry.enabled:true}")
     private boolean retryEnabled;
 
@@ -78,7 +79,8 @@ public class FhirSyncRetryTask {
     }
 
     private void retryOne(FhirSyncStatus event) {
-        // On ne sait rejouer que les cibles SAMPLE (transformPersistObjectsUnderSamples).
+        // On ne sait rejouer que les cibles SAMPLE
+        // (transformPersistObjectsUnderSamples).
         if (!FhirSyncConstants.TARGET_SAMPLE.equals(event.getTargetType()) || event.getTargetId() == null) {
             return;
         }

@@ -46,7 +46,10 @@ public interface FhirSyncStatusService extends BaseObjectService<FhirSyncStatus,
     /** Marque un événement SUCCESS (efface l'erreur). */
     void markSuccess(String syncStatusId);
 
-    /** Marque un événement FAILED : incrémente attemptCount, stocke le message (tronqué). */
+    /**
+     * Marque un événement FAILED : incrémente attemptCount, stocke le message
+     * (tronqué).
+     */
     void markFailed(String syncStatusId, String errorMessage);
 
     /** Échecs rejouables (FAILED, attemptCount < maxAttempts). */

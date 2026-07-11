@@ -46,14 +46,14 @@ public class FhirSyncMonitorRestController {
     private org.openelisglobal.sample.service.SampleService sampleService;
 
     // Résolution paresseuse : FhirTransformService participe à une référence
-    // circulaire (fhirTransformServiceImpl <-> fhirReferralServiceImpl) ; l'injecter
+    // circulaire (fhirTransformServiceImpl <-> fhirReferralServiceImpl) ;
+    // l'injecter
     // en champ dans un controller peut empêcher le démarrage du contexte.
     private FhirTransformService fhirTransformService() {
         return org.openelisglobal.spring.util.SpringContext.getBean(FhirTransformService.class);
     }
 
-    private static final java.text.SimpleDateFormat DISPLAY_FORMAT = new java.text.SimpleDateFormat(
-            "dd/MM/yyyy HH:mm");
+    private static final java.text.SimpleDateFormat DISPLAY_FORMAT = new java.text.SimpleDateFormat("dd/MM/yyyy HH:mm");
 
     // Résout le numéro labo (accession number) depuis le sampleId. Best-effort :
     // renvoie null si le sample n'existe pas (id historique, supprimé…).
@@ -82,7 +82,8 @@ public class FhirSyncMonitorRestController {
     /**
      * Liste des événements de synchro, avec filtres optionnels combinables :
      * <ul>
-     * <li>{@code status} : statut (défaut FAILED). Valeur {@code ALL} = tous statuts.</li>
+     * <li>{@code status} : statut (défaut FAILED). Valeur {@code ALL} = tous
+     * statuts.</li>
      * <li>{@code accession} : filtre par numéro labo (correspondance partielle,
      * insensible à la casse).</li>
      * <li>{@code date} : filtre par date de transaction (jj/mm/aaaa, sur
@@ -137,8 +138,8 @@ public class FhirSyncMonitorRestController {
             // Filtre date de transaction (jour). DISPLAY_FORMAT = "dd/MM/yyyy HH:mm",
             // on compare la partie date (10 premiers caractères).
             if (hasDate) {
-                if (formattedDate == null || !formattedDate.substring(0, Math.min(10, formattedDate.length()))
-                        .equals(date.trim())) {
+                if (formattedDate == null
+                        || !formattedDate.substring(0, Math.min(10, formattedDate.length())).equals(date.trim())) {
                     continue;
                 }
             }
@@ -161,10 +162,11 @@ public class FhirSyncMonitorRestController {
     }
 
     /**
-     * Rejeu historique des samples reçus dans une plage de dates (dateEnd optionnel,
-     * défaut = aujourd'hui côté service). Régénère le FHIR complet de chaque sample
-     * en PUT idempotent (pas de doublon). Trace chaque sample dans le monitoring.
-     * Format de date attendu = format d'affichage local (ex FR : jj/mm/aaaa).
+     * Rejeu historique des samples reçus dans une plage de dates (dateEnd
+     * optionnel, défaut = aujourd'hui côté service). Régénère le FHIR complet de
+     * chaque sample en PUT idempotent (pas de doublon). Trace chaque sample dans le
+     * monitoring. Format de date attendu = format d'affichage local (ex FR :
+     * jj/mm/aaaa).
      */
     @PostMapping("/replay")
     public Map<String, Object> replaySince(@RequestParam String dateStart,
@@ -210,7 +212,9 @@ public class FhirSyncMonitorRestController {
         return result;
     }
 
-    /** Rejeu manuel d'un événement (bouton du monitoring). Rejoue le sample cible. */
+    /**
+     * Rejeu manuel d'un événement (bouton du monitoring). Rejoue le sample cible.
+     */
     @PostMapping("/retry/{id}")
     public Map<String, Object> retry(@PathVariable String id) {
         Map<String, Object> result = new HashMap<>();

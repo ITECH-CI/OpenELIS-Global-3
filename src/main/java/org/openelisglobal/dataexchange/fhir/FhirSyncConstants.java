@@ -15,7 +15,9 @@
  */
 package org.openelisglobal.dataexchange.fhir;
 
-/** Constantes partagées pour le suivi de synchronisation FHIR (FhirSyncStatus). */
+/**
+ * Constantes partagées pour le suivi de synchronisation FHIR (FhirSyncStatus).
+ */
 public final class FhirSyncConstants {
 
     private FhirSyncConstants() {

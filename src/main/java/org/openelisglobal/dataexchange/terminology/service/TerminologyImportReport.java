@@ -19,8 +19,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Rapport global d'un import terminologique (preview ou apply) : cible, compteurs
- * agrégés et détail ligne à ligne.
+ * Rapport global d'un import terminologique (preview ou apply) : cible,
+ * compteurs agrégés et détail ligne à ligne.
  */
 public class TerminologyImportReport {
 

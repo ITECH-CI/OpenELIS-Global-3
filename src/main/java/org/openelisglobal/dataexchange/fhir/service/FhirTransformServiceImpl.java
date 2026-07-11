@@ -365,8 +365,8 @@ public class FhirTransformServiceImpl implements FhirTransformService {
                         Reference cultureAnchor = firstResultObservationRef(analysis);
                         for (Observation bacterioObs : buildBacteriologyObservations(analysis, cultureAnchor)) {
                             observations.put(bacterioObs.getIdElement().getIdPart(), bacterioObs);
-                            diagnosticReport.addResult(
-                                    createReferenceFor(ResourceType.Observation, bacterioObs.getIdElement().getIdPart()));
+                            diagnosticReport.addResult(createReferenceFor(ResourceType.Observation,
+                                    bacterioObs.getIdElement().getIdPart()));
                         }
                         diagnosticReports.put(analysis.getFhirUuidAsString(), diagnosticReport);
                     }
@@ -963,8 +963,7 @@ public class FhirTransformServiceImpl implements FhirTransformService {
         if (program != null && !GenericValidator.isBlankOrNull(program.getValue())) {
             serviceRequest.addCategory(transformSampleProgramToCodeableConcept(program));
         }
-        serviceRequest.setPriority(
-                mapServiceRequestPriority(analysis.getSampleItem().getSample().getPriority()));
+        serviceRequest.setPriority(mapServiceRequestPriority(analysis.getSampleItem().getSample().getPriority()));
         serviceRequest.setCode(transformTestToCodeableConcept(test.getId()));
         serviceRequest.setAuthoredOn(new Date());
         for (Note note : noteService.getNotes(analysis)) {
@@ -1373,8 +1372,8 @@ public class FhirTransformServiceImpl implements FhirTransformService {
         // Ne jamais produire une Observation FINAL sans value[x] ni raison :
         // marquer explicitement l'absence de donnée exploitable (dataAbsentReason).
         if (!valueSet) {
-            observation.setDataAbsentReason(new CodeableConcept().addCoding(new Coding(
-                    "http://terminology.hl7.org/CodeSystem/data-absent-reason", "unknown", "Unknown")));
+            observation.setDataAbsentReason(new CodeableConcept().addCoding(
+                    new Coding("http://terminology.hl7.org/CodeSystem/data-absent-reason", "unknown", "Unknown")));
         }
         observation.setCode(transformTestToCodeableConcept(test.getId()));
         observation.addBasedOn(this.createReferenceFor(ResourceType.ServiceRequest, analysis.getFhirUuidAsString()));
@@ -1420,10 +1419,10 @@ public class FhirTransformServiceImpl implements FhirTransformService {
     private static final String LOINC_SUSCEPTIBILITY = "18769-0"; // Microbial susceptibility
 
     /**
-     * UUID déterministe à partir d'une clé métier stable. Garantit l'idempotence
-     * du rejeu (même resource id à chaque passage) pour les entités bactério qui
-     * n'ont pas de colonne fhir_uuid persistée. La clé inclut le fhirUuid de
-     * l'analyse pour éviter toute collision entre analyses.
+     * UUID déterministe à partir d'une clé métier stable. Garantit l'idempotence du
+     * rejeu (même resource id à chaque passage) pour les entités bactério qui n'ont
+     * pas de colonne fhir_uuid persistée. La clé inclut le fhirUuid de l'analyse
+     * pour éviter toute collision entre analyses.
      */
     private String deterministicFhirId(String key) {
         return UUID.nameUUIDFromBytes(key.getBytes(java.nio.charset.StandardCharsets.UTF_8)).toString();
@@ -1434,7 +1433,7 @@ public class FhirTransformServiceImpl implements FhirTransformService {
      * analyse donnée. Retourne une liste vide si l'analyse ne porte aucun organisme
      * (analyse non bactério, ou culture négative) — comportement neutre.
      *
-     * @param analysis     l'analyse (déjà pourvue d'un fhirUuid)
+     * @param analysis      l'analyse (déjà pourvue d'un fhirUuid)
      * @param cultureAnchor référence FHIR de l'Observation "culture" dont dérivent
      *                      les isolats (le premier Result de l'analyse), ou null →
      *                      on retombe sur le ServiceRequest de l'analyse.
@@ -1576,7 +1575,8 @@ public class FhirTransformServiceImpl implements FhirTransformService {
         if (!GenericValidator.isBlankOrNull(text)) {
             code.setText(text);
         } else {
-            code.addCoding(new Coding("http://terminology.hl7.org/CodeSystem/data-absent-reason", "unknown", "Unknown"));
+            code.addCoding(
+                    new Coding("http://terminology.hl7.org/CodeSystem/data-absent-reason", "unknown", "Unknown"));
         }
         return code;
     }
@@ -1585,11 +1585,11 @@ public class FhirTransformServiceImpl implements FhirTransformService {
             org.openelisglobal.bacteriology.valueholder.BacteriologyOrganism organism) {
         if (!GenericValidator.isBlankOrNull(organism.getOrganismType())) {
             Observation.ObservationComponentComponent typeComp = isolate.addComponent();
-            typeComp.setCode(new CodeableConcept()
-                    .addCoding(new Coding(fhirConfig.getOeFhirSystem() + "/bacteriology", "organism_type", "Germ type")));
-            typeComp.setValue(new CodeableConcept().addCoding(new Coding(
-                    fhirConfig.getOeFhirSystem() + "/bacteriology_organism_type", organism.getOrganismType(),
-                    organism.getOrganismType())));
+            typeComp.setCode(new CodeableConcept().addCoding(
+                    new Coding(fhirConfig.getOeFhirSystem() + "/bacteriology", "organism_type", "Germ type")));
+            typeComp.setValue(new CodeableConcept()
+                    .addCoding(new Coding(fhirConfig.getOeFhirSystem() + "/bacteriology_organism_type",
+                            organism.getOrganismType(), organism.getOrganismType())));
         }
         if (organism.getCapsulePresence() != null) {
             Observation.ObservationComponentComponent capsuleComp = isolate.addComponent();
@@ -1634,8 +1634,8 @@ public class FhirTransformServiceImpl implements FhirTransformService {
         // Composants quantitatifs : diamètre d'inhibition (mm) et CMI.
         if (abg.getDiameterMm() != null) {
             Observation.ObservationComponentComponent diamComp = obs.addComponent();
-            diamComp.setCode(new CodeableConcept()
-                    .addCoding(new Coding("http://loinc.org", "27196-9", "Zone of inhibition")));
+            diamComp.setCode(
+                    new CodeableConcept().addCoding(new Coding("http://loinc.org", "27196-9", "Zone of inhibition")));
             diamComp.setValue(new Quantity().setValue(abg.getDiameterMm()).setUnit("mm"));
         }
         if (!GenericValidator.isBlankOrNull(abg.getMicValue())) {
@@ -1701,8 +1701,8 @@ public class FhirTransformServiceImpl implements FhirTransformService {
                 analysis.getFhirUuidAsString() + "/bacteriology_flora/" + flora.getId());
         Observation obs = new Observation();
         obs.setId(floraFhirId);
-        obs.addIdentifier(createIdentifier(fhirConfig.getOeFhirSystem() + "/bacteriology_flora",
-                String.valueOf(flora.getId())));
+        obs.addIdentifier(
+                createIdentifier(fhirConfig.getOeFhirSystem() + "/bacteriology_flora", String.valueOf(flora.getId())));
         obs.setStatus(obsStatus);
         // code = le test "nombre de flore" associé (LOINC si présent + coding OE).
         if (flora.getFloraCountTestId() != null) {
@@ -1868,7 +1868,8 @@ public class FhirTransformServiceImpl implements FhirTransformService {
                     .setValue(organization.getCode()));
         }
         // Garde sur l'UUID (et non sur getCode() — copier-coller du bloc précédent) :
-        // sinon une organisation avec UUID mais sans code perdait son identifiant org_uuid.
+        // sinon une organisation avec UUID mais sans code perdait son identifiant
+        // org_uuid.
         if (organization.getFhirUuid() != null) {
             fhirOrganization.addIdentifier(new Identifier().setSystem(fhirConfig.getOeFhirSystem() + "/org_uuid")
                     .setValue(organization.getFhirUuidAsString()));
@@ -2001,8 +2002,7 @@ public class FhirTransformServiceImpl implements FhirTransformService {
     // Mappe la priorité métier OE (OrderPriority) vers la priorité FHIR. OE
     // produit une vraie priorité (ROUTINE/ASAP/STAT/TIMED/FUTURE_STAT) qui était
     // ignorée (ROUTINE en dur).
-    private ServiceRequestPriority mapServiceRequestPriority(
-            org.openelisglobal.sample.valueholder.OrderPriority p) {
+    private ServiceRequestPriority mapServiceRequestPriority(org.openelisglobal.sample.valueholder.OrderPriority p) {
         if (p == null) {
             return ServiceRequestPriority.ROUTINE;
         }

@@ -109,7 +109,9 @@ public class TerminologyImportServiceImpl implements TerminologyImportService {
         return report;
     }
 
-    /** Traite une ligne de données : matching par clé naturelle puis application. */
+    /**
+     * Traite une ligne de données : matching par clé naturelle puis application.
+     */
     private TerminologyImportLine processLine(TerminologyTarget target, Map<String, Integer> columns, String rawLine,
             boolean persist, boolean overwrite) {
         String[] cells = splitCells(rawLine);
@@ -153,8 +155,8 @@ public class TerminologyImportServiceImpl implements TerminologyImportService {
     }
 
     /**
-     * Décide, champ par champ, ce qu'il faut faire des codes du CSV face aux valeurs
-     * existantes :
+     * Décide, champ par champ, ce qu'il faut faire des codes du CSV face aux
+     * valeurs existantes :
      * <ul>
      * <li>cellule CSV vide → on ne touche jamais le champ ;</li>
      * <li>identique à l'existant → aucun changement sur ce champ ;</li>
@@ -163,10 +165,10 @@ public class TerminologyImportServiceImpl implements TerminologyImportService {
      * {@code overwrite} est vrai, sinon la LIGNE entière sort en CONFLICT (rien
      * n'est écrit, pour éviter une application partielle).</li>
      * </ul>
-     * Si aucun champ ne change → NO_CHANGE. Sinon WOULD_UPDATE (dry-run) ou UPDATED.
-     * Le paramètre {@code hasSnomed} permet aux cibles sans colonne LOINC (ex.
-     * dictionnaire d'organismes) de ne pas considérer LOINC — ici on traite les deux
-     * de façon uniforme, un code vide étant neutre.
+     * Si aucun champ ne change → NO_CHANGE. Sinon WOULD_UPDATE (dry-run) ou
+     * UPDATED. Le paramètre {@code hasSnomed} permet aux cibles sans colonne LOINC
+     * (ex. dictionnaire d'organismes) de ne pas considérer LOINC — ici on traite
+     * les deux de façon uniforme, un code vide étant neutre.
      */
     private CodeDecision decideCodes(String csvLoinc, String csvSnomed, String existingLoinc, String existingSnomed,
             boolean overwrite, boolean persist) {
@@ -343,7 +345,8 @@ public class TerminologyImportServiceImpl implements TerminologyImportService {
 
     /**
      * Garde commune : ignore les lignes non validées (SKIPPED_PROPOSED) et celles
-     * sans aucun code (SKIPPED_NO_CODE). Renvoie null si la ligne doit être traitée.
+     * sans aucun code (SKIPPED_NO_CODE). Renvoie null si la ligne doit être
+     * traitée.
      */
     private TerminologyImportLine guard(String key, String loinc, String snomed, String status) {
         if (!STATUS_VALIDATED.equalsIgnoreCase(trimToEmpty(status))) {
@@ -373,7 +376,9 @@ public class TerminologyImportServiceImpl implements TerminologyImportService {
         return line.split(SEPARATOR, -1);
     }
 
-    /** Lit l'en-tête et associe chaque nom de colonne (trim, minuscule) à son index. */
+    /**
+     * Lit l'en-tête et associe chaque nom de colonne (trim, minuscule) à son index.
+     */
     private Map<String, Integer> parseHeader(String headerLine) {
         Map<String, Integer> columns = new HashMap<>();
         String[] cells = splitCells(headerLine);
@@ -407,7 +412,8 @@ public class TerminologyImportServiceImpl implements TerminologyImportService {
     }
 
     // Écrase toute séquence de blancs (espaces, tabulations, sauts de ligne) en un
-    // espace simple, et trim. Permet de matcher un dict_entry du CSV avec sa version
+    // espace simple, et trim. Permet de matcher un dict_entry du CSV avec sa
+    // version
     // en base qui peut contenir un saut de ligne interne.
     private String normalizeWhitespace(String value) {
         return value == null ? "" : value.trim().replaceAll("\\s+", " ");

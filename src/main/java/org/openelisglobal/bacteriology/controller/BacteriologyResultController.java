@@ -1460,14 +1460,16 @@ public class BacteriologyResultController extends BaseController {
     /**
      * Régénère et persiste le FHIR complet d'un sample bactério après validation.
      * Traçage via FhirSyncStatus (visible dans le monitoring). Non bloquant : toute
-     * exception est capturée et enregistrée (markFailed), jamais propagée à l'appelant.
+     * exception est capturée et enregistrée (markFailed), jamais propagée à
+     * l'appelant.
      */
     private void triggerFhirSyncForSample(String sampleId) {
         if (sampleId == null) {
             return;
         }
         // Résolution paresseuse via SpringContext : injecter FhirTransformService en
-        // champ crée une référence circulaire (fhirTransformServiceImpl <-> fhirReferral)
+        // champ crée une référence circulaire (fhirTransformServiceImpl <->
+        // fhirReferral)
         // qui empêche le démarrage du contexte.
         org.openelisglobal.dataexchange.fhir.service.FhirSyncStatusService fhirSyncStatusService = SpringContext
                 .getBean(org.openelisglobal.dataexchange.fhir.service.FhirSyncStatusService.class);
