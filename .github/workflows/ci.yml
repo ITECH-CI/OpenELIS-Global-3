@@ -1,9 +1,9 @@
 name: OpenELIS-Global-2 CI Build
 on:
   push:
-    branches: [develop]
+    branches: [develop, develop-civ]
   pull_request:
-    branches: [develop]
+    branches: [develop, develop-civ]
   workflow_dispatch:
 
 jobs:
@@ -11,8 +11,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Set up JDK 21
-        uses: actions/setup-java@v1
+        uses: actions/setup-java@v4
         with:
+          distribution: temurin
           java-version: 21
       - name: Cache local Maven repository
         uses: actions/cache@v4
@@ -23,7 +24,7 @@ jobs:
             ${{ runner.os }}-maven-
 
       - name: Checkout OpenELIS-Global2
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:
           repository: ${{github.repository}}
           submodules: recursive
@@ -34,7 +35,7 @@ jobs:
       - name: Initialize and build submodules
         run: |
           cd dataexport
-          mvn clean install  
+          mvn clean install
           cd ..
 
       - name: Build OpenELIS-Global2
@@ -55,10 +56,10 @@ jobs:
 
       - name: Check coverage report exists
         if: github.event_name == 'push'
-        run: ls -lah target/html || echo "Coverage report not found!"     
+        run: ls -lah target/html || echo "Coverage report not found!"
 
       - name: Publish coverage report to GitHub Pages
-        if: github.event_name == 'push'
+        if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
         uses: JamesIves/github-pages-deploy-action@v4
         with:
           folder: target/html/

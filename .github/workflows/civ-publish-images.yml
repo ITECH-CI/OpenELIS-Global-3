@@ -1,0 +1,84 @@
+# Publie les images Docker du fork CIV sur GitHub Container Registry (ghcr.io).
+# Backend (WAR Tomcat) + frontend (nginx). amd64 uniquement (serveurs cibles amd64).
+# Tags : develop-civ (mobile) + sha-<court> (immuable, traçable).
+# Auth via GITHUB_TOKEN (aucun secret à gérer). Packages destinés à être publics.
+name: CIV - Publish Docker Images (ghcr)
+
+on:
+  push:
+    branches: [develop-civ]
+  workflow_dispatch:
+
+env:
+  REGISTRY: ghcr.io
+  # ghcr exige un namespace en minuscules ; github.repository_owner peut contenir
+  # des majuscules (ITECH-CI) -> normalisé dans l'étape "prepare".
+  BACKEND_IMAGE_SUFFIX: openelis-global-civ
+  FRONTEND_IMAGE_SUFFIX: openelis-global-civ-frontend
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout (avec submodules pour dataexport)
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Préparer les variables (owner en minuscules, sha court)
+        id: prep
+        run: |
+          owner_lc="$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')"
+          echo "owner_lc=${owner_lc}" >> "$GITHUB_OUTPUT"
+          echo "backend_image=${{ env.REGISTRY }}/${owner_lc}/${{ env.BACKEND_IMAGE_SUFFIX }}" >> "$GITHUB_OUTPUT"
+          echo "frontend_image=${{ env.REGISTRY }}/${owner_lc}/${{ env.FRONTEND_IMAGE_SUFFIX }}" >> "$GITHUB_OUTPUT"
+          echo "sha_short=sha-$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login ghcr.io
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build & push backend
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          platforms: linux/amd64
+          push: true
+          build-args: |
+            SKIP_SPOTLESS=true
+          tags: |
+            ${{ steps.prep.outputs.backend_image }}:develop-civ
+            ${{ steps.prep.outputs.backend_image }}:${{ steps.prep.outputs.sha_short }}
+          cache-from: type=registry,ref=${{ steps.prep.outputs.backend_image }}:buildcache
+          cache-to: type=registry,ref=${{ steps.prep.outputs.backend_image }}:buildcache,mode=max
+
+      - name: Build & push frontend
+        uses: docker/build-push-action@v5
+        with:
+          context: ./frontend
+          file: ./frontend/Dockerfile.prod
+          platforms: linux/amd64
+          push: true
+          tags: |
+            ${{ steps.prep.outputs.frontend_image }}:develop-civ
+            ${{ steps.prep.outputs.frontend_image }}:${{ steps.prep.outputs.sha_short }}
+          cache-from: type=registry,ref=${{ steps.prep.outputs.frontend_image }}:buildcache
+          cache-to: type=registry,ref=${{ steps.prep.outputs.frontend_image }}:buildcache,mode=max
+
+      - name: Récapitulatif
+        run: |
+          echo "### Images publiées sur ghcr" >> "$GITHUB_STEP_SUMMARY"
+          echo "- ${{ steps.prep.outputs.backend_image }}:develop-civ (+ ${{ steps.prep.outputs.sha_short }})" >> "$GITHUB_STEP_SUMMARY"
+          echo "- ${{ steps.prep.outputs.frontend_image }}:develop-civ (+ ${{ steps.prep.outputs.sha_short }})" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "> Pensez à rendre les packages **publics** (Settings du package sur GitHub) au premier push." >> "$GITHUB_STEP_SUMMARY"
