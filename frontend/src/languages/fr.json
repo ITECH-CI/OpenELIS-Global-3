@@ -1313,6 +1313,7 @@
   "fhir.sync.monitor.title": "Suivi de synchronisation FHIR",
   "fhir.sync.refresh": "Actualiser",
   "fhir.sync.retry": "Rejouer",
+  "fhir.sync.retry.running": "Rejeu…",
   "fhir.sync.col.trigger": "Déclencheur",
   "fhir.sync.col.target": "Échantillon",
   "fhir.sync.col.status": "Statut",

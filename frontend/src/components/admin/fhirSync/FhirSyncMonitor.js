@@ -63,6 +63,7 @@ function FhirSyncMonitor() {
   const [expandedErrors, setExpandedErrors] = useState({});
   const [searchAccession, setSearchAccession] = useState("");
   const [searchDate, setSearchDate] = useState("");
+  const [retryingId, setRetryingId] = useState(null);
 
   const toggleError = (id) => {
     setExpandedErrors((prev) => ({ ...prev, [id]: !prev[id] }));
@@ -110,10 +111,12 @@ function FhirSyncMonitor() {
   };
 
   const onRetry = (id) => {
+    setRetryingId(id);
     postToOpenElisServerJsonResponse(
       `/rest/fhir-sync/retry/${id}`,
       JSON.stringify({}),
       (res) => {
+        setRetryingId(null);
         if (res && res.success) {
           addNotification({
             title: intl.formatMessage({ id: "notification.title" }),
@@ -305,10 +308,7 @@ function FhirSyncMonitor() {
               id="fhirSyncStatusFilter"
               labelText={intl.formatMessage({ id: "fhir.sync.col.status" })}
               value={statusFilter}
-              onChange={(e) => {
-                setStatusFilter(e.target.value);
-                loadList(e.target.value, searchAccession, searchDate);
-              }}
+              onChange={(e) => setStatusFilter(e.target.value)}
             >
               <SelectItem value="FAILED" text="FAILED" />
               <SelectItem value="PENDING" text="PENDING" />
@@ -452,16 +452,27 @@ function FhirSyncMonitor() {
                           )}
                         </TableCell>
                         <TableCell>
-                          <Button
-                            kind="tertiary"
-                            size="sm"
-                            onClick={() => onRetry(row.id)}
-                          >
-                            <FormattedMessage
-                              id="fhir.sync.retry"
-                              defaultMessage="Rejouer"
+                          {retryingId === row.id ? (
+                            <InlineLoading
+                              status="active"
+                              description={intl.formatMessage({
+                                id: "fhir.sync.retry.running",
+                                defaultMessage: "Rejeu…",
+                              })}
                             />
-                          </Button>
+                          ) : (
+                            <Button
+                              kind="tertiary"
+                              size="sm"
+                              disabled={retryingId !== null}
+                              onClick={() => onRetry(row.id)}
+                            >
+                              <FormattedMessage
+                                id="fhir.sync.retry"
+                                defaultMessage="Rejouer"
+                              />
+                            </Button>
+                          )}
                         </TableCell>
                       </TableRow>
                     ))}

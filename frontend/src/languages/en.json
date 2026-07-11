@@ -671,6 +671,7 @@
   "fhir.sync.monitor.title": "FHIR synchronization monitoring",
   "fhir.sync.refresh": "Refresh",
   "fhir.sync.retry": "Retry",
+  "fhir.sync.retry.running": "Retrying…",
   "fhir.sync.col.trigger": "Trigger",
   "fhir.sync.col.target": "Sample",
   "fhir.sync.col.status": "Status",
