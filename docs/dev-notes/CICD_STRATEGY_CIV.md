@@ -189,8 +189,51 @@
 
 ### Pré-requis / décisions ouvertes
 
-- [ ] Confirmer le namespace ghcr exact (`itech-ci` vs autre) + visibilité.
-- [ ] Confirmer l'arch cible des serveurs (amd64 ?) pour limiter le multi-arch.
+- [x] Namespace ghcr : `ghcr.io/itech-ci/...` (owner `ITECH-CI` normalisé en
+      minuscules dans les workflows). Visibilité : **publique** (à activer au
+      1er push).
+- [x] Arch cible : **amd64 seul** (serveurs de déploiement).
 - [ ] Vérifier que `initDB/OpenELIS-Global.sql` de l'installeur reflète bien le
       schéma actuel (sinon une install from scratch partirait d'un schéma
       périmé).
+
+## 7. État d'implémentation (2026-07-11)
+
+### Lot A — livré (`develop-civ`)
+
+- `ci.yml` : triggers `develop-civ` (push/PR), actions modernisées (checkout@v4,
+  setup-java@v4 temurin 21). Coverage Pages limité à `develop`.
+- `frontend-qa.yml` : triggers `develop-civ`.
+- `civ-publish-images.yml` (nouveau) : sur push `develop-civ` → build+push
+  `ghcr.io/itech-ci/openelis-global-civ` (backend) et `-frontend`, tags
+  `:develop-civ` + `:sha-<court>`, amd64, cache registry, `GITHUB_TOKEN`.
+  **Backend+frontend seulement** (ce qui change souvent).
+
+### Lot B — livré (`civ-release.yml`)
+
+- Trigger : tag `v*` (ex. `v3.3.1.0`) ou `workflow_dispatch` (input `version`).
+- Étapes : `build-civ.sh` (build les **5 images CIV** : backend, frontend,
+  hapi-fhir-jpaserver, nginx-proxy, dnsmasq + pull postgres/autoheal + assemble
+  l'**installeur offline** `.tar.gz`) → re-tag + push des 5 images sur ghcr
+  `:<version>` + `:latest` → **GitHub Release** avec l'installeur en asset.
+- **Deux canaux indépendants** : _online_ (pull ghcr) et _offline_ (installeur
+  autonome ; le compose du template charge des images `:latest` locales via
+  `docker load`, sans dépendance à ghcr).
+
+Pour publier une release :
+
+```
+git tag v3.3.1.0 && git push origin v3.3.1.0
+```
+
+### Reste à faire (lots C/D)
+
+- Lot C : `docker-compose.civ.yml` pointant backend+frontend vers ghcr (update
+  en ligne `pull && up -d`) ; compléter `INSTALL_CIV.md` (online + offline).
+- Lot D : nettoyer les workflows hérités DIGI-UW (`tx-*`, `publish-*` gardés
+  upstream, `label-merge-conflict`) ; retirer `oe-build-export.sh` une fois le
+  CI validé sur GitHub.
+- **Dette préexistante** : `RELEASE_NOTES.md` n'est pas au format spotless dans
+  le repo (le bloc `.md` du pom l'inclut) → `spotless:check` du CI échouera
+  dessus tant qu'il n'est pas reformaté une fois ou exclu du `pom.xml`.
+  Indépendant des changements CIV.
