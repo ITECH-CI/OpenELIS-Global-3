@@ -45,10 +45,19 @@ Service `dataexchange.terminology.service.TerminologyImportService` :
 
 Règles :
 - Matching par **clé naturelle** (test: description ; dictionary: catégorie+entrée ;
-  obs type: type_name). 0 correspondance → NOT_FOUND ; >1 → AMBIGUOUS.
+  obs type: type_name). 0 correspondance → NOT_FOUND ; >1 → AMBIGUOUS. Le dict_entry
+  est comparé en normalisant les blancs (certaines entrées en base ont un saut de
+  ligne interne).
 - Seules les lignes `status=validated` avec au moins un code non vide sont appliquées
   (SKIPPED_PROPOSED / SKIPPED_NO_CODE sinon).
 - Une cellule de code vide **n'écrase jamais** une valeur existante.
+- **Arbitrage des conflits** : si un code du CSV **diffère** d'une valeur déjà présente
+  en base, la ligne sort en **CONFLICT** et n'est **pas** appliquée par défaut (le
+  message indique ancienne → nouvelle valeur). Pour forcer l'écrasement, activer
+  l'option **overwrite** (case à cocher dans l'UI, `?overwrite=true` en API) : les
+  conflits deviennent alors des mises à jour. Un code CSV identique à l'existant sort
+  en **NO_CHANGE**. L'application d'une ligne est atomique : un conflit non autorisé
+  bloque toute la ligne (pas d'écriture partielle loinc/snomed).
 - Chaque ligne est traitée en try/catch : une ligne en erreur (ERROR) n'arrête pas le
   lot.
 
