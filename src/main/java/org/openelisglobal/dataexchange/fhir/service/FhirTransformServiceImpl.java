@@ -174,6 +174,8 @@ public class FhirTransformServiceImpl implements FhirTransformService {
     private org.openelisglobal.bacteriology.service.BacteriologyOrganismService bacteriologyOrganismService;
     @Autowired
     private org.openelisglobal.bacteriology.service.BacteriologyAntibiogramService bacteriologyAntibiogramService;
+    @Autowired
+    private org.openelisglobal.bacteriology.service.BacteriologyFloraService bacteriologyFloraService;
 
     private String ADDRESS_PART_VILLAGE_ID;
     private String ADDRESS_PART_COMMUNE_ID;
@@ -1444,7 +1446,11 @@ public class FhirTransformServiceImpl implements FhirTransformService {
 
         List<org.openelisglobal.bacteriology.valueholder.BacteriologyOrganism> organisms = bacteriologyOrganismService
                 .getOrganismsByAnalysisId(analysisIdInt);
-        if (organisms == null || organisms.isEmpty()) {
+        List<org.openelisglobal.bacteriology.valueholder.BacteriologyFlora> floras = bacteriologyFloraService
+                .getByAnalysisId(analysisIdInt);
+        boolean hasOrganisms = organisms != null && !organisms.isEmpty();
+        boolean hasFloras = floras != null && !floras.isEmpty();
+        if (!hasOrganisms && !hasFloras) {
             return out;
         }
 
@@ -1462,7 +1468,8 @@ public class FhirTransformServiceImpl implements FhirTransformService {
         boolean finalized = statusService.matches(analysis.getStatusId(), AnalysisStatus.Finalized);
         ObservationStatus obsStatus = finalized ? ObservationStatus.FINAL : ObservationStatus.PRELIMINARY;
 
-        for (org.openelisglobal.bacteriology.valueholder.BacteriologyOrganism organism : organisms) {
+        for (org.openelisglobal.bacteriology.valueholder.BacteriologyOrganism organism : (hasOrganisms ? organisms
+                : new ArrayList<org.openelisglobal.bacteriology.valueholder.BacteriologyOrganism>())) {
             String isolateId = deterministicFhirId(
                     analysis.getFhirUuidAsString() + "/bacteriology_organism/" + organism.getId());
             Observation isolate = new Observation();
@@ -1503,6 +1510,19 @@ public class FhirTransformServiceImpl implements FhirTransformService {
                     if (susceptibility != null) {
                         out.add(susceptibility);
                     }
+                }
+            }
+        }
+
+        // Flore (nombre de flore) : une Observation par BacteriologyFlora, dérivée de
+        // la culture. Indépendante des organismes (une culture peut n'avoir que de la
+        // flore, ex. flore polymicrobienne sans identification d'organisme).
+        if (hasFloras) {
+            for (org.openelisglobal.bacteriology.valueholder.BacteriologyFlora flora : floras) {
+                Observation floraObs = buildFloraObservation(analysis, flora, obsStatus, isolateDerivedFrom,
+                        serviceRequestRef, specimenRef, patientRef);
+                if (floraObs != null) {
+                    out.add(floraObs);
                 }
             }
         }
@@ -1662,6 +1682,83 @@ public class FhirTransformServiceImpl implements FhirTransformService {
             return new CodeableConcept().setText(sir);
         }
         return new CodeableConcept().addCoding(new Coding(system, code, display));
+    }
+
+    // Observation "nombre de flore" : value = le compte (numérique si possible),
+    // composants = caractéristiques de chaque flore détaillée (Gram, regroupement,
+    // autre caractéristique), résolues via dictionnaire.
+    private Observation buildFloraObservation(Analysis analysis,
+            org.openelisglobal.bacteriology.valueholder.BacteriologyFlora flora, ObservationStatus obsStatus,
+            Reference cultureAnchor, Reference serviceRequestRef, Reference specimenRef, Reference patientRef) {
+        String floraFhirId = deterministicFhirId(
+                analysis.getFhirUuidAsString() + "/bacteriology_flora/" + flora.getId());
+        Observation obs = new Observation();
+        obs.setId(floraFhirId);
+        obs.addIdentifier(createIdentifier(fhirConfig.getOeFhirSystem() + "/bacteriology_flora",
+                String.valueOf(flora.getId())));
+        obs.setStatus(obsStatus);
+        // code = le test "nombre de flore" associé (LOINC si présent + coding OE).
+        if (flora.getFloraCountTestId() != null) {
+            obs.setCode(transformTestToCodeableConcept(String.valueOf(flora.getFloraCountTestId())));
+        } else {
+            obs.setCode(new CodeableConcept().addCoding(
+                    new Coding(fhirConfig.getOeFhirSystem() + "/bacteriology", "flora_count", "Flora count")));
+        }
+        // value = le compte de flore. Numérique si parseable, sinon chaîne.
+        String count = flora.getFloraCount();
+        if (!GenericValidator.isBlankOrNull(count)) {
+            try {
+                obs.setValue(new Quantity().setValue(new BigDecimal(count.trim())));
+            } catch (NumberFormatException e) {
+                obs.setValue(new StringType(count));
+            }
+        } else {
+            obs.setDataAbsentReason(new CodeableConcept().addCoding(
+                    new Coding("http://terminology.hl7.org/CodeSystem/data-absent-reason", "unknown", "Unknown")));
+        }
+        if (cultureAnchor != null) {
+            obs.addDerivedFrom(cultureAnchor);
+        }
+        if (serviceRequestRef != null) {
+            obs.addBasedOn(serviceRequestRef);
+        }
+        if (specimenRef != null) {
+            obs.setSpecimen(specimenRef);
+        }
+        if (patientRef != null) {
+            obs.setSubject(patientRef);
+        }
+        if (analysis.getReleasedDate() != null) {
+            obs.setEffective(new DateTimeType(analysis.getReleasedDate()));
+            obs.setIssued(analysis.getReleasedDate());
+        }
+        // Détails par flore identifiée : Gram, mode de regroupement, autre
+        // caractéristique. Chacun résolu via dictionnaire quand renseigné.
+        if (flora.getDetails() != null) {
+            for (org.openelisglobal.bacteriology.valueholder.BacteriologyFloraDetail detail : flora.getDetails()) {
+                addDictionaryComponent(obs, "gram_type", "Gram type", detail.getGramTypeDictId());
+                addDictionaryComponent(obs, "grouping_mode", "Grouping mode", detail.getGroupingModeDictId());
+                addDictionaryComponent(obs, "other_characteristic", "Other characteristic",
+                        detail.getOtherCharacteristicDictId());
+            }
+        }
+        return obs;
+    }
+
+    // Ajoute un composant Observation dont la valeur est un CodeableConcept résolu
+    // depuis le dictionnaire (no-op si dictId null ou dictionnaire introuvable).
+    private void addDictionaryComponent(Observation obs, String code, String display, Integer dictId) {
+        if (dictId == null) {
+            return;
+        }
+        Dictionary dictionary = dictionaryService.getDataForId(String.valueOf(dictId));
+        if (dictionary == null) {
+            return;
+        }
+        Observation.ObservationComponentComponent comp = obs.addComponent();
+        comp.setCode(new CodeableConcept()
+                .addCoding(new Coding(fhirConfig.getOeFhirSystem() + "/bacteriology", code, display)));
+        comp.setValue(buildDictionaryCodeableConcept(dictionary));
     }
 
     @Override
@@ -1943,6 +2040,11 @@ public class FhirTransformServiceImpl implements FhirTransformService {
                 : dictionary.getLocalizedDictionaryName().getEnglish();
         if (dictionary.getLoincCode() != null && !dictionary.getLoincCode().isEmpty()) {
             codeableConcept.addCoding(new Coding("http://loinc.org", dictionary.getLoincCode(), display));
+        }
+        // Coding SNOMED CT si le dictionnaire référentiel le porte (organismes,
+        // antibiotiques…). Alimenté via la colonne dictionary.snomed_code.
+        if (dictionary.getSnomedCode() != null && !dictionary.getSnomedCode().isEmpty()) {
+            codeableConcept.addCoding(new Coding("http://snomed.info/sct", dictionary.getSnomedCode(), display));
         }
         codeableConcept.addCoding(
                 new Coding(fhirConfig.getOeFhirSystem() + "/dictionary_entry", dictionary.getDictEntry(), display));

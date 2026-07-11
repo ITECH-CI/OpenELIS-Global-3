@@ -29,6 +29,10 @@ public class Dictionary extends BaseObject<String> {
 
     private String loincCode;
 
+    // Code SNOMED CT de référence (ex. organisme, antibiotique) : alimente le
+    // coding SNOMED des ressources FHIR quand renseigné. Optionnel.
+    private String snomedCode;
+
     public class ComparatorLocalizedName implements Comparator<Dictionary> {
         @Override
         public int compare(Dictionary o1, Dictionary o2) {
@@ -171,6 +175,14 @@ public class Dictionary extends BaseObject<String> {
 
     public void setLoincCode(String loincCode) {
         this.loincCode = loincCode;
+    }
+
+    public String getSnomedCode() {
+        return snomedCode;
+    }
+
+    public void setSnomedCode(String snomedCode) {
+        this.snomedCode = snomedCode;
     }
 
 }

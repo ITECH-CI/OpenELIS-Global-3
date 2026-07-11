@@ -125,6 +125,8 @@ file="add_study_modifier_menu.xml" />
         file="add_gram_polynucleaires_to_urethrales_sperme_sampletypes.xml" />
     <include relativeToChangelogFile="true"
         file="create_fhir_sync_status.xml" />
+    <include relativeToChangelogFile="true"
+        file="add_snomed_code_to_dictionary.xml" />
 
 
 </databaseChangeLog>
