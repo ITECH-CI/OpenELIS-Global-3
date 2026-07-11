@@ -1461,9 +1461,12 @@ public class FhirTransformServiceImpl implements FhirTransformService {
                 ? createReferenceFor(ResourceType.Specimen, sampleItem.getFhirUuidAsString())
                 : null;
         Reference serviceRequestRef = createReferenceFor(ResourceType.ServiceRequest, analysis.getFhirUuidAsString());
-        // Ancre de dérivation des isolats : l'Observation culture si fournie, sinon
-        // le ServiceRequest de l'analyse.
-        Reference isolateDerivedFrom = cultureAnchor != null ? cultureAnchor : serviceRequestRef;
+        // Ancre de dérivation des isolats : UNIQUEMENT l'Observation culture. FHIR R4
+        // n'autorise sur Observation.derivedFrom que DocumentReference, ImagingStudy,
+        // Media, QuestionnaireResponse, Observation, MolecularSequence — surtout PAS
+        // ServiceRequest (HAPI-0931). Sans culture, on omet derivedFrom ; le lien vers
+        // la demande passe par basedOn (valide), déjà posé.
+        Reference isolateDerivedFrom = cultureAnchor;
 
         boolean finalized = statusService.matches(analysis.getStatusId(), AnalysisStatus.Finalized);
         ObservationStatus obsStatus = finalized ? ObservationStatus.FINAL : ObservationStatus.PRELIMINARY;

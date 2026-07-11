@@ -79,27 +79,80 @@ public class FhirSyncMonitorRestController {
         return counts;
     }
 
-    /** Liste des événements d'un statut (défaut FAILED), limitée. */
+    /**
+     * Liste des événements de synchro, avec filtres optionnels combinables :
+     * <ul>
+     * <li>{@code status} : statut (défaut FAILED). Valeur {@code ALL} = tous statuts.</li>
+     * <li>{@code accession} : filtre par numéro labo (correspondance partielle,
+     * insensible à la casse).</li>
+     * <li>{@code date} : filtre par date de transaction (jj/mm/aaaa, sur
+     * lastAttemptAt).</li>
+     * </ul>
+     * Dès qu'un filtre accession/date est fourni, la recherche porte sur tous les
+     * statuts (le filtre statut n'est appliqué que s'il vaut autre chose que ALL).
+     */
     @GetMapping("/list")
     public List<Map<String, Object>> list(@RequestParam(defaultValue = "FAILED") String status,
-            @RequestParam(defaultValue = "200") int max) {
-        List<FhirSyncStatus> items = fhirSyncStatusService.getByStatus(status, max);
+            @RequestParam(defaultValue = "200") int max, @RequestParam(required = false) String accession,
+            @RequestParam(required = false) String date) {
+
+        boolean hasAccession = accession != null && !accession.trim().isEmpty();
+        boolean hasDate = date != null && !date.trim().isEmpty();
+        boolean allStatuses = "ALL".equalsIgnoreCase(status) || hasAccession || hasDate;
+
+        // Récupère les événements : un statut précis, ou tous statuts confondus.
+        List<FhirSyncStatus> items = new ArrayList<>();
+        if (allStatuses) {
+            for (SyncStatus s : SyncStatus.values()) {
+                items.addAll(fhirSyncStatusService.getByStatus(s.name(), max));
+            }
+            // Tri plus récent en tête (les listes par statut sont concaténées).
+            items.sort((a, b) -> {
+                if (a.getLastAttemptAt() == null) {
+                    return b.getLastAttemptAt() == null ? 0 : 1;
+                }
+                if (b.getLastAttemptAt() == null) {
+                    return -1;
+                }
+                return b.getLastAttemptAt().compareTo(a.getLastAttemptAt());
+            });
+        } else {
+            items = fhirSyncStatusService.getByStatus(status, max);
+        }
+
+        String accessionNeedle = hasAccession ? accession.trim().toLowerCase() : null;
+
         List<Map<String, Object>> out = new ArrayList<>();
         for (FhirSyncStatus item : items) {
+            String acc = resolveAccessionNumber(item.getTargetType(), item.getTargetId());
+            // Filtre accession (partiel, insensible à la casse).
+            if (accessionNeedle != null && (acc == null || !acc.toLowerCase().contains(accessionNeedle))) {
+                continue;
+            }
+            String formattedDate = item.getLastAttemptAt() != null ? DISPLAY_FORMAT.format(item.getLastAttemptAt())
+                    : null;
+            // Filtre date de transaction (jour). DISPLAY_FORMAT = "dd/MM/yyyy HH:mm",
+            // on compare la partie date (10 premiers caractères).
+            if (hasDate) {
+                if (formattedDate == null || !formattedDate.substring(0, Math.min(10, formattedDate.length()))
+                        .equals(date.trim())) {
+                    continue;
+                }
+            }
             Map<String, Object> row = new HashMap<>();
             row.put("id", item.getId());
             row.put("triggerType", item.getTriggerType());
             row.put("targetType", item.getTargetType());
             row.put("targetId", item.getTargetId());
-            // Numéro labo lisible en plus de l'id technique.
-            row.put("accessionNumber", resolveAccessionNumber(item.getTargetType(), item.getTargetId()));
+            row.put("accessionNumber", acc);
             row.put("status", item.getStatus());
             row.put("attemptCount", item.getAttemptCount());
-            // Date formatée (jj/mm/aaaa hh:mm) au lieu du timestamp epoch.
-            row.put("lastAttemptAt",
-                    item.getLastAttemptAt() != null ? DISPLAY_FORMAT.format(item.getLastAttemptAt()) : null);
+            row.put("lastAttemptAt", formattedDate);
             row.put("errorMessage", item.getErrorMessage());
             out.add(row);
+            if (out.size() >= max) {
+                break;
+            }
         }
         return out;
     }
