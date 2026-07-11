@@ -1,117 +1,1656 @@
 # Codage des entrees de dictionnaire (organismes, antibiotiques, levures).
 # Cle: category + dict_entry. status: proposed|validated.
-# NB: la categorie Bacteria (1545 organismes) n'est PAS incluse ici par defaut ;
-#     l'ajouter par lots valides. Ce fichier couvre antibiotiques + levures.
+# Codes SNOMED CT prerremplis (status=proposed) -> A VALIDER par un biologiste
+# avant de passer status a validated. Un code vide = non code (a completer).
 category;dict_entry;loinc;snomed;status
 Bacteriology Antibiotics;Afipia sp.;;;proposed
-Bacteriology Antibiotics;Amikacin 30μg-Aminoglycosides;;;proposed
+Bacteriology Antibiotics;Amikacin 30μg-Aminoglycosides;;372515007;proposed
 Bacteriology Antibiotics;Amoxicillin/Clavulanic acid 20/10μg-Beta-lactam+Inhibitors;;;proposed
-Bacteriology Antibiotics;Ampicillin 10μg-Penicillins;;;proposed
-Bacteriology Antibiotics;Ampicillin 2μg-Penicillins;;;proposed
-Bacteriology Antibiotics;Azithromycin 15μg-Macrolides;;;proposed
-Bacteriology Antibiotics;Aztreonam 30μg-Monobactams;;;proposed
-Bacteriology Antibiotics;Cefepime 30μg-Cephems;;;proposed
-Bacteriology Antibiotics;Cefixime 5μg-Cephems-Oral;;;proposed
-Bacteriology Antibiotics;Cefotaxime 5μg-Cephems;;;proposed
-Bacteriology Antibiotics;Cefoxitin 30μg-Cephems;;;proposed
-Bacteriology Antibiotics;Ceftazidime 10μg-Cephems;;;proposed
-Bacteriology Antibiotics;Ceftriaxone 30μg-Cephems;;;proposed
+Bacteriology Antibiotics;Ampicillin 10μg-Penicillins;;34014006;proposed
+Bacteriology Antibiotics;Ampicillin 2μg-Penicillins;;34014006;proposed
+Bacteriology Antibiotics;Azithromycin 15μg-Macrolides;;387531004;proposed
+Bacteriology Antibiotics;Aztreonam 30μg-Monobactams;;15251003;proposed
+Bacteriology Antibiotics;Cefepime 30μg-Cephems;;372733002;proposed
+Bacteriology Antibiotics;Cefixime 5μg-Cephems-Oral;;372715009;proposed
+Bacteriology Antibiotics;Cefotaxime 5μg-Cephems;;387533001;proposed
+Bacteriology Antibiotics;Cefoxitin 30μg-Cephems;;373458009;proposed
+Bacteriology Antibiotics;Ceftazidime 10μg-Cephems;;373528004;proposed
+Bacteriology Antibiotics;Ceftriaxone 30μg-Cephems;;373510001;proposed
 Bacteriology Antibiotics;Cefuroxime 30μg-Cephems;;;proposed
 Bacteriology Antibiotics;Cephalothin 30μg-Cephems;;;proposed
 Bacteriology Antibiotics;Chloramphenicol 30μg-Phenicols;;;proposed
-Bacteriology Antibiotics;Ciprofloxacin 5μg-Quinolones;;;proposed
-Bacteriology Antibiotics;Clindamycin 2μg-Lincosamides;;;proposed
-Bacteriology Antibiotics;Colistin 10μg-Lipopeptides;;;proposed
+Bacteriology Antibiotics;Ciprofloxacin 5μg-Quinolones;;372840008;proposed
+Bacteriology Antibiotics;Clindamycin 2μg-Lincosamides;;372582002;proposed
+Bacteriology Antibiotics;Colistin 10μg-Lipopeptides;;108682003;proposed
 Bacteriology Antibiotics;Doripenem 10μg-Penems;;;proposed
-Bacteriology Antibiotics;Ertapenem 10μg-Penems;;;proposed
-Bacteriology Antibiotics;Erythromycin 15μg-Macrolides;;;proposed
-Bacteriology Antibiotics;Fosfomycin 200μg-Fosfomycins;;;proposed
-Bacteriology Antibiotics;Fusidic acid 10μg-Steroidals;;;proposed
-Bacteriology Antibiotics;Gentamicin 10μg-Aminoglycosides;;;proposed
-Bacteriology Antibiotics;Gentamicin 30μg-Aminoglycosides;;;proposed
-Bacteriology Antibiotics;Imipenem 10μg-Penems;;;proposed
-Bacteriology Antibiotics;Levofloxacin 5μg-Quinolones;;;proposed
-Bacteriology Antibiotics;Mecillinam (Amdinocillin);;;proposed
-10μg-Penicillins;mecillinam;;;proposed
-Bacteriology Antibiotics;Meropenem 10μg-Penems;;;proposed
-Bacteriology Antibiotics;Metronidazole;;;proposed
-10μg-Nitroimidazoles;metronidazole;;;proposed
-Bacteriology Antibiotics;Minocycline 30μg-Tetracyclines;;;proposed
-Bacteriology Antibiotics;Moxifloxacin 5μg-Quinolones;;;proposed
-Bacteriology Antibiotics;Nalidixic acid 30μg-Quinolones;;;proposed
-Bacteriology Antibiotics;Netilmicin 10μg-Aminoglycosides;;;proposed
-Bacteriology Antibiotics;Nitrofurantoin 100μg-Nitrofurans;;;proposed
+Bacteriology Antibiotics;Ertapenem 10μg-Penems;;409306008;proposed
+Bacteriology Antibiotics;Erythromycin 15μg-Macrolides;;372590004;proposed
+Bacteriology Antibiotics;Fosfomycin 200μg-Fosfomycins;;108699000;proposed
+Bacteriology Antibiotics;Fusidic acid 10μg-Steroidals;;371765003;proposed
+Bacteriology Antibiotics;Gentamicin 10μg-Aminoglycosides;;372510001;proposed
+Bacteriology Antibiotics;Gentamicin 30μg-Aminoglycosides;;372510001;proposed
+Bacteriology Antibiotics;Imipenem 10μg-Penems;;65183007;proposed
+Bacteriology Antibiotics;Levofloxacin 5μg-Quinolones;;372623005;proposed
+Bacteriology Antibiotics;Mecillinam (Amdinocillin) 10μg-Penicillins;;;proposed
+Bacteriology Antibiotics;Meropenem 10μg-Penems;;387012009;proposed
+Bacteriology Antibiotics;Metronidazole 10μg-Nitroimidazoles;;372602008;proposed
+Bacteriology Antibiotics;Minocycline 30μg-Tetracyclines;;372587003;proposed
+Bacteriology Antibiotics;Moxifloxacin 5μg-Quinolones;;373568002;proposed
+Bacteriology Antibiotics;Nalidixic acid 30μg-Quinolones;;372755005;proposed
+Bacteriology Antibiotics;Netilmicin 10μg-Aminoglycosides;;372513000;proposed
+Bacteriology Antibiotics;Nitrofurantoin 100μg-Nitrofurans;;371489001;proposed
 Bacteriology Antibiotics;Nitroxoline 30μg-Quinolones;;;proposed
-Bacteriology Antibiotics;Norfloxacin 10μg-Quinolones;;;proposed
-Bacteriology Antibiotics;Ofloxacin 5μg-Quinolones;;;proposed
-Bacteriology Antibiotics;Oxacillin 1μg-Penicillins;;;proposed
-Bacteriology Antibiotics;Penicillin G 1unit-Penicillins;;;proposed
-Bacteriology Antibiotics;Piperacillin 30μg-Penicillins;;;proposed
-Bacteriology Antibiotics;Piperacillin/Tazobactam;;;proposed
-30/6μg-Beta-lactam+Inhibitors;piperacillin_tazobactam;;;proposed
-Bacteriology Antibiotics;Rifampin 5μg-Ansamycins;;;proposed
+Bacteriology Antibiotics;Norfloxacin 10μg-Quinolones;;372695000;proposed
+Bacteriology Antibiotics;Ofloxacin 5μg-Quinolones;;372699006;proposed
+Bacteriology Antibiotics;Oxacillin 1μg-Penicillins;;387546007;proposed
+Bacteriology Antibiotics;Penicillin G 1unit-Penicillins;;764146007;proposed
+Bacteriology Antibiotics;Piperacillin 30μg-Penicillins;;373304005;proposed
+Bacteriology Antibiotics;Piperacillin/Tazobactam 30/6μg-Beta-lactam+Inhibitors;;;proposed
+Bacteriology Antibiotics;Rifampin 5μg-Ansamycins;;387159009;proposed
 Bacteriology Antibiotics;Spectinomycin 100μg-Aminocyclitols;;;proposed
-Bacteriology Antibiotics;Teicoplanin 30μg-Glycopeptides;;;proposed
+Bacteriology Antibiotics;Teicoplanin 30μg-Glycopeptides;;373533001;proposed
 Bacteriology Antibiotics;Tetracycline 30μg-Tetracyclines;;;proposed
-Bacteriology Antibiotics;Ticarcillin 75μg-Penicillins;;;proposed
-Bacteriology Antibiotics;Ticarcillin/Clavulanic acid;;;proposed
-75/10-15μg-Beta-lactam+Inhibitors;ticarcillin_clavulanic_acid;;;proposed
-Bacteriology Antibiotics;Tigecycline 15μg-Tetracyclines;;;proposed
-Bacteriology Antibiotics;Tobramycin 10μg-Aminoglycosides;;;proposed
-Bacteriology Antibiotics;Trimethoprim 5μg-Folate pathway;;;proposed
-inhibitors;trimethoprim;;;proposed
-Bacteriology Antibiotics;Trimethoprim/Sulfamethoxazole;;;proposed
-1.25/23.75μg-Folate pathway inhibitors;trimethoprim_sulfamethoxazole;;;proposed
-Bacteriology Antibiotics;Vancomycin 5μg-Glycopeptides;;;proposed
-Therapeutic Antibiotics;AMIKACIN;;;proposed
-Therapeutic Antibiotics;AMOXICILLIN;;;proposed
+Bacteriology Antibiotics;Ticarcillin 75μg-Penicillins;;373326006;proposed
+Bacteriology Antibiotics;Ticarcillin/Clavulanic acid 75/10-15μg-Beta-lactam+Inhibitors;;;proposed
+Bacteriology Antibiotics;Tigecycline 15μg-Tetracyclines;;424423007;proposed
+Bacteriology Antibiotics;Tobramycin 10μg-Aminoglycosides;;372520008;proposed
+Bacteriology Antibiotics;Trimethoprim 5μg-Folate pathway inhibitors;;373461002;proposed
+Bacteriology Antibiotics;Trimethoprim/Sulfamethoxazole 1.25/23.75μg-Folate pathway inhibitors;;;proposed
+Bacteriology Antibiotics;Vancomycin 5μg-Glycopeptides;;372735009;proposed
+Therapeutic Antibiotics;AMIKACIN;;372515007;proposed
+Therapeutic Antibiotics;AMOXICILLIN;;372687004;proposed
 Therapeutic Antibiotics;AMOXICILLIN-CLAVULANIC ACID;;;proposed
-Therapeutic Antibiotics;AMPICILLIN;;;proposed
-Therapeutic Antibiotics;AZITHROMYCIN;;;proposed
-Therapeutic Antibiotics;BENZYLPENICILLIN;;;proposed
+Therapeutic Antibiotics;AMPICILLIN;;34014006;proposed
+Therapeutic Antibiotics;AZITHROMYCIN;;387531004;proposed
+Therapeutic Antibiotics;BENZYLPENICILLIN;;764146007;proposed
 Therapeutic Antibiotics;CEFAZOLIN;;;proposed
-Therapeutic Antibiotics;CEFEPIME;;;proposed
-Therapeutic Antibiotics;CEFIXIME;;;proposed
-Therapeutic Antibiotics;CEFOTAXIME;;;proposed
-Therapeutic Antibiotics;CEFTAZIDIME;;;proposed
-Therapeutic Antibiotics;CEFTRIAXONE;;;proposed
+Therapeutic Antibiotics;CEFEPIME;;372733002;proposed
+Therapeutic Antibiotics;CEFIXIME;;372715009;proposed
+Therapeutic Antibiotics;CEFOTAXIME;;387533001;proposed
+Therapeutic Antibiotics;CEFTAZIDIME;;373528004;proposed
+Therapeutic Antibiotics;CEFTRIAXONE;;373510001;proposed
 Therapeutic Antibiotics;CEFUROXIME;;;proposed
-Therapeutic Antibiotics;CIPROFLOXACIN;;;proposed
+Therapeutic Antibiotics;CIPROFLOXACIN;;372840008;proposed
 Therapeutic Antibiotics;CLARITHROMYCIN;;;proposed
-Therapeutic Antibiotics;CLINDAMYCIN;;;proposed
+Therapeutic Antibiotics;CLINDAMYCIN;;372582002;proposed
 Therapeutic Antibiotics;CLOXACILLIN;;;proposed
-Therapeutic Antibiotics;COLISTIN;;;proposed
+Therapeutic Antibiotics;COLISTIN;;108682003;proposed
 Therapeutic Antibiotics;DOXYCYCLINE;;;proposed
-Therapeutic Antibiotics;ERTAPENEM;;;proposed
-Therapeutic Antibiotics;ERYTHROMYCIN;;;proposed
+Therapeutic Antibiotics;ERTAPENEM;;409306008;proposed
+Therapeutic Antibiotics;ERYTHROMYCIN;;372590004;proposed
 Therapeutic Antibiotics;FLUCLOXACILLIN;;;proposed
-Therapeutic Antibiotics;FOSFOMYCIN;;;proposed
-Therapeutic Antibiotics;FUSIDIC ACID;;;proposed
-Therapeutic Antibiotics;GENTAMICIN;;;proposed
-Therapeutic Antibiotics;IMIPENEM;;;proposed
-Therapeutic Antibiotics;LEVOFLOXACIN;;;proposed
+Therapeutic Antibiotics;FOSFOMYCIN;;108699000;proposed
+Therapeutic Antibiotics;FUSIDIC ACID;;371765003;proposed
+Therapeutic Antibiotics;GENTAMICIN;;372510001;proposed
+Therapeutic Antibiotics;IMIPENEM;;65183007;proposed
+Therapeutic Antibiotics;LEVOFLOXACIN;;372623005;proposed
 Therapeutic Antibiotics;LINEZOLID;;;proposed
-Therapeutic Antibiotics;MEROPENEM;;;proposed
-Therapeutic Antibiotics;METRONIDAZOLE;;;proposed
-Therapeutic Antibiotics;MINOCYCLINE;;;proposed
-Therapeutic Antibiotics;MOXIFLOXACIN;;;proposed
-Therapeutic Antibiotics;NETILMICIN;;;proposed
-Therapeutic Antibiotics;NITROFURANTOIN;;;proposed
-Therapeutic Antibiotics;NORFLOXACIN;;;proposed
-Therapeutic Antibiotics;OFLOXACIN;;;proposed
+Therapeutic Antibiotics;MEROPENEM;;387012009;proposed
+Therapeutic Antibiotics;METRONIDAZOLE;;372602008;proposed
+Therapeutic Antibiotics;MINOCYCLINE;;372587003;proposed
+Therapeutic Antibiotics;MOXIFLOXACIN;;373568002;proposed
+Therapeutic Antibiotics;NETILMICIN;;372513000;proposed
+Therapeutic Antibiotics;NITROFURANTOIN;;371489001;proposed
+Therapeutic Antibiotics;NORFLOXACIN;;372695000;proposed
+Therapeutic Antibiotics;OFLOXACIN;;372699006;proposed
 Therapeutic Antibiotics;PIPERACILLIN-TAZOBACTAM;;;proposed
-Therapeutic Antibiotics;RIFAMPICIN;;;proposed
+Therapeutic Antibiotics;RIFAMPICIN;;387159009;proposed
 Therapeutic Antibiotics;SPIRAMYCIN;;;proposed
-Therapeutic Antibiotics;TEICOPLANIN;;;proposed
-Therapeutic Antibiotics;TETRACYCLINE;;;proposed
+Therapeutic Antibiotics;TEICOPLANIN;;373533001;proposed
+Therapeutic Antibiotics;TETRACYCLINE;;372809008;proposed
 Therapeutic Antibiotics;TICARCILLIN-CLAVULANIC ACID;;;proposed
-Therapeutic Antibiotics;TOBRAMYCIN;;;proposed
-Therapeutic Antibiotics;TRIMETHOPRIM;;;proposed
+Therapeutic Antibiotics;TOBRAMYCIN;;372520008;proposed
+Therapeutic Antibiotics;TRIMETHOPRIM;;373461002;proposed
 Therapeutic Antibiotics;TRIMETHOPRIM-SULFAMETHOXAZOLE;;;proposed
-Therapeutic Antibiotics;VANCOMYCIN;;;proposed
+Therapeutic Antibiotics;VANCOMYCIN;;372735009;proposed
 Yeasts;Candida albicans;;53326005;proposed
-Yeasts;Candida glabrata;;;proposed
-Yeasts;Candida krusei;;;proposed
-Yeasts;Candida parapsilosis;;;proposed
-Yeasts;Candida tropicalis;;;proposed
-Yeasts;Saccharomyces cerevisiae;;;proposed
+Yeasts;Candida glabrata;;444877006;proposed
+Yeasts;Candida krusei;;16452009;proposed
+Yeasts;Candida parapsilosis;;61302002;proposed
+Yeasts;Candida tropicalis;;47885008;proposed
+Yeasts;Saccharomyces cerevisiae;;58296003;proposed
+Bacteria;Abiotrophia Adiacens;;;proposed
+Bacteria;Abiotrophia Defectiva;;;proposed
+Bacteria;Abiotrophia Sp;;;proposed
+Bacteria;Acetivibrio Sp;;;proposed
+Bacteria;Acetobacterium Sp;;;proposed
+Bacteria;Acholeplasma Sp;;;proposed
+Bacteria;Achromobacter Denitrificans;;;proposed
+Bacteria;Achromobacter Piechaudii;;;proposed
+Bacteria;Achromobacter Sp;;;proposed
+Bacteria;Achromobacter Xylosoxidans Ss Xylosoxidans;;;proposed
+Bacteria;Acidaminococcus Fermentans;;;proposed
+Bacteria;Acidaminococcus Sp;;;proposed
+Bacteria;Acidovorax Delafieldii;;;proposed
+Bacteria;Acidovorax Facilis;;;proposed
+Bacteria;Acidovorax Sp;;;proposed
+Bacteria;Acidovorax Temperans;;;proposed
+Bacteria;Acinetobacter baumannii;;40733004;proposed
+Bacteria;Acinetobacter Baumannii;;40733004;proposed
+Bacteria;Acinetobacter Baylyi;;;proposed
+Bacteria;Acinetobacter Bereziniae;;;proposed
+Bacteria;Acinetobacter Calcoaceticus;;83744009;proposed
+Bacteria;Acinetobacter Dijkshoorniae;;;proposed
+Bacteria;Acinetobacter Guillouiae;;;proposed
+Bacteria;Acinetobacter Haemolyticus;;47456002;proposed
+Bacteria;Acinetobacter Johnsonii;;;proposed
+Bacteria;Acinetobacter Junii;;;proposed
+Bacteria;Acinetobacter Lactucae;;;proposed
+Bacteria;Acinetobacter Lwoffii;;63968007;proposed
+Bacteria;Acinetobacter Nosocomialis;;;proposed
+Bacteria;Acinetobacter Parvus;;;proposed
+Bacteria;Acinetobacter Pittii;;;proposed
+Bacteria;Acinetobacter Radioresistens;;;proposed
+Bacteria;Acinetobacter Schindleri;;;proposed
+Bacteria;Acinetobacter Seifertii;;;proposed
+Bacteria;Acinetobacter Sp;;;proposed
+Bacteria;Acinetobacter Ursingii;;;proposed
+Bacteria;Actinobacillus Actinomycetemcomitans;;;proposed
+Bacteria;Actinobacillus Equuli;;;proposed
+Bacteria;Actinobacillus Lignieresii;;;proposed
+Bacteria;Actinobacillus Pleuropneumoniae;;;proposed
+Bacteria;Actinobacillus Seminis;;;proposed
+Bacteria;Actinobacillus Sp;;;proposed
+Bacteria;Actinobacillus Suis;;;proposed
+Bacteria;Actinobacillus Ureae;;;proposed
+Bacteria;Actinobaculum Suis;;;proposed
+Bacteria;Actinomadura Madurae;;;proposed
+Bacteria;Actinomadura Sp;;;proposed
+Bacteria;Actinomyces Bernardiae;;;proposed
+Bacteria;Actinomyces Bovis;;;proposed
+Bacteria;Actinomyces Georgiae;;;proposed
+Bacteria;Actinomyces Gerencseriae;;;proposed
+Bacteria;Actinomyces Israelii;;60686002;proposed
+Bacteria;Actinomyces Meyeri;;;proposed
+Bacteria;Actinomyces Naeslundii;;;proposed
+Bacteria;Actinomyces Neuii Ss Anitratus;;;proposed
+Bacteria;Actinomyces Neuii Ss Neuii;;;proposed
+Bacteria;Actinomyces Odontolyticus;;;proposed
+Bacteria;Actinomyces Pyogenes;;;proposed
+Bacteria;Actinomyces Sp;;;proposed
+Bacteria;Actinomyces Turicensis;;;proposed
+Bacteria;Actinomyces Viscosus;;;proposed
+Bacteria;Aerococcus Sp;;;proposed
+Bacteria;Aerococcus Urinae;;;proposed
+Bacteria;Aerococcus Viridans;;;proposed
+Bacteria;Aeromonas Caviae;;34418006;proposed
+Bacteria;Aeromonas Dhakensis;;;proposed
+Bacteria;Aeromonas Enteropelogenes;;;proposed
+Bacteria;Aeromonas Eucrenophila;;;proposed
+Bacteria;Aeromonas Hydrophila;;30783005;proposed
+Bacteria;Aeromonas Jandaei;;;proposed
+Bacteria;Aeromonas Media;;;proposed
+Bacteria;Aeromonas Punctata;;;proposed
+Bacteria;Aeromonas Punctata Ss Punctata;;;proposed
+Bacteria;Aeromonas Salmonicida;;;proposed
+Bacteria;Aeromonas Schubertii;;;proposed
+Bacteria;Aeromonas Sobria;;64726006;proposed
+Bacteria;Aeromonas Sp;;;proposed
+Bacteria;Aeromonas Trota;;;proposed
+Bacteria;Aeromonas Veronii;;;proposed
+Bacteria;Aeromonas Veronii Biovar Sobria;;;proposed
+Bacteria;Aeromonas Veronii Biovar Veronii;;;proposed
+Bacteria;Afipia Broomeae;;;proposed
+Bacteria;Afipia Clevelandensis;;;proposed
+Bacteria;Afipia Felis;;;proposed
+Bacteria;Afipia Sp;;;proposed
+Bacteria;Aggregatibacter Actinomycetemcomitans;;;proposed
+Bacteria;Aggregatibacter Aphrophilus;;;proposed
+Bacteria;Aggregatibacter Segnis;;;proposed
+Bacteria;Aggregatibacter Sp;;;proposed
+Bacteria;Agrobacterium Radiobacter;;;proposed
+Bacteria;Agrobacterium Sp;;;proposed
+Bacteria;Alcaligenes Piechaudii;;;proposed
+Bacteria;Alcaligenes Sp;;;proposed
+Bacteria;Alcaligenes Xylosoxidans;;;proposed
+Bacteria;Alcaligenes Xylosoxidans Ss Denitrificans;;;proposed
+Bacteria;Alcaligenes Xylosoxidans Ss Xylosoxidans;;;proposed
+Bacteria;Aliivibrio Sp;;;proposed
+Bacteria;Alistipes Putredinis;;;proposed
+Bacteria;Alloiococcus Otitis;;;proposed
+Bacteria;Alloiococcus Sp;;;proposed
+Bacteria;Alteromonas Hanedai;;;proposed
+Bacteria;Alteromonas Sp;;;proposed
+Bacteria;Alysiella Sp;;;proposed
+Bacteria;Anaerobiospirillum Sp;;;proposed
+Bacteria;Anaerobiospirillum Succiniciproducens;;;proposed
+Bacteria;Anaerococcus Degeneri;;;proposed
+Bacteria;Anaerococcus Hydrogenalis;;;proposed
+Bacteria;Anaerococcus Lactolyticus;;;proposed
+Bacteria;Anaerococcus Prevotii;;;proposed
+Bacteria;Anaerococcus Sp;;;proposed
+Bacteria;Anaerococcus Tetradius;;;proposed
+Bacteria;Anaerococcus Vaginalis;;;proposed
+Bacteria;Anaerorhabdus Furcosa;;;proposed
+Bacteria;Anaerorhabdus Sp;;;proposed
+Bacteria;Anaerovibrio Sp;;;proposed
+Bacteria;Anaplasma Centrale;;;proposed
+Bacteria;Anaplasma Marginale;;;proposed
+Bacteria;Anaplasma Mesaeterum;;;proposed
+Bacteria;Anaplasma Ovis;;;proposed
+Bacteria;Anaplasma Phagocytophilum;;;proposed
+Bacteria;Anaplasma Sp;;;proposed
+Bacteria;Arachnia Propionica;;;proposed
+Bacteria;Arcanobacterium Bernardiae;;;proposed
+Bacteria;Arcanobacterium Haemolyticum;;;proposed
+Bacteria;Arcanobacterium Pyogenes;;;proposed
+Bacteria;Arcanobacterium Sp;;;proposed
+Bacteria;Arcobacter Butzleri;;;proposed
+Bacteria;Arcobacter Cryaerophilus;;;proposed
+Bacteria;Arcobacter Nitrofigilis;;;proposed
+Bacteria;Arcobacter Sp;;;proposed
+Bacteria;Arthrobacter Sp;;;proposed
+Bacteria;Asaccharospora Irregularis;;;proposed
+Bacteria;Atopobium Minutum;;;proposed
+Bacteria;Atopobium Parvulum;;;proposed
+Bacteria;Atopobium Rimae;;;proposed
+Bacteria;Atopobium Sp;;;proposed
+Bacteria;Aureobacterium Sp;;;proposed
+Bacteria;Avibacterium Avium;;;proposed
+Bacteria;Avibacterium Gallinarum;;;proposed
+Bacteria;Avibacterium Paragallinarum;;;proposed
+Bacteria;Avibacterium Sp;;;proposed
+Bacteria;Avibacterium Volantium;;;proposed
+Bacteria;Azospirillum Brasilense;;;proposed
+Bacteria;Bacillus Alvei;;;proposed
+Bacteria;Bacillus Anthracis;;55011009;proposed
+Bacteria;Bacillus Brevis;;;proposed
+Bacteria;Bacillus Cereus;;30122001;proposed
+Bacteria;Bacillus Circulans;;;proposed
+Bacteria;Bacillus Coagulans;;;proposed
+Bacteria;Bacillus Firmus;;;proposed
+Bacteria;Bacillus Laterosporus;;;proposed
+Bacteria;Bacillus Lentus;;;proposed
+Bacteria;Bacillus Licheniformis;;;proposed
+Bacteria;Bacillus Macerans;;;proposed
+Bacteria;Bacillus Megaterium;;;proposed
+Bacteria;Bacillus Mycoides;;;proposed
+Bacteria;Bacillus Pantothenticus;;;proposed
+Bacteria;Bacillus Polymyxa;;;proposed
+Bacteria;Bacillus Pumilus;;;proposed
+Bacteria;Bacillus Sp;;;proposed
+Bacteria;Bacillus Sphaericus;;;proposed
+Bacteria;Bacillus Stearothermophilus;;;proposed
+Bacteria;Bacillus Subtilis;;64604001;proposed
+Bacteria;Bacillus Thuringiensis;;;proposed
+Bacteria;Bacteroides Asaccharolyticus;;;proposed
+Bacteria;Bacteroides Bivius;;;proposed
+Bacteria;Bacteroides Buccae;;;proposed
+Bacteria;Bacteroides Buccalis;;;proposed
+Bacteria;Bacteroides Caccae;;;proposed
+Bacteria;Bacteroides Capillosus;;;proposed
+Bacteria;Bacteroides Coagulans;;;proposed
+Bacteria;Bacteroides Corporis;;;proposed
+Bacteria;Bacteroides Denticola;;;proposed
+Bacteria;Bacteroides Disiens;;;proposed
+Bacteria;Bacteroides Distasonis;;;proposed
+Bacteria;Bacteroides Eggerthii;;;proposed
+Bacteria;Bacteroides Endodontalis;;;proposed
+Bacteria;Bacteroides Forsythus;;;proposed
+Bacteria;Bacteroides Fragilis;;35441002;proposed
+Bacteria;Bacteroides Furcosus;;;proposed
+Bacteria;Bacteroides Gingivalis;;;proposed
+Bacteria;Bacteroides Gracilis;;;proposed
+Bacteria;Bacteroides Intermedius;;;proposed
+Bacteria;Bacteroides Levii;;;proposed
+Bacteria;Bacteroides Loescheii;;;proposed
+Bacteria;Bacteroides Nordii;;;proposed
+Bacteria;Bacteroides Ochraceus;;;proposed
+Bacteria;Bacteroides Oralis;;;proposed
+Bacteria;Bacteroides Oris;;;proposed
+Bacteria;Bacteroides Ovatus;;;proposed
+Bacteria;Bacteroides Pneumosintes;;;proposed
+Bacteria;Bacteroides Putredinis;;;proposed
+Bacteria;Bacteroides Pyogenes;;;proposed
+Bacteria;Bacteroides Ruminicola;;;proposed
+Bacteria;Bacteroides Ruminicola Ss Brevis;;;proposed
+Bacteria;Bacteroides Ruminicola Ss Ruminicola;;;proposed
+Bacteria;Bacteroides Sp;;;proposed
+Bacteria;Bacteroides Splanchnicus;;;proposed
+Bacteria;Bacteroides Stercoris;;;proposed
+Bacteria;Bacteroides Tectum;;;proposed
+Bacteria;Bacteroides Thetaiotaomicron;;;proposed
+Bacteria;Bacteroides Uniformis;;;proposed
+Bacteria;Bacteroides Ureolyticus;;;proposed
+Bacteria;Bacteroides Vulgatus;;;proposed
+Bacteria;Bartonella Bacilliformis;;;proposed
+Bacteria;Bartonella Elizabethae;;;proposed
+Bacteria;Bartonella Henselae;;53997004;proposed
+Bacteria;Bartonella Quintana;;;proposed
+Bacteria;Bartonella Sp;;;proposed
+Bacteria;Bergeriella Denitrificans;;;proposed
+Bacteria;Bergeyella Sp;;;proposed
+Bacteria;Bergeyella Zoohelcum;;;proposed
+Bacteria;Bibersteinia Trehalosi;;;proposed
+Bacteria;Bifidobacterium Adolescentis;;;proposed
+Bacteria;Bifidobacterium Bifidum;;;proposed
+Bacteria;Bifidobacterium Breve;;;proposed
+Bacteria;Bifidobacterium Catenulatum;;;proposed
+Bacteria;Bifidobacterium Coryneforme;;;proposed
+Bacteria;Bifidobacterium Dentium;;;proposed
+Bacteria;Bifidobacterium Infantis;;;proposed
+Bacteria;Bifidobacterium Longum;;;proposed
+Bacteria;Bifidobacterium Longum Infantis;;;proposed
+Bacteria;Bifidobacterium Magnum;;;proposed
+Bacteria;Bifidobacterium Pseudolongum;;;proposed
+Bacteria;Bifidobacterium Sp;;;proposed
+Bacteria;Bilophila Sp;;;proposed
+Bacteria;Bilophila Wadsworthia;;;proposed
+Bacteria;Blautia Hansenii;;;proposed
+Bacteria;Blautia Producta;;;proposed
+Bacteria;Bordetella Avium;;;proposed
+Bacteria;Bordetella Bronchiseptica;;74403009;proposed
+Bacteria;Bordetella Hinzii;;;proposed
+Bacteria;Bordetella Holmesii;;;proposed
+Bacteria;Bordetella Parapertussis;;47135001;proposed
+Bacteria;Bordetella Pertussis;;5247005;proposed
+Bacteria;Bordetella Sp;;;proposed
+Bacteria;Borrelia Afzelii;;;proposed
+Bacteria;Borrelia Anserina;;;proposed
+Bacteria;Borrelia Burgdorferi;;72904005;proposed
+Bacteria;Borrelia Duttonii;;;proposed
+Bacteria;Borrelia Garinii;;;proposed
+Bacteria;Borrelia Hermsii;;;proposed
+Bacteria;Borrelia Parkeri;;;proposed
+Bacteria;Borrelia Recurrentis;;;proposed
+Bacteria;Borrelia Sp;;;proposed
+Bacteria;Borrelia Turicatae;;;proposed
+Bacteria;Brachyspira;;;proposed
+Bacteria;Brachyspira Aalborgi;;;proposed
+Bacteria;Brachyspira Alvinipulli;;;proposed
+Bacteria;Brachyspira Hyodysenteriae;;;proposed
+Bacteria;Brachyspira Intermedia;;;proposed
+Bacteria;Brachyspira Pilosicoli;;;proposed
+Bacteria;Brachyspira Sp;;;proposed
+Bacteria;Branhamella Catarrhalis;;113845004;proposed
+Bacteria;Branhamella Sp;;;proposed
+Bacteria;Brevibacillus Brevis;;;proposed
+Bacteria;Brevibacillus Laterosporus;;;proposed
+Bacteria;Brevibacterium Acetylicum;;;proposed
+Bacteria;Brevibacterium Casei;;;proposed
+Bacteria;Brevibacterium Epidermidis;;;proposed
+Bacteria;Brevibacterium Mcbrellneri;;;proposed
+Bacteria;Brevibacterium Sp;;;proposed
+Bacteria;Brevundimonas Diminuta;;;proposed
+Bacteria;Brevundimonas Sp;;;proposed
+Bacteria;Brevundimonas Vesicularis;;;proposed
+Bacteria;Brochothrix Sp;;;proposed
+Bacteria;Brucella Melintensis Biovar Ovis;;;proposed
+Bacteria;Brucella Melitensis;;45118002;proposed
+Bacteria;Brucella Ovis;;;proposed
+Bacteria;Brucella Sp;;;proposed
+Bacteria;Budvicia Aquatica;;;proposed
+Bacteria;Budvicia Sp;;;proposed
+Bacteria;Burkholderia Ambifaria Genomovar Vii;;;proposed
+Bacteria;Burkholderia Anthina Genomovar Viii;;;proposed
+Bacteria;Burkholderia Cenocepacia Genomovar Iii;;;proposed
+Bacteria;Burkholderia Cepacia;;41229009;proposed
+Bacteria;Burkholderia Cepacia Complex;;;proposed
+Bacteria;Burkholderia Dolosa Genomovar Vi;;;proposed
+Bacteria;Burkholderia Gladioli;;;proposed
+Bacteria;Burkholderia Mallei;;55402005;proposed
+Bacteria;Burkholderia Multivorans Genomovar Ii;;;proposed
+Bacteria;Burkholderia Pickettii;;;proposed
+Bacteria;Burkholderia Pseudomallei;;35729003;proposed
+Bacteria;Burkholderia Pyrrocinia Genomovar Ix;;;proposed
+Bacteria;Burkholderia Sp;;;proposed
+Bacteria;Burkholderia Stabilis Genomovar Iv;;;proposed
+Bacteria;Burkholderia Ubonensis Genomovar X;;;proposed
+Bacteria;Burkholderia Vietnamiensis Genomovar V;;;proposed
+Bacteria;Buttiauxella Ferragutiae;;;proposed
+Bacteria;Buttiauxella Gaviniae;;;proposed
+Bacteria;Buttiauxella Noackiae;;;proposed
+Bacteria;Buttiauxella Sp;;;proposed
+Bacteria;Butyrivibrio Sp;;;proposed
+Bacteria;Calymmatobacterium Granulomatis;;;proposed
+Bacteria;Calymmatobacterium Sp;;;proposed
+Bacteria;Campylobacter Coli;;59616005;proposed
+Bacteria;Campylobacter Concisus;;;proposed
+Bacteria;Campylobacter Curvus;;;proposed
+Bacteria;Campylobacter Fennelliae;;;proposed
+Bacteria;Campylobacter Fetus Ss Fetus;;;proposed
+Bacteria;Campylobacter Fetus Ss Venerealis;;;proposed
+Bacteria;Campylobacter Gracilis;;;proposed
+Bacteria;Campylobacter Hyointestinalis;;;proposed
+Bacteria;Campylobacter Jejuni;;66543000;proposed
+Bacteria;Campylobacter Jejuni Biotype1;;;proposed
+Bacteria;Campylobacter Jejuni Biotype2;;;proposed
+Bacteria;Campylobacter Jejuni Ss Doylei;;;proposed
+Bacteria;Campylobacter Jejuni Ss Jejuni;;;proposed
+Bacteria;Campylobacter Mucosalis;;;proposed
+Bacteria;Campylobacter Rectus;;;proposed
+Bacteria;Campylobacter Showae;;;proposed
+Bacteria;Campylobacter Sp;;;proposed
+Bacteria;Campylobacter Sputorum;;;proposed
+Bacteria;Campylobacter Sputorum Ss Bubulus;;;proposed
+Bacteria;Campylobacter Sputorum Ss Sputorum;;;proposed
+Bacteria;Campylobacter Upsaliensis;;;proposed
+Bacteria;Campylobacter Ureolyticus;;;proposed
+Bacteria;Capnocytophaga Canimorsus;;;proposed
+Bacteria;Capnocytophaga Cynodegmi;;;proposed
+Bacteria;Capnocytophaga Gingivalis;;;proposed
+Bacteria;Capnocytophaga Granulosa;;;proposed
+Bacteria;Capnocytophaga Haemolytica;;;proposed
+Bacteria;Capnocytophaga Ochracea;;;proposed
+Bacteria;Capnocytophaga Sp;;;proposed
+Bacteria;Capnocytophaga Sputigena;;;proposed
+Bacteria;Capsularis Sp;;;proposed
+Bacteria;Cardiobacterium Hominis;;;proposed
+Bacteria;Cardiobacterium Sp;;;proposed
+Bacteria;Carnobacterium Maltaromaticum;;;proposed
+Bacteria;Carnobacterium Sp;;;proposed
+Bacteria;Caryophanon Sp;;;proposed
+Bacteria;Catonella Morbi;;;proposed
+Bacteria;Catonella Sp;;;proposed
+Bacteria;Cdc Df3;;;proposed
+Bacteria;Cdc Ef5;;;proposed
+Bacteria;Cdc Enteric Group59;;;proposed
+Bacteria;Cdc Enteric Group63;;;proposed
+Bacteria;Cdc Enteric Group64;;;proposed
+Bacteria;Cedecea Davisae;;;proposed
+Bacteria;Cedecea Lapagei;;;proposed
+Bacteria;Cedecea Neteri;;;proposed
+Bacteria;Cedecea Sp;;;proposed
+Bacteria;Cellulomonas Sp;;;proposed
+Bacteria;Cellulomonas Turbata;;;proposed
+Bacteria;Cellulosimicrobium Cellulans;;;proposed
+Bacteria;Cellulosimicrobium Sp;;;proposed
+Bacteria;Centipeda Periodontii;;;proposed
+Bacteria;Centipeda Sp;;;proposed
+Bacteria;Cetobacterium Somerae;;;proposed
+Bacteria;Cetobacterium Sp;;;proposed
+Bacteria;Chlamydia Abortus;;;proposed
+Bacteria;Chlamydia Felis;;;proposed
+Bacteria;Chlamydia Pneumoniae;;58038003;proposed
+Bacteria;Chlamydia Psittaci;;62880007;proposed
+Bacteria;Chlamydia Sp;;;proposed
+Bacteria;Chlamydia Trachomatis;;63938009;proposed
+Bacteria;Chlamydophila Abortus;;;proposed
+Bacteria;Chlamydophila Felis;;;proposed
+Bacteria;Chlamydophila Pecorum;;;proposed
+Bacteria;Chlamydophila Pneumoniae;;58038003;proposed
+Bacteria;Chlamydophila Psittaci;;62880007;proposed
+Bacteria;Chlamydophila Sp;;;proposed
+Bacteria;Chromobacterium Sp;;;proposed
+Bacteria;Chromobacterium Violaceum;;28884001;proposed
+Bacteria;Chryseobacterium Arthrosphaerae;;;proposed
+Bacteria;Chryseobacterium Gleum;;;proposed
+Bacteria;Chryseobacterium Indologenes;;;proposed
+Bacteria;Chryseobacterium Meningosepticum;;;proposed
+Bacteria;Chryseobacterium Sp;;;proposed
+Bacteria;Chryseomonas Luteola;;;proposed
+Bacteria;Chryseomonas Sp;;;proposed
+Bacteria;Citrobacter Amalonaticus;;;proposed
+Bacteria;Citrobacter Amalonaticus Group;;;proposed
+Bacteria;Citrobacter Braakii;;;proposed
+Bacteria;Citrobacter Diversus;;64268001;proposed
+Bacteria;Citrobacter Farmeri;;;proposed
+Bacteria;Citrobacter Freundii;;50841009;proposed
+Bacteria;Citrobacter Genomospecies9;;;proposed
+Bacteria;Citrobacter Gillenii;;;proposed
+Bacteria;Citrobacter Koseri;;54276004;proposed
+Bacteria;Citrobacter Murliniae;;;proposed
+Bacteria;Citrobacter Rodentium;;;proposed
+Bacteria;Citrobacter Sedlakii;;;proposed
+Bacteria;Citrobacter Sp;;;proposed
+Bacteria;Citrobacter Werkmanii;;;proposed
+Bacteria;Citrobacter Youngae;;;proposed
+Bacteria;Clavibacter Michiganensis Michiganensis;;;proposed
+Bacteria;Clavibacter Michiganensis Ss Michiganensis;;;proposed
+Bacteria;Clavibacter Sp;;;proposed
+Bacteria;Clostridioides Difficile;;62617009;proposed
+Bacteria;Clostridioides Difficile Toxin Nonproducing;;;proposed
+Bacteria;Clostridioides Difficile Toxin Producing;;;proposed
+Bacteria;Clostridioides Sp;;;proposed
+Bacteria;Clostridium Absonum;;;proposed
+Bacteria;Clostridium Acetobutylicum;;;proposed
+Bacteria;Clostridium Aminovalericum;;;proposed
+Bacteria;Clostridium Argentinense;;;proposed
+Bacteria;Clostridium Baratii;;;proposed
+Bacteria;Clostridium Beijerinckii;;;proposed
+Bacteria;Clostridium Botulinum;;13045009;proposed
+Bacteria;Clostridium Butyricum;;;proposed
+Bacteria;Clostridium Cadaveris;;;proposed
+Bacteria;Clostridium Carnis;;;proposed
+Bacteria;Clostridium Chauvoei;;;proposed
+Bacteria;Clostridium Clostridioforme;;;proposed
+Bacteria;Clostridium Difficile;;62617009;proposed
+Bacteria;Clostridium Difficile Toxin Nonproducing;;;proposed
+Bacteria;Clostridium Difficile Toxin Producing;;;proposed
+Bacteria;Clostridium Fallax;;;proposed
+Bacteria;Clostridium Ghoni;;;proposed
+Bacteria;Clostridium Haemolyticum;;;proposed
+Bacteria;Clostridium Hastiforme;;;proposed
+Bacteria;Clostridium Histolyticum;;;proposed
+Bacteria;Clostridium Indolis;;;proposed
+Bacteria;Clostridium Innocuum;;;proposed
+Bacteria;Clostridium Irregularis;;;proposed
+Bacteria;Clostridium Limosum;;;proposed
+Bacteria;Clostridium Malenominatum;;;proposed
+Bacteria;Clostridium Nexile;;;proposed
+Bacteria;Clostridium Novyi;;42322006;proposed
+Bacteria;Clostridium Oroticum;;;proposed
+Bacteria;Clostridium Paraputrificum;;;proposed
+Bacteria;Clostridium Perfringens;;87628006;proposed
+Bacteria;Clostridium Ramosum;;;proposed
+Bacteria;Clostridium Sardiniense;;;proposed
+Bacteria;Clostridium Sartagoforme;;;proposed
+Bacteria;Clostridium Scatologenes;;;proposed
+Bacteria;Clostridium Septicum;;58917006;proposed
+Bacteria;Clostridium Sordellii;;64177002;proposed
+Bacteria;Clostridium Sp;;;proposed
+Bacteria;Clostridium Sphenoides;;;proposed
+Bacteria;Clostridium Sporogenes;;;proposed
+Bacteria;Clostridium Subterminale;;;proposed
+Bacteria;Clostridium Symbiosum;;;proposed
+Bacteria;Clostridium Tertium;;;proposed
+Bacteria;Clostridium Tetani;;31955002;proposed
+Bacteria;Collinsella Aerofaciens;;;proposed
+Bacteria;Comamonas Acidovorans;;;proposed
+Bacteria;Comamonas Sp;;;proposed
+Bacteria;Comamonas Testosteroni;;;proposed
+Bacteria;Coprococcus Sp;;;proposed
+Bacteria;Corynebacterium Accolens;;;proposed
+Bacteria;Corynebacterium Afermentans;;;proposed
+Bacteria;Corynebacterium Amycolatum;;;proposed
+Bacteria;Corynebacterium Argentoratense;;;proposed
+Bacteria;Corynebacterium Aurimucosum;;;proposed
+Bacteria;Corynebacterium Auris;;;proposed
+Bacteria;Corynebacterium Bovis;;;proposed
+Bacteria;Corynebacterium Coyleae;;;proposed
+Bacteria;Corynebacterium Cystitidis;;;proposed
+Bacteria;Corynebacterium Diphtheriae;;77728005;proposed
+Bacteria;Corynebacterium Equi;;;proposed
+Bacteria;Corynebacterium Glucuronolyticum;;;proposed
+Bacteria;Corynebacterium Glutamicum;;;proposed
+Bacteria;Corynebacterium Jeikeium;;;proposed
+Bacteria;Corynebacterium Kutscheri;;;proposed
+Bacteria;Corynebacterium Macginleyi;;;proposed
+Bacteria;Corynebacterium Matruchotii;;;proposed
+Bacteria;Corynebacterium Michiganense;;;proposed
+Bacteria;Corynebacterium Minutissimum;;;proposed
+Bacteria;Corynebacterium Mucifaciens;;;proposed
+Bacteria;Corynebacterium Mycetoides;;;proposed
+Bacteria;Corynebacterium Nigricans;;;proposed
+Bacteria;Corynebacterium Pilosum;;;proposed
+Bacteria;Corynebacterium Propinquum;;;proposed
+Bacteria;Corynebacterium Pseudodiphtheriticum;;;proposed
+Bacteria;Corynebacterium Pseudotuberculosis;;;proposed
+Bacteria;Corynebacterium Pyogenes;;;proposed
+Bacteria;Corynebacterium Renale;;;proposed
+Bacteria;Corynebacterium Sp;;;proposed
+Bacteria;Corynebacterium Sp Diphtheroids;;;proposed
+Bacteria;Corynebacterium Striatum;;;proposed
+Bacteria;Corynebacterium Ulcerans;;;proposed
+Bacteria;Corynebacterium Urealyticum;;;proposed
+Bacteria;Corynebacterium Xerosis;;;proposed
+Bacteria;Cosenzaea Myxofaciens;;;proposed
+Bacteria;Cowdria Ruminantium;;;proposed
+Bacteria;Coxiella Burnetii;;18142006;proposed
+Bacteria;Coxiella Sp;;;proposed
+Bacteria;Cristispira Sp;;;proposed
+Bacteria;Cronobacter Sakazakii;;447816004;proposed
+Bacteria;Cronobacter Sp;;;proposed
+Bacteria;Cupriavidus Pauculus;;;proposed
+Bacteria;Cutibacterium Acnes;;;proposed
+Bacteria;Cutibacterium Sp;;;proposed
+Bacteria;Deinococcus Sp;;;proposed
+Bacteria;Delftia Acidovorans;;;proposed
+Bacteria;Delftia Sp;;;proposed
+Bacteria;Dermabacter Hominis;;;proposed
+Bacteria;Dermabacter Sp;;;proposed
+Bacteria;Dermacoccus Nishinomiyaensis;;;proposed
+Bacteria;Dermacoccus Sp;;;proposed
+Bacteria;Dermatophilus Congolensis;;;proposed
+Bacteria;Dermatophilus Sp;;;proposed
+Bacteria;Desulfobacter Sp;;;proposed
+Bacteria;Desulfobulbus Sp;;;proposed
+Bacteria;Desulfococcus Sp;;;proposed
+Bacteria;Desulfomonas Pigra;;;proposed
+Bacteria;Desulfomonas Sp;;;proposed
+Bacteria;Desulfosarcina Sp;;;proposed
+Bacteria;Desulfovibrio;;;proposed
+Bacteria;Desulfovibrio Desulfuricans Ss Aestuarii;;;proposed
+Bacteria;Desulfovibrio Desulfuricans Ss Desulfuricans;;;proposed
+Bacteria;Desulfovibrio Piger;;;proposed
+Bacteria;Dialister Pneumosintes;;;proposed
+Bacteria;Dialister Sp;;;proposed
+Bacteria;Dichelobacter Nodosus;;;proposed
+Bacteria;Dichelobacter Sp;;;proposed
+Bacteria;Dysgonomonas Capnocytophagoides;;;proposed
+Bacteria;Edwardsiella Anguillarum;;;proposed
+Bacteria;Edwardsiella Hoshinae;;;proposed
+Bacteria;Edwardsiella Ictaluri;;;proposed
+Bacteria;Edwardsiella Piscicida;;;proposed
+Bacteria;Edwardsiella Tarda;;38254008;proposed
+Bacteria;Eggerthella Lenta;;;proposed
+Bacteria;Eggerthella Sp;;;proposed
+Bacteria;Eikenella Corrodens;;48252008;proposed
+Bacteria;Eikenella Sp;;;proposed
+Bacteria;Elizabethkingia Anophelis;;;proposed
+Bacteria;Elizabethkingia Meningoseptica;;;proposed
+Bacteria;Elizabethkingia Sp;;;proposed
+Bacteria;Empedobacter Brevis;;;proposed
+Bacteria;Empedobacter Sp;;;proposed
+Bacteria;Enterobacter Agglomerans;;;proposed
+Bacteria;Enterobacter Sp;;;proposed
+Bacteria;Enterobacter spp.;;;proposed
+Bacteria;Enterococcus Avium;;53309006;proposed
+Bacteria;Enterococcus Cecorum;;;proposed
+Bacteria;Enterococcus Columbae;;;proposed
+Bacteria;Enterococcus Dispar;;;proposed
+Bacteria;Enterococcus Durans;;113010005;proposed
+Bacteria;Enterococcus faecalis;;78065002;proposed
+Bacteria;Enterococcus Faecalis;;78065002;proposed
+Bacteria;Enterococcus Faecium;;90272000;proposed
+Bacteria;Enterococcus Gallinarum;;58335001;proposed
+Bacteria;Enterococcus Hirae;;;proposed
+Bacteria;Enterococcus Saccharolyticus;;;proposed
+Bacteria;Erysipelothrix Rhusiopathiae;;50528008;proposed
+Bacteria;Erysipelothrix Tonsillarum;;;proposed
+Bacteria;Escherichia Albertii;;;proposed
+Bacteria;Escherichia coli;;112283007;proposed
+Bacteria;Escherichia Coli;;112283007;proposed
+Bacteria;Escherichia Fergusonii;;;proposed
+Bacteria;Escherichia Hermannii;;;proposed
+Bacteria;Escherichia Vulneris;;;proposed
+Bacteria;Eubacterium Aerofaciens;;;proposed
+Bacteria;Eubacterium Alactolyticum;;;proposed
+Bacteria;Eubacterium Brachy;;;proposed
+Bacteria;Eubacterium Combesii;;;proposed
+Bacteria;Eubacterium Contortum;;;proposed
+Bacteria;Eubacterium Cylindroides;;;proposed
+Bacteria;Eubacterium Lentum;;;proposed
+Bacteria;Eubacterium Limosum;;;proposed
+Bacteria;Eubacterium Moniliforme;;;proposed
+Bacteria;Eubacterium Nitritogenes;;;proposed
+Bacteria;Eubacterium Nodatum;;;proposed
+Bacteria;Eubacterium Rectale;;;proposed
+Bacteria;Eubacterium Saburreum;;;proposed
+Bacteria;Eubacterium Saphenum;;;proposed
+Bacteria;Eubacterium Schtitka;;;proposed
+Bacteria;Eubacterium Sp;;;proposed
+Bacteria;Eubacterium Sulci;;;proposed
+Bacteria;Eubacterium Tenue;;;proposed
+Bacteria;Eubacterium Timidum;;;proposed
+Bacteria;Eubacterium Yurii Ss Margaretiae;;;proposed
+Bacteria;Eubacterium Yurii Ss Schtitka;;;proposed
+Bacteria;Eubacterium Yurii Ss Yurii;;;proposed
+Bacteria;Ewingella Americana;;;proposed
+Bacteria;Ewingella Sp;;;proposed
+Bacteria;Exiguobacterium Acetylicum;;;proposed
+Bacteria;Exiguobacterium Sp;;;proposed
+Bacteria;Faecalibacterium Prausnitzii;;;proposed
+Bacteria;Fibrobacter Sp;;;proposed
+Bacteria;Filifactor Alocis;;;proposed
+Bacteria;Filifactor Sp;;;proposed
+Bacteria;Filifactor Villosus;;;proposed
+Bacteria;Finegoldia Magna;;;proposed
+Bacteria;Globicatella Sp;;;proposed
+Bacteria;Gordonia Aichiensis;;;proposed
+Bacteria;Gordonia Bronchialis;;;proposed
+Bacteria;Gordonia Rubripertincta;;;proposed
+Bacteria;Gordonia Rubropertinctus;;;proposed
+Bacteria;Gordonia Sp;;;proposed
+Bacteria;Gordonia Sputi;;;proposed
+Bacteria;Gordonia Terrae;;;proposed
+Bacteria;Granulicatella Adiacens;;;proposed
+Bacteria;Granulicatella Sp;;;proposed
+Bacteria;Grimontia Hollisae;;;proposed
+Bacteria;Haemobartonella Canis;;;proposed
+Bacteria;Haemobartonella Felis;;;proposed
+Bacteria;Haemophilus Actinomycetemcomitans;;;proposed
+Bacteria;Haemophilus Aegyptius;;;proposed
+Bacteria;Haemophilus Aphrophilus;;;proposed
+Bacteria;Haemophilus Avium;;;proposed
+Bacteria;Haemophilus Ducreyi;;39833004;proposed
+Bacteria;Haemophilus Equigenitalis;;;proposed
+Bacteria;Haemophilus Haemoglobinophilus;;;proposed
+Bacteria;Haemophilus Haemolyticus;;;proposed
+Bacteria;Haemophilus influenzae;;44470000;proposed
+Bacteria;Haemophilus Influenzae;;44470000;proposed
+Bacteria;Haemophilus Influenzae Not Typable;;;proposed
+Bacteria;Haemophilus Influenzae Not Type B;;;proposed
+Bacteria;Haemophilus Influenzae Type B;;;proposed
+Bacteria;Haemophilus Paracuniculus;;;proposed
+Bacteria;Haemophilus Paragallinarum;;;proposed
+Bacteria;Haemophilus Parahaemolyticus;;;proposed
+Bacteria;Haemophilus Parainfluenzae;;32694009;proposed
+Bacteria;Haemophilus Paraphrohaemolyticus;;;proposed
+Bacteria;Haemophilus Paraphrophilus;;;proposed
+Bacteria;Haemophilus Parasuis;;;proposed
+Bacteria;Haemophilus Pleuropneumoniae;;;proposed
+Bacteria;Haemophilus Sp;;;proposed
+Bacteria;Haemophilus Vaginalis;;42360000;proposed
+Bacteria;Hafnia Alvei;;50626004;proposed
+Bacteria;Hafnia Paralvei;;;proposed
+Bacteria;Hafnia Sp;;;proposed
+Bacteria;Hallella Seregens;;;proposed
+Bacteria;Hallella Sp;;;proposed
+Bacteria;Hathewaya Limosa;;;proposed
+Bacteria;Hathewaya Sp;;;proposed
+Bacteria;Helcococcus Kunzii;;;proposed
+Bacteria;Helcococcus Sp;;;proposed
+Bacteria;Helicobacter Cinaedi Clo1;;;proposed
+Bacteria;Helicobacter Felis;;;proposed
+Bacteria;Helicobacter Fennelliae Clo2;;;proposed
+Bacteria;Helicobacter Mustelae;;;proposed
+Bacteria;Helicobacter Nemestrinae;;;proposed
+Bacteria;Helicobacter Pullorum;;;proposed
+Bacteria;Helicobacter Pylori;;75330002;proposed
+Bacteria;Helicobacter Sp;;;proposed
+Bacteria;Herbaspirillum Sp;;;proposed
+Bacteria;Histophilus Ovis;;;proposed
+Bacteria;Histophilus Somni;;;proposed
+Bacteria;Histophilus Sp;;;proposed
+Bacteria;Ilyobacter Sp;;;proposed
+Bacteria;Johnsonella Ignava;;;proposed
+Bacteria;Johnsonella Sp;;;proposed
+Bacteria;Kingella Denitrificans;;;proposed
+Bacteria;Kingella Indologenes;;;proposed
+Bacteria;Kingella Kingae;;54097007;proposed
+Bacteria;Kingella Oralis;;;proposed
+Bacteria;Kingella Sp;;;proposed
+Bacteria;Klebsiella Aerogenes;;29307009;proposed
+Bacteria;Klebsiella Granulomatis Lympho Granul;;;proposed
+Bacteria;Klebsiella Mobilis;;;proposed
+Bacteria;Klebsiella Ornithinolytica;;;proposed
+Bacteria;Klebsiella Oxytoca;;58900005;proposed
+Bacteria;Klebsiella Ozaenae;;;proposed
+Bacteria;Klebsiella pneumoniae;;56415008;proposed
+Bacteria;Klebsiella Pneumoniae;;56415008;proposed
+Bacteria;Klebsiella Pneumoniae Ss Ozaenae;;;proposed
+Bacteria;Klebsiella Pneumoniae Ss Pneumoniae;;;proposed
+Bacteria;Klebsiella Pneumoniae Ss Rhinoscleromatis;;;proposed
+Bacteria;Klebsiella Quasipneumoniae;;;proposed
+Bacteria;Klebsiella Rhinoscleromatis;;47624003;proposed
+Bacteria;Klebsiella Sp;;;proposed
+Bacteria;Klebsiella Terrigena;;;proposed
+Bacteria;Klebsiella Trevisanii;;;proposed
+Bacteria;Klebsiella Variicola;;;proposed
+Bacteria;Kluyvera Ascorbata;;;proposed
+Bacteria;Kluyvera Cryocrescens;;;proposed
+Bacteria;Kluyvera Intermedia;;;proposed
+Bacteria;Kluyvera Sp;;;proposed
+Bacteria;Kocuria Kristinae;;;proposed
+Bacteria;Kocuria Rosea;;;proposed
+Bacteria;Kocuria Sp;;;proposed
+Bacteria;Kocuria Varians;;;proposed
+Bacteria;Koserella Sp;;;proposed
+Bacteria;Koserella Trabulsii;;;proposed
+Bacteria;Kurthia Sp;;;proposed
+Bacteria;Lactobacillus Acidophilus;;;proposed
+Bacteria;Lactobacillus Amylovorus;;;proposed
+Bacteria;Lactobacillus Brevis;;;proposed
+Bacteria;Lactobacillus Casei;;;proposed
+Bacteria;Lactobacillus Catenaformis;;;proposed
+Bacteria;Lactobacillus Cellobiosus;;;proposed
+Bacteria;Lactobacillus Confusus;;;proposed
+Bacteria;Lactobacillus Crispatus;;;proposed
+Bacteria;Lactobacillus Dextrinicus;;;proposed
+Bacteria;Lactobacillus Fermentum;;;proposed
+Bacteria;Lactobacillus Gasseri;;;proposed
+Bacteria;Lactobacillus Jensenii;;;proposed
+Bacteria;Lactobacillus Johnsonii;;;proposed
+Bacteria;Lactobacillus Minutus;;;proposed
+Bacteria;Lactobacillus Oris;;;proposed
+Bacteria;Lactobacillus Plantarum;;;proposed
+Bacteria;Lactobacillus Reuteri;;;proposed
+Bacteria;Lactobacillus Rhamnosus;;;proposed
+Bacteria;Lactobacillus Rimae;;;proposed
+Bacteria;Lactobacillus Salivarius;;;proposed
+Bacteria;Lactobacillus Salivarius Ss Salivarius;;;proposed
+Bacteria;Lactobacillus Sp;;;proposed
+Bacteria;Lactobacillus Uli;;;proposed
+Bacteria;Lactobacillus Vaginalis;;;proposed
+Bacteria;Lactococcus Garvieae;;;proposed
+Bacteria;Lactococcus Garvieae Ss Garvieae;;;proposed
+Bacteria;Lactococcus Lactis;;;proposed
+Bacteria;Lactococcus Lactis Ss Cremoris;;;proposed
+Bacteria;Lactococcus Lactis Ss Lactis;;;proposed
+Bacteria;Lactococcus Sp;;;proposed
+Bacteria;Lawsonia Intracellularis;;;proposed
+Bacteria;Leclercia Adecarboxylata;;;proposed
+Bacteria;Leclercia Sp;;;proposed
+Bacteria;Legionella Anisa;;;proposed
+Bacteria;Legionella Birminghamensis;;;proposed
+Bacteria;Legionella Bozemanii;;;proposed
+Bacteria;Legionella Brunensis;;;proposed
+Bacteria;Legionella Cherrii;;;proposed
+Bacteria;Legionella Cincinnatiensis;;;proposed
+Bacteria;Legionella Dumoffii;;;proposed
+Bacteria;Legionella Erythra;;;proposed
+Bacteria;Legionella Geestiana;;;proposed
+Bacteria;Legionella Gormanii;;;proposed
+Bacteria;Legionella Hackeliae;;;proposed
+Bacteria;Legionella Israelensis;;;proposed
+Bacteria;Legionella Jamestowniensis;;;proposed
+Bacteria;Legionella Jordanis;;;proposed
+Bacteria;Legionella Lansingensis;;;proposed
+Bacteria;Legionella Longbeachae;;;proposed
+Bacteria;Legionella Maceachernii;;;proposed
+Bacteria;Legionella Micdadei;;;proposed
+Bacteria;Legionella Moravica;;;proposed
+Bacteria;Legionella Nautarum;;;proposed
+Bacteria;Legionella Oakridgensis;;;proposed
+Bacteria;Legionella Parisiensis;;;proposed
+Bacteria;Legionella Pneumophila;;80323003;proposed
+Bacteria;Legionella Pneumophila Ss Fraseri;;;proposed
+Bacteria;Legionella Pneumophila Ss Pascullei;;;proposed
+Bacteria;Legionella Pneumophila Ss Pneumophila;;;proposed
+Bacteria;Legionella Quateirensis;;;proposed
+Bacteria;Legionella Quinlivanii;;;proposed
+Bacteria;Legionella Rubrilucens;;;proposed
+Bacteria;Legionella Sainthelensi;;;proposed
+Bacteria;Legionella Santicrucis;;;proposed
+Bacteria;Legionella Shakespearei;;;proposed
+Bacteria;Legionella Sp;;;proposed
+Bacteria;Legionella Spiritensis;;;proposed
+Bacteria;Legionella Steigerwaltii;;;proposed
+Bacteria;Legionella Tucsonensis;;;proposed
+Bacteria;Legionella Wadsworthii;;;proposed
+Bacteria;Legionella Worsleiensis;;;proposed
+Bacteria;Leifsonia Aquatica;;;proposed
+Bacteria;Leifsonia Sp;;;proposed
+Bacteria;Leminorella Grimontii;;;proposed
+Bacteria;Leminorella Richardii;;;proposed
+Bacteria;Leminorella Sp;;;proposed
+Bacteria;Leptospira Borgpetersenii;;;proposed
+Bacteria;Leptospira Inadai;;;proposed
+Bacteria;Leptospira Interrogans;;81068000;proposed
+Bacteria;Leptospira Kirschneri;;;proposed
+Bacteria;Leptospira Noguchii;;;proposed
+Bacteria;Leptospira Santarosai;;;proposed
+Bacteria;Leptospira Sp;;;proposed
+Bacteria;Leptospira Weilii;;;proposed
+Bacteria;Leptotrichia Buccalis;;;proposed
+Bacteria;Leptotrichia Sp;;;proposed
+Bacteria;Leuconostoc Citreum;;;proposed
+Bacteria;Leuconostoc Cremoris;;;proposed
+Bacteria;Leuconostoc Dextranicum;;;proposed
+Bacteria;Leuconostoc Lactis;;;proposed
+Bacteria;Leuconostoc Mesenteroides;;;proposed
+Bacteria;Leuconostoc Mesenteroides Ss Cremoris;;;proposed
+Bacteria;Leuconostoc Mesenteroides Ss Dextranicum;;;proposed
+Bacteria;Leuconostoc Mesenteroides Ss Mesenteroides;;;proposed
+Bacteria;Leuconostoc Oenos;;;proposed
+Bacteria;Leuconostoc Pseudomesenteroides;;;proposed
+Bacteria;Leuconostoc Sp;;;proposed
+Bacteria;Listeria Grayi;;;proposed
+Bacteria;Listeria Innocua;;;proposed
+Bacteria;Listeria Ivanovii;;;proposed
+Bacteria;Listeria Monocytogenes;;39371004;proposed
+Bacteria;Listeria Murrayi;;;proposed
+Bacteria;Listeria Seeligeri;;;proposed
+Bacteria;Listeria Sp;;;proposed
+Bacteria;Listeria Welshimeri;;;proposed
+Bacteria;Listonella Anguillarum;;;proposed
+Bacteria;Listonella Damsela;;;proposed
+Bacteria;Listonella Pelagia;;;proposed
+Bacteria;Listonella Sp;;;proposed
+Bacteria;Lysinibacillus Sphaericus;;;proposed
+Bacteria;Lysinibacillus Sphaericus Var Sphaericus;;;proposed
+Bacteria;Macrococcus Caseolyticus;;;proposed
+Bacteria;Macrococcus Sp;;;proposed
+Bacteria;Mannheimia Haemolytica;;;proposed
+Bacteria;Mannheimia Sp;;;proposed
+Bacteria;Mannheimia Varigena;;;proposed
+Bacteria;Megamonas Hypermegale;;;proposed
+Bacteria;Megamonas Hypermegas;;;proposed
+Bacteria;Megamonas Sp;;;proposed
+Bacteria;Megasphaera Elsdenii;;;proposed
+Bacteria;Megasphaera Sp;;;proposed
+Bacteria;Melissococcus Plutonius;;;proposed
+Bacteria;Melissococcus Sp;;;proposed
+Bacteria;Methylobacterium Extorquens;;;proposed
+Bacteria;Methylobacterium Mesophilicum;;;proposed
+Bacteria;Methylobacterium Sp;;;proposed
+Bacteria;Microbacterium Arborescens;;;proposed
+Bacteria;Microbacterium Imperiale;;;proposed
+Bacteria;Microbacterium Liquefaciens;;;proposed
+Bacteria;Microbacterium Oxydans;;;proposed
+Bacteria;Microbacterium Sp;;;proposed
+Bacteria;Micrococcus Kristinae;;;proposed
+Bacteria;Micrococcus Luteus;;;proposed
+Bacteria;Micrococcus Roseus;;;proposed
+Bacteria;Micrococcus Sp;;;proposed
+Bacteria;Micrococcus Varians;;;proposed
+Bacteria;Micropolyspora Faeni;;;proposed
+Bacteria;Micropolyspora Rectivirgula;;;proposed
+Bacteria;Mycobacterium Intracellulare Ss Chimaera;;;proposed
+Bacteria;Mycobacterium Kansasii;;15992009;proposed
+Bacteria;Mycobacterium Komossense;;;proposed
+Bacteria;Mycobacterium Lentiflavum;;;proposed
+Bacteria;Mycobacterium Leprae;;30410003;proposed
+Bacteria;Mycobacterium Lepraemurium;;;proposed
+Bacteria;Mycobacterium Malmoense;;;proposed
+Bacteria;Mycobacterium Marinum;;18446004;proposed
+Bacteria;Mycobacterium Microti;;;proposed
+Bacteria;Mycobacterium Mucogenicum;;;proposed
+Bacteria;Mycobacterium Neoaurum;;;proposed
+Bacteria;Mycobacterium Nonchromogenicum;;;proposed
+Bacteria;Mycobacterium Obuense;;;proposed
+Bacteria;Mycobacterium Orygis;;;proposed
+Bacteria;Mycobacterium Parafortuitum;;;proposed
+Bacteria;Mycobacterium Paratuberculosis;;;proposed
+Bacteria;Mycobacterium Peregrinum;;;proposed
+Bacteria;Mycobacterium Phlei;;;proposed
+Bacteria;Mycobacterium Pinnipedii;;;proposed
+Bacteria;Mycobacterium Porcinum;;;proposed
+Bacteria;Mycobacterium Rhodesiae;;;proposed
+Bacteria;Mycobacterium Scrofulaceum;;;proposed
+Bacteria;Mycobacterium Senegalense;;;proposed
+Bacteria;Mycobacterium Shimoidei;;;proposed
+Bacteria;Mycobacterium Simiae;;;proposed
+Bacteria;Mycobacterium Smegmatis;;;proposed
+Bacteria;Mycobacterium Sphagni;;;proposed
+Bacteria;Mycobacterium Suricattae;;;proposed
+Bacteria;Mycobacterium Szulgai;;;proposed
+Bacteria;Mycobacterium Terrae;;;proposed
+Bacteria;Mycobacterium Thermoresistibile;;;proposed
+Bacteria;Mycobacterium Tokaiense;;;proposed
+Bacteria;Mycobacterium Triviale;;;proposed
+Bacteria;Mycobacterium Tuberculosis;;113858008;proposed
+Bacteria;Mycobacterium Ulcerans;;;proposed
+Bacteria;Mycobacterium Vaccae;;;proposed
+Bacteria;Mycobacterium Xenopi;;;proposed
+Bacteria;Mycoplasma Agalactiae;;;proposed
+Bacteria;Mycoplasma Arginini;;;proposed
+Bacteria;Mycoplasma Bovis;;;proposed
+Bacteria;Mycoplasma Buccale;;;proposed
+Bacteria;Mycoplasma Capricolum;;;proposed
+Bacteria;Mycoplasma Capricolum Ss Capricolum;;;proposed
+Bacteria;Mycoplasma Conjunctivae;;;proposed
+Bacteria;Mycoplasma Dispar;;;proposed
+Bacteria;Mycoplasma Faucium;;;proposed
+Bacteria;Mycoplasma Fermentans;;;proposed
+Bacteria;Mycoplasma Gallisepticum;;;proposed
+Bacteria;Mycoplasma Genitalium;;;proposed
+Bacteria;Mycoplasma Haemocanis;;;proposed
+Bacteria;Mycoplasma Haemofelis;;;proposed
+Bacteria;Mycoplasma Haemosuis;;;proposed
+Bacteria;Mycoplasma Hominis;;57718002;proposed
+Bacteria;Mycoplasma Hyopneumoniae;;;proposed
+Bacteria;Mycoplasma Hyorhinis;;;proposed
+Bacteria;Mycoplasma Hyosynoviae;;;proposed
+Bacteria;Mycoplasma Iowae;;;proposed
+Bacteria;Mycoplasma Lipophilum;;;proposed
+Bacteria;Mycoplasma Meleagridis;;;proposed
+Bacteria;Mycoplasma Mycoides Ss Mycoides;;;proposed
+Bacteria;Mycoplasma Orale;;;proposed
+Bacteria;Mycoplasma Ovipneumoniae;;;proposed
+Bacteria;Mycoplasma Penetrans;;;proposed
+Bacteria;Mycoplasma Pneumoniae;;58436008;proposed
+Bacteria;Mycoplasma Primatum;;;proposed
+Bacteria;Mycoplasma Putrefaciens;;;proposed
+Bacteria;Mycoplasma Salivarium;;;proposed
+Bacteria;Mycoplasma Sp;;;proposed
+Bacteria;Mycoplasma Spermatophilum;;;proposed
+Bacteria;Mycoplasma Suis;;;proposed
+Bacteria;Mycoplasma Synoviae;;;proposed
+Bacteria;Mycoplasmoides Gallisepticum;;;proposed
+Bacteria;Myroides Odoratus;;;proposed
+Bacteria;Myroides Sp;;;proposed
+Bacteria;Neisseria Canis;;;proposed
+Bacteria;Neisseria Cinerea;;;proposed
+Bacteria;Neisseria Denitrificans;;;proposed
+Bacteria;Neisseria Elongata;;;proposed
+Bacteria;Neisseria Elongata Ss Elongata;;;proposed
+Bacteria;Neisseria Elongata Ss Glycolytica;;;proposed
+Bacteria;Neisseria Elongata Ss Nitroreducens;;;proposed
+Bacteria;Neisseria Flavescens;;;proposed
+Bacteria;Neisseria gonorrhoeae;;68704007;proposed
+Bacteria;Neisseria Gonorrhoeae;;68704007;proposed
+Bacteria;Neisseria Lactamica;;;proposed
+Bacteria;Neisseria Meningitidis;;36989005;proposed
+Bacteria;Neisseria Meningitidis Other Serogroups;;;proposed
+Bacteria;Neisseria Meningitidis Serogroup A;;;proposed
+Bacteria;Neisseria Meningitidis Serogroup B;;;proposed
+Bacteria;Neisseria Meningitidis Serogroup C;;;proposed
+Bacteria;Neisseria Meningitidis Serogroup W135;;;proposed
+Bacteria;Neisseria Meningitidis Serogroup Y;;;proposed
+Bacteria;Neisseria Mucosa;;;proposed
+Bacteria;Neisseria Polysaccharea;;;proposed
+Bacteria;Neisseria Sicca;;;proposed
+Bacteria;Neisseria Sp;;;proposed
+Bacteria;Neisseria Subflava;;;proposed
+Bacteria;Neisseria Weaveri;;;proposed
+Bacteria;Neorickettsia Sennetsu;;;proposed
+Bacteria;Nocardia Abscessus;;;proposed
+Bacteria;Nocardia Asteroides;;40947005;proposed
+Bacteria;Nocardia Brasiliensis;;42423007;proposed
+Bacteria;Nocardia Carnea;;;proposed
+Bacteria;Nocardia Coeliaca;;;proposed
+Bacteria;Nocardia Crassostreae;;;proposed
+Bacteria;Nocardia Cyriacigeorgica;;;proposed
+Bacteria;Nocardia Farcinica;;;proposed
+Bacteria;Nocardia Nova;;;proposed
+Bacteria;Nocardia Otitidiscaviarum;;;proposed
+Bacteria;Nocardia Pseudobrasiliensis;;;proposed
+Bacteria;Nocardia Seriolae;;;proposed
+Bacteria;Nocardia Sp;;;proposed
+Bacteria;Nocardia Transvalensis;;;proposed
+Bacteria;Nocardiopsis Dassonvillei;;;proposed
+Bacteria;Nocardiopsis Sp;;;proposed
+Bacteria;Ochrobactrum Anthropi;;;proposed
+Bacteria;Ochrobactrum Sp;;;proposed
+Bacteria;Odoribacter Splanchnicus;;;proposed
+Bacteria;Oenococcus Oeni;;;proposed
+Bacteria;Oenococcus Sp;;;proposed
+Bacteria;Oerskovia Sp;;;proposed
+Bacteria;Oerskovia Turbata;;;proposed
+Bacteria;Oerskovia Xanthineolytica;;;proposed
+Bacteria;Oligella Sp;;;proposed
+Bacteria;Oligella Ureolytica;;;proposed
+Bacteria;Oligella Urethralis;;;proposed
+Bacteria;Olsenella Uli;;;proposed
+Bacteria;Oribaculum Catoniae;;;proposed
+Bacteria;Oribaculum Sp;;;proposed
+Bacteria;Orientia Sp;;;proposed
+Bacteria;Orientia Tsutsugamushi;;;proposed
+Bacteria;Ornithobacterium Rhinotracheale;;;proposed
+Bacteria;Ornithobacterium Sp;;;proposed
+Bacteria;Paenibacillus Alvei;;;proposed
+Bacteria;Paenibacillus Larvae;;;proposed
+Bacteria;Paenibacillus Macerans;;;proposed
+Bacteria;Paenibacillus Polymyxa;;;proposed
+Bacteria;Paenibacillus Sp;;;proposed
+Bacteria;Pandoraea Sp;;;proposed
+Bacteria;Pantoea Agglomerans;;;proposed
+Bacteria;Pantoea Sp;;;proposed
+Bacteria;Parabacteroides Distasonis;;;proposed
+Bacteria;Parabacteroides Merdae;;;proposed
+Bacteria;Parabacteroides Spp;;;proposed
+Bacteria;Paracoccus Sp;;;proposed
+Bacteria;Paracoccus Yeei;;;proposed
+Bacteria;Parvimonas Micra;;;proposed
+Bacteria;Parvimonas Sp;;;proposed
+Bacteria;Pasteurella Aerogenes;;;proposed
+Bacteria;Pasteurella Anatis;;;proposed
+Bacteria;Pasteurella Avium;;;proposed
+Bacteria;Pasteurella Bettyae;;;proposed
+Bacteria;Pasteurella Canis;;;proposed
+Bacteria;Pasteurella Dagmatis;;;proposed
+Bacteria;Pasteurella Gallicida;;;proposed
+Bacteria;Pasteurella Gallinarum;;;proposed
+Bacteria;Pasteurella Haemolytica;;;proposed
+Bacteria;Pasteurella Langaaensis;;;proposed
+Bacteria;Pasteurella Lymphangitidis;;;proposed
+Bacteria;Pasteurella Mairii;;;proposed
+Bacteria;Pasteurella Multocida;;6961002;proposed
+Bacteria;Pasteurella Multocida Ss Gallicida;;;proposed
+Bacteria;Pasteurella Multocida Ss Multocida;;;proposed
+Bacteria;Pasteurella Multocida Ss Septica;;;proposed
+Bacteria;Pasteurella Pneumotropica;;;proposed
+Bacteria;Pasteurella Sp;;;proposed
+Bacteria;Pasteurella Stomatis;;;proposed
+Bacteria;Pasteurella Testudinis;;;proposed
+Bacteria;Pasteurella Trehalosi;;;proposed
+Bacteria;Pasteurella Ureae;;;proposed
+Bacteria;Pasteurella Volantium;;;proposed
+Bacteria;Pectinatus Sp;;;proposed
+Bacteria;Pectobacterium Carotovorum Carotovorum;;;proposed
+Bacteria;Pectobacterium Sp;;;proposed
+Bacteria;Pediococcus Acidilactici;;;proposed
+Bacteria;Pediococcus Damnosus;;;proposed
+Bacteria;Pediococcus Dextrinicus;;;proposed
+Bacteria;Pediococcus Lolii;;;proposed
+Bacteria;Pediococcus Parvulus;;;proposed
+Bacteria;Pediococcus Pentosaceus;;;proposed
+Bacteria;Pediococcus Sp;;;proposed
+Bacteria;Pelobacter Sp;;;proposed
+Bacteria;Peptococcus Magnus;;;proposed
+Bacteria;Peptococcus Niger;;;proposed
+Bacteria;Peptococcus Saccharolyticus;;;proposed
+Bacteria;Peptococcus Sp;;;proposed
+Bacteria;Peptoniphilus Asaccharolyticus;;;proposed
+Bacteria;Peptoniphilus Indolicus;;;proposed
+Bacteria;Peptoniphilus Lacrimalis;;;proposed
+Bacteria;Peptostreptococcus Anaerobius;;;proposed
+Bacteria;Peptostreptococcus Asaccharolyticus;;;proposed
+Bacteria;Peptostreptococcus Hydrogenalis;;;proposed
+Bacteria;Peptostreptococcus Indolicus;;;proposed
+Bacteria;Peptostreptococcus Lacrimalis;;;proposed
+Bacteria;Peptostreptococcus Lactolyticus;;;proposed
+Bacteria;Peptostreptococcus Magnus;;;proposed
+Bacteria;Peptostreptococcus Micros;;;proposed
+Bacteria;Peptostreptococcus Prevotii;;;proposed
+Bacteria;Peptostreptococcus Productus;;;proposed
+Bacteria;Peptostreptococcus Sp;;;proposed
+Bacteria;Peptostreptococcus Tetradius;;;proposed
+Bacteria;Peptostreptococcus Vaginalis;;;proposed
+Bacteria;Photobacterium Damselae;;;proposed
+Bacteria;Photobacterium Damselae Ss Damselae;;;proposed
+Bacteria;Photobacterium Damselae Ss Piscicida;;;proposed
+Bacteria;Photobacterium Sp;;;proposed
+Bacteria;Piscirickettsia Salmonis;;;proposed
+Bacteria;Piscirickettsia Sp;;;proposed
+Bacteria;Planococcus Sp;;;proposed
+Bacteria;Plesiomonas Shigelloides;;58921000;proposed
+Bacteria;Plesiomonas Sp;;;proposed
+Bacteria;Porphyromonas Asaccharolytica;;;proposed
+Bacteria;Porphyromonas Catoniae;;;proposed
+Bacteria;Porphyromonas Endodontalis;;;proposed
+Bacteria;Porphyromonas Gingivalis;;;proposed
+Bacteria;Porphyromonas Gingivicanis;;;proposed
+Bacteria;Porphyromonas Levii;;;proposed
+Bacteria;Porphyromonas Macacae;;;proposed
+Bacteria;Porphyromonas Salivosa;;;proposed
+Bacteria;Porphyromonas Sp;;;proposed
+Bacteria;Prevotella Bivia;;;proposed
+Bacteria;Prevotella Brevis;;;proposed
+Bacteria;Prevotella Buccae;;;proposed
+Bacteria;Prevotella Buccalis;;;proposed
+Bacteria;Prevotella Corporis;;;proposed
+Bacteria;Prevotella Dentalis;;;proposed
+Bacteria;Prevotella Denticola;;;proposed
+Bacteria;Prevotella Disiens;;;proposed
+Bacteria;Prevotella Enoeca;;;proposed
+Bacteria;Prevotella Heparinolytica;;;proposed
+Bacteria;Prevotella Intermedia;;;proposed
+Bacteria;Prevotella Loescheii;;;proposed
+Bacteria;Prevotella Melaninogenica;;;proposed
+Bacteria;Prevotella Nigrescens;;;proposed
+Bacteria;Prevotella Oralis;;;proposed
+Bacteria;Prevotella Oris;;;proposed
+Bacteria;Prevotella Oulorum;;;proposed
+Bacteria;Prevotella Ruminicola;;;proposed
+Bacteria;Prevotella Ruminicola Ss Brevis;;;proposed
+Bacteria;Prevotella Sp;;;proposed
+Bacteria;Prevotella Tannerae;;;proposed
+Bacteria;Prevotella Veroralis;;;proposed
+Bacteria;Prevotella Zoogleoformans;;;proposed
+Bacteria;Propionibacterium Acnes;;;proposed
+Bacteria;Propionibacterium Avidum;;;proposed
+Bacteria;Propionibacterium Freudenreichii;;;proposed
+Bacteria;Propionibacterium Granulosum;;;proposed
+Bacteria;Propionibacterium Jensenii;;;proposed
+Bacteria;Propionibacterium Lymphophilum;;;proposed
+Bacteria;Propionibacterium Propionicum;;;proposed
+Bacteria;Propionibacterium Sp;;;proposed
+Bacteria;Propionibacterium Thoenii;;;proposed
+Bacteria;Propionigenium Sp;;;proposed
+Bacteria;Propionimicrobium Lymphophilum;;;proposed
+Bacteria;Proteus mirabilis;;30878000;proposed
+Bacteria;Providencia Alcalifaciens;;;proposed
+Bacteria;Providencia Heimbachae;;;proposed
+Bacteria;Providencia Rettgeri;;;proposed
+Bacteria;Providencia Rustigianii;;;proposed
+Bacteria;Providencia Sp;;;proposed
+Bacteria;Providencia Stuartii;;;proposed
+Bacteria;Pseudoflavonifractor Capillosus;;;proposed
+Bacteria;Pseudomonas Acidovorans;;;proposed
+Bacteria;Pseudomonas aeruginosa;;52499004;proposed
+Bacteria;Pseudomonas Aeruginosa;;52499004;proposed
+Bacteria;Pseudomonas Alcaligenes;;;proposed
+Bacteria;Pseudomonas Anguilliseptica;;;proposed
+Bacteria;Pseudomonas Delafieldii;;;proposed
+Bacteria;Pseudomonas Diminuta;;;proposed
+Bacteria;Pseudomonas Facilis;;;proposed
+Bacteria;Pseudomonas Fluorescens;;62649008;proposed
+Bacteria;Pseudomonas Gessardii;;;proposed
+Bacteria;Pseudomonas Gladioli;;;proposed
+Bacteria;Pseudomonas Indigofera;;;proposed
+Bacteria;Pseudomonas Luteola;;;proposed
+Bacteria;Pseudomonas Mallei;;55402005;proposed
+Bacteria;Pseudomonas Mendocina;;;proposed
+Bacteria;Pseudomonas Oryzihabitans;;;proposed
+Bacteria;Pseudomonas Otitidis;;;proposed
+Bacteria;Pseudomonas Paucimobilis;;;proposed
+Bacteria;Pseudomonas Pertucinogena;;;proposed
+Bacteria;Pseudomonas Pickettii;;;proposed
+Bacteria;Pseudomonas Pseudoalcaligenes;;;proposed
+Bacteria;Pseudomonas Pseudomallei;;35729003;proposed
+Bacteria;Pseudomonas Putida;;36864001;proposed
+Bacteria;Pseudomonas Sp;;;proposed
+Bacteria;Pseudomonas Stutzeri;;57887003;proposed
+Bacteria;Pseudomonas Testosteroni;;;proposed
+Bacteria;Pseudomonas Viridiflava;;;proposed
+Bacteria;Pseudopropionibacterium Propionicum;;;proposed
+Bacteria;Pseudopropionibacterium Sp;;;proposed
+Bacteria;Pseudoramibacter Alactolyticus;;;proposed
+Bacteria;Psychrobacter Immobilis;;;proposed
+Bacteria;Psychrobacter Phenylpyruvicus;;;proposed
+Bacteria;Psychrobacter Sp;;;proposed
+Bacteria;Rahnella Aquatilis;;;proposed
+Bacteria;Rahnella Sp;;;proposed
+Bacteria;Ralstonia Paucula;;;proposed
+Bacteria;Ralstonia Pickettii;;;proposed
+Bacteria;Ralstonia Sp;;;proposed
+Bacteria;Raoultella Ornithinolytica;;;proposed
+Bacteria;Raoultella Planticola;;;proposed
+Bacteria;Raoultella Terrigena;;;proposed
+Bacteria;Renibacterium Sp;;;proposed
+Bacteria;Rhizobium Radiobacter;;;proposed
+Bacteria;Rhizobium Sp;;;proposed
+Bacteria;Rhodococcus Equi;;;proposed
+Bacteria;Rhodococcus Rhodochrous;;;proposed
+Bacteria;Rhodococcus Sp;;;proposed
+Bacteria;Rickettsia Akari;;;proposed
+Bacteria;Rickettsia Conorii;;;proposed
+Bacteria;Rickettsia Japonica;;;proposed
+Bacteria;Rickettsia Prowazekii;;;proposed
+Bacteria;Rickettsia Rickettsii;;;proposed
+Bacteria;Rickettsia Sp;;;proposed
+Bacteria;Rickettsia Tsutsugamushi;;;proposed
+Bacteria;Riemerella Anatipestifer;;;proposed
+Bacteria;Riemerella Sp;;;proposed
+Bacteria;Rikenella Sp;;;proposed
+Bacteria;Rochalimaea Elizabethae;;;proposed
+Bacteria;Rochalimaea Henselae;;;proposed
+Bacteria;Rochalimaea Quintana;;;proposed
+Bacteria;Rochalimaea Sp;;;proposed
+Bacteria;Roseomonas Cervicalis;;;proposed
+Bacteria;Roseomonas Fauriae;;;proposed
+Bacteria;Roseomonas Gilardii;;;proposed
+Bacteria;Roseomonas Sp;;;proposed
+Bacteria;Rothia Dentocariosa;;;proposed
+Bacteria;Rothia Mucilaginosa;;;proposed
+Bacteria;Ruminobacter Sp;;;proposed
+Bacteria;Ruminococcus Hansenii;;;proposed
+Bacteria;Ruminococcus Productus;;;proposed
+Bacteria;Ruminococcus Sp;;;proposed
+Bacteria;Saccharomonospora Rectivirgula;;;proposed
+Bacteria;Saccharopolyspora Sp;;;proposed
+Bacteria;Salmonella Bongori;;;proposed
+Bacteria;Salmonella Enterica Ss Arizonae Subgroup Iiia;;;proposed
+Bacteria;Salmonella Enterica Ss Diarizonae Subgroup Iiib;;;proposed
+Bacteria;Salmonella Enterica Ss Enterica Subgroup I;;;proposed
+Bacteria;Salmonella Enterica Ss Houtenae Subgroup Iv;;;proposed
+Bacteria;Salmonella Enterica Ss Indica Subgroup Vi;;;proposed
+Bacteria;Salmonella Enterica Ss Salamae Subgroup Ii;;;proposed
+Bacteria;Salmonella Group51 O51;;;proposed
+Bacteria;Salmonella Group52 O52;;;proposed
+Bacteria;Salmonella Group53 O53;;;proposed
+Bacteria;Salmonella Group54 O54;;;proposed
+Bacteria;Salmonella Group55 O55;;;proposed
+Bacteria;Salmonella Group56 O56;;;proposed
+Bacteria;Salmonella Group57 O57;;;proposed
+Bacteria;Salmonella Group58 O58;;;proposed
+Bacteria;Salmonella Group59 O59;;;proposed
+Bacteria;Salmonella Group60 O60;;;proposed
+Bacteria;Salmonella Group61 O61;;;proposed
+Bacteria;Salmonella Group62 O62;;;proposed
+Bacteria;Salmonella Group63 O63;;;proposed
+Bacteria;Salmonella Group64 O64;;;proposed
+Bacteria;Salmonella Group65 O65;;;proposed
+Bacteria;Salmonella Group66 O66;;;proposed
+Bacteria;Salmonella Group67 O67;;;proposed
+Bacteria;Salmonella Group AO2;;;proposed
+Bacteria;Salmonella Group BO4;;;proposed
+Bacteria;Salmonella Group C1 O7;;;proposed
+Bacteria;Salmonella Group C2 O68;;;proposed
+Bacteria;Salmonella Group C3 O8;;;proposed
+Bacteria;Salmonella Group C4 O714;;;proposed
+Bacteria;Salmonella Group CC1 C4 C2 C3;;;proposed
+Bacteria;Salmonella Group D1 O9;;;proposed
+Bacteria;Salmonella Group D2 O946;;;proposed
+Bacteria;Salmonella Group D3 O94627;;;proposed
+Bacteria;Salmonella Group DD1 D2 D3;;;proposed
+Bacteria;Salmonella Group E1 O310;;;proposed
+Bacteria;Salmonella Group E2 O315;;;proposed
+Bacteria;Salmonella Group E3 O31514;;;proposed
+Bacteria;Salmonella Group E4 O1319;;;proposed
+Bacteria;Salmonella Group EE1 E2 E3;;;proposed
+Bacteria;Salmonella Group FO11;;;proposed
+Bacteria;Salmonella Group G1 O1322;;;proposed
+Bacteria;Salmonella Group G2 O1323;;;proposed
+Bacteria;Salmonella Group GO13 G1 G2;;;proposed
+Bacteria;Salmonella Group HO614;;;proposed
+Bacteria;Salmonella Group IO16;;;proposed
+Bacteria;Salmonella Group JO17;;;proposed
+Bacteria;Salmonella Group KO18;;;proposed
+Bacteria;Salmonella Group LO21;;;proposed
+Bacteria;Salmonella Group MO28;;;proposed
+Bacteria;Salmonella Group NO30;;;proposed
+Bacteria;Salmonella Group OO35;;;proposed
+Bacteria;Salmonella Group PO38;;;proposed
+Bacteria;Salmonella Group QO39;;;proposed
+Bacteria;Salmonella Group RO40;;;proposed
+Bacteria;Salmonella Group SO41;;;proposed
+Bacteria;Salmonella Group TO42;;;proposed
+Bacteria;Salmonella Group UO43;;;proposed
+Bacteria;Salmonella Group VO44;;;proposed
+Bacteria;Salmonella Group WO45;;;proposed
+Bacteria;Salmonella Group XO47;;;proposed
+Bacteria;Salmonella Group YO48;;;proposed
+Bacteria;Salmonella Group ZO50;;;proposed
+Bacteria;Salmonella Hadar;;;proposed
+Bacteria;Salmonella Heidelberg;;;proposed
+Bacteria;Salmonella Hirschfeldii SParatyphi C;;;proposed
+Bacteria;Salmonella Indiana;;;proposed
+Bacteria;Salmonella Infantis;;;proposed
+Bacteria;Salmonella Isangi;;;proposed
+Bacteria;Salmonella Java Salmonella Paratyphi B;;;proposed
+Bacteria;Salmonella Javiana;;;proposed
+Bacteria;Salmonella Kaapstad;;;proposed
+Bacteria;Salmonella Kedougou;;;proposed
+Bacteria;Salmonella Kentucky;;;proposed
+Bacteria;Salmonella Kottbus;;;proposed
+Bacteria;Salmonella Krefeld;;;proposed
+Bacteria;Salmonella Larochelle;;;proposed
+Bacteria;Salmonella Lexington;;;proposed
+Bacteria;Salmonella Litchfield;;;proposed
+Bacteria;Salmonella Livingstone;;;proposed
+Bacteria;Salmonella Lomita;;;proposed
+Bacteria;Salmonella London;;;proposed
+Bacteria;Salmonella Manhattan;;;proposed
+Bacteria;Salmonella Mbandaka;;;proposed
+Bacteria;Salmonella Montevideo;;;proposed
+Bacteria;Salmonella Muenchen;;;proposed
+Bacteria;Salmonella Muenster;;;proposed
+Bacteria;Salmonella Narashino;;;proposed
+Bacteria;Salmonella Newport;;;proposed
+Bacteria;Salmonella Ohio;;;proposed
+Bacteria;Salmonella Oranienburg;;;proposed
+Bacteria;Salmonella Orion;;;proposed
+Bacteria;Salmonella Ouakam;;;proposed
+Bacteria;Salmonella Panama;;;proposed
+Bacteria;Salmonella Paratyphi;;;proposed
+Bacteria;Salmonella Paratyphi A;;397509006;proposed
+Bacteria;Salmonella Paratyphi B;;397510001;proposed
+Bacteria;Salmonella Paratyphi BVar Java;;;proposed
+Bacteria;Salmonella Paratyphi C;;397511002;proposed
+Bacteria;Salmonella Poona;;;proposed
+Bacteria;Salmonella Potsdam;;;proposed
+Bacteria;Salmonella Reading;;;proposed
+Bacteria;Salmonella Rissen;;;proposed
+Bacteria;Salmonella Saintpaul;;;proposed
+Bacteria;Salmonella Sandiego;;;proposed
+Bacteria;Salmonella Schottmuelleri SParatyphi B;;;proposed
+Bacteria;Salmonella Schwarzengrund;;;proposed
+Bacteria;Salmonella Senftenberg;;;proposed
+Bacteria;Salmonella Sp;;;proposed
+Bacteria;Salmonella Sp Nontypable;;;proposed
+Bacteria;Salmonella Sp Non Typhi;;;proposed
+Bacteria;Salmonella sp., non-Typhi/non-Paratyphi;;;proposed
+Bacteria;Salmonella Sp Non Typhoidal;;;proposed
+Bacteria;Salmonella spp.;;;proposed
+Bacteria;Salmonella Sp Rough;;;proposed
+Bacteria;Salmonella Sp Typhoidal;;;proposed
+Bacteria;Salmonella Sp Unnamed;;;proposed
+Bacteria;Salmonella Stanley;;;proposed
+Bacteria;Salmonella Subterranea;;;proposed
+Bacteria;Salmonella Tennessee;;;proposed
+Bacteria;Salmonella Typhi;;80428001;proposed
+Bacteria;Salmonella Typhimurium;;48023004;proposed
+Bacteria;Salmonella Typhimurium Dt104;;;proposed
+Bacteria;Salmonella Typhimurium Var Copenhagen;;;proposed
+Bacteria;Salmonella Typhisuis;;;proposed
+Bacteria;Salmonella Virchow;;;proposed
+Bacteria;Salmonella Virginia;;;proposed
+Bacteria;Salmonella Wandsworth;;;proposed
+Bacteria;Salmonella Weltevreden;;;proposed
+Bacteria;Salmonella Weybridge;;;proposed
+Bacteria;Salmonella Worthington;;;proposed
+Bacteria;Sarcina Sp;;;proposed
+Bacteria;Sarcina Ventriculi;;;proposed
+Bacteria;Sebaldella Sp;;;proposed
+Bacteria;Selenomonas Artemidis;;;proposed
+Bacteria;Selenomonas Dianae;;;proposed
+Bacteria;Selenomonas Flueggei;;;proposed
+Bacteria;Selenomonas Infelix;;;proposed
+Bacteria;Selenomonas Noxia;;;proposed
+Bacteria;Selenomonas Sp;;;proposed
+Bacteria;Selenomonas Sputigena;;;proposed
+Bacteria;Serpulina Sp;;;proposed
+Bacteria;Serratia Entomophila;;;proposed
+Bacteria;Serratia Ficaria;;;proposed
+Bacteria;Serratia Fonticola;;;proposed
+Bacteria;Serratia Grimesii;;;proposed
+Bacteria;Serratia Liquefaciens;;;proposed
+Bacteria;Serratia Marcescens;;52341009;proposed
+Bacteria;Serratia Odorifera;;;proposed
+Bacteria;Serratia Plymuthica;;;proposed
+Bacteria;Serratia Proteamaculans;;;proposed
+Bacteria;Serratia Proteamaculans Ss Proteamaculans;;;proposed
+Bacteria;Serratia Proteamaculans Ss Quinovora;;;proposed
+Bacteria;Serratia Quinivorans;;;proposed
+Bacteria;Serratia Rubidaea;;;proposed
+Bacteria;Serratia Sp;;;proposed
+Bacteria;Shewanella Algae;;;proposed
+Bacteria;Shewanella Benthica;;;proposed
+Bacteria;Shewanella Hanedai;;;proposed
+Bacteria;Shewanella Putrefaciens;;;proposed
+Bacteria;Shewanella Sp;;;proposed
+Bacteria;Shigella Boydii;;25233007;proposed
+Bacteria;Shigella Boydii Nontypable;;;proposed
+Bacteria;Shigella Boydii Serotype1;;;proposed
+Bacteria;Shigella Boydii Serotype10;;;proposed
+Bacteria;Shigella Boydii Serotype11;;;proposed
+Bacteria;Shigella Boydii Serotype12;;;proposed
+Bacteria;Shigella Boydii Serotype13;;;proposed
+Bacteria;Shigella Boydii Serotype14;;;proposed
+Bacteria;Shigella Boydii Serotype15;;;proposed
+Bacteria;Shigella Boydii Serotype16;;;proposed
+Bacteria;Shigella Boydii Serotype17;;;proposed
+Bacteria;Shigella Boydii Serotype18;;;proposed
+Bacteria;Shigella Boydii Serotype2;;;proposed
+Bacteria;Shigella Boydii Serotype3;;;proposed
+Bacteria;Shigella Boydii Serotype4;;;proposed
+Bacteria;Shigella Boydii Serotype5;;;proposed
+Bacteria;Shigella Boydii Serotype6;;;proposed
+Bacteria;Shigella Boydii Serotype7;;;proposed
+Bacteria;Shigella Boydii Serotype8;;;proposed
+Bacteria;Shigella Boydii Serotype9;;;proposed
+Bacteria;Shigella Dysenteriae;;55131002;proposed
+Bacteria;Shigella Dysenteriae Nontypable;;;proposed
+Bacteria;Shigella Dysenteriae Not Type1;;;proposed
+Bacteria;Shigella Dysenteriae Serotype1;;;proposed
+Bacteria;Shigella Dysenteriae Serotype10;;;proposed
+Bacteria;Shigella Dysenteriae Serotype11;;;proposed
+Bacteria;Shigella Dysenteriae Serotype12;;;proposed
+Bacteria;Shigella Dysenteriae Serotype13;;;proposed
+Bacteria;Shigella Dysenteriae Serotype14;;;proposed
+Bacteria;Shigella Dysenteriae Serotype15;;;proposed
+Bacteria;Shigella Dysenteriae Serotype2;;;proposed
+Bacteria;Shigella Dysenteriae Serotype3;;;proposed
+Bacteria;Shigella Dysenteriae Serotype4;;;proposed
+Bacteria;Shigella Dysenteriae Serotype5;;;proposed
+Bacteria;Shigella Dysenteriae Serotype6;;;proposed
+Bacteria;Shigella Dysenteriae Serotype7;;;proposed
+Bacteria;Shigella Dysenteriae Serotype8;;;proposed
+Bacteria;Shigella Dysenteriae Serotype9;;;proposed
+Bacteria;Shigella Dysenteriae Type1;;;proposed
+Bacteria;Shigella Flexneri;;21927006;proposed
+Bacteria;Shigella Flexneri Nontypable;;;proposed
+Bacteria;Shigella Flexneri Serogroup Aa479;;;proposed
+Bacteria;Shigella Flexneri Serotype1;;;proposed
+Bacteria;Shigella Flexneri Serotype1a;;;proposed
+Bacteria;Shigella Flexneri Serotype1b;;;proposed
+Bacteria;Shigella Flexneri Serotype2;;;proposed
+Bacteria;Shigella Flexneri Serotype2a;;;proposed
+Bacteria;Shigella Flexneri Serotype2b;;;proposed
+Bacteria;Shigella Flexneri Serotype3;;;proposed
+Bacteria;Shigella Flexneri Serotype3a;;;proposed
+Bacteria;Shigella Flexneri Serotype3b;;;proposed
+Bacteria;Shigella Flexneri Serotype4;;;proposed
+Bacteria;Shigella Flexneri Serotype4a;;;proposed
+Bacteria;Shigella Flexneri Serotype4b;;;proposed
+Bacteria;Shigella Flexneri Serotype4c;;;proposed
+Bacteria;Shigella Flexneri Serotype5;;;proposed
+Bacteria;Shigella Flexneri Serotype5a;;;proposed
+Bacteria;Shigella Flexneri Serotype5b;;;proposed
+Bacteria;Shigella Flexneri Serotype6;;;proposed
+Bacteria;Shigella Flexneri Variant X;;;proposed
+Bacteria;Shigella Flexneri Variant Y;;;proposed
+Bacteria;Shigella Sonnei;;46999007;proposed
+Bacteria;Shigella Sp;;;proposed
+Bacteria;Shigella spp.;;;proposed
+Bacteria;Shimwellia Blattae;;;proposed
+Bacteria;Simonsiella Sp;;;proposed
+Bacteria;Solobacterium Moorei;;;proposed
+Bacteria;Solobacterium Sp;;;proposed
+Bacteria;Sphingobacterium Mizutaii;;;proposed
+Bacteria;Sphingobacterium Multivorum;;;proposed
+Bacteria;Sphingobacterium Sp;;;proposed
+Bacteria;Sphingobacterium Spiritivorum;;;proposed
+Bacteria;Sphingomonas Paucimobilis;;;proposed
+Bacteria;Staphylococcus Argenteus;;;proposed
+Bacteria;Staphylococcus aureus;;3092008;proposed
+Bacteria;Staphylococcus Aureus;;3092008;proposed
+Bacteria;Staphylococcus Capitis;;58725008;proposed
+Bacteria;Staphylococcus Capitis Ss Capitis;;;proposed
+Bacteria;Staphylococcus Capitis Ss Ureolyticus;;;proposed
+Bacteria;Staphylococcus Epidermidis;;60875001;proposed
+Bacteria;Staphylococcus Haemolyticus;;58150001;proposed
+Bacteria;Staphylococcus Hominis;;56794008;proposed
+Bacteria;Staphylococcus Lugdunensis;;115329001;proposed
+Bacteria;Staphylococcus Pasteuri;;;proposed
+Bacteria;Staphylococcus Pettenkoferi;;;proposed
+Bacteria;Staphylococcus Saprophyticus;;40886007;proposed
+Bacteria;Staphylococcus Simulans;;122929005;proposed
+Bacteria;Staphylococcus Warneri;;90387002;proposed
+Bacteria;Staphylococcus Xylosus;;;proposed
+Bacteria;Stenotrophomonas Maltophilia;;40428004;proposed
+Bacteria;Streptobacillus Moniliformis;;;proposed
+Bacteria;Streptococcus Acidominimus;;;proposed
+Bacteria;Streptococcus Adjacens;;;proposed
+Bacteria;Streptococcus agalactiae;;43492007;proposed
+Bacteria;Streptococcus Agalactiae;;43492007;proposed
+Bacteria;Streptococcus Alactolyticus;;;proposed
+Bacteria;Streptococcus Anginosus;;39411000;proposed
+Bacteria;Streptococcus Bovis;;41404009;proposed
+Bacteria;Streptococcus Canis;;87172008;proposed
+Bacteria;Streptococcus Capitis Urealyticus;;;proposed
+Bacteria;Streptococcus Caprae;;;proposed
+Bacteria;Streptococcus Caseolyticus;;;proposed
+Bacteria;Streptococcus Chromogenes;;;proposed
+Bacteria;Streptococcus Cohnii;;;proposed
+Bacteria;Streptococcus Cohnii Ss Cohnii;;;proposed
+Bacteria;Streptococcus Cohnii Ss Urealyticus;;;proposed
+Bacteria;Streptococcus Constellatus;;54382005;proposed
+Bacteria;Streptococcus Cremoris;;;proposed
+Bacteria;Streptococcus Delphini;;;proposed
+Bacteria;Streptococcus Dysgalactiae;;55893007;proposed
+Bacteria;Streptococcus Dysgalactiae Ss Equi;;;proposed
+Bacteria;Streptococcus Dysgalactiae Ss Equisimilis;;;proposed
+Bacteria;Streptococcus Epidermidis;;;proposed
+Bacteria;Streptococcus Equi;;60687006;proposed
+Bacteria;Streptococcus Equinus;;;proposed
+Bacteria;Streptococcus Equi Ss Equi;;;proposed
+Bacteria;Streptococcus Equi Ss Zooepidemicus;;;proposed
+Bacteria;Streptococcus Equorum;;;proposed
+Bacteria;Streptococcus Felis;;;proposed
+Bacteria;Streptococcus Ferus;;;proposed
+Bacteria;Streptococcus Gallinarum;;;proposed
+Bacteria;Streptococcus Gallolyticus;;;proposed
+Bacteria;Streptococcus Haemolyticus;;;proposed
+Bacteria;Streptococcus Hominis;;;proposed
+Bacteria;Streptococcus Hominis Ss Hominis;;;proposed
+Bacteria;Streptococcus Hominis Ss Ureolyticus;;;proposed
+Bacteria;Streptococcus Hyicus;;;proposed
+Bacteria;Streptococcus Infantarius;;;proposed
+Bacteria;Streptococcus Intermedius;;31703003;proposed
+Bacteria;Streptococcus Lutetiensis;;;proposed
+Bacteria;Streptococcus Mitis;;74474003;proposed
+Bacteria;Streptococcus Mucilaginosus;;;proposed
+Bacteria;Streptococcus Muscae;;;proposed
+Bacteria;Streptococcus Mutans;;77268007;proposed
+Bacteria;Streptococcus Oralis;;;proposed
+Bacteria;Streptococcus Oralis Ss Oralis;;;proposed
+Bacteria;Streptococcus Parasanguinis;;;proposed
+Bacteria;Streptococcus Pasteuri;;;proposed
+Bacteria;Streptococcus pneumoniae;;9861002;proposed
+Bacteria;Streptococcus Pneumoniae;;9861002;proposed
+Bacteria;Streptococcus Pyogenes;;80166006;proposed
+Bacteria;Streptococcus Salivarius;;2361000;proposed
+Bacteria;Streptococcus Sanguinis;;;proposed
+Bacteria;Streptococcus Sanguinis Ii;;;proposed
+Bacteria;Streptococcus Sobrinus;;;proposed
+Bacteria;Streptococcus Suis;;59083001;proposed
+Bacteria;Streptococcus Uberis;;70154005;proposed
+Bacteria;Streptococcus Vestibularis;;;proposed
+Bacteria;Streptococcus Viridans;;;proposed
+Bacteria;Streptococcus Zooepidemicus;;;proposed
+Bacteria;Streptomyces Griseus;;;proposed
+Bacteria;Streptomyces Somaliensis;;;proposed
+Bacteria;Streptomyces Sp;;;proposed
+Bacteria;Succinimonas Amylolytica;;;proposed
+Bacteria;Succinimonas Sp;;;proposed
+Bacteria;Succinivibrio Sp;;;proposed
+Bacteria;Suttonella Indologenes;;;proposed
+Bacteria;Suttonella Sp;;;proposed
+Bacteria;Tannerella Forsythia;;;proposed
+Bacteria;Tatlockia Maceachernii;;;proposed
+Bacteria;Tatlockia Micdadei;;;proposed
+Bacteria;Tatlockia Sp;;;proposed
+Bacteria;Tatumella Ptyseos;;;proposed
+Bacteria;Tatumella Sp;;;proposed
+Bacteria;Taylorella Equigenitalis;;;proposed
+Bacteria;Taylorella Sp;;;proposed
+Bacteria;Tenacibaculum Maritimum;;;proposed
+Bacteria;Tenacibaculum Sp;;;proposed
+Bacteria;Tetragenococcus Solitarius;;;proposed
+Bacteria;Tissierella Praeacuta;;;proposed
+Bacteria;Tissierella Sp;;;proposed
+Bacteria;Trabulsiella Guamensis Cdc Enteric Group90;;;proposed
+Bacteria;Trabulsiella Sp;;;proposed
+Bacteria;Treponema Denticola;;;proposed
+Bacteria;Treponema Sp;;;proposed
+Bacteria;Trueperella Bernardiae;;;proposed
+Bacteria;Trueperella Pyogenes;;;proposed
+Bacteria;Trueperella Sp;;;proposed
+Bacteria;Tsukamurella Paurometabola;;;proposed
+Bacteria;Tsukamurella Sp;;;proposed
+Bacteria;Turicella Otitidis;;;proposed
+Bacteria;Turicella Sp;;;proposed
+Bacteria;Ureaplasma Sp;;;proposed
+Bacteria;Ureaplasma Urealyticum;;47108005;proposed
+Bacteria;Vagococcus Salmoninarum;;;proposed
+Bacteria;Vagococcus Sp;;;proposed
+Bacteria;Veillonella Parvula;;;proposed
+Bacteria;Veillonella Sp;;;proposed
+Bacteria;Vibrio Aestuarianus;;;proposed
+Bacteria;Vibrio Alginolyticus;;40613008;proposed
+Bacteria;Vibrio Anguillarum;;;proposed
+Bacteria;Vibrio Carchariae;;;proposed
+Bacteria;Vibrio Cholerae;;11250009;proposed
+Bacteria;Vibrio Cholerae El Tor;;;proposed
+Bacteria;Vibrio Cholerae Non O1 Non O139;;;proposed
+Bacteria;Vibrio Cholerae O1;;;proposed
+Bacteria;Vibrio Cholerae O139;;;proposed
+Bacteria;Vibrio Cholerae O1 Hikojima;;;proposed
+Bacteria;Vibrio Cholerae O1 Inaba;;;proposed
+Bacteria;Vibrio Cholerae O1 Ogawa;;;proposed
+Bacteria;Vibrio Cincinnatiensis;;;proposed
+Bacteria;Vibrio Damsela;;;proposed
+Bacteria;Vibrio Fluvialis;;35793003;proposed
+Bacteria;Vibrio Furnissii;;;proposed
+Bacteria;Vibrio Harveyi;;;proposed
+Bacteria;Vibrio Hollisae;;;proposed
+Bacteria;Vibrio Metschnikovii;;;proposed
+Bacteria;Vibrio Mimicus;;59558005;proposed
+Bacteria;Vibrio Parahaemolyticus;;32217000;proposed
+Bacteria;Vibrio Pelagius;;;proposed
+Bacteria;Vibrio Sp;;;proposed
+Bacteria;Vibrio Vulnificus;;30542007;proposed
+Bacteria;Virgibacillus Pantothenticus;;;proposed
+Bacteria;Vogesella Indigofera;;;proposed
+Bacteria;Vogesella Sp;;;proposed
+Bacteria;Weeksella Sp;;;proposed
+Bacteria;Weeksella Virosa;;;proposed
+Bacteria;Weeksella Zoohelcum;;;proposed
+Bacteria;Weissella Confusa;;;proposed
+Bacteria;Weissella Sp;;;proposed
+Bacteria;Wolinella Curva;;;proposed
+Bacteria;Wolinella Recta;;;proposed
+Bacteria;Wolinella Sp;;;proposed
+Bacteria;Wolinella Succinogenes;;;proposed
+Bacteria;Xanthomonas Maltophilia;;40428004;proposed
+Bacteria;Xanthomonas Sp;;;proposed
+Bacteria;Yersinia Aldovae;;;proposed
+Bacteria;Yersinia Bercovieri;;;proposed
+Bacteria;Yersinia Enterocolitica;;54169009;proposed
+Bacteria;Yersinia Frederiksenii;;;proposed
+Bacteria;Yersinia Intermedia;;;proposed
+Bacteria;Yersinia Kristensenii;;;proposed
+Bacteria;Yersinia Mollaretii;;;proposed
+Bacteria;Yersinia Pestis;;35408001;proposed
+Bacteria;Yersinia Philomiragia;;;proposed
+Bacteria;Yersinia Pseudotuberculosis;;13564001;proposed
+Bacteria;Yersinia Rohdei;;;proposed
+Bacteria;Yersinia Ruckeri;;;proposed
+Bacteria;Yersinia Sp;;;proposed
+Bacteria;Yokenella Regensburgei;;;proposed
+Bacteria;Yokenella Sp;;;proposed

@@ -173,13 +173,18 @@ public class TerminologyImportServiceImpl implements TerminologyImportService {
             return guard;
         }
 
-        // Filtre la catégorie sur le dictEntry exact ; 0 -> NOT_FOUND, >1 -> AMBIGUOUS.
+        // Filtre la catégorie sur le dictEntry ; 0 -> NOT_FOUND, >1 -> AMBIGUOUS.
+        // Comparaison normalisée sur les espaces : certains dict_entry en base
+        // contiennent un saut de ligne interne (ex. "Metronidazole\n10μg-...") que le
+        // CSV ne peut pas reproduire tel quel — on aligne en écrasant tout blanc
+        // (newline, espaces multiples) en un espace simple des deux côtés.
         List<Dictionary> matches = new ArrayList<>();
         if (!isBlank(category) && !isBlank(dictEntry)) {
+            String normalizedEntry = normalizeWhitespace(dictEntry);
             List<Dictionary> inCategory = dictionaryService.getDictionaryEntrysByCategoryNameLocalizedSort(category);
             if (inCategory != null) {
                 for (Dictionary d : inCategory) {
-                    if (d != null && dictEntry.equals(d.getDictEntry())) {
+                    if (d != null && normalizedEntry.equals(normalizeWhitespace(d.getDictEntry()))) {
                         matches.add(d);
                     }
                 }
@@ -306,5 +311,12 @@ public class TerminologyImportServiceImpl implements TerminologyImportService {
 
     private String trimToEmpty(String value) {
         return value == null ? "" : value.trim();
+    }
+
+    // Écrase toute séquence de blancs (espaces, tabulations, sauts de ligne) en un
+    // espace simple, et trim. Permet de matcher un dict_entry du CSV avec sa version
+    // en base qui peut contenir un saut de ligne interne.
+    private String normalizeWhitespace(String value) {
+        return value == null ? "" : value.trim().replaceAll("\\s+", " ");
     }
 }

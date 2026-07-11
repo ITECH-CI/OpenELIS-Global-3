@@ -1,7 +1,7 @@
 # Codage des types d'observation clinique. Cle: type_name. status: proposed|validated.
-# Seules les lignes status=validated avec un code non vide sont appliquees.
+# Codes LOINC/SNOMED prerremplis (status=proposed) -> A VALIDER avant passage a validated.
 type_name;loinc;snomed;status
-aidsStage;;;proposed
+aidsStage;;62479008;proposed
 antiTbTreatment;;;proposed
 anyCurrentDiseases;;;proposed
 anyPriorDiseases;;;proposed
@@ -28,20 +28,20 @@ cd4Percent;8123-2;;proposed
 CDiarrheaC;;;proposed
 CGenPrurigo;;;proposed
 CIST;;;proposed
-CKaposiSarc;;;proposed
+CKaposiSarc;;109385007;proposed
 CLINICAL_INFOS;;;proposed
 CLINICAL_INFOS_OTHER;;;proposed
 clinicVisits;;;proposed
 colLeucore;;;proposed
 ColTests;;;proposed
-COpharCand;;;proposed
+COpharCand;;79740000;proposed
 cotrimoxazoleTreatAdvEffGrd;;;proposed
 cotrimoxazoleTreatAdvEffType;;;proposed
 cotrimoxazoleTreatAnyAdvEff;;;proposed
 cotrimoxazoleTreatment;;;proposed
-cough;;;proposed
+cough;;49727002;proposed
 cryptoMen;;;proposed
-CShingles;;;proposed
+CShingles;;4740000;proposed
 CTBExpul;;;proposed
 CTBPul;;;proposed
 Culture;;;proposed
@@ -59,7 +59,7 @@ demandcd4Count;24467-3;;proposed
 demandcd4Date;;;proposed
 demandcd4Percent;8123-2;;proposed
 dermPruip;;;proposed
-diarrhea;;;proposed
+diarrhea;;62315008;proposed
 educationLevel;;;proposed
 eidHowChildFed;;;proposed
 eidInfantCotrimoxazole;;;proposed
@@ -73,7 +73,7 @@ eidTypeOfClinic;;;proposed
 eidTypeOfClinicOther;;;proposed
 EPIDEMIO_WEEK;;;proposed
 expulTB;;;proposed
-fever;;;proposed
+fever;;386661006;proposed
 futureARVTreatmentINNs;;;proposed
 Germ Identification;;;proposed
 herpes;;;proposed
@@ -92,13 +92,13 @@ indSecondTestName;;;proposed
 indSecondTestResult;;;proposed
 indSiteFinalResult;;;proposed
 INDWELLING_DEVICES;;;proposed
-initcd4Count;;;proposed
+initcd4Count;24467-3;;proposed
 initcd4Date;;;proposed
-initcd4Percent;;;proposed
+initcd4Percent;8123-2;;proposed
 initialSampleCondition;;;proposed
 interruptedARVTreatment;;;proposed
 INVASIVE_GESTURE;;;proposed
-karnofskyScore;;;proposed
+karnofskyScore;89247-1;;proposed
 legalResidence;;;proposed
 maritalStatus;;;proposed
 matHIV;;;proposed
@@ -109,7 +109,7 @@ nationality;;;proposed
 nextVisitDate;;;proposed
 otherSecondaryOrderType;;;proposed
 PatientRecordStatus;;;proposed
-patientWeight;;;proposed
+patientWeight;29463-7;;proposed
 paymentStatus;;;proposed
 PCervCancer;;;proposed
 PCrblToxo;;;proposed
@@ -117,11 +117,11 @@ PCryptoMen;;;proposed
 PDiarrheaC;;;proposed
 PGenPrurigo;;;proposed
 PIST;;;proposed
-PKaposiSarc;;;proposed
-POpharCand;;;proposed
-Pregnancy;;;proposed
+PKaposiSarc;;109385007;proposed
+POpharCand;;79740000;proposed
+Pregnancy;;77386006;proposed
 PrescriptionType;;;proposed
-Order;;;proposed
+            Order;;;proposed
 PREV3M_ATB;;;proposed
 PREV3M_ATB_LIST;;;proposed
 primaryOrderType;;;proposed
@@ -134,7 +134,7 @@ priorVLLab;;;proposed
 priorVLValue;;;proposed
 program;;;proposed
 projectFormName;;;proposed
-PShingles;;;proposed
+PShingles;;4740000;proposed
 PTBExpul;;;proposed
 PTBPul;;;proposed
 pulTB;;;proposed
@@ -148,7 +148,7 @@ roomNumber;;;proposed
 sampleInterpretation;;;proposed
 sampleNature;;;proposed
 SampleRecordStatus;;;proposed
-sarcKapo;;;proposed
+sarcKapo;;109385007;proposed
 secondaryOrderType;;;proposed
 secondaryTreatment;;;proposed
 service;;;proposed
@@ -163,7 +163,7 @@ TbFollowupReasonPeriodLine2;;;proposed
 TbOrderReason;;;proposed
 TbSampleAspects;;;proposed
 TbSpecimenState;;;proposed
-thrush;;;proposed
+thrush;;79740000;proposed
 underInvestigation;;;proposed
 uretreAspect;;;proposed
 Urgence;;;proposed
@@ -173,10 +173,10 @@ vaginalAutre;;;proposed
 vaginalCouleur;;;proposed
 vlBenefit;;;proposed
 vlOtherReasonForRequest;;;proposed
-vlPregnancy;;;proposed
+vlPregnancy;;77386006;proposed
 vlReasonForRequest;;;proposed
 vlSuckle;;;proposed
-weightLoss;;;proposed
+weightLoss;;89362005;proposed
 whichPCR;;;proposed
 xIngPadenp;;;proposed
-zona;;;proposed
+zona;;4740000;proposed
