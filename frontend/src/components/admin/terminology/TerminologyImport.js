@@ -22,6 +22,7 @@ import {
   FileUploader,
   TextArea,
   Modal,
+  Checkbox,
 } from "@carbon/react";
 import { getFromOpenElisServer } from "../../utils/Utils.js";
 import { NotificationContext } from "../../layout/Layout.js";
@@ -62,6 +63,7 @@ function TerminologyImport() {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+  const [overwrite, setOverwrite] = useState(false);
 
   useEffect(() => {
     getFromOpenElisServer("/rest/terminology-import/targets", (res) => {
@@ -86,7 +88,7 @@ function TerminologyImport() {
     fetch(
       `${config.serverBaseUrl}/rest/terminology-import/${mode}?target=${encodeURIComponent(
         target,
-      )}`,
+      )}&overwrite=${overwrite}`,
       {
         credentials: "include",
         method: "POST",
@@ -192,6 +194,8 @@ function TerminologyImport() {
       return <Tag type="green">{action}</Tag>;
     if (action === "NOT_FOUND" || action === "ERROR")
       return <Tag type="red">{action}</Tag>;
+    // Conflit (code existant différent, non écrasé) : orange, appelle un arbitrage.
+    if (action === "CONFLICT") return <Tag type="magenta">{action}</Tag>;
     return <Tag type="gray">{action}</Tag>;
   };
 
@@ -266,6 +270,22 @@ function TerminologyImport() {
               rows={6}
               value={csvContent}
               onChange={(e) => setCsvContent(e.target.value)}
+            />
+          </Column>
+        </Grid>
+        <br />
+        {/* Option d'écrasement des codes existants différents (arbitrage) */}
+        <Grid fullWidth>
+          <Column lg={16} md={8} sm={4}>
+            <Checkbox
+              id="terminologyOverwrite"
+              labelText={intl.formatMessage({
+                id: "terminology.import.overwrite",
+                defaultMessage:
+                  "Écraser les codes existants différents (sinon signalés en conflit)",
+              })}
+              checked={overwrite}
+              onChange={(e, { checked }) => setOverwrite(checked)}
             />
           </Column>
         </Grid>
@@ -349,6 +369,22 @@ function TerminologyImport() {
                   />
                   {": "}
                   {report.notFound != null ? report.notFound : 0}
+                </Tag>
+                <Tag type="magenta">
+                  <FormattedMessage
+                    id="terminology.import.summary.conflict"
+                    defaultMessage="Conflits"
+                  />
+                  {": "}
+                  {report.conflict != null ? report.conflict : 0}
+                </Tag>
+                <Tag type="gray">
+                  <FormattedMessage
+                    id="terminology.import.summary.noChange"
+                    defaultMessage="Inchangés"
+                  />
+                  {": "}
+                  {report.noChange != null ? report.noChange : 0}
                 </Tag>
                 <Tag type="gray">
                   <FormattedMessage

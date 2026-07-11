@@ -52,25 +52,37 @@ public class TerminologyImportRestController {
         return targets;
     }
 
-    /** Dry-run : analyse le CSV et renvoie le rapport sans rien écrire en base. */
+    /**
+     * Dry-run : analyse le CSV et renvoie le rapport sans rien écrire en base.
+     *
+     * @param overwrite si true, les codes différents d'un existant sortent en
+     *                  WOULD_UPDATE (écraseraient) ; si false (défaut), en CONFLICT.
+     */
     @PostMapping(value = "/preview", consumes = { MediaType.TEXT_PLAIN_VALUE, "text/csv" })
     public ResponseEntity<TerminologyImportReport> preview(@RequestParam("target") String target,
+            @RequestParam(value = "overwrite", defaultValue = "false") boolean overwrite,
             @RequestBody String csvContent) {
         TerminologyTarget parsed = TerminologyTarget.fromString(target);
         if (parsed == null) {
             return ResponseEntity.badRequest().build();
         }
-        return ResponseEntity.ok(terminologyImportService.preview(parsed, csvContent));
+        return ResponseEntity.ok(terminologyImportService.preview(parsed, csvContent, overwrite));
     }
 
-    /** Application : met à jour les entités et renvoie le rapport. Idempotent. */
+    /**
+     * Application : met à jour les entités et renvoie le rapport. Idempotent.
+     *
+     * @param overwrite si true, écrase les codes existants différents ; si false
+     *                  (défaut), les laisse intacts et les signale en CONFLICT.
+     */
     @PostMapping(value = "/apply", consumes = { MediaType.TEXT_PLAIN_VALUE, "text/csv" })
     public ResponseEntity<TerminologyImportReport> apply(@RequestParam("target") String target,
+            @RequestParam(value = "overwrite", defaultValue = "false") boolean overwrite,
             @RequestBody String csvContent) {
         TerminologyTarget parsed = TerminologyTarget.fromString(target);
         if (parsed == null) {
             return ResponseEntity.badRequest().build();
         }
-        return ResponseEntity.ok(terminologyImportService.apply(parsed, csvContent));
+        return ResponseEntity.ok(terminologyImportService.apply(parsed, csvContent, overwrite));
     }
 }

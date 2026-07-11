@@ -48,24 +48,26 @@ public class TerminologyImportServiceImpl implements TerminologyImportService {
 
     @Override
     @Transactional(readOnly = true)
-    public TerminologyImportReport preview(TerminologyTarget target, String csvContent) {
+    public TerminologyImportReport preview(TerminologyTarget target, String csvContent, boolean overwrite) {
         // Dry-run : on parcourt les lignes en mode simulation (persist = false).
-        return process(target, csvContent, false);
+        return process(target, csvContent, false, overwrite);
     }
 
     @Override
     @Transactional
-    public TerminologyImportReport apply(TerminologyTarget target, String csvContent) {
+    public TerminologyImportReport apply(TerminologyTarget target, String csvContent, boolean overwrite) {
         // Application réelle : persist = true.
-        return process(target, csvContent, true);
+        return process(target, csvContent, true, overwrite);
     }
 
     /**
      * Cœur commun preview/apply : lit l'en-tête pour localiser les colonnes, puis
      * traite chaque ligne dans un try/catch isolé (une ligne en erreur n'arrête pas
-     * le lot). {@code persist} distingue dry-run et application.
+     * le lot). {@code persist} distingue dry-run et application ; {@code overwrite}
+     * autorise (ou non) l'écrasement d'un code existant différent.
      */
-    private TerminologyImportReport process(TerminologyTarget target, String csvContent, boolean persist) {
+    private TerminologyImportReport process(TerminologyTarget target, String csvContent, boolean persist,
+            boolean overwrite) {
         TerminologyImportReport report = new TerminologyImportReport(target);
         if (target == null) {
             return report;
@@ -91,7 +93,7 @@ public class TerminologyImportServiceImpl implements TerminologyImportService {
             }
 
             try {
-                TerminologyImportLine result = processLine(target, columns, rawLine, persist);
+                TerminologyImportLine result = processLine(target, columns, rawLine, persist, overwrite);
                 if (result != null) {
                     report.addLine(result);
                 }
@@ -107,7 +109,7 @@ public class TerminologyImportServiceImpl implements TerminologyImportService {
 
     /** Traite une ligne de données : matching par clé naturelle puis application. */
     private TerminologyImportLine processLine(TerminologyTarget target, Map<String, Integer> columns, String rawLine,
-            boolean persist) {
+            boolean persist, boolean overwrite) {
         String[] cells = splitCells(rawLine);
         String loinc = value(cells, columns, "loinc");
         String snomed = value(cells, columns, "snomed");
@@ -115,14 +117,96 @@ public class TerminologyImportServiceImpl implements TerminologyImportService {
 
         switch (target) {
         case TEST:
-            return processTest(cells, columns, loinc, snomed, status, persist);
+            return processTest(cells, columns, loinc, snomed, status, persist, overwrite);
         case DICTIONARY:
-            return processDictionary(cells, columns, loinc, snomed, status, persist);
+            return processDictionary(cells, columns, loinc, snomed, status, persist, overwrite);
         case OBSERVATION_HISTORY_TYPE:
-            return processObservationHistoryType(cells, columns, loinc, snomed, status, persist);
+            return processObservationHistoryType(cells, columns, loinc, snomed, status, persist, overwrite);
         default:
             return null;
         }
+    }
+
+    // ------------------------------------------------------------------
+    // Décision d'application des codes (gestion des conflits / no-change)
+    // ------------------------------------------------------------------
+
+    /**
+     * Décision pour un couple de codes (loinc, snomed) d'une ligne, comparé aux
+     * valeurs existantes de l'entité. Porte l'action retenue et, si applicable, les
+     * valeurs à écrire (newLoinc/newSnomed = null quand le champ ne change pas).
+     */
+    private static final class CodeDecision {
+        final Action action;
+        final String newLoinc; // null = ne pas toucher
+        final String newSnomed; // null = ne pas toucher
+        final String message;
+
+        CodeDecision(Action action, String newLoinc, String newSnomed, String message) {
+            this.action = action;
+            this.newLoinc = newLoinc;
+            this.newSnomed = newSnomed;
+            this.message = message;
+        }
+    }
+
+    /**
+     * Décide, champ par champ, ce qu'il faut faire des codes du CSV face aux valeurs
+     * existantes :
+     * <ul>
+     * <li>cellule CSV vide → on ne touche jamais le champ ;</li>
+     * <li>identique à l'existant → aucun changement sur ce champ ;</li>
+     * <li>l'existant est vide → on renseigne (pas un conflit) ;</li>
+     * <li>différent d'un existant non vide → conflit : appliqué seulement si
+     * {@code overwrite} est vrai, sinon la LIGNE entière sort en CONFLICT (rien
+     * n'est écrit, pour éviter une application partielle).</li>
+     * </ul>
+     * Si aucun champ ne change → NO_CHANGE. Sinon WOULD_UPDATE (dry-run) ou UPDATED.
+     * Le paramètre {@code hasSnomed} permet aux cibles sans colonne LOINC (ex.
+     * dictionnaire d'organismes) de ne pas considérer LOINC — ici on traite les deux
+     * de façon uniforme, un code vide étant neutre.
+     */
+    private CodeDecision decideCodes(String csvLoinc, String csvSnomed, String existingLoinc, String existingSnomed,
+            boolean overwrite, boolean persist) {
+        String newLoinc = null;
+        String newSnomed = null;
+        StringBuilder conflicts = new StringBuilder();
+
+        // LOINC
+        if (!isBlank(csvLoinc)) {
+            if (trimToEmpty(csvLoinc).equals(trimToEmpty(existingLoinc))) {
+                // identique : rien à faire
+            } else if (isBlank(existingLoinc)) {
+                newLoinc = csvLoinc.trim();
+            } else if (overwrite) {
+                newLoinc = csvLoinc.trim();
+            } else {
+                conflicts.append("LOINC '").append(existingLoinc).append("' -> '").append(csvLoinc.trim()).append("' ");
+            }
+        }
+        // SNOMED
+        if (!isBlank(csvSnomed)) {
+            if (trimToEmpty(csvSnomed).equals(trimToEmpty(existingSnomed))) {
+                // identique
+            } else if (isBlank(existingSnomed)) {
+                newSnomed = csvSnomed.trim();
+            } else if (overwrite) {
+                newSnomed = csvSnomed.trim();
+            } else {
+                conflicts.append("SNOMED '").append(existingSnomed).append("' -> '").append(csvSnomed.trim())
+                        .append("'");
+            }
+        }
+
+        // Un conflit non autorisé bloque toute la ligne (pas d'écriture partielle).
+        if (conflicts.length() > 0) {
+            return new CodeDecision(Action.CONFLICT, null, null,
+                    "code existant différent (non écrasé) : " + conflicts.toString().trim());
+        }
+        if (newLoinc == null && newSnomed == null) {
+            return new CodeDecision(Action.NO_CHANGE, null, null, "codes déjà à jour");
+        }
+        return new CodeDecision(persist ? Action.UPDATED : Action.WOULD_UPDATE, newLoinc, newSnomed, null);
     }
 
     // ------------------------------------------------------------------
@@ -131,7 +215,7 @@ public class TerminologyImportServiceImpl implements TerminologyImportService {
 
     /** TEST : clé test_name (=description) + sample_type indicatif. */
     private TerminologyImportLine processTest(String[] cells, Map<String, Integer> columns, String loinc, String snomed,
-            String status, boolean persist) {
+            String status, boolean persist, boolean overwrite) {
         String testName = value(cells, columns, "test_name");
         String sampleType = value(cells, columns, "sample_type");
         String key = isBlank(sampleType) ? testName : testName + " / " + sampleType;
@@ -147,23 +231,24 @@ public class TerminologyImportServiceImpl implements TerminologyImportService {
             return new TerminologyImportLine(key, Action.NOT_FOUND, loinc, snomed, "aucun test pour ce test_name");
         }
 
-        // Application des codes (les cellules vides n'écrasent jamais).
-        if (!isBlank(loinc)) {
-            test.setLoinc(loinc);
+        CodeDecision decision = decideCodes(loinc, snomed, test.getLoinc(), test.getSnomedCode(), overwrite, persist);
+        if (decision.action == Action.UPDATED || decision.action == Action.WOULD_UPDATE) {
+            if (decision.newLoinc != null) {
+                test.setLoinc(decision.newLoinc);
+            }
+            if (decision.newSnomed != null) {
+                test.setSnomedCode(decision.newSnomed);
+            }
+            if (persist) {
+                testService.update(test);
+            }
         }
-        if (!isBlank(snomed)) {
-            test.setSnomedCode(snomed);
-        }
-        if (persist) {
-            testService.update(test);
-            return new TerminologyImportLine(key, Action.UPDATED, loinc, snomed, null);
-        }
-        return new TerminologyImportLine(key, Action.WOULD_UPDATE, loinc, snomed, null);
+        return new TerminologyImportLine(key, decision.action, loinc, snomed, decision.message);
     }
 
     /** DICTIONARY : clé category + dict_entry. */
     private TerminologyImportLine processDictionary(String[] cells, Map<String, Integer> columns, String loinc,
-            String snomed, String status, boolean persist) {
+            String snomed, String status, boolean persist, boolean overwrite) {
         String category = value(cells, columns, "category");
         String dictEntry = value(cells, columns, "dict_entry");
         String key = category + " / " + dictEntry;
@@ -201,22 +286,25 @@ public class TerminologyImportServiceImpl implements TerminologyImportService {
         }
 
         Dictionary dictionary = matches.get(0);
-        if (!isBlank(loinc)) {
-            dictionary.setLoincCode(loinc);
+        CodeDecision decision = decideCodes(loinc, snomed, dictionary.getLoincCode(), dictionary.getSnomedCode(),
+                overwrite, persist);
+        if (decision.action == Action.UPDATED || decision.action == Action.WOULD_UPDATE) {
+            if (decision.newLoinc != null) {
+                dictionary.setLoincCode(decision.newLoinc);
+            }
+            if (decision.newSnomed != null) {
+                dictionary.setSnomedCode(decision.newSnomed);
+            }
+            if (persist) {
+                dictionaryService.update(dictionary);
+            }
         }
-        if (!isBlank(snomed)) {
-            dictionary.setSnomedCode(snomed);
-        }
-        if (persist) {
-            dictionaryService.update(dictionary);
-            return new TerminologyImportLine(key, Action.UPDATED, loinc, snomed, null);
-        }
-        return new TerminologyImportLine(key, Action.WOULD_UPDATE, loinc, snomed, null);
+        return new TerminologyImportLine(key, decision.action, loinc, snomed, decision.message);
     }
 
     /** OBSERVATION_HISTORY_TYPE : clé type_name. */
     private TerminologyImportLine processObservationHistoryType(String[] cells, Map<String, Integer> columns,
-            String loinc, String snomed, String status, boolean persist) {
+            String loinc, String snomed, String status, boolean persist, boolean overwrite) {
         String typeName = value(cells, columns, "type_name");
         String key = typeName;
 
@@ -231,17 +319,20 @@ public class TerminologyImportServiceImpl implements TerminologyImportService {
                     "aucun type d'observation pour ce type_name");
         }
 
-        if (!isBlank(loinc)) {
-            type.setLoincCode(loinc);
+        CodeDecision decision = decideCodes(loinc, snomed, type.getLoincCode(), type.getSnomedCode(), overwrite,
+                persist);
+        if (decision.action == Action.UPDATED || decision.action == Action.WOULD_UPDATE) {
+            if (decision.newLoinc != null) {
+                type.setLoincCode(decision.newLoinc);
+            }
+            if (decision.newSnomed != null) {
+                type.setSnomedCode(decision.newSnomed);
+            }
+            if (persist) {
+                observationHistoryTypeService.update(type);
+            }
         }
-        if (!isBlank(snomed)) {
-            type.setSnomedCode(snomed);
-        }
-        if (persist) {
-            observationHistoryTypeService.update(type);
-            return new TerminologyImportLine(key, Action.UPDATED, loinc, snomed, null);
-        }
-        return new TerminologyImportLine(key, Action.WOULD_UPDATE, loinc, snomed, null);
+        return new TerminologyImportLine(key, decision.action, loinc, snomed, decision.message);
     }
 
     // ------------------------------------------------------------------

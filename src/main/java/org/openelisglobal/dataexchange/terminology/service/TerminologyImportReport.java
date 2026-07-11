@@ -30,6 +30,8 @@ public class TerminologyImportReport {
     private int wouldUpdate;
     private int notFound;
     private int skipped;
+    private int conflict;
+    private int noChange;
     private final List<TerminologyImportLine> lines = new ArrayList<>();
 
     public TerminologyImportReport() {
@@ -57,6 +59,12 @@ public class TerminologyImportReport {
             break;
         case NOT_FOUND:
             notFound++;
+            break;
+        case CONFLICT:
+            conflict++;
+            break;
+        case NO_CHANGE:
+            noChange++;
             break;
         case SKIPPED_PROPOSED:
         case SKIPPED_NO_CODE:
@@ -95,6 +103,14 @@ public class TerminologyImportReport {
 
     public int getSkipped() {
         return skipped;
+    }
+
+    public int getConflict() {
+        return conflict;
+    }
+
+    public int getNoChange() {
+        return noChange;
     }
 
     public List<TerminologyImportLine> getLines() {

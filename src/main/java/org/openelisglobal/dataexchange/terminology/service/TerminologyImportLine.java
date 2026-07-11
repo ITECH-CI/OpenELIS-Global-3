@@ -35,6 +35,15 @@ public class TerminologyImportLine {
         SKIPPED_NO_CODE,
         /** Plusieurs entités correspondent à la clé : refus de trancher. */
         AMBIGUOUS,
+        /** Les codes du CSV sont déjà ceux en base : rien à faire. */
+        NO_CHANGE,
+        /**
+         * Le CSV propose un code différent de celui déjà présent en base, et
+         * l'écrasement n'est pas autorisé (overwrite=false) : arbitrage requis. La
+         * ligne n'est PAS appliquée ; le message précise l'ancienne et la nouvelle
+         * valeur.
+         */
+        CONFLICT,
         /** Erreur inattendue lors du traitement de la ligne (voir message). */
         ERROR
     }
