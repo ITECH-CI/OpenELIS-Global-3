@@ -861,6 +861,11 @@
                                 <exclude>dataexport/**</exclude>
                                 <exclude>plugins/**</exclude>
                                 <exclude>frontend/**</exclude>
+                                <!-- Notes de version : géré à part (process de release), pas du
+                                    code à formater automatiquement. Exclu du spotless. Deux formes : à la racine
+                                    et en sous-dossier (l'ant-matcher **/ n'attrape pas un fichier racine). -->
+                                <exclude>RELEASE_NOTES.md</exclude>
+                                <exclude>**/RELEASE_NOTES.md</exclude>
                             </excludes>
                             <prettier>
                                 <!-- Formatter that Spotless supports and can format Markdown: https://github.com/diffplug/spotless/tree/main/plugin-maven#prettier
