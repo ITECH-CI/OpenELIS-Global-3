@@ -226,13 +226,29 @@ Pour publier une release :
 git tag v3.3.1.0 && git push origin v3.3.1.0
 ```
 
-### Reste à faire (lots C/D)
+### Lot C — livré
 
-- Lot C : `docker-compose.civ.yml` pointant backend+frontend vers ghcr (update
-  en ligne `pull && up -d`) ; compléter `INSTALL_CIV.md` (online + offline).
-- Lot D : nettoyer les workflows hérités DIGI-UW (`tx-*`, `publish-*` gardés
-  upstream, `label-merge-conflict`) ; retirer `oe-build-export.sh` une fois le
-  CI validé sur GitHub.
+- `docker-compose.civ.yml` : backend/frontend/fhir/nginx →
+  `ghcr.io/itech-ci/ openelis-global-civ*` (variable `OE_TAG`, défaut `latest`)
+  ; postgres/certs tiers. Update en ligne
+  `docker compose -f docker-compose.civ.yml pull && up -d`. Ne recrée pas la
+  config (suppose une install existante par l'installeur).
+- `INSTALL_CIV.md` §3.2 : procédure de mise à jour EN LIGNE via ghcr (offline en
+  §3.1). Section CI actualisée.
+
+### Lot D — livré
+
+- Workflows hérités DIGI-UW supprimés (skippés sur le fork ou remplacés) :
+  `tx-pull`, `tx-push`, `publish-and-test`, `publish-dev-backend-images`,
+  `publish-dev-frontend-images`, `label-merge-conflict`, `build-installer`.
+  Restent : `ci`, `frontend-qa`, `civ-publish-images`, `civ-release`.
+- `oe-build-export.sh` : à retirer une fois le CI validé sur GitHub (gardé pour
+  l'instant comme filet de secours build manuel).
+
+### Reste (validation GitHub + dette)
+
+- Valider sur GitHub : push `develop-civ` (déclenche CI + images), rendre les
+  packages ghcr **publics**, tester un tag `v*`.
 - **Dette préexistante** : `RELEASE_NOTES.md` n'est pas au format spotless dans
   le repo (le bloc `.md` du pom l'inclut) → `spotless:check` du CI échouera
   dessus tant qu'il n'est pas reformaté une fois ou exclu du `pom.xml`.
