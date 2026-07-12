@@ -625,7 +625,8 @@ const Index = () => {
     // blocking the order for them would be wrong.
     const patient = orderFormValues.patientProperties || {};
     const isBlank = (v) => v == null || String(v).trim() === "";
-    const isExistingPatient = !isBlank(patient.patientPK) || !isBlank(patient.guid);
+    const isExistingPatient =
+      !isBlank(patient.patientPK) || !isBlank(patient.guid);
     const missingRequiredPatientIds = [];
     if (
       String(configurationProperties?.PATIENT_SUBJECT_NUMBER_REQUIRED) ===
@@ -637,7 +638,8 @@ const Index = () => {
       );
     }
     if (
-      String(configurationProperties?.PATIENT_NATIONAL_ID_REQUIRED) === "true" &&
+      String(configurationProperties?.PATIENT_NATIONAL_ID_REQUIRED) ===
+        "true" &&
       isBlank(patient.nationalId)
     ) {
       missingRequiredPatientIds.push(

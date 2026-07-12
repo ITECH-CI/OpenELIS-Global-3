@@ -79,14 +79,20 @@ function FhirSyncMonitor() {
   // recherche tous statuts confondus côté backend.
   const loadList = (status, accession, date) => {
     setLoading(true);
-    const params = new URLSearchParams({ status: status || "FAILED", max: 200 });
+    const params = new URLSearchParams({
+      status: status || "FAILED",
+      max: 200,
+    });
     if (accession) params.append("accession", accession);
     if (date) params.append("date", date);
-    getFromOpenElisServer(`/rest/fhir-sync/list?${params.toString()}`, (res) => {
-      setRows(Array.isArray(res) ? res : []);
-      setPage(1);
-      setLoading(false);
-    });
+    getFromOpenElisServer(
+      `/rest/fhir-sync/list?${params.toString()}`,
+      (res) => {
+        setRows(Array.isArray(res) ? res : []);
+        setPage(1);
+        setLoading(false);
+      },
+    );
   };
 
   useEffect(() => {
@@ -193,12 +199,30 @@ function FhirSyncMonitor() {
   };
 
   const headers = [
-    { key: "triggerType", header: intl.formatMessage({ id: "fhir.sync.col.trigger" }) },
-    { key: "targetId", header: intl.formatMessage({ id: "fhir.sync.col.target" }) },
-    { key: "status", header: intl.formatMessage({ id: "fhir.sync.col.status" }) },
-    { key: "attemptCount", header: intl.formatMessage({ id: "fhir.sync.col.attempts" }) },
-    { key: "lastAttemptAt", header: intl.formatMessage({ id: "fhir.sync.col.last" }) },
-    { key: "errorMessage", header: intl.formatMessage({ id: "fhir.sync.col.error" }) },
+    {
+      key: "triggerType",
+      header: intl.formatMessage({ id: "fhir.sync.col.trigger" }),
+    },
+    {
+      key: "targetId",
+      header: intl.formatMessage({ id: "fhir.sync.col.target" }),
+    },
+    {
+      key: "status",
+      header: intl.formatMessage({ id: "fhir.sync.col.status" }),
+    },
+    {
+      key: "attemptCount",
+      header: intl.formatMessage({ id: "fhir.sync.col.attempts" }),
+    },
+    {
+      key: "lastAttemptAt",
+      header: intl.formatMessage({ id: "fhir.sync.col.last" }),
+    },
+    {
+      key: "errorMessage",
+      header: intl.formatMessage({ id: "fhir.sync.col.error" }),
+    },
     { key: "actions", header: "" },
   ];
 
@@ -349,7 +373,9 @@ function FhirSyncMonitor() {
             />
           </Column>
           <Column lg={4} md={2} sm={4}>
-            <div style={{ marginTop: "1.5rem", display: "flex", gap: "0.5rem" }}>
+            <div
+              style={{ marginTop: "1.5rem", display: "flex", gap: "0.5rem" }}
+            >
               <Button
                 kind="primary"
                 size="md"

@@ -283,7 +283,9 @@ function TerminologyImport() {
         {/* Actions : dry-run puis apply */}
         <Grid fullWidth>
           <Column lg={16} md={8} sm={4}>
-            <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+            <div
+              style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}
+            >
               {previewing ? (
                 <InlineLoading
                   status="active"

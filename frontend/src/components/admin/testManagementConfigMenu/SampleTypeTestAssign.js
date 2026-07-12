@@ -1,10 +1,4 @@
-import React, {
-  useContext,
-  useState,
-  useEffect,
-  useRef,
-  useMemo,
-} from "react";
+import React, { useContext, useState, useEffect, useRef, useMemo } from "react";
 import {
   Heading,
   Loading,
@@ -226,7 +220,9 @@ function SampleTypeTestAssign() {
                             md={4}
                             sm={4}
                           >
-                            <ClickableTile onClick={() => openAssignModal(test)}>
+                            <ClickableTile
+                              onClick={() => openAssignModal(test)}
+                            >
                               {test.value}
                             </ClickableTile>
                           </Column>
@@ -293,7 +289,10 @@ function SampleTypeTestAssign() {
                     <Tag
                       key={`selected-${item.id}`}
                       type="blue"
-                      style={{ marginRight: "0.25rem", marginBottom: "0.25rem" }}
+                      style={{
+                        marginRight: "0.25rem",
+                        marginBottom: "0.25rem",
+                      }}
                     >
                       {item.value}
                     </Tag>
