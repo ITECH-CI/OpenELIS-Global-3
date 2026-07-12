@@ -160,7 +160,10 @@ vrai certificat.
 ## 3. Mise à jour (nouvelle version)
 
 La mise à jour **préserve la base de données** (le volume de données n'est pas
-touché ; les migrations Liquibase s'appliquent au démarrage du webapp).
+touché ; les migrations Liquibase s'appliquent au démarrage du webapp). Deux
+canaux selon la connectivité du site.
+
+### 3.1 Site déconnecté — via l'installeur offline (canal principal)
 
 ```bash
 # transférer + décompresser le NOUVEL installeur (version supérieure)
@@ -181,6 +184,31 @@ Le mode `update` :
 
 > Le mode par défaut (`sans -m`) fait `update-install` : il détecte
 > automatiquement s'il faut installer ou mettre à jour.
+
+### 3.2 Site connecté — via ghcr (`docker-compose.civ.yml`)
+
+Pour les serveurs ayant accès à Internet, on peut tirer directement les images
+publiées sur ghcr (voir `CICD_STRATEGY_CIV.md`) sans transférer d'installeur.
+`docker-compose.civ.yml` (à la racine du repo) pointe
+backend/frontend/fhir/nginx vers `ghcr.io/itech-ci/openelis-global-civ*` ;
+postgres et certs restent tiers.
+
+> ⚠️ Ce compose ne recrée PAS la configuration du site (volumes `./volume/*`,
+> secrets, certs) : il suppose une installation existante (faite par
+> l'installeur) et ne fait que redéployer les images. Faire un **backup DB
+> avant** (cf. §4).
+
+```bash
+# depuis un dossier contenant docker-compose.civ.yml et l'arborescence ./volume/*
+# OE_TAG = version à déployer (ex. 3.3.2.0) ; défaut = latest
+export OE_TAG=3.3.2.0
+docker compose -f docker-compose.civ.yml pull
+docker compose -f docker-compose.civ.yml up -d
+```
+
+Les migrations Liquibase s'appliquent au redémarrage du webapp ; la base est
+préservée. Pour revenir en arrière, redéployer avec l'`OE_TAG` précédent (les
+images versionnées restent disponibles sur ghcr).
 
 ---
 
@@ -407,10 +435,18 @@ Options : `--images-only` (build images sans installeur), `VERSION=x.y.z.w`
 > sudo docker compose up -d   # relancer depuis le dossier de l'installer
 > ```
 
-### En CI (à venir — cf. CICD_STRATEGY_CIV.md)
+### En CI (cf. CICD_STRATEGY_CIV.md §7)
 
-Build automatique sur tag `v*` → images ghcr + installeur attaché à la **GitHub
-Release** (téléchargeable). Voir la roadmap dans `CICD_STRATEGY_CIV.md`.
+Le pipeline GitHub Actions est en place :
+
+- **push `develop-civ`** → `civ-publish-images.yml` : images backend + frontend
+  sur ghcr (`:develop-civ` + `:sha-<court>`).
+- **tag `v*`** (ex. `git tag v3.3.2.0 && git push origin v3.3.2.0`) →
+  `civ-release.yml` : les **5 images CIV** sur ghcr (`:<version>` + `:latest`) +
+  l'**installeur offline** `.tar.gz` attaché à la **GitHub Release**.
+
+Déploiement : télécharger l'installeur de la Release (offline, §3.1) ou tirer
+les images ghcr (en ligne, §3.2).
 
 ---
 
