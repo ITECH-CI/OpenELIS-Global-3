@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+     http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+    <!--
+        Mini-HIE : sépare le TIERS (fhir_gateway_client) de ses JETONS
+        (fhir_gateway_token, 1 client -> N jetons pour la rotation). Ajoute
+        fhir_gateway_client et fait migrer fhir_gateway_token de client_name (texte)
+        vers client_id (FK). Idempotent (preConditions).
+    -->
+    <changeSet author="itechciv" id="create-fhir-gateway-client-seq-1">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <sequenceExists schemaName="clinlims" sequenceName="fhir_gateway_client_seq" />
+            </not>
+        </preConditions>
+        <createSequence schemaName="clinlims" sequenceName="fhir_gateway_client_seq"
+            startValue="1" incrementBy="1" />
+        <rollback>
+            <dropSequence schemaName="clinlims" sequenceName="fhir_gateway_client_seq" />
+        </rollback>
+    </changeSet>
+
+    <changeSet author="itechciv" id="create-fhir-gateway-client-table-1">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists schemaName="clinlims" tableName="fhir_gateway_client" />
+            </not>
+        </preConditions>
+        <createTable schemaName="clinlims" tableName="fhir_gateway_client">
+            <column name="id" type="BIGINT">
+                <constraints primaryKey="true" nullable="false" />
+            </column>
+            <column name="name" type="VARCHAR(200)">
+                <constraints nullable="false" unique="true" />
+            </column>
+            <column name="description" type="VARCHAR(500)">
+                <constraints nullable="true" />
+            </column>
+            <column name="is_active" type="VARCHAR(1)" defaultValue="Y">
+                <constraints nullable="false" />
+            </column>
+            <column name="created_at" type="TIMESTAMP">
+                <constraints nullable="true" />
+            </column>
+            <column name="lastupdated" type="TIMESTAMP">
+                <constraints nullable="true" />
+            </column>
+        </createTable>
+        <rollback>
+            <dropTable schemaName="clinlims" tableName="fhir_gateway_client" />
+        </rollback>
+    </changeSet>
+
+    <!-- fhir_gateway_token : client_name -> client_id (la table est récente et vide
+         en pratique ; pas de migration de données). -->
+    <changeSet author="itechciv" id="fhir-gateway-token-add-client-id-1">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists schemaName="clinlims" tableName="fhir_gateway_token" columnName="client_id" />
+            </not>
+        </preConditions>
+        <addColumn schemaName="clinlims" tableName="fhir_gateway_token">
+            <column name="client_id" type="VARCHAR(10)" />
+        </addColumn>
+        <rollback>
+            <dropColumn schemaName="clinlims" tableName="fhir_gateway_token" columnName="client_id" />
+        </rollback>
+    </changeSet>
+
+    <changeSet author="itechciv" id="fhir-gateway-token-drop-client-name-1">
+        <preConditions onFail="MARK_RAN">
+            <columnExists schemaName="clinlims" tableName="fhir_gateway_token" columnName="client_name" />
+        </preConditions>
+        <dropColumn schemaName="clinlims" tableName="fhir_gateway_token" columnName="client_name" />
+    </changeSet>
+
+</databaseChangeLog>

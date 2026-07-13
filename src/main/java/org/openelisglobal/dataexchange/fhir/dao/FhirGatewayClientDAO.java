@@ -13,17 +13,11 @@
  */
 package org.openelisglobal.dataexchange.fhir.dao;
 
-import java.util.List;
 import org.openelisglobal.common.dao.BaseDAO;
-import org.openelisglobal.dataexchange.fhir.valueholder.FhirGatewayToken;
+import org.openelisglobal.dataexchange.fhir.valueholder.FhirGatewayClient;
 
-public interface FhirGatewayTokenDAO extends BaseDAO<FhirGatewayToken, String> {
+public interface FhirGatewayClientDAO extends BaseDAO<FhirGatewayClient, String> {
 
-    /**
-     * Jeton ACTIF (et dont le client est actif) correspondant à ce hash, ou null.
-     */
-    FhirGatewayToken findActiveByTokenHash(String tokenHash);
-
-    /** Tous les jetons d'un client, plus récents en tête. */
-    List<FhirGatewayToken> getByClientId(String clientId);
+    /** Client par nom (unicité), ou null. */
+    FhirGatewayClient findByName(String name);
 }

@@ -80,6 +80,7 @@ import SampleTypeOrder from "./testManagementConfigMenu/SampleTypeOrder.js";
 import SampleTypeCreate from "./testManagementConfigMenu/SampleTypeCreate.js";
 import SampleTypeTestAssign from "./testManagementConfigMenu/SampleTypeTestAssign.js";
 import FhirSyncMonitor from "./fhirSync/FhirSyncMonitor.js";
+import FhirGateway from "./fhirGateway/FhirGateway.js";
 import TerminologyImport from "./terminology/TerminologyImport.js";
 import UomManagement from "./testManagementConfigMenu/UomManagement.js";
 import UomCreate from "./testManagementConfigMenu/UomCreate.js";
@@ -212,6 +213,13 @@ function Admin() {
             href="#FhirSyncMonitor"
           >
             <FormattedMessage id="fhir.sync.monitor.title" />
+          </SideNavLink>
+          <SideNavLink
+            data-cy="fhirGateway"
+            renderIcon={ListDropdown}
+            href="#FhirGateway"
+          >
+            <FormattedMessage id="fhir.gateway.title" />
           </SideNavLink>
           <SideNavLink
             data-cy="terminologyImport"
@@ -408,6 +416,9 @@ function Admin() {
       </PathRoute>
       <PathRoute path="#FhirSyncMonitor">
         <FhirSyncMonitor />
+      </PathRoute>
+      <PathRoute path="#FhirGateway">
+        <FhirGateway />
       </PathRoute>
       <PathRoute path="#TerminologyImport">
         <TerminologyImport />

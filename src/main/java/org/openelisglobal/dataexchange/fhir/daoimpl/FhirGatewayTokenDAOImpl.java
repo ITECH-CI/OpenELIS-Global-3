@@ -36,6 +36,9 @@ public class FhirGatewayTokenDAOImpl extends BaseDAOImpl<FhirGatewayToken, Strin
     @Transactional(readOnly = true)
     public FhirGatewayToken findActiveByTokenHash(String tokenHash) {
         try {
+            // Jeton actif par hash. La vérification "client actif" se fait côté service
+            // (id du client = LIMSStringNumberUserType, un join HQL sur clientId=String
+            // vs c.id produit un SQL invalide — on garde donc deux lookups simples).
             String hql = "from FhirGatewayToken t where t.tokenHash = :hash and t.isActive = 'Y'";
             Query<FhirGatewayToken> query = entityManager.unwrap(Session.class).createQuery(hql,
                     FhirGatewayToken.class);
@@ -46,6 +49,21 @@ public class FhirGatewayTokenDAOImpl extends BaseDAOImpl<FhirGatewayToken, Strin
         } catch (RuntimeException e) {
             LogEvent.logError(e);
             throw new LIMSRuntimeException("Error in FhirGatewayToken findActiveByTokenHash()", e);
+        }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<FhirGatewayToken> getByClientId(String clientId) {
+        try {
+            String hql = "from FhirGatewayToken t where t.clientId = :clientId order by t.createdAt desc nulls last";
+            Query<FhirGatewayToken> query = entityManager.unwrap(Session.class).createQuery(hql,
+                    FhirGatewayToken.class);
+            query.setParameter("clientId", clientId);
+            return query.list();
+        } catch (RuntimeException e) {
+            LogEvent.logError(e);
+            throw new LIMSRuntimeException("Error in FhirGatewayToken getByClientId()", e);
         }
     }
 }

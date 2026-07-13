@@ -4,27 +4,26 @@
 
 <hibernate-mapping>
     <class
-        name="org.openelisglobal.dataexchange.fhir.valueholder.FhirGatewayToken"
-        table="fhir_gateway_token" optimistic-lock="version"
+        name="org.openelisglobal.dataexchange.fhir.valueholder.FhirGatewayClient"
+        table="fhir_gateway_client" optimistic-lock="version"
         dynamic-update="true">
         <id name="id"
             type="org.openelisglobal.hibernate.resources.usertype.LIMSStringNumberUserType">
             <column name="ID" precision="10" scale="0" />
             <generator
                 class="org.openelisglobal.hibernate.resources.StringSequenceGenerator">
-                <param name="sequence_name">fhir_gateway_token_seq</param>
+                <param name="sequence_name">fhir_gateway_client_seq</param>
             </generator>
         </id>
         <version name="lastupdated" column="LASTUPDATED"
             type="timestamp" access="field" />
 
-        <property name="clientId" type="java.lang.String">
-            <column name="client_id" length="10" not-null="true" />
+        <property name="name" type="java.lang.String">
+            <column name="name" length="200" not-null="true" unique="true" />
         </property>
 
-        <property name="tokenHash" type="java.lang.String">
-            <column name="token_hash" length="64" not-null="true"
-                unique="true" />
+        <property name="description" type="java.lang.String">
+            <column name="description" length="500" not-null="false" />
         </property>
 
         <property name="isActive" type="java.lang.String">
@@ -33,10 +32,6 @@
 
         <property name="createdAt" type="timestamp">
             <column name="created_at" not-null="false" />
-        </property>
-
-        <property name="lastUsedAt" type="timestamp">
-            <column name="last_used_at" not-null="false" />
         </property>
     </class>
 </hibernate-mapping>

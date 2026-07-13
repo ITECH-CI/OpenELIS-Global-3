@@ -172,17 +172,23 @@ tout token révoqué en base bloque immédiatement l'accès (401).
 
 ## 9. Phase A — LIVRÉE (2026-07-13)
 
-Implémentation :
+Implémentation (modèle à 2 entités : un tiers -> N jetons, pour la rotation) :
 
-- Entité `FhirGatewayToken` (table `fhir_gateway_token`, migration
-  `create_fhir_gateway_token.xml`) : jeton HASHÉ (SHA-256), `is_active`
-  (révocation à chaud), `last_used_at` (audit). DAO/Service
-  (`findActiveByTokenHash`, `validateAndTouch`, `createToken`).
+- `FhirGatewayClient` (table `fhir_gateway_client`) : tiers déclaré (nom unique,
+  description, `is_active`). Désactiver le client bloque tous ses jetons.
+- `FhirGatewayToken` (table `fhir_gateway_token`, `client_id` FK) : jeton HASHÉ
+  (SHA-256, jamais en clair), `is_active` (révocation par jeton), `last_used_at`
+  (audit). Migrations `create_fhir_gateway_token.xml` +
+  `create_fhir_gateway_client.xml`.
+- Validation (`validateAndTouch`) : jeton actif ET client actif -> 200.
 - `FhirGatewayRestController` (`/rest/fhir-gateway`) :
   - `GET /auth` — validation pour nginx `auth_request` (200/401). Ouvert
     (OPEN_PAGES).
-  - `POST /token?clientName=...` — crée un jeton, renvoie sa valeur EN CLAIR une
-    seule fois. Protégé (session OE).
+  - Administration (session OE) : `GET/POST /clients`,
+    `POST /clients/{id}/active`, `GET/POST /clients/{id}/tokens` (POST émet un
+    jeton et renvoie sa valeur EN CLAIR une seule fois), `POST /tokens/{id}/revoke`.
+  - Page admin `#FhirGateway` : lister/créer des tiers, émettre un jeton (affiché
+    une fois, copiable), révoquer un jeton, activer/désactiver un tiers.
 - nginx `nginx-prod.conf` : `location = /fhir-gateway/auth` (internal) +
   `location /fhir/` (auth_request + IP allowlist à décommenter + proxy vers
   HAPI).

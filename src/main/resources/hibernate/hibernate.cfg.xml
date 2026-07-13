@@ -33,6 +33,7 @@
             resource="hibernate/hbm/AnalysisQaEventAction.hbm.xml" />
         <mapping resource="hibernate/hbm/Analyte.hbm.xml" />
         <mapping resource="hibernate/hbm/FhirSyncStatus.hbm.xml" />
+        <mapping resource="hibernate/hbm/FhirGatewayClient.hbm.xml" />
         <mapping resource="hibernate/hbm/FhirGatewayToken.hbm.xml" />
         <mapping resource="hibernate/hbm/History.hbm.xml" />
         <mapping resource="hibernate/hbm/CityStateZip.hbm.xml" />

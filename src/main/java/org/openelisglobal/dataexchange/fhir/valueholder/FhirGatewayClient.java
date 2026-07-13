@@ -17,31 +17,26 @@ import java.sql.Timestamp;
 import org.openelisglobal.common.valueholder.BaseObject;
 
 /**
- * Jeton d'accès d'un tiers au mini-HIE (gateway FHIR). Rattaché à un
- * {@link FhirGatewayClient} (un client peut avoir plusieurs jetons : rotation).
- * Le jeton n'est JAMAIS stocké en clair : seul son hash SHA-256 est conservé
- * (tokenHash). Révocable à chaud via isActive. lastUsedAt trace le dernier
- * accès.
+ * Tiers autorisé à accéder au mini-HIE (SIGDEP, EMR, autre LIS). Un client peut
+ * détenir plusieurs {@link FhirGatewayToken} (rotation sans perdre l'identité
+ * du client). Désactiver le client ({@code isActive=N}) bloque tous ses jetons.
  */
-public class FhirGatewayToken extends BaseObject<String> {
+public class FhirGatewayClient extends BaseObject<String> {
 
     private static final long serialVersionUID = 1L;
 
     private String id;
 
-    // Client (tiers) propriétaire du jeton.
-    private String clientId;
+    // Nom lisible du tiers (ex. "SIGDEP-CV site X"). Unique.
+    private String name;
 
-    // Hash SHA-256 (hex) du jeton présenté. Jamais le jeton en clair.
-    private String tokenHash;
+    // Description / contact (optionnel).
+    private String description;
 
-    // Révocation à chaud du jeton : "Y"/"N".
+    // Révocation globale du tiers : "Y"/"N".
     private String isActive = "Y";
 
     private Timestamp createdAt;
-
-    // Dernier accès autorisé avec ce jeton (audit, best-effort).
-    private Timestamp lastUsedAt;
 
     @Override
     public String getId() {
@@ -53,20 +48,20 @@ public class FhirGatewayToken extends BaseObject<String> {
         this.id = id;
     }
 
-    public String getClientId() {
-        return clientId;
+    public String getName() {
+        return name;
     }
 
-    public void setClientId(String clientId) {
-        this.clientId = clientId;
+    public void setName(String name) {
+        this.name = name;
     }
 
-    public String getTokenHash() {
-        return tokenHash;
+    public String getDescription() {
+        return description;
     }
 
-    public void setTokenHash(String tokenHash) {
-        this.tokenHash = tokenHash;
+    public void setDescription(String description) {
+        this.description = description;
     }
 
     public String getIsActive() {
@@ -85,16 +80,8 @@ public class FhirGatewayToken extends BaseObject<String> {
         this.createdAt = createdAt;
     }
 
-    public Timestamp getLastUsedAt() {
-        return lastUsedAt;
-    }
-
-    public void setLastUsedAt(Timestamp lastUsedAt) {
-        this.lastUsedAt = lastUsedAt;
-    }
-
     @Override
     protected String getDefaultLocalizedName() {
-        return "token:" + clientId;
+        return name;
     }
 }

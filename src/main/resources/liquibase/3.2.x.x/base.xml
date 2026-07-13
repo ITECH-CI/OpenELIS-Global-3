@@ -133,6 +133,8 @@ file="add_study_modifier_menu.xml" />
         file="add_codes_to_observation_history_type.xml" />
     <include relativeToChangelogFile="true"
         file="create_fhir_gateway_token.xml" />
+    <include relativeToChangelogFile="true"
+        file="create_fhir_gateway_client.xml" />
 
 
 </databaseChangeLog>
