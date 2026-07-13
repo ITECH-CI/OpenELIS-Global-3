@@ -49,6 +49,14 @@ public class FhirGatewayRestController {
     @Autowired
     private FhirGatewayTokenService fhirGatewayTokenService;
 
+    // Dates formatées côté API (jj/mm/aaaa hh:mm), comme le monitoring FHIR, pour
+    // éviter d'exposer un timestamp brut à l'UI.
+    private static final java.text.SimpleDateFormat DISPLAY_FORMAT = new java.text.SimpleDateFormat("dd/MM/yyyy HH:mm");
+
+    private static synchronized String formatDate(java.util.Date date) {
+        return date != null ? DISPLAY_FORMAT.format(date) : null;
+    }
+
     /**
      * Point de validation pour nginx auth_request. 200 = autorisé, 401 = refusé.
      */
@@ -113,8 +121,8 @@ public class FhirGatewayRestController {
             Map<String, Object> row = new HashMap<>();
             row.put("id", t.getId());
             row.put("active", "Y".equals(t.getIsActive()));
-            row.put("createdAt", t.getCreatedAt());
-            row.put("lastUsedAt", t.getLastUsedAt());
+            row.put("createdAt", formatDate(t.getCreatedAt()));
+            row.put("lastUsedAt", formatDate(t.getLastUsedAt()));
             out.add(row);
         }
         return out;
