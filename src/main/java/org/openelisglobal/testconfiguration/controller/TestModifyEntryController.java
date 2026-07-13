@@ -146,8 +146,8 @@ public class TestModifyEntryController extends BaseController {
             bean.setTestUnit(testService.getTestSectionName(test));
             bean.setPanel(createPanelList(testService, test));
             bean.setResultType(resultType);
-            TypeOfSample typeOfSample = testService.getTypeOfSample(test);
-            bean.setSampleType(typeOfSample != null ? typeOfSample.getLocalizedName() : "n/a");
+            // Tous les types d'échantillon du test (pas seulement le premier).
+            bean.setSampleType(testService.getAllSampleTypesDisplay(test));
             bean.setOrderable(test.getOrderable() ? "Orderable" : "Not orderable");
             bean.setNotifyResults(test.isNotifyResults());
             bean.setInLabOnly(test.isInLabOnly());

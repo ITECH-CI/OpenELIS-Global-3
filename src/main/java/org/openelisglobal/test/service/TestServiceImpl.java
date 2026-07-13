@@ -210,6 +210,36 @@ public class TestServiceImpl extends AuditableBaseObjectServiceImpl<Test, String
 
     @Override
     @Transactional(readOnly = true)
+    public List<TypeOfSample> getAllTypeOfSamplesForTest(Test test) {
+        List<TypeOfSample> result = new ArrayList<>();
+        if (test == null) {
+            return result;
+        }
+        List<TypeOfSampleTest> typeOfSampleTests = typeOfSampleTestService.getTypeOfSampleTestsForTest(test.getId());
+        if (typeOfSampleTests == null) {
+            return result;
+        }
+        for (TypeOfSampleTest tost : typeOfSampleTests) {
+            TypeOfSample tos = typeOfSampleService.getTypeOfSampleById(tost.getTypeOfSampleId());
+            if (tos != null) {
+                result.add(tos);
+            }
+        }
+        return result;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public String getAllSampleTypesDisplay(Test test) {
+        List<TypeOfSample> types = getAllTypeOfSamplesForTest(test);
+        if (types.isEmpty()) {
+            return "n/a";
+        }
+        return types.stream().map(TypeOfSample::getLocalizedName).collect(Collectors.joining(", "));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public List<Panel> getPanels(Test test) {
         List<Panel> panelList = new ArrayList<>();
         if (test != null) {

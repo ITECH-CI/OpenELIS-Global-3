@@ -196,7 +196,10 @@ public class BacterioPatientReport extends PatientReport implements IReportCreat
 
                     // Get test name to determine grouping
                     Test test = analysis.getTest();
-                    String testName = TestServiceImpl.getLocalizedTestNameWithType(test);
+                    // Type d'échantillon de l'analyse courante (pas le 1er sample type
+                    // du test) pour un suffixe correct côté rapport bactério.
+                    String testName = TestServiceImpl.getLocalizedTestNameWithType(test,
+                            analysis.getSampleItem() != null ? analysis.getSampleItem().getTypeOfSampleId() : null);
                     String reportingName = "";
                     try {
                         Localization localization = test.getLocalizedReportingName();
