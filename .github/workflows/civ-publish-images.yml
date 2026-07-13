@@ -77,6 +77,13 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      # Pas de cache-from/cache-to registry : il restaure des LAYERS depuis le
+      # registre sans restaurer le mount cache `.m2` (--mount=type=cache dans le
+      # Dockerfile) -> l'artefact local dataexport-api/core:0.0.0.9, installé dans
+      # ce mount à une étape antérieure, est absent quand le `mvn clean install`
+      # tourne depuis un layer caché -> "Could not find artifact". Sans cache
+      # registry, tout le build s'exécute d'un bloc (mount .m2 cohérent). Build un
+      # peu plus long mais fiable.
       - name: Build & push backend
         uses: docker/build-push-action@v5
         with:
@@ -89,8 +96,6 @@ jobs:
           tags: |
             ${{ steps.prep.outputs.backend_image }}:develop-civ
             ${{ steps.prep.outputs.backend_image }}:${{ steps.prep.outputs.sha_short }}
-          cache-from: type=registry,ref=${{ steps.prep.outputs.backend_image }}:buildcache
-          cache-to: type=registry,ref=${{ steps.prep.outputs.backend_image }}:buildcache,mode=max
 
       - name: Build & push frontend
         uses: docker/build-push-action@v5
@@ -102,8 +107,6 @@ jobs:
           tags: |
             ${{ steps.prep.outputs.frontend_image }}:develop-civ
             ${{ steps.prep.outputs.frontend_image }}:${{ steps.prep.outputs.sha_short }}
-          cache-from: type=registry,ref=${{ steps.prep.outputs.frontend_image }}:buildcache
-          cache-to: type=registry,ref=${{ steps.prep.outputs.frontend_image }}:buildcache,mode=max
 
       - name: Récapitulatif
         run: |
