@@ -38,8 +38,13 @@ RUN --mount=type=cache,target=/root/.m2,sharing=locked \
 WORKDIR /build
 
 COPY ./pom.xml /build/pom.xml
+# go-offline = simple pré-chauffage du cache .m2 ; il tente de résoudre TOUTES les
+# dépendances en ligne, y compris dataexport-api/core:0.0.0.9 qui n'existent QUE
+# localement (buildés ci-dessus) et sur AUCUN repo distant -> il échoue sur un
+# runner au cache .m2 froid. Non critique : le `mvn clean install` suivant
+# télécharge ce qui manque. On tolère donc son échec.
 RUN --mount=type=cache,target=/root/.m2,sharing=locked \
-    mvn dependency:go-offline 
+    mvn dependency:go-offline || true
 
 ARG SKIP_SPOTLESS="false"
 COPY ./src /build/src
