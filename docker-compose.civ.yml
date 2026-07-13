@@ -85,9 +85,9 @@ services:
     depends_on:
       - database
       - certs
-    ports:
-      - "8081:8080"
-      - "8444:8443"
+    # Mini-HIE : le HAPI n'est PAS publié sur l'hôte/réseau. Il n'est joignable
+    # qu'en interne (réseau docker "default") par OE et par le proxy nginx
+    # (location /fhir/, sécurisée par jeton + IP). Ne PAS rouvrir de ports ici.
     networks:
       - default
     restart: always

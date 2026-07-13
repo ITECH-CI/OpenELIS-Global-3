@@ -169,3 +169,38 @@ Côté nginx (`nginx-prod.conf`) :
 
 Résultat : un tiers autorisé (IP + token valide) peut lire les ressources FHIR ;
 tout token révoqué en base bloque immédiatement l'accès (401).
+
+## 9. Phase A — LIVRÉE (2026-07-13)
+
+Implémentation :
+
+- Entité `FhirGatewayToken` (table `fhir_gateway_token`, migration
+  `create_fhir_gateway_token.xml`) : jeton HASHÉ (SHA-256), `is_active`
+  (révocation à chaud), `last_used_at` (audit). DAO/Service
+  (`findActiveByTokenHash`, `validateAndTouch`, `createToken`).
+- `FhirGatewayRestController` (`/rest/fhir-gateway`) :
+  - `GET /auth` — validation pour nginx `auth_request` (200/401). Ouvert
+    (OPEN_PAGES).
+  - `POST /token?clientName=...` — crée un jeton, renvoie sa valeur EN CLAIR une
+    seule fois. Protégé (session OE).
+- nginx `nginx-prod.conf` : `location = /fhir-gateway/auth` (internal) +
+  `location /fhir/` (auth_request + IP allowlist à décommenter + proxy vers
+  HAPI).
+- `docker-compose.civ.yml` : ports HAPI (8081/8444) **fermés** — HAPI non
+  exposé.
+
+Testé end-to-end : sans jeton → 401 ; jeton invalide → 401 ; jeton valide
+(Bearer ou X-API-Key) → 200 ; `last_used_at` mis à jour ; révocation
+(`is_active=N`) → 401 immédiat.
+
+### Exploitation (déclarer un tiers)
+
+1. Créer un jeton (admin OE authentifié) :
+   `POST /api/rest/fhir-gateway/token?clientName=SIGDEP-CV` → renvoie le jeton
+   en clair (à transmettre au tiers une seule fois).
+2. Optionnel : restreindre par IP — décommenter/ajuster `allow ...; deny all;`
+   dans la `location /fhir/` de `nginx-prod.conf`, puis recharger nginx.
+3. Le tiers lit les ressources FHIR : `GET https://<serveur>/fhir/Patient?...`
+   avec header `Authorization: Bearer <jeton>` (ou `X-API-Key: <jeton>`).
+4. Révoquer : passer `is_active` à `N` (ou via une future UI admin) → accès
+   bloqué immédiatement.

@@ -93,8 +93,13 @@ public class SecurityConfig {
 
     // TODO should we move these to the properties files?
     // pages that have special security constraints
+    // /rest/fhir-gateway/auth : appelé par nginx (auth_request) pour valider un
+    // jeton de tiers ; ouvert (pas de session) car il ne fait QUE valider un jeton
+    // et n'expose aucune donnée. La création de jeton (/rest/fhir-gateway/token)
+    // reste protégée (pas listée ici -> session OE requise).
     public static final String[] OPEN_PAGES = { "/pluginServlet/**", "/ChangePasswordLogin",
-            "/UpdateLoginChangePassword", "/health/**", "/rest/open-configuration-properties", "/docs/UserManual" };
+            "/UpdateLoginChangePassword", "/health/**", "/rest/open-configuration-properties", "/docs/UserManual",
+            "/rest/fhir-gateway/auth" };
     public static final String[] LOGIN_PAGES = { "/LoginPage", "/ValidateLogin", "/session" };
 
     public static final String[] AUTH_OPEN_PAGES = { "/Home", "/Dashboard", "/Logout", "/MasterListsPage",

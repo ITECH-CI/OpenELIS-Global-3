@@ -1,0 +1,42 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping>
+    <class
+        name="org.openelisglobal.dataexchange.fhir.valueholder.FhirGatewayToken"
+        table="fhir_gateway_token" optimistic-lock="version"
+        dynamic-update="true">
+        <id name="id"
+            type="org.openelisglobal.hibernate.resources.usertype.LIMSStringNumberUserType">
+            <column name="ID" precision="10" scale="0" />
+            <generator
+                class="org.openelisglobal.hibernate.resources.StringSequenceGenerator">
+                <param name="sequence_name">fhir_gateway_token_seq</param>
+            </generator>
+        </id>
+        <version name="lastupdated" column="LASTUPDATED"
+            type="timestamp" access="field" />
+
+        <property name="clientName" type="java.lang.String">
+            <column name="client_name" length="200" not-null="true" />
+        </property>
+
+        <property name="tokenHash" type="java.lang.String">
+            <column name="token_hash" length="64" not-null="true"
+                unique="true" />
+        </property>
+
+        <property name="isActive" type="java.lang.String">
+            <column name="is_active" length="1" not-null="true" />
+        </property>
+
+        <property name="createdAt" type="timestamp">
+            <column name="created_at" not-null="false" />
+        </property>
+
+        <property name="lastUsedAt" type="timestamp">
+            <column name="last_used_at" not-null="false" />
+        </property>
+    </class>
+</hibernate-mapping>
