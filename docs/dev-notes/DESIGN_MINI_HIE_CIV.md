@@ -186,9 +186,11 @@ Implémentation (modèle à 2 entités : un tiers -> N jetons, pour la rotation)
     (OPEN_PAGES).
   - Administration (session OE) : `GET/POST /clients`,
     `POST /clients/{id}/active`, `GET/POST /clients/{id}/tokens` (POST émet un
-    jeton et renvoie sa valeur EN CLAIR une seule fois), `POST /tokens/{id}/revoke`.
-  - Page admin `#FhirGateway` : lister/créer des tiers, émettre un jeton (affiché
-    une fois, copiable), révoquer un jeton, activer/désactiver un tiers.
+    jeton et renvoie sa valeur EN CLAIR une seule fois),
+    `POST /tokens/{id}/revoke`.
+  - Page admin `#FhirGateway` : lister/créer des tiers, émettre un jeton
+    (affiché une fois, copiable), révoquer un jeton, activer/désactiver un
+    tiers.
 - nginx `nginx-prod.conf` : `location = /fhir-gateway/auth` (internal) +
   `location /fhir/` (auth_request + IP allowlist à décommenter + proxy vers
   HAPI).
@@ -210,3 +212,51 @@ Testé end-to-end : sans jeton → 401 ; jeton invalide → 401 ; jeton valide
    avec header `Authorization: Bearer <jeton>` (ou `X-API-Key: <jeton>`).
 4. Révoquer : passer `is_active` à `N` (ou via une future UI admin) → accès
    bloqué immédiatement.
+
+## 10. Phase B — B1 LIVRÉE (2026-07-14)
+
+**Réception PUSH d'ordres FHIR par un tiers**, réutilisant le **moteur d'ordre
+unique** natif (celui du polling FHIR et du workflow charge virale
+`StudyElectronicOrder`), pas un chemin parallèle.
+
+Côté OE (backend) :
+
+- `FhirInboundRestController` (`POST /rest/fhir-in/order`) : lit le corps brut
+  via `HttpServletRequest.getReader()` (**pas** `@RequestBody String`, qui fait
+  passer le JSON par Jackson et échoue en 400). 201 si un ordre est créé, 422
+  si le Bundle est valide mais non exploitable (test/patient incomplet, ordre
+  déjà reçu → `DUPLICATE_ORDER`).
+- `FhirOrderReceptionService(Impl)` : parse le Bundle (Patient +
+  ServiceRequest[] + QuestionnaireResponse[] + Specimen[]), attribue des ids
+  locaux stables, **stampe le Patient d'un identifiant `externalId`** au format
+  attendu par `TaskInterpreterImpl` (type coding `<oeFhirSystem>/genIdType` =
+  `externalId`, valeur = UUID local), persiste dans le store FHIR local, puis
+  pour chaque ServiceRequest construit un **Task minimal** (status REQUESTED,
+  `for` patient, `basedOn` SR) et le passe au **`TaskWorker`** natif
+  (`interpret` → `DBOrderExistanceChecker` → `IOrderPersister`), qui crée un
+  **`ElectronicOrder` "Entered"** (`status_of_sample` id 21, EXTERNAL_ORDER).
+- `SecurityConfig` OPEN_PAGES : `/rest/fhir-in/**` (sécurité appliquée en amont
+  par nginx `auth_request`, même jeton que `/fhir/`).
+
+Côté nginx (`nginx-prod.conf` + `nginx.conf` dev) :
+
+- `location /fhir-in/` : `auth_request /fhir-gateway/auth` (jeton) + proxy vers
+  `.../rest/fhir-in/` (OE, **pas** le HAPI). IP allowlist à décommenter comme
+  pour `/fhir/`.
+
+**Point clé (workflow unique)** : un Patient reçu d'un tiers n'a aucun
+identifiant OE ; sans le stamp `externalId`, la reprise d'ordre plante (le
+persister interroge la BD avec un externalId null → `varchar = bytea`). Le stamp
+reproduit exactement ce que fait le flux natif
+(`FhirApiWorkFlowServiceImpl#createIdentifierToRemoteResource`).
+
+Testé end-to-end : POST direct (8443) et **via nginx** (443, `Authorization:
+Bearer <jeton>`) → 201 + `electronic_order` "Entered" créé ; rejeu du même
+numéro d'ordre → 422 `DUPLICATE_ORDER` ; sans jeton → 401. L'ordre apparaît dans
+la file d'entrée d'échantillon (comme un ordre reçu par le polling natif), où
+l'opérateur crée l'échantillon et OE construit le Task.
+
+**Reste (B2, chantier suivant)** : exploiter le `QuestionnaireResponse` reçu
+(actuellement stocké mais ignoré) — rattachement à l'ElectronicOrder, sélection
+auto du Programme depuis le code du ServiceRequest, pré-remplissage des
+`additionalQuestions` de l'entrée d'échantillon.

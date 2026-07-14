@@ -99,7 +99,11 @@ public class SecurityConfig {
     // reste protégée (pas listée ici -> session OE requise).
     public static final String[] OPEN_PAGES = { "/pluginServlet/**", "/ChangePasswordLogin",
             "/UpdateLoginChangePassword", "/health/**", "/rest/open-configuration-properties", "/docs/UserManual",
-            "/rest/fhir-gateway/auth" };
+            "/rest/fhir-gateway/auth",
+            // Réception PUSH d'ordres FHIR (mini-HIE) : ouvert côté OE car la sécurité
+            // (jeton + IP) est appliquée EN AMONT par nginx (location /fhir-in/ +
+            // auth_request). Voir DESIGN_MINI_HIE_CIV.md.
+            "/rest/fhir-in/**" };
     public static final String[] LOGIN_PAGES = { "/LoginPage", "/ValidateLogin", "/session" };
 
     public static final String[] AUTH_OPEN_PAGES = { "/Home", "/Dashboard", "/Logout", "/MasterListsPage",
