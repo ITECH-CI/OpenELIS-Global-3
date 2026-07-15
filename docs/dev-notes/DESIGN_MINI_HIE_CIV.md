@@ -312,3 +312,48 @@ Non-régression : un ordre **sans** QR renvoie `program` vide sans erreur
 **Reste** : Phase C (durcissement : mTLS, restriction des ressources lues,
 quotas, audit) ; push distant `/fhir-in` inverse (dataexport modernisé) ;
 déduplication fine des QR sur re-push.
+
+## 12. Phase C — durcissement (LIVRÉE 2026-07-15)
+
+Durcissement de l'accès tiers, **administrable depuis OE** (page #FhirGateway).
+Choix d'architecture : la config nginx reste **statique** ; la décision d'accès
+dynamique est prise par OE dans l'endpoint `/auth` (déjà appelé par nginx
+`auth_request` à chaque requête `/fhir/`).
+
+Axes retenus (mTLS écarté) :
+
+- **Restriction des ressources lues** : par tiers, liste CSV de types FHIR
+  autorisés (`fhir_gateway_client.allowed_resources`, vide = tous). Lecture seule
+  imposée (GET/HEAD ; toute écriture -> 403).
+- **Quota** : `rate_limit_per_min` par tiers (0/NULL = illimité), fenêtre
+  glissante **en mémoire** (garde-fou best-effort : par instance, remis à zéro au
+  redémarrage — pas un quota strict multi-instances).
+- **Audit** : table `fhir_gateway_access_log` (client, date, méthode, ressource,
+  statut), une ligne par requête évaluée.
+
+Mécanique :
+
+- nginx (`nginx-prod.conf` + `nginx.conf`) transmet à `/auth` la méthode et l'URI
+  d'origine via `X-Original-Method` / `X-Original-URI`.
+- `FhirGatewayTokenService.authorizeAccess(token, method, uri)` : un seul hash +
+  une seule recherche de jeton, applique jeton actif -> lecture seule -> ressource
+  autorisée -> quota, journalise, renvoie 200/401/403/429.
+- Le module nginx `auth_request` ne propage proprement que 200/401/403 : un refus
+  de quota (429) est **renvoyé 403 au client** mais journalisé 429 en base (visible
+  dans le journal d'accès admin). Un tiers qui atteint son quota voit donc 403.
+- L'audit et le `touch` de `last_used_at` sont best-effort (exceptions avalées) :
+  ils ne doivent jamais changer la décision d'accès.
+
+Admin #FhirGateway : bouton « Politique d'accès » par tiers (cases ressources +
+quota/min) ; bouton « Journal d'accès » (100 derniers, statut coloré).
+
+Migrations : `fhir_gateway_hardening.xml` (colonnes client + table access_log +
+séquence + index), idempotentes, incluses dans `base.xml`.
+
+Testé bout-en-bout (direct + via nginx) : GET ressource autorisée -> 200 ; GET
+ressource interdite -> 403 ; POST -> 403 ; sans/mauvais jeton -> 401 ; quota
+dépassé -> 403 client + 429 audité. Non-régression : sans politique, tout GET
+autorisé.
+
+**Reste mini-HIE** : mTLS (si les tiers peuvent présenter un certificat) ; push
+distant `/fhir-in` inverse (dataexport modernisé) ; déduplication fine des QR.

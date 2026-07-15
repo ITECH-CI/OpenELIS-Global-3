@@ -17,6 +17,7 @@ import {
   InlineLoading,
   TextInput,
   Modal,
+  Checkbox,
 } from "@carbon/react";
 import { Renew, Copy } from "@carbon/icons-react";
 import {
@@ -59,6 +60,32 @@ function FhirGateway() {
   const [revokingId, setRevokingId] = useState(null);
   // Jeton fraîchement émis, affiché en clair une seule fois dans le modal.
   const [issuedToken, setIssuedToken] = useState(null);
+
+  // Phase C : édition de la politique d'accès d'un tiers (modal).
+  const [policyClient, setPolicyClient] = useState(null);
+  const [policyResources, setPolicyResources] = useState([]);
+  const [policyRateLimit, setPolicyRateLimit] = useState("");
+  const [savingPolicy, setSavingPolicy] = useState(false);
+
+  // Phase C : journal d'audit des accès (modal).
+  const [accessLogOpen, setAccessLogOpen] = useState(false);
+  const [accessLog, setAccessLog] = useState([]);
+  const [loadingAccessLog, setLoadingAccessLog] = useState(false);
+
+  // Ressources FHIR proposables à la restriction (lecture mini-HIE). Vide = toutes.
+  const FHIR_RESOURCE_TYPES = [
+    "Patient",
+    "ServiceRequest",
+    "DiagnosticReport",
+    "Observation",
+    "Specimen",
+    "Task",
+    "Practitioner",
+    "Organization",
+    "Encounter",
+    "Questionnaire",
+    "QuestionnaireResponse",
+  ];
 
   // POST vers un endpoint qui renvoie 200 sans corps JSON garanti (active,
   // revoke). Le helper standard fait response.json() et échouerait sur un
@@ -274,6 +301,80 @@ function FhirGateway() {
     }
   };
 
+  // --- Phase C : politique d'accès ---
+
+  const onOpenPolicy = (client) => {
+    setPolicyClient(client);
+    // allowedResources est une chaîne CSV (ou null = toutes).
+    setPolicyResources(
+      client.allowedResources
+        ? client.allowedResources
+            .split(",")
+            .map((s) => s.trim())
+            .filter((s) => s.length > 0)
+        : [],
+    );
+    setPolicyRateLimit(
+      client.rateLimitPerMin != null ? String(client.rateLimitPerMin) : "",
+    );
+  };
+
+  const togglePolicyResource = (resource, checked) => {
+    setPolicyResources((prev) =>
+      checked ? [...prev, resource] : prev.filter((r) => r !== resource),
+    );
+  };
+
+  const onSavePolicy = () => {
+    if (!policyClient) return;
+    setSavingPolicy(true);
+    const params = new URLSearchParams();
+    // Liste vide => on n'envoie pas allowedResources (= toutes autorisées).
+    if (policyResources.length > 0) {
+      params.append("allowedResources", policyResources.join(","));
+    }
+    const rate = parseInt(policyRateLimit, 10);
+    if (!isNaN(rate) && rate > 0) {
+      params.append("rateLimitPerMin", String(rate));
+    }
+    postExpectOk(
+      `/rest/fhir-gateway/clients/${policyClient.id}/policy?${params.toString()}`,
+      (ok) => {
+        setSavingPolicy(false);
+        if (ok) {
+          notify(
+            intl.formatMessage({
+              id: "fhir.gateway.policy.saved",
+              defaultMessage: "Politique d'accès enregistrée.",
+            }),
+            NotificationKinds.success,
+          );
+          setPolicyClient(null);
+          loadClients();
+        } else {
+          notify(
+            intl.formatMessage({
+              id: "fhir.gateway.policy.error",
+              defaultMessage: "Échec de l'enregistrement de la politique.",
+            }),
+            NotificationKinds.error,
+          );
+        }
+      },
+    );
+  };
+
+  // --- Phase C : journal d'accès ---
+
+  const onOpenAccessLog = () => {
+    setAccessLogOpen(true);
+    setLoadingAccessLog(true);
+    getFromOpenElisServer("/rest/fhir-gateway/access-log?max=100", (res) => {
+      setAccessLog(Array.isArray(res) ? res : []);
+      setLoadingAccessLog(false);
+    });
+  };
+
   const statusTag = (active) =>
     active ? (
       <Tag type="green">
@@ -365,6 +466,12 @@ function FhirGateway() {
                 defaultMessage="Déclarez les systèmes tiers autorisés à lire les ressources FHIR (mini-HIE) et gérez leurs jetons d'accès."
               />
             </p>
+            <Button kind="tertiary" size="sm" onClick={onOpenAccessLog}>
+              <FormattedMessage
+                id="fhir.gateway.accessLog.open"
+                defaultMessage="Journal d'accès"
+              />
+            </Button>
           </Column>
         </Grid>
         <br />
@@ -526,6 +633,16 @@ function FhirGateway() {
                                 />
                               </Button>
                             )}
+                            <Button
+                              kind="ghost"
+                              size="sm"
+                              onClick={() => onOpenPolicy(client)}
+                            >
+                              <FormattedMessage
+                                id="fhir.gateway.client.policy"
+                                defaultMessage="Politique d'accès"
+                              />
+                            </Button>
                           </div>
                         </TableCell>
                       </TableRow>
@@ -673,6 +790,153 @@ function FhirGateway() {
             />
           </Button>
         </div>
+      </Modal>
+
+      {/* Phase C : édition de la politique d'accès d'un tiers */}
+      <Modal
+        open={policyClient !== null}
+        modalHeading={intl.formatMessage({
+          id: "fhir.gateway.policy.modal.heading",
+          defaultMessage: "Politique d'accès du tiers",
+        })}
+        primaryButtonText={intl.formatMessage({
+          id: "fhir.gateway.policy.save",
+          defaultMessage: "Enregistrer",
+        })}
+        secondaryButtonText={intl.formatMessage({
+          id: "fhir.gateway.policy.cancel",
+          defaultMessage: "Annuler",
+        })}
+        primaryButtonDisabled={savingPolicy}
+        onRequestSubmit={onSavePolicy}
+        onRequestClose={() => setPolicyClient(null)}
+      >
+        {policyClient && (
+          <>
+            <p style={{ marginBottom: "1rem" }}>
+              <strong>{policyClient.name}</strong>
+            </p>
+            <p style={{ marginBottom: "0.5rem" }}>
+              <FormattedMessage
+                id="fhir.gateway.policy.resources.label"
+                defaultMessage="Ressources FHIR autorisées en lecture (aucune cochée = toutes autorisées) :"
+              />
+            </p>
+            <div style={{ marginBottom: "1rem" }}>
+              {FHIR_RESOURCE_TYPES.map((resource) => (
+                <Checkbox
+                  key={resource}
+                  id={`policy-res-${resource}`}
+                  labelText={resource}
+                  checked={policyResources.includes(resource)}
+                  onChange={(e) =>
+                    togglePolicyResource(resource, e.target.checked)
+                  }
+                />
+              ))}
+            </div>
+            <TextInput
+              id="fhirGatewayRateLimit"
+              type="number"
+              min="0"
+              labelText={intl.formatMessage({
+                id: "fhir.gateway.policy.rateLimit.label",
+                defaultMessage: "Quota de requêtes par minute (0 = illimité)",
+              })}
+              value={policyRateLimit}
+              onChange={(e) => setPolicyRateLimit(e.target.value)}
+            />
+          </>
+        )}
+      </Modal>
+
+      {/* Phase C : journal d'audit des accès */}
+      <Modal
+        open={accessLogOpen}
+        modalHeading={intl.formatMessage({
+          id: "fhir.gateway.accessLog.heading",
+          defaultMessage: "Journal d'accès (100 derniers)",
+        })}
+        passiveModal
+        size="lg"
+        onRequestClose={() => setAccessLogOpen(false)}
+      >
+        {loadingAccessLog ? (
+          <InlineLoading
+            status="active"
+            description={intl.formatMessage({
+              id: "fhir.gateway.accessLog.loading",
+              defaultMessage: "Chargement…",
+            })}
+          />
+        ) : accessLog.length === 0 ? (
+          <p>
+            <FormattedMessage
+              id="fhir.gateway.accessLog.none"
+              defaultMessage="Aucun accès enregistré."
+            />
+          </p>
+        ) : (
+          <Table size="sm">
+            <TableHead>
+              <TableRow>
+                <TableHeader>
+                  <FormattedMessage
+                    id="fhir.gateway.accessLog.col.time"
+                    defaultMessage="Date"
+                  />
+                </TableHeader>
+                <TableHeader>
+                  <FormattedMessage
+                    id="fhir.gateway.accessLog.col.client"
+                    defaultMessage="Client"
+                  />
+                </TableHeader>
+                <TableHeader>
+                  <FormattedMessage
+                    id="fhir.gateway.accessLog.col.method"
+                    defaultMessage="Méthode"
+                  />
+                </TableHeader>
+                <TableHeader>
+                  <FormattedMessage
+                    id="fhir.gateway.accessLog.col.resource"
+                    defaultMessage="Ressource"
+                  />
+                </TableHeader>
+                <TableHeader>
+                  <FormattedMessage
+                    id="fhir.gateway.accessLog.col.status"
+                    defaultMessage="Statut"
+                  />
+                </TableHeader>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {accessLog.map((entry) => (
+                <TableRow key={entry.id}>
+                  <TableCell>{entry.accessedAt}</TableCell>
+                  <TableCell>{entry.clientId}</TableCell>
+                  <TableCell>{entry.method}</TableCell>
+                  <TableCell>{entry.resourceType}</TableCell>
+                  <TableCell>
+                    <Tag
+                      type={
+                        entry.status === 200
+                          ? "green"
+                          : entry.status === 429
+                            ? "magenta"
+                            : "red"
+                      }
+                    >
+                      {entry.status}
+                    </Tag>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        )}
       </Modal>
     </>
   );

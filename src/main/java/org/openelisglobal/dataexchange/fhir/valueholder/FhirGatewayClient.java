@@ -36,6 +36,14 @@ public class FhirGatewayClient extends BaseObject<String> {
     // Révocation globale du tiers : "Y"/"N".
     private String isActive = "Y";
 
+    // Durcissement (Phase C) : types de ressources FHIR autorisés en lecture, en
+    // liste CSV (ex. "Patient,ServiceRequest"). null/vide = tous autorisés.
+    private String allowedResources;
+
+    // Durcissement (Phase C) : quota de requêtes/minute pour ce tiers. null/0 =
+    // illimité.
+    private Integer rateLimitPerMin;
+
     private Timestamp createdAt;
 
     @Override
@@ -70,6 +78,22 @@ public class FhirGatewayClient extends BaseObject<String> {
 
     public void setIsActive(String isActive) {
         this.isActive = isActive;
+    }
+
+    public String getAllowedResources() {
+        return allowedResources;
+    }
+
+    public void setAllowedResources(String allowedResources) {
+        this.allowedResources = allowedResources;
+    }
+
+    public Integer getRateLimitPerMin() {
+        return rateLimitPerMin;
+    }
+
+    public void setRateLimitPerMin(Integer rateLimitPerMin) {
+        this.rateLimitPerMin = rateLimitPerMin;
     }
 
     public Timestamp getCreatedAt() {

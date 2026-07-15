@@ -19,10 +19,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.openelisglobal.dataexchange.fhir.service.FhirGatewayTokenService;
+import org.openelisglobal.dataexchange.fhir.valueholder.FhirGatewayAccessLog;
 import org.openelisglobal.dataexchange.fhir.valueholder.FhirGatewayClient;
 import org.openelisglobal.dataexchange.fhir.valueholder.FhirGatewayToken;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -58,15 +58,24 @@ public class FhirGatewayRestController {
     }
 
     /**
-     * Point de validation pour nginx auth_request. 200 = autorisé, 401 = refusé.
+     * Point de validation pour nginx auth_request (Phase C). Applique la décision
+     * d'accès complète : jeton valide + méthode lecture seule + ressource autorisée
+     * pour le tiers + quota non dépassé, et journalise l'accès. Renvoie 200
+     * (autorisé), 401 (jeton invalide), 403 (méthode/ressource interdite) ou 429
+     * (quota dépassé). nginx transmet la méthode et l'URI d'origine via les headers
+     * {@code X-Original-Method} et {@code X-Original-URI}.
      */
     @GetMapping("/auth")
     public ResponseEntity<Void> auth(HttpServletRequest request) {
         String token = extractToken(request);
-        if (fhirGatewayTokenService.validateAndTouch(token)) {
-            return ResponseEntity.ok().build();
-        }
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        String method = request.getHeader("X-Original-Method");
+        String uri = request.getHeader("X-Original-URI");
+        int status = fhirGatewayTokenService.authorizeAccess(token, method, uri);
+        // Le module nginx auth_request ne propage proprement que 200/401/403 : tout
+        // autre code (429...) devient un 500 côté client. On renvoie donc 403 à nginx
+        // pour un refus de quota, tout en journalisant la vraie raison (429) en base.
+        int nginxStatus = (status == 200 || status == 401) ? status : 403;
+        return ResponseEntity.status(nginxStatus).build();
     }
 
     // ------------------------------------------------------------------
@@ -83,6 +92,8 @@ public class FhirGatewayRestController {
             row.put("name", c.getName());
             row.put("description", c.getDescription());
             row.put("active", "Y".equals(c.getIsActive()));
+            row.put("allowedResources", c.getAllowedResources());
+            row.put("rateLimitPerMin", c.getRateLimitPerMin());
             out.add(row);
         }
         return out;
@@ -108,6 +119,43 @@ public class FhirGatewayRestController {
     public ResponseEntity<Void> setClientActive(@PathVariable String clientId, @RequestParam("active") boolean active) {
         fhirGatewayTokenService.setClientActive(clientId, active);
         return ResponseEntity.ok().build();
+    }
+
+    /**
+     * Met à jour la config de durcissement (Phase C) d'un tiers : ressources FHIR
+     * autorisées (CSV, vide = toutes) et quota de requêtes/minute (0 = illimité).
+     */
+    @PostMapping("/clients/{clientId}/policy")
+    public ResponseEntity<Void> updateClientPolicy(@PathVariable String clientId,
+            @RequestParam(value = "allowedResources", required = false) String allowedResources,
+            @RequestParam(value = "rateLimitPerMin", required = false) Integer rateLimitPerMin) {
+        fhirGatewayTokenService.updateClientPolicy(clientId, allowedResources, rateLimitPerMin);
+        return ResponseEntity.ok().build();
+    }
+
+    /**
+     * Journal d'audit des accès tiers (Phase C). Sans {@code clientId} : tous
+     * clients confondus. {@code max} borne le nombre de lignes (défaut 100).
+     */
+    @GetMapping("/access-log")
+    public List<Map<String, Object>> listAccessLog(@RequestParam(value = "clientId", required = false) String clientId,
+            @RequestParam(value = "max", required = false, defaultValue = "100") int max) {
+        int bounded = Math.max(1, Math.min(max, 500));
+        List<FhirGatewayAccessLog> logs = (clientId == null || clientId.trim().isEmpty())
+                ? fhirGatewayTokenService.getRecentAccessLogs(bounded)
+                : fhirGatewayTokenService.getRecentAccessLogsForClient(clientId, bounded);
+        List<Map<String, Object>> out = new ArrayList<>();
+        for (FhirGatewayAccessLog l : logs) {
+            Map<String, Object> row = new HashMap<>();
+            row.put("id", l.getId());
+            row.put("clientId", l.getClientId());
+            row.put("accessedAt", formatDate(l.getAccessedAt()));
+            row.put("method", l.getMethod());
+            row.put("resourceType", l.getResourceType());
+            row.put("status", l.getStatus());
+            out.add(row);
+        }
+        return out;
     }
 
     /**

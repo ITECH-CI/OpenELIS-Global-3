@@ -15,6 +15,7 @@ package org.openelisglobal.dataexchange.fhir.service;
 
 import java.util.List;
 import org.openelisglobal.common.service.BaseObjectService;
+import org.openelisglobal.dataexchange.fhir.valueholder.FhirGatewayAccessLog;
 import org.openelisglobal.dataexchange.fhir.valueholder.FhirGatewayClient;
 import org.openelisglobal.dataexchange.fhir.valueholder.FhirGatewayToken;
 
@@ -32,6 +33,19 @@ public interface FhirGatewayTokenService extends BaseObjectService<FhirGatewayTo
      */
     boolean validateAndTouch(String rawToken);
 
+    /**
+     * Décision d'accès complète (Phase C, durcissement) pour nginx auth_request :
+     * valide le jeton, applique les règles administrables du tiers (lecture seule,
+     * ressources autorisées, quota/min) et journalise l'accès. Renvoie le statut
+     * HTTP à retourner à nginx : 200 (autorisé), 401 (jeton invalide), 403 (méthode
+     * ou ressource interdite), 429 (quota dépassé).
+     *
+     * @param rawToken   jeton en clair présenté par le tiers
+     * @param method     méthode HTTP d'origine (transmise par nginx), ex. "GET"
+     * @param requestUri URI d'origine, ex. "/fhir/Patient?..."
+     */
+    int authorizeAccess(String rawToken, String method, String requestUri);
+
     // --- Administration des clients ---
 
     /** Liste des tiers déclarés (plus récents en tête). */
@@ -42,6 +56,21 @@ public interface FhirGatewayTokenService extends BaseObjectService<FhirGatewayTo
 
     /** Active/désactive un tiers (désactiver bloque tous ses jetons). */
     void setClientActive(String clientId, boolean active);
+
+    /**
+     * Met à jour la config de durcissement d'un tiers (Phase C) :
+     * {@code allowedResources} (CSV de types FHIR, null/vide = tous) et
+     * {@code rateLimitPerMin} (null/0 = illimité).
+     */
+    void updateClientPolicy(String clientId, String allowedResources, Integer rateLimitPerMin);
+
+    // --- Audit (Phase C) ---
+
+    /** Derniers accès tiers (tous clients), du plus récent au plus ancien. */
+    List<FhirGatewayAccessLog> getRecentAccessLogs(int max);
+
+    /** Derniers accès d'un client donné. */
+    List<FhirGatewayAccessLog> getRecentAccessLogsForClient(String clientId, int max);
 
     // --- Administration des jetons ---
 
