@@ -323,26 +323,27 @@ dynamique est prise par OE dans l'endpoint `/auth` (déjà appelé par nginx
 Axes retenus (mTLS écarté) :
 
 - **Restriction des ressources lues** : par tiers, liste CSV de types FHIR
-  autorisés (`fhir_gateway_client.allowed_resources`, vide = tous). Lecture seule
-  imposée (GET/HEAD ; toute écriture -> 403).
+  autorisés (`fhir_gateway_client.allowed_resources`, vide = tous). Lecture
+  seule imposée (GET/HEAD ; toute écriture -> 403).
 - **Quota** : `rate_limit_per_min` par tiers (0/NULL = illimité), fenêtre
-  glissante **en mémoire** (garde-fou best-effort : par instance, remis à zéro au
-  redémarrage — pas un quota strict multi-instances).
+  glissante **en mémoire** (garde-fou best-effort : par instance, remis à zéro
+  au redémarrage — pas un quota strict multi-instances).
 - **Audit** : table `fhir_gateway_access_log` (client, date, méthode, ressource,
   statut), une ligne par requête évaluée.
 
 Mécanique :
 
-- nginx (`nginx-prod.conf` + `nginx.conf`) transmet à `/auth` la méthode et l'URI
-  d'origine via `X-Original-Method` / `X-Original-URI`.
+- nginx (`nginx-prod.conf` + `nginx.conf`) transmet à `/auth` la méthode et
+  l'URI d'origine via `X-Original-Method` / `X-Original-URI`.
 - `FhirGatewayTokenService.authorizeAccess(token, method, uri)` : un seul hash +
-  une seule recherche de jeton, applique jeton actif -> lecture seule -> ressource
-  autorisée -> quota, journalise, renvoie 200/401/403/429.
-- Le module nginx `auth_request` ne propage proprement que 200/401/403 : un refus
-  de quota (429) est **renvoyé 403 au client** mais journalisé 429 en base (visible
-  dans le journal d'accès admin). Un tiers qui atteint son quota voit donc 403.
-- L'audit et le `touch` de `last_used_at` sont best-effort (exceptions avalées) :
-  ils ne doivent jamais changer la décision d'accès.
+  une seule recherche de jeton, applique jeton actif -> lecture seule ->
+  ressource autorisée -> quota, journalise, renvoie 200/401/403/429.
+- Le module nginx `auth_request` ne propage proprement que 200/401/403 : un
+  refus de quota (429) est **renvoyé 403 au client** mais journalisé 429 en base
+  (visible dans le journal d'accès admin). Un tiers qui atteint son quota voit
+  donc 403.
+- L'audit et le `touch` de `last_used_at` sont best-effort (exceptions avalées)
+  : ils ne doivent jamais changer la décision d'accès.
 
 Admin #FhirGateway : bouton « Politique d'accès » par tiers (cases ressources +
 quota/min) ; bouton « Journal d'accès » (100 derniers, statut coloré).
@@ -357,3 +358,65 @@ autorisé.
 
 **Reste mini-HIE** : mTLS (si les tiers peuvent présenter un certificat) ; push
 distant `/fhir-in` inverse (dataexport modernisé) ; déduplication fine des QR.
+
+## 13. Push distant (sens sortant) — exposition de l'existant (2026-07-15)
+
+**Constat** : OpenELIS pousse DÉJÀ des ressources FHIR vers un serveur distant,
+via le module `dataexport` (dépendances Maven
+`dataexport-api`/`dataexport-core`, actives dans le runtime OE par
+`@ComponentScan org.itech`). Décision : **exposer et documenter cet existant**
+plutôt que réimplémenter un push.
+
+### Comment ça marche (natif)
+
+1. **Enregistrement** (`RegisterFhirHooksTask`, `@PostConstruct`) : si
+   `org.openelisglobal.fhir.subscriber` est renseigné, crée/sauve un
+   `DataExportTask` (table `data_export_task` + `data_export_headers`) avec
+   endpoint = subscriber, la liste des ressources et les headers d'auth. **Sans
+   subscriber, aucune tâche n'est créée → push inactif.**
+2. **Export périodique** (`DataExportTaskCheckerServiceImpl`, `@Scheduled` /60s)
+   : pour chaque tâche dont l'intervalle est écoulé →
+   `DataExportServiceImpl.exportNewDataFromLocalToRemote` : lit le store FHIR
+   LOCAL par `lastUpdated` (delta depuis le dernier succès), construit un Bundle
+   transaction (PUT `resourceType/{id}`), l'envoie au distant via
+   `remoteFhirClient.transaction().withBundle(...)`.
+3. Déclencheurs additionnels : `POST /dataexport/fhir` (à la demande) et un hook
+   post-transformation (`FhirTransformationController.runExportTasks`).
+
+### Configuration (`common.properties`)
+
+- `org.openelisglobal.fhir.subscriber` = URL du serveur distant (Consolidated
+  Server / HIE). **Vide par défaut = push désactivé.**
+- `org.openelisglobal.fhir.subscriber.resources` = types poussés (défaut :
+  Task,Patient,ServiceRequest,DiagnosticReport,Observation,Specimen,Practitioner,
+  Encounter).
+- `org.openelisglobal.fhir.subscriber.backup.interval` (min) /
+  `...backup.timeout` (s).
+- `...subscriber.allowHTTP` = autorise un endpoint HTTP (sinon HTTPS requis).
+- **Auth** : les headers du `DataExportTask` (table `data_export_headers`) sont
+  ajoutés à chaque requête (Server-Name/Server-Code). Limite connue : le client
+  distant réutilise `getFhirClient(path)` → mêmes creds BasicAuth
+  (`fhirstore.username/password`) que le store local ; pour des creds propres au
+  distant il faudrait la variante `getFhirClient(path, user, pass|token)`.
+
+### Supervision (ajout Phase « push distant »)
+
+`GET /dataexport/fhir/status` (`FhirExportController`, session admin) : liste
+chaque cible avec endpoint, ressources, intervalle, **dernier essai** et
+**dernier succès**
+(`DataExportTaskService.getLatestInstant... / getLatestSuccessInstant...`). Le
+module natif n'exposait pas cette visibilité ; elle permet à un admin de
+vérifier que le push fonctionne et depuis quand.
+
+### Pour ACTIVER le push distant (opérateur)
+
+1. Renseigner `org.openelisglobal.fhir.subscriber` (URL HIE) + éventuellement
+   les ressources/intervalle dans `common.properties`, redémarrer OE.
+2. Vérifier via `GET /dataexport/fhir/status` que la cible apparaît, puis
+   surveiller `lastSuccess`. Forcer un export : `POST /dataexport/fhir`.
+
+### Reste (si besoin ultérieur, hors périmètre actuel)
+
+Multi-cibles administrable depuis l'UI (comme les clients gateway), creds/token
+propres par cible, push « à chaud » réutilisant les objets déjà transformés (au
+lieu du re-pull du local). Non retenu ici (le mono-cible dataexport suffit).
