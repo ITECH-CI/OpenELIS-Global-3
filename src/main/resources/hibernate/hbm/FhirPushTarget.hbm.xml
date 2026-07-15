@@ -1,0 +1,63 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping>
+    <class
+        name="org.openelisglobal.dataexchange.fhir.valueholder.FhirPushTarget"
+        table="fhir_push_target" optimistic-lock="version"
+        dynamic-update="true">
+        <id name="id"
+            type="org.openelisglobal.hibernate.resources.usertype.LIMSStringNumberUserType">
+            <column name="ID" precision="10" scale="0" />
+            <generator
+                class="org.openelisglobal.hibernate.resources.StringSequenceGenerator">
+                <param name="sequence_name">fhir_push_target_seq</param>
+            </generator>
+        </id>
+        <version name="lastupdated" column="LASTUPDATED"
+            type="timestamp" access="field" />
+
+        <property name="name" type="java.lang.String">
+            <column name="name" length="200" not-null="true" unique="true" />
+        </property>
+
+        <property name="description" type="java.lang.String">
+            <column name="description" length="500" not-null="false" />
+        </property>
+
+        <property name="endpoint" type="java.lang.String">
+            <column name="endpoint" length="500" not-null="true"
+                unique="true" />
+        </property>
+
+        <property name="allowedResources" type="java.lang.String">
+            <column name="allowed_resources" length="1000"
+                not-null="false" />
+        </property>
+
+        <property name="intervalMinutes" type="java.lang.Integer">
+            <column name="interval_minutes" not-null="false" />
+        </property>
+
+        <property name="authType" type="java.lang.String">
+            <column name="auth_type" length="10" not-null="true" />
+        </property>
+
+        <property name="authUsername" type="java.lang.String">
+            <column name="auth_username" length="200" not-null="false" />
+        </property>
+
+        <property name="authSecret" type="java.lang.String">
+            <column name="auth_secret" length="1000" not-null="false" />
+        </property>
+
+        <property name="isActive" type="java.lang.String">
+            <column name="is_active" length="1" not-null="true" />
+        </property>
+
+        <property name="createdAt" type="timestamp">
+            <column name="created_at" not-null="false" />
+        </property>
+    </class>
+</hibernate-mapping>

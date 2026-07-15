@@ -137,6 +137,8 @@ file="add_study_modifier_menu.xml" />
         file="create_fhir_gateway_client.xml" />
     <include relativeToChangelogFile="true"
         file="fhir_gateway_hardening.xml" />
+    <include relativeToChangelogFile="true"
+        file="create_fhir_push_target.xml" />
 
 
 </databaseChangeLog>

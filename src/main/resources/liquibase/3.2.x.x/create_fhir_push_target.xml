@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+     http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+    <!--
+        Mini-HIE : cibles de PUSH FHIR distant administrables depuis OE. Chaque cible
+        (fhir_push_target) porte les métadonnées éditables par l'admin (nom, actif,
+        endpoint, ressources, fréquence, auth) et est projetée dans data_export_task
+        (moteur d'export du module dataexport) par le service de synchronisation.
+        Idempotent (preConditions).
+    -->
+
+    <changeSet author="itechciv" id="create-fhir-push-target-seq-1">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <sequenceExists schemaName="clinlims" sequenceName="fhir_push_target_seq" />
+            </not>
+        </preConditions>
+        <createSequence schemaName="clinlims" sequenceName="fhir_push_target_seq"
+            startValue="1" incrementBy="1" />
+        <rollback>
+            <dropSequence schemaName="clinlims" sequenceName="fhir_push_target_seq" />
+        </rollback>
+    </changeSet>
+
+    <changeSet author="itechciv" id="create-fhir-push-target-table-1">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists schemaName="clinlims" tableName="fhir_push_target" />
+            </not>
+        </preConditions>
+        <createTable schemaName="clinlims" tableName="fhir_push_target">
+            <column name="id" type="BIGINT">
+                <constraints primaryKey="true" nullable="false" />
+            </column>
+            <column name="name" type="VARCHAR(200)">
+                <constraints nullable="false" unique="true" />
+            </column>
+            <column name="description" type="VARCHAR(500)">
+                <constraints nullable="true" />
+            </column>
+            <!-- URL du serveur FHIR distant (unique : c'est la clé de projection vers
+                 data_export_task, upsert par endpoint). -->
+            <column name="endpoint" type="VARCHAR(500)">
+                <constraints nullable="false" unique="true" />
+            </column>
+            <!-- Types FHIR poussés, liste CSV (vide/NULL = liste par défaut). -->
+            <column name="allowed_resources" type="VARCHAR(1000)">
+                <constraints nullable="true" />
+            </column>
+            <column name="interval_minutes" type="INT">
+                <constraints nullable="true" />
+            </column>
+            <!-- Auth vers le distant : NONE / BASIC / TOKEN. -->
+            <column name="auth_type" type="VARCHAR(10)" defaultValue="NONE">
+                <constraints nullable="false" />
+            </column>
+            <column name="auth_username" type="VARCHAR(200)">
+                <constraints nullable="true" />
+            </column>
+            <!-- Mot de passe (BASIC) ou jeton (TOKEN). Stocké en clair (comme les creds
+                 fhirstore/crserver existants) ; à chiffrer si l'install durcit les secrets. -->
+            <column name="auth_secret" type="VARCHAR(1000)">
+                <constraints nullable="true" />
+            </column>
+            <column name="is_active" type="VARCHAR(1)" defaultValue="Y">
+                <constraints nullable="false" />
+            </column>
+            <column name="created_at" type="TIMESTAMP">
+                <constraints nullable="true" />
+            </column>
+            <column name="lastupdated" type="TIMESTAMP">
+                <constraints nullable="true" />
+            </column>
+        </createTable>
+        <rollback>
+            <dropTable schemaName="clinlims" tableName="fhir_push_target" />
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>
