@@ -2,7 +2,7 @@
 <dataset>
     <!-- Unit of Measure entries -->
     <unit_of_measure id="1" name="mg/dL"
-        description="Milligrams per deciliter" />
+        description="Milligrams per deciliter" ucum_code="mg/dL" />
     <unit_of_measure id="2" name="g/L"
         description="Grams per liter" />
     <unit_of_measure id="3" name="mmol/L"

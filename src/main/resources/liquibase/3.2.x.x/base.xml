@@ -139,6 +139,10 @@ file="add_study_modifier_menu.xml" />
         file="fhir_gateway_hardening.xml" />
     <include relativeToChangelogFile="true"
         file="create_fhir_push_target.xml" />
+    <include relativeToChangelogFile="true"
+        file="add_cmu_patient_identity_type.xml" />
+    <include relativeToChangelogFile="true"
+        file="populate_ucum_codes.xml" />
 
 
 </databaseChangeLog>

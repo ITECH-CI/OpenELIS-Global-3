@@ -30,6 +30,15 @@ public class FhirConfig {
     @Value("${org.openelisglobal.oe.fhir.system:http://openelis-global.org}")
     private String oeFhirSystem;
 
+    // System (OID national) du numéro d'assuré CMU/CNAM, exposé sur
+    // Patient.identifier
+    // pour le rapprochement inter-systèmes (interop PSNDPE). Configurable ; vide =
+    // n'expose pas d'identifiant CMU avec OID national. Valeur cible par défaut :
+    // urn:oid:1.3.6.1.4.1.53864.1.3 (à confirmer avec l'équipe interop).
+    @Getter
+    @Value("${org.openelisglobal.cmu.identifier.system:urn:oid:1.3.6.1.4.1.53864.1.3}")
+    private String cmuIdentifierSystem;
+
     @Getter
     @Value("${org.openelisglobal.fhirstore.uri:}")
     private String localFhirStorePath;

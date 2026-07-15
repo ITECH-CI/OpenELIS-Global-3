@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+    <!--
+        Mapping initial des unités de mesure OpenELIS vers leurs codes UCUM
+        (http://unitsofmeasure.org), pour exposer les Quantity FHIR conformément aux
+        IG (interop PSNDPE). Ne remplit que les unités dont l'ucum_code est encore
+        NULL (ne réécrase pas un mapping ajusté manuellement) -> idempotent et
+        respectueux des corrections ultérieures. Les unités ambiguës/non métrologiques
+        (ex. "num/champ", "Unité", "ppl") sont volontairement laissées NULL : pas de
+        code UCUM standard, à décider avec l'équipe interop.
+
+        Rappel UCUM : sensible à la casse ; L=litre, g=gramme, mol=mole, U=unité
+        arbitraire, 10*n=puissances, {..}=annotation non-dimensionnelle.
+    -->
+    <changeSet author="itechciv" id="populate-ucum-codes-1">
+        <comment>Map OpenELIS units of measure to UCUM codes (only where ucum_code is NULL)</comment>
+        <sql>
+            UPDATE clinlims.unit_of_measure SET ucum_code = m.ucum FROM (VALUES
+              ('%', '%'),
+              ('Vol%', '%{vol}'),
+              ('10^3/µl', '10*3/uL'),
+              ('10^6/µl', '10*6/uL'),
+              ('Cell/µl', '/uL'),
+              ('/µL', '/uL'),
+              ('μl', 'uL'),
+              ('million/uL', '10*6/uL'),
+              ('K/mm^3', '10*3/mm3'),
+              ('mille/mm^3', '10*3/mm3'),
+              ('mille/mm3', '10*3/mm3'),
+              ('million/mm^3', '10*6/mm3'),
+              ('million/mm3', '10*6/mm3'),
+              ('/mm3', '/mm3'),
+              ('mm3', 'mm3'),
+              ('micron^3', 'um3'),
+              ('fl', 'fL'),
+              ('pg', 'pg'),
+              ('g/dl', 'g/dL'),
+              ('g/dL', 'g/dL'),
+              ('g/l', 'g/L'),
+              ('mg/dl', 'mg/dL'),
+              ('mg/l', 'mg/L'),
+              ('ug/dL', 'ug/dL'),
+              ('ug/l', 'ug/L'),
+              ('ng/mL', 'ng/mL'),
+              ('mmol/l', 'mmol/L'),
+              ('µmol/L', 'umol/L'),
+              ('ml/L', 'mL/L'),
+              ('mL', 'mL'),
+              ('L/24h', 'L/(24.h)'),
+              ('mm/h', 'mm/h'),
+              ('copies/ml', '{copies}/mL'),
+              ('Copies/ml', '{copies}/mL'),
+              ('cp/mL', '{copies}/mL'),
+              ('UI/L', '[iU]/L'),
+              ('u/L', 'U/L'),
+              ('Ul/l', 'U/L'),
+              ('ui/ml', '[iU]/mL'),
+              ('mU/ml', 'mU/mL'),
+              ('mlU/ml', 'm[iU]/mL'),
+              ('sec', 's'),
+              ('secondes', 's'),
+              ('mns', 'min')
+            ) AS m(name, ucum)
+            WHERE clinlims.unit_of_measure.name = m.name
+              AND (clinlims.unit_of_measure.ucum_code IS NULL OR clinlims.unit_of_measure.ucum_code = '');
+        </sql>
+        <rollback>
+            <sql>
+                UPDATE clinlims.unit_of_measure SET ucum_code = NULL
+                WHERE name IN ('%','Vol%','10^3/µl','10^6/µl','Cell/µl','/µL','μl','million/uL',
+                  'K/mm^3','mille/mm^3','mille/mm3','million/mm^3','million/mm3','/mm3','mm3',
+                  'micron^3','fl','pg','g/dl','g/dL','g/l','mg/dl','mg/l','ug/dL','ug/l','ng/mL',
+                  'mmol/l','µmol/L','ml/L','mL','L/24h','mm/h','copies/ml','Copies/ml','cp/mL',
+                  'UI/L','u/L','Ul/l','ui/ml','mU/ml','mlU/ml','sec','secondes','mns');
+            </sql>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

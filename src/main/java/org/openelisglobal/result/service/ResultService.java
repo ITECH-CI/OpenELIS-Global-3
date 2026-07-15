@@ -80,6 +80,13 @@ public interface ResultService extends BaseObjectService<Result, String> {
 
     String getUOM(Result result);
 
+    /**
+     * Code UCUM de l'unité de mesure du test du résultat, ou "" si aucune
+     * correspondance UCUM n'est renseignée. Sert à exposer les Quantity FHIR avec
+     * system/code UCUM.
+     */
+    String getUcumCode(Result result);
+
     // SI Unit Conversion methods
 
     /**

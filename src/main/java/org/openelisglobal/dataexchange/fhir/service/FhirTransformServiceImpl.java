@@ -731,6 +731,7 @@ public class FhirTransformServiceImpl implements FhirTransformService {
         org.hl7.fhir.r4.model.Patient fhirPatient = new org.hl7.fhir.r4.model.Patient();
         String subjectNumber = patientService.getSubjectNumber(patient);
         String nationalId = patientService.getNationalId(patient);
+        String cmuNumber = patientService.getCMUNumber(patient);
         String guid = patientService.getGUID(patient);
         String stNumber = patientService.getSTNumber(patient);
         String uuid = patient.getFhirUuidAsString();
@@ -738,7 +739,7 @@ public class FhirTransformServiceImpl implements FhirTransformService {
                 "transforming patient with id: " + patient.getId() + " fhirUuid: " + uuid);
 
         fhirPatient.setId(uuid);
-        fhirPatient.setIdentifier(createPatientIdentifiers(subjectNumber, nationalId, stNumber, guid, uuid));
+        fhirPatient.setIdentifier(createPatientIdentifiers(subjectNumber, nationalId, cmuNumber, stNumber, guid, uuid));
 
         HumanName humanName = new HumanName();
         List<HumanName> humanNameList = new ArrayList<>();
@@ -783,6 +784,13 @@ public class FhirTransformServiceImpl implements FhirTransformService {
 
             if ("http://openelis-global.org/pat_nationalId".equals(system)) {
                 patientSearchResults.setNationalId(value);
+            } else if (!GenericValidator.isBlankOrNull(fhirConfig.getCmuIdentifierSystem())
+                    && fhirConfig.getCmuIdentifierSystem().equals(system)) {
+                // Un patient entrant identifié par son matricule CMU (OID national)
+                // alimente le nationalId OE (qui héberge ce code), sauf s'il est déjà posé.
+                if (GenericValidator.isBlankOrNull(patientSearchResults.getNationalId())) {
+                    patientSearchResults.setNationalId(value);
+                }
             } else if ("http://openelis-global.org/pat_guid".equals(system)) {
                 patientSearchResults.setExternalId(value);
             } else if ("http://openelis-global.org/pat_uuid".equals(system)) {
@@ -860,8 +868,8 @@ public class FhirTransformServiceImpl implements FhirTransformService {
         return address;
     }
 
-    private List<Identifier> createPatientIdentifiers(String subjectNumber, String nationalId, String stNumber,
-            String guid, String fhirUuid) {
+    private List<Identifier> createPatientIdentifiers(String subjectNumber, String nationalId, String cmuNumber,
+            String stNumber, String guid, String fhirUuid) {
         LogEvent.logTrace(this.getClass().getSimpleName(), "transformToAddress", "transformToAddress called");
 
         List<Identifier> identifierList = new ArrayList<>();
@@ -870,6 +878,13 @@ public class FhirTransformServiceImpl implements FhirTransformService {
         }
         if (!GenericValidator.isBlankOrNull(nationalId)) {
             identifierList.add(createIdentifier(fhirConfig.getOeFhirSystem() + "/pat_nationalId", nationalId));
+        }
+        // Matricule CMU/CNAM exposé avec l'OID national (clé de rapprochement
+        // inter-systèmes PSNDPE), en plus des identifiants OpenELIS internes. Émis
+        // seulement si un system OID est configuré et le matricule présent.
+        if (!GenericValidator.isBlankOrNull(cmuNumber)
+                && !GenericValidator.isBlankOrNull(fhirConfig.getCmuIdentifierSystem())) {
+            identifierList.add(createIdentifier(fhirConfig.getCmuIdentifierSystem(), cmuNumber));
         }
         if (!GenericValidator.isBlankOrNull(stNumber)) {
             identifierList.add(createIdentifier(fhirConfig.getOeFhirSystem() + "/pat_stNumber", stNumber));
@@ -1338,11 +1353,8 @@ public class FhirTransformServiceImpl implements FhirTransformService {
         if (!GenericValidator.isBlankOrNull(result.getValue())) {
             // in case of Viral load test
             if (result.getAnalysis().getTest().getName().equalsIgnoreCase("Viral Load")) {
-                Quantity quantity = new Quantity();
                 long finalResult = result.getVLValueAsNumber();
-                quantity.setValue(finalResult);
-                quantity.setUnit(resultService.getUOM(result));
-                observation.setValue(quantity);
+                observation.setValue(buildQuantity(new BigDecimal(finalResult), result));
                 valueSet = true;
             } else if (TypeOfTestResultServiceImpl.ResultType.isMultiSelectVariant(result.getResultType())
                     && !"0".equals(result.getValue())) {
@@ -1359,10 +1371,7 @@ public class FhirTransformServiceImpl implements FhirTransformService {
                     valueSet = true;
                 }
             } else if (TypeOfTestResultServiceImpl.ResultType.isNumeric(result.getResultType())) {
-                Quantity quantity = new Quantity();
-                quantity.setValue(new BigDecimal(result.getValue(true)));
-                quantity.setUnit(resultService.getUOM(result));
-                observation.setValue(quantity);
+                observation.setValue(buildQuantity(new BigDecimal(result.getValue(true)), result));
                 valueSet = true;
             } else if (TypeOfTestResultServiceImpl.ResultType.isTextOnlyVariant(result.getResultType())) {
                 observation.setValue(new StringType(result.getValue()));
@@ -2069,6 +2078,27 @@ public class FhirTransformServiceImpl implements FhirTransformService {
         return id;
     }
 
+    /**
+     * Construit une Quantity FHIR pour un résultat numérique : valeur + libellé
+     * d'unité, et si l'unité a un code UCUM renseigné, le system UCUM
+     * (http://unitsofmeasure.org) + le code — requis par la plupart des IG pour la
+     * validation des mesures. Sans code UCUM, seul le libellé (display) est posé.
+     */
+    private Quantity buildQuantity(BigDecimal value, Result result) {
+        Quantity quantity = new Quantity();
+        quantity.setValue(value);
+        String unit = resultService.getUOM(result);
+        if (!GenericValidator.isBlankOrNull(unit)) {
+            quantity.setUnit(unit);
+        }
+        String ucum = resultService.getUcumCode(result);
+        if (!GenericValidator.isBlankOrNull(ucum)) {
+            quantity.setSystem("http://unitsofmeasure.org");
+            quantity.setCode(ucum);
+        }
+        return quantity;
+    }
+
     @Override
     public Identifier createIdentifier(String system, String value) {
         LogEvent.logTrace(this.getClass().getSimpleName(), "createIdentifier", "createIdentifier called");
@@ -2076,7 +2106,8 @@ public class FhirTransformServiceImpl implements FhirTransformService {
         Identifier identifier = new Identifier();
         identifier.setValue(value);
 
-        if (Objects.equals(system, fhirConfig.getOeFhirSystem() + "/pat_nationalId")) {
+        if (Objects.equals(system, fhirConfig.getOeFhirSystem() + "/pat_nationalId")
+                || Objects.equals(system, fhirConfig.getCmuIdentifierSystem())) {
             identifier.setUse(Identifier.IdentifierUse.OFFICIAL);
         } else {
             identifier.setUse(Identifier.IdentifierUse.USUAL);

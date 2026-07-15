@@ -39,6 +39,13 @@ public interface PatientService extends BaseObjectService<Patient, String> {
 
     String getNationalId(Patient patient);
 
+    /**
+     * Numéro d'assuré CMU/CNAM du patient : valeur du type d'identité "CMU" si
+     * présent, sinon repli sur le nationalId (qui héberge historiquement ce code).
+     * Renvoie "" si aucun.
+     */
+    String getCMUNumber(Patient patient);
+
     String getSTNumber(Patient patient);
 
     String getSubjectNumber(Patient patient);

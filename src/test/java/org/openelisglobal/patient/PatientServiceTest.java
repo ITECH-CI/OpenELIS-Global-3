@@ -394,6 +394,23 @@ public class PatientServiceTest extends BaseWebContextSensitiveTest {
         Assert.assertEquals("1234", patientService.getNationalId(pat));
     }
 
+    /**
+     * En l'absence d'un type d'identité dédié "CMU" (non présent dans le jeu de
+     * test), le numéro CMU/CNAM retombe sur le nationalId qui héberge ce code
+     * (interop PSNDPE).
+     */
+    @Test
+    public void getCMUNumber_shouldFallBackToNationalId() throws Exception {
+        Patient pat = patientService.get("1");
+
+        Assert.assertEquals("1234", patientService.getCMUNumber(pat));
+    }
+
+    @Test
+    public void getCMUNumber_shouldReturnEmptyForNullPatient() {
+        Assert.assertEquals("", patientService.getCMUNumber(null));
+    }
+
     @Test
     public void getAddressComponents_shouldReturnAddressComponents() {
         String city = "Kampala";

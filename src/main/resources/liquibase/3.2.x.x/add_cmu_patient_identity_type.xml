@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+    <!--
+        Type d'identité patient "CMU" (numéro d'assuré CMU/CNAM), pour
+        l'interopérabilité PSNDPE. OpenELIS enregistrait ce code dans le nationalId ;
+        ce type dédié permet de le distinguer. L'accesseur getCMUNumber() lit ce type
+        en priorité et retombe sur nationalId. Idempotent.
+    -->
+    <changeSet author="itechciv" id="add-cmu-patient-identity-type-1">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">
+                SELECT count(*) FROM clinlims.patient_identity_type
+                WHERE identity_type = 'CMU'
+            </sqlCheck>
+        </preConditions>
+        <comment>Add CMU/CNAM patient identity type</comment>
+        <sql>
+            INSERT INTO clinlims.patient_identity_type(id, identity_type, description, lastupdated) VALUES
+            (nextval('patient_identity_type_seq'), 'CMU', 'Numero assure CMU/CNAM', now());
+        </sql>
+        <rollback>
+            <sql>DELETE FROM clinlims.patient_identity_type WHERE identity_type = 'CMU';</sql>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

@@ -59,6 +59,7 @@ public class PatientServiceImpl extends AuditableBaseObjectServiceImpl<Patient, 
     // these are only used in this class
     private static String PATIENT_GUID_IDENTITY;
     private static String PATIENT_NATIONAL_IDENTITY;
+    private static String PATIENT_CMU_IDENTITY;
     private static String PATIENT_AKA_IDENTITY;
     private static String PATIENT_MOTHER_IDENTITY;
     private static String PATIENT_INSURANCE_IDENTITY;
@@ -111,6 +112,11 @@ public class PatientServiceImpl extends AuditableBaseObjectServiceImpl<Patient, 
         patientType = identityTypeService.getNamedIdentityType("NATIONAL");
         if (patientType != null) {
             PATIENT_NATIONAL_IDENTITY = patientType.getId();
+        }
+
+        patientType = identityTypeService.getNamedIdentityType("CMU");
+        if (patientType != null) {
+            PATIENT_CMU_IDENTITY = patientType.getId();
         }
 
         patientType = identityTypeService.getNamedIdentityType("ST");
@@ -262,6 +268,21 @@ public class PatientServiceImpl extends AuditableBaseObjectServiceImpl<Patient, 
         } else {
             return getIdentityInfo(patient, PATIENT_NATIONAL_IDENTITY);
         }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public String getCMUNumber(Patient patient) {
+        if (patient == null) {
+            return "";
+        }
+        // Type d'identité dédié "CMU" en priorité ; repli sur le nationalId qui a
+        // historiquement servi à enregistrer le code CMU dans ce déploiement.
+        String cmu = getIdentityInfo(patient, PATIENT_CMU_IDENTITY);
+        if (!GenericValidator.isBlankOrNull(cmu)) {
+            return cmu;
+        }
+        return getNationalId(patient);
     }
 
     /*
