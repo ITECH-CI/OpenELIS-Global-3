@@ -172,9 +172,28 @@ const OrderEntryAdditionalQuestions = ({
   const [questionnaireResponse, setQuestionnaireResponse] = useState(
     orderFormValues?.sampleOrderItems?.additionalQuestions,
   );
+  const loadedProgramId = useRef(null);
+
+  // Reprise d'un ordre reçu (ordre poussé par un tiers) : le programme est
+  // pré-sélectionné (programId posé par processLabOrderSuccess) sans passer par le
+  // Select. On charge alors le Questionnaire du programme ; setAdditionalQuestions
+  // reportera les réponses déjà reçues (merge par linkId).
+  useEffect(() => {
+    var programId = orderFormValues?.sampleOrderItems?.programId;
+    // Recharge dès que le programme diffère du dernier chargé (nouvel ordre repris,
+    // même si un questionnaire d'un ordre précédent est encore en état).
+    if (programId && loadedProgramId.current !== programId) {
+      loadedProgramId.current = programId;
+      getFromOpenElisServer(
+        "/rest/program/" + programId + "/questionnaire",
+        (res) => setAdditionalQuestions(res, { target: { value: programId } }),
+      );
+    }
+  }, [orderFormValues?.sampleOrderItems?.programId]);
 
   const handleProgramSelection = (event, selectedProgram, programCode) => {
     if (!event?.target?.value) {
+      loadedProgramId.current = null;
       setAdditionalQuestions({});
       setOrderFormValues({
         ...orderFormValues,
@@ -185,6 +204,9 @@ const OrderEntryAdditionalQuestions = ({
         },
       });
     } else {
+      // Marque ce programme comme déjà chargé pour éviter un double fetch par le
+      // useEffect de reprise.
+      loadedProgramId.current = event.target.value;
       setOrderFormValues({
         ...orderFormValues,
         sampleOrderItems: {
@@ -230,6 +252,25 @@ const OrderEntryAdditionalQuestions = ({
     if ("item" in res) {
       setQuestionnaire(res);
       var convertedQuestionnaireResponse = convertQuestionnaireToResponse(res);
+      // Si un QuestionnaireResponse a déjà été reçu avec l'ordre (ordre poussé par un
+      // tiers, cf mini-HIE), on reporte ses réponses (par linkId) dans le squelette
+      // vierge, pour pré-remplir les renseignements cliniques sans écraser la saisie.
+      var receivedResponse =
+        orderFormValues?.sampleOrderItems?.additionalQuestions;
+      if (
+        receivedResponse &&
+        Array.isArray(receivedResponse.item) &&
+        convertedQuestionnaireResponse
+      ) {
+        convertedQuestionnaireResponse.item.forEach((item) => {
+          var received = receivedResponse.item.find(
+            (r) => r.linkId === item.linkId,
+          );
+          if (received && Array.isArray(received.answer)) {
+            item.answer = received.answer;
+          }
+        });
+      }
       setQuestionnaireResponse(convertedQuestionnaireResponse);
       setOrderFormValues({
         ...orderFormValues,

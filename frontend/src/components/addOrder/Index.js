@@ -191,6 +191,11 @@ const Index = () => {
         );
       }
 
+      // PROGRAMME + renseignements cliniques reçus (ordre poussé par un tiers)
+      if (order.program) {
+        parseProgram(newOrderFormValues, order.program);
+      }
+
       const urlParams = new URLSearchParams(window.location.search);
       const externalId = urlParams.get("ID");
       const labNumber = urlParams.get("labNumber");
@@ -237,6 +242,28 @@ const Index = () => {
     newOrderFormValues.patientProperties = {
       ...newOrderFormValues.patientProperties,
       guid: patient.guid,
+    };
+  };
+
+  const parseProgram = (newOrderFormValues, program) => {
+    // Le QuestionnaireResponse reçu est sérialisé en JSON dans additionalQuestions ;
+    // il sera fusionné (par linkId) dans le squelette du questionnaire du programme
+    // au chargement (cf OrderEntryAdditionalQuestions.setAdditionalQuestions).
+    let receivedQuestionnaireResponse = null;
+    if (program.additionalQuestions) {
+      try {
+        receivedQuestionnaireResponse = JSON.parse(program.additionalQuestions);
+      } catch (e) {
+        console.error("additionalQuestions reçu illisible", e);
+      }
+    }
+    newOrderFormValues.sampleOrderItems = {
+      ...newOrderFormValues.sampleOrderItems,
+      // program.id peut être typé number par la conversion XML->JSON : on force en
+      // chaîne pour correspondre aux id du Select (issus de /rest/user-programs).
+      programId: program.id != null ? String(program.id) : "",
+      programCode: program.code != null ? String(program.code) : "",
+      additionalQuestions: receivedQuestionnaireResponse,
     };
   };
 

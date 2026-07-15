@@ -223,9 +223,9 @@ Côté OE (backend) :
 
 - `FhirInboundRestController` (`POST /rest/fhir-in/order`) : lit le corps brut
   via `HttpServletRequest.getReader()` (**pas** `@RequestBody String`, qui fait
-  passer le JSON par Jackson et échoue en 400). 201 si un ordre est créé, 422
-  si le Bundle est valide mais non exploitable (test/patient incomplet, ordre
-  déjà reçu → `DUPLICATE_ORDER`).
+  passer le JSON par Jackson et échoue en 400). 201 si un ordre est créé, 422 si
+  le Bundle est valide mais non exploitable (test/patient incomplet, ordre déjà
+  reçu → `DUPLICATE_ORDER`).
 - `FhirOrderReceptionService(Impl)` : parse le Bundle (Patient +
   ServiceRequest[] + QuestionnaireResponse[] + Specimen[]), attribue des ids
   locaux stables, **stampe le Patient d'un identifiant `externalId`** au format
@@ -250,13 +250,65 @@ persister interroge la BD avec un externalId null → `varchar = bytea`). Le sta
 reproduit exactement ce que fait le flux natif
 (`FhirApiWorkFlowServiceImpl#createIdentifierToRemoteResource`).
 
-Testé end-to-end : POST direct (8443) et **via nginx** (443, `Authorization:
-Bearer <jeton>`) → 201 + `electronic_order` "Entered" créé ; rejeu du même
-numéro d'ordre → 422 `DUPLICATE_ORDER` ; sans jeton → 401. L'ordre apparaît dans
-la file d'entrée d'échantillon (comme un ordre reçu par le polling natif), où
-l'opérateur crée l'échantillon et OE construit le Task.
+Testé end-to-end : POST direct (8443) et **via nginx** (443,
+`Authorization: Bearer <jeton>`) → 201 + `electronic_order` "Entered" créé ;
+rejeu du même numéro d'ordre → 422 `DUPLICATE_ORDER` ; sans jeton → 401. L'ordre
+apparaît dans la file d'entrée d'échantillon (comme un ordre reçu par le polling
+natif), où l'opérateur crée l'échantillon et OE construit le Task.
 
 **Reste (B2, chantier suivant)** : exploiter le `QuestionnaireResponse` reçu
 (actuellement stocké mais ignoré) — rattachement à l'ElectronicOrder, sélection
 auto du Programme depuis le code du ServiceRequest, pré-remplissage des
 `additionalQuestions` de l'entrée d'échantillon.
+
+## 11. Phase B — B2 LIVRÉE (2026-07-15)
+
+**Exploitation du QuestionnaireResponse reçu** (renseignements cliniques
+additionnels) : à la reprise d'un ordre poussé par un tiers, OE pré-sélectionne
+le **Programme** et pré-remplit les **questions additionnelles**.
+
+**Décision d'association SR → Programme** : via le **Questionnaire du QR**. Le
+QR reçu porte `QR.questionnaire = "Questionnaire/<uuid>"` où `<uuid>` est celui
+d'un Questionnaire de Programme OE (champ `program.questionnaire_fhir_uuid`).
+Aucune table de correspondance à créer ; c'est le mécanisme le plus FHIR-natif.
+Le tiers récupère cet UUID via l'API programme (exposée en lecture par la
+gateway `/fhir/`).
+
+Côté OE (backend) :
+
+- **Réception** (`FhirOrderReceptionServiceImpl`) : (a) l'id local du
+  ServiceRequest est aligné sur son **numéro d'ordre** (identifier), comme le
+  flux natif — c'est par cet id (RES_ID) que la reprise retrouve le SR ; (b)
+  chaque QR est **rattaché au SR via based-on** (réécriture des références sur
+  les nouveaux ids, ou rattachement au SR unique) ; (c) le **Task minimal est
+  persisté** dans le store FHIR (based-on SR), pour que la reprise le retrouve.
+- **Résolution Programme** :
+  `ProgramService.getProgramByQuestionnaireUuid(UUID)` (+ DAO) — HQL sur
+  `Program.questionnaireUUID`.
+- **Reprise** (`LabOrderSearchProvider`) : après résolution du SR, recherche le
+  QR par based-on, en déduit le Programme via `QR.questionnaire`, et émet un
+  bloc XML `<program>` (id, code, `additionalQuestions` = QR sérialisé). Deux
+  corrections de robustesse au passage : la recherche du SR par RES_ID ne dépend
+  plus des remote store paths (les ordres PUSH n'en ont pas) ; `addRequester`
+  tolère un Task sans owner (ordre reçu sans praticien).
+
+Côté front (`addOrder`) :
+
+- `Index.js#parseProgram` : consomme `order.program` → pose
+  `sampleOrderItems.programId/programCode/additionalQuestions` (QR reçu parsé).
+- `OrderEntryAdditionalQuestions.js` : un `useEffect` charge le Questionnaire du
+  programme quand `programId` est pré-posé (reprise, sans passer par le Select)
+  ; `setAdditionalQuestions` **fusionne** (par linkId) les réponses déjà reçues
+  dans le squelette du questionnaire — les renseignements du tiers sont
+  pré-remplis sans écraser la saisie.
+
+Testé end-to-end : POST d'un Bundle (SR LOINC 25836-8 + QR référençant le
+Questionnaire du programme RTN_BACTER + réponses) → reprise
+`LabOrderSearchProvider` renvoie
+`program {id:5, code:RTN_BACTER, additionalQuestions:<QR complet>}`.
+Non-régression : un ordre **sans** QR renvoie `program` vide sans erreur
+(comportement historique préservé).
+
+**Reste** : Phase C (durcissement : mTLS, restriction des ressources lues,
+quotas, audit) ; push distant `/fhir-in` inverse (dataexport modernisé) ;
+déduplication fine des QR sur re-push.

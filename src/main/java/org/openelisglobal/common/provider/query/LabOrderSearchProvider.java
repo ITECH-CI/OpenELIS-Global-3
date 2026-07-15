@@ -37,6 +37,7 @@ import org.hl7.fhir.r4.model.Location;
 import org.hl7.fhir.r4.model.Organization;
 import org.hl7.fhir.r4.model.Patient;
 import org.hl7.fhir.r4.model.Practitioner;
+import org.hl7.fhir.r4.model.QuestionnaireResponse;
 import org.hl7.fhir.r4.model.ResourceType;
 import org.hl7.fhir.r4.model.ServiceRequest;
 import org.hl7.fhir.r4.model.Specimen;
@@ -59,6 +60,8 @@ import org.openelisglobal.panelitem.service.PanelItemService;
 import org.openelisglobal.panelitem.valueholder.PanelItem;
 import org.openelisglobal.patient.service.PatientService;
 import org.openelisglobal.person.service.PersonService;
+import org.openelisglobal.program.service.ProgramService;
+import org.openelisglobal.program.valueholder.Program;
 import org.openelisglobal.provider.service.ProviderService;
 import org.openelisglobal.provider.valueholder.Provider;
 import org.openelisglobal.spring.util.SpringContext;
@@ -92,6 +95,7 @@ public class LabOrderSearchProvider extends BaseQueryProvider {
     private TypeOfSampleService typeOfSampleService = SpringContext.getBean(TypeOfSampleService.class);
     private FhirPersistanceService fhirPersistanceService = SpringContext.getBean(FhirPersistanceService.class);
     private OrganizationService organizationService = SpringContext.getBean(OrganizationService.class);
+    private ProgramService programService = SpringContext.getBean(ProgramService.class);
 
     private Map<TypeOfSample, PanelTestLists> typeOfSampleMap;
     private Map<Panel, List<TypeOfSample>> panelSampleTypesMap;
@@ -106,6 +110,8 @@ public class LabOrderSearchProvider extends BaseQueryProvider {
     private Specimen specimen = null;
     private Patient patient = null;
     private String patientGuid;
+    private QuestionnaireResponse questionnaireResponse = null;
+    private Program program = null;
 
     private List<ElectronicOrder> eOrders = null;
     private ElectronicOrder eOrder = null;
@@ -127,6 +133,11 @@ public class LabOrderSearchProvider extends BaseQueryProvider {
             throws ServletException, IOException {
 
         String orderNumber = request.getParameter("orderNumber");
+        // Réinitialise l'état déduit du QR/programme : l'instance pouvant être
+        // réutilisée entre requêtes, un ordre sans QR ne doit pas hériter du
+        // programme d'un ordre précédent.
+        questionnaireResponse = null;
+        program = null;
         eOrders = electronicOrderService.getElectronicOrdersByExternalId(orderNumber);
 
         // if (eOrders.isEmpty()) {
@@ -140,20 +151,24 @@ public class LabOrderSearchProvider extends BaseQueryProvider {
 
             IGenericClient localFhirClient = fhirUtil.getFhirClient(fhirConfig.getLocalFhirStorePath());
 
-            for (String remotePath : fhirConfig.getRemoteStorePaths()) {
-                Bundle srBundle = (Bundle) localFhirClient.search().forResource(ServiceRequest.class)
-                        .where(ServiceRequest.RES_ID.exactly().code(orderNumber))
-                        .include(ServiceRequest.INCLUDE_SPECIMEN).execute();
-                for (BundleEntryComponent bundleComponent : srBundle.getEntry()) {
-                    if (bundleComponent.hasResource()
-                            && ResourceType.ServiceRequest.equals(bundleComponent.getResource().getResourceType())) {
-                        serviceRequest = (ServiceRequest) bundleComponent.getResource();
-                    }
-                    if (bundleComponent.hasResource()
-                            && ResourceType.Specimen.equals(bundleComponent.getResource().getResourceType())) {
-                        specimen = (Specimen) bundleComponent.getResource();
-                    }
+            // Recherche par id de ressource (RES_ID = numéro d'ordre). Indépendante des
+            // stores distants : les ordres reçus en PUSH (mini-HIE) n'ont pas de remote
+            // store path, donc cette recherche doit tourner même quand la liste est vide.
+            Bundle srBundle = (Bundle) localFhirClient.search().forResource(ServiceRequest.class)
+                    .where(ServiceRequest.RES_ID.exactly().code(orderNumber)).include(ServiceRequest.INCLUDE_SPECIMEN)
+                    .execute();
+            for (BundleEntryComponent bundleComponent : srBundle.getEntry()) {
+                if (bundleComponent.hasResource()
+                        && ResourceType.ServiceRequest.equals(bundleComponent.getResource().getResourceType())) {
+                    serviceRequest = (ServiceRequest) bundleComponent.getResource();
                 }
+                if (bundleComponent.hasResource()
+                        && ResourceType.Specimen.equals(bundleComponent.getResource().getResourceType())) {
+                    specimen = (Specimen) bundleComponent.getResource();
+                }
+            }
+
+            for (String remotePath : fhirConfig.getRemoteStorePaths()) {
                 srBundle = (Bundle) localFhirClient.search().forResource(ServiceRequest.class)
                         .where(ServiceRequest.IDENTIFIER.exactly().systemAndIdentifier(remotePath, orderNumber))
                         .include(ServiceRequest.INCLUDE_SPECIMEN).execute();
@@ -202,6 +217,13 @@ public class LabOrderSearchProvider extends BaseQueryProvider {
             } else {
                 LogEvent.logDebug(this.getClass().getSimpleName(), "processRequest", "no matching task");
             }
+
+            // QuestionnaireResponse (renseignements cliniques additionnels reçus d'un
+            // tiers) : rattaché au ServiceRequest via based-on (cf
+            // FhirOrderReceptionServiceImpl). S'il référence un Questionnaire connu, on en
+            // déduit le programme OE (Program.questionnaireUUID) pour pré-remplir le
+            // formulaire d'entrée d'échantillon.
+            resolveQuestionnaireResponseAndProgram(localFhirClient);
 
             if (!GenericValidator
                     .isBlankOrNull(task.getRestriction().getRecipientFirstRep().getReferenceElement().getIdPart())) {
@@ -350,8 +372,75 @@ public class LabOrderSearchProvider extends BaseQueryProvider {
         addSampleTypes(xml);
         addCrossPanels(xml);
         addCrosstests(xml);
+        addProgram(xml);
         addAlerts(xml, patientGuid);
         xml.append("</order>");
+    }
+
+    /**
+     * Recherche le QuestionnaireResponse rattaché (based-on) au ServiceRequest de
+     * l'ordre, et en déduit le programme OE si le QR référence un Questionnaire
+     * connu (Program.questionnaireUUID). Best-effort : toute absence/erreur laisse
+     * le formulaire sans programme pré-rempli (comportement historique).
+     */
+    private void resolveQuestionnaireResponseAndProgram(IGenericClient localFhirClient) {
+        if (serviceRequest == null) {
+            return;
+        }
+        try {
+            Bundle qrBundle = (Bundle) localFhirClient.search().forResource(QuestionnaireResponse.class)
+                    .where(QuestionnaireResponse.BASED_ON
+                            .hasId(ResourceType.ServiceRequest + "/" + serviceRequest.getIdElement().getIdPart()))
+                    .returnBundle(Bundle.class).execute();
+            for (BundleEntryComponent entry : qrBundle.getEntry()) {
+                if (entry.hasResource()
+                        && ResourceType.QuestionnaireResponse.equals(entry.getResource().getResourceType())) {
+                    questionnaireResponse = (QuestionnaireResponse) entry.getResource();
+                    break;
+                }
+            }
+        } catch (Exception e) {
+            LogEvent.logWarn(this.getClass().getSimpleName(), "resolveQuestionnaireResponseAndProgram",
+                    "recherche QuestionnaireResponse échouée : " + e.getMessage());
+            return;
+        }
+
+        if (questionnaireResponse == null || !questionnaireResponse.hasQuestionnaire()) {
+            return;
+        }
+        // QR.questionnaire est un canonical (ex "Questionnaire/<uuid>" ou une URL) : on
+        // en extrait la dernière composante comme identifiant.
+        String questionnaireCanonical = questionnaireResponse.getQuestionnaire();
+        String questionnaireIdPart = questionnaireCanonical == null ? null
+                : questionnaireCanonical.substring(questionnaireCanonical.lastIndexOf('/') + 1);
+        if (GenericValidator.isBlankOrNull(questionnaireIdPart)) {
+            return;
+        }
+        try {
+            program = programService.getProgramByQuestionnaireUuid(UUID.fromString(questionnaireIdPart));
+        } catch (IllegalArgumentException e) {
+            LogEvent.logWarn(this.getClass().getSimpleName(), "resolveQuestionnaireResponseAndProgram",
+                    "référence Questionnaire non-UUID : " + questionnaireIdPart);
+        }
+    }
+
+    /**
+     * Émet le programme déduit (id + code) et les renseignements cliniques
+     * additionnels (QuestionnaireResponse sérialisé en JSON), pour pré-remplissage
+     * côté front.
+     */
+    private void addProgram(StringBuilder xml) {
+        if (program == null) {
+            return;
+        }
+        xml.append("<program>");
+        XMLUtil.appendKeyValue("id", String.valueOf(program.getId()), xml);
+        XMLUtil.appendKeyValue("code", program.getCode() == null ? "" : program.getCode(), xml);
+        if (questionnaireResponse != null) {
+            String qrJson = fhirUtil.getFhirParser().encodeResourceToString(questionnaireResponse);
+            XMLUtil.appendKeyValue("additionalQuestions", qrJson, xml);
+        }
+        xml.append("</program>");
     }
 
     private void addRequestingOrg(StringBuilder xml) {
@@ -407,14 +496,17 @@ public class LabOrderSearchProvider extends BaseQueryProvider {
             }
             requesterValuesMap.put(PROVIDER_LAST_NAME, requesterPerson.getNameFirstRep().getFamily());
             requesterValuesMap.put(PROVIDER_FIRST_NAME, requesterPerson.getNameFirstRep().getGivenAsSingleString());
-        } else {
+        } else if (task.hasOwner()
+                && !GenericValidator.isBlankOrNull(task.getOwner().getReferenceElement().getIdPart())) {
+            // Un ordre reçu sans praticien (ex. mini-HIE PUSH) a un Task sans owner : on
+            // ne tente la résolution que si l'owner est présent, sinon on laisse le
+            // demandeur vide (comportement tolérant pour les ordres tiers).
             Provider provider = providerService
                     .getProviderByFhirId(UUID.fromString(task.getOwner().getReferenceElement().getIdPart()));
             if (provider != null) {
                 requesterValuesMap.put(PROVIDER_ID, provider.getId());
                 requesterValuesMap.put(PROVIDER_PERSON_ID, provider.getPerson().getId());
             }
-
         }
         xml.append("<requester>");
         XMLUtil.appendKeyValue(PROVIDER_ID, requesterValuesMap.get(PROVIDER_ID), xml);

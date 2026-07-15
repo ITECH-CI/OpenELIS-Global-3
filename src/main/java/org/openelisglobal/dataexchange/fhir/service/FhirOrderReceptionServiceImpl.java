@@ -15,8 +15,11 @@ package org.openelisglobal.dataexchange.fhir.service;
 
 import ca.uhn.fhir.context.FhirContext;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import org.apache.commons.validator.GenericValidator;
 import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.CodeableConcept;
 import org.hl7.fhir.r4.model.Coding;
@@ -115,8 +118,26 @@ public class FhirOrderReceptionServiceImpl implements FhirOrderReceptionService 
         ensureExternalIdIdentifier(patient);
         fhirOperations.updateResources.put(patient.getIdElement().getIdPart(), patient);
 
+        // On mémorise l'id ORIGINAL de chaque ServiceRequest (celui référencé par le
+        // tiers dans QR.basedOn) avant de lui attribuer un id local, pour pouvoir
+        // réécrire les liens QR -> SR sur les nouveaux ids.
+        Map<String, String> srIdRemap = new HashMap<>();
         for (ServiceRequest sr : serviceRequests) {
-            ensureId(sr);
+            String originalId = sr.getIdElement() != null ? sr.getIdElement().getIdPart() : null;
+            // On aligne l'id local du ServiceRequest sur SON NUMÉRO D'ORDRE (identifier),
+            // comme le fait le flux d'import natif : c'est par cet id (RES_ID) que la
+            // reprise en entrée d'échantillon (LabOrderSearchProvider) retrouve le SR à
+            // partir du numéro de l'ElectronicOrder. Sans ça, le SR reçu est introuvable
+            // et la reprise plante (serviceRequest null).
+            String orderNumber = sr.hasIdentifier() ? sr.getIdentifierFirstRep().getValue() : null;
+            if (!GenericValidator.isBlankOrNull(orderNumber)) {
+                sr.setId(orderNumber);
+            } else {
+                ensureId(sr);
+            }
+            if (originalId != null && !originalId.isEmpty()) {
+                srIdRemap.put(originalId, sr.getIdElement().getIdPart());
+            }
             // Rattache le ServiceRequest au patient reçu.
             sr.setSubject(referenceTo(ResourceType.Patient, patient.getIdElement().getIdPart()));
             fhirOperations.updateResources.put(sr.getIdElement().getIdPart(), sr);
@@ -125,10 +146,16 @@ public class FhirOrderReceptionServiceImpl implements FhirOrderReceptionService 
             ensureId(sp);
             fhirOperations.updateResources.put(sp.getIdElement().getIdPart(), sp);
         }
-        // Les QR sont stockés (liés au ServiceRequest via based-on). Leur exploitation
-        // fine (pré-remplissage renseignements cliniques) est un chantier ultérieur.
+        // Les QR portent les renseignements cliniques additionnels. On les rattache au
+        // ServiceRequest via based-on (lien exploité à la reprise en entrée
+        // d'échantillon, cf LabOrderSearchProvider) : soit le tiers a fourni un basedOn
+        // (qu'on réécrit sur le nouvel id local), soit on rattache au SR unique du
+        // Bundle. Sans ce lien, le QR est stocké orphelin et jamais réexploité.
+        String soleServiceRequestId = serviceRequests.size() == 1 ? serviceRequests.get(0).getIdElement().getIdPart()
+                : null;
         for (QuestionnaireResponse qr : questionnaireResponses) {
             ensureId(qr);
+            rewireQuestionnaireResponseBasedOn(qr, srIdRemap, soleServiceRequestId);
             fhirOperations.updateResources.put(qr.getIdElement().getIdPart(), qr);
         }
 
@@ -164,6 +191,16 @@ public class FhirOrderReceptionServiceImpl implements FhirOrderReceptionService 
                     firstOrderNumber = sr.hasIdentifier() ? sr.getIdentifierFirstRep().getValue() : null;
                 }
                 if (result == TaskResult.OK) {
+                    // Persiste le Task (based-on SR) dans le store FHIR local : la reprise
+                    // en entrée d'échantillon (LabOrderSearchProvider) le recherche par
+                    // based-on. Le flux natif a toujours un Task présent ; l'ordre reçu en
+                    // PUSH doit donc aussi le matérialiser. En cas d'échec on PROPAGE :
+                    // l'ElectronicOrder vient d'être créé dans la même transaction, il faut
+                    // tout annuler plutôt que de laisser un ordre irrécupérable (sans Task,
+                    // la reprise plante sur orElseThrow).
+                    FhirOperations taskOps = new FhirOperations();
+                    taskOps.updateResources.put(minimalTask.getIdElement().getIdPart(), minimalTask);
+                    fhirPersistanceService.createUpdateFhirResourcesInFhirStore(taskOps);
                     accepted++;
                 } else {
                     details.append(sr.getIdElement().getIdPart()).append('=').append(result).append(' ');
@@ -202,6 +239,32 @@ public class FhirOrderReceptionServiceImpl implements FhirOrderReceptionService 
         identifier.setType(new CodeableConcept().addCoding(new Coding().setCode("externalId").setSystem(genIdSystem)));
         identifier.setValue(patient.getIdElement().getIdPart());
         patient.addIdentifier(identifier);
+    }
+
+    /**
+     * Garantit que le QuestionnaireResponse pointe (via based-on) vers le
+     * ServiceRequest local. Si le tiers a fourni un based-on, on réécrit sa
+     * référence sur le nouvel id local (via {@code srIdRemap}). Sinon, si le Bundle
+     * ne contient qu'un seul ServiceRequest, on rattache le QR à celui-ci.
+     * Idempotent.
+     */
+    private void rewireQuestionnaireResponseBasedOn(QuestionnaireResponse qr, Map<String, String> srIdRemap,
+            String soleServiceRequestId) {
+        boolean linked = false;
+        for (Reference ref : qr.getBasedOn()) {
+            if (ref.getReferenceElement() == null || ref.getReferenceElement().getIdPart() == null) {
+                continue;
+            }
+            String referencedId = ref.getReferenceElement().getIdPart();
+            String newId = srIdRemap.get(referencedId);
+            if (newId != null) {
+                ref.setReference(ResourceType.ServiceRequest.name() + "/" + newId);
+                linked = true;
+            }
+        }
+        if (!linked && soleServiceRequestId != null) {
+            qr.addBasedOn(referenceTo(ResourceType.ServiceRequest, soleServiceRequestId));
+        }
     }
 
     private void ensureId(Resource resource) {
