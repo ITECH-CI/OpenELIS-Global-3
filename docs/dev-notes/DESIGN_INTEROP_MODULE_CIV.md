@@ -697,6 +697,59 @@ exhaustivement (src/main + schéma de base + submodule dataexport) :
 **Reste** : dé-dup `dataexport` + secrets en base chiffrés + écrans config →
 **incrément 5**.
 
+## 6.6 Config admin des flux de sync (incrément 5) — IMPLÉMENTÉ (local)
+
+**Objectif** : piloter les flux du module depuis un écran OE
+(activer/désactiver, URLs, credentials) au lieu des feature flags statiques
+`application.properties` (qui exigeaient un redémarrage). Décision : **volet
+config + credentials chiffrés** (la dé-dup `dataexport` reste un chantier
+séparé).
+
+**Véhicule = `SiteInformation` (clé/valeur admin)**, pas une table dédiée (1
+seul serveur consolidé, ~9 réglages). Chiffrement du mot de passe **gratuit**
+(flag `encrypted=true`, jasypt via `SiteInformationServiceImpl`) ;
+rafraîchissement à chaud **déjà câblé**
+(`ConfigurationProperties.loadDBValuesIntoConfiguration()`).
+
+**Implémenté (backend) :**
+
+- Migration `add_consolidated_sync_config.xml` : domaine `consolidatedSync` + 9
+  clés SiteInformation (`consolidatedSyncEnabled`/`Pull`/`Push`, `ApiUrl`,
+  `AuthUrl`, `Username`, `Password` **encrypted=true**, `LabUuid`, `AllowHttp` —
+  noms ≤ 32 car). Idempotent (`sqlCheck`). Les booléens sont seedés **vides**
+  (pas `false`) pour que le fallback property joue tant que l'admin n'a rien
+  saisi.
+- `SyncConfigService` : source UNIQUE et DYNAMIQUE. Lit chaque clé via
+  `getSiteInformationByName` (déchiffre le password), **fallback sur l'ancien
+  `@Value("${...consolidated...}")`** si la clé DB est vide (rétro-compat des
+  déploiements existants). Getters
+  `isSyncEnabled()/getApiUrl()/getPassword()...`.
+- `DataSyncTask`/`DataPullTask`/`DataPushTask` + `ConsolidatedServerClient`
+  **rebranchés** : lisent la config via `SyncConfigService` à CHAQUE tick (plus
+  de `@Value` figé pour enabled/URLs/credentials/labUuid). L'HTTPS est forcé à
+  la résolution (`resolvedApiUrl()`), plus au `@PostConstruct`.
+- `ConsolidatedSyncConfigRestController` (`/rest/consolidated-sync-config`) :
+  GET (password JAMAIS renvoyé → booléen `hasPassword`) + POST save. **Écrit
+  chaque clé via `siteInformationService.update()`** (qui CHIFFRE) — PAS via
+  `updateSiteInformationByName` qui court-circuite le chiffrement (le password
+  serait stocké en clair). Password vide = « inchangé ». Puis
+  `loadDBValuesIntoConfiguration()`.
+
+**Implémenté (frontend) :** écran React `ConsolidatedSyncConfig.js` (Carbon :
+`Toggle` ×3, `TextInput`, `PasswordInput` "vide=inchangé", `Checkbox` allowHttp,
+bouton Save + notification), monté dans `Admin.js` (import + menu + route
+`#ConsolidatedSyncConfig`), protégé `GLOBAL_ADMIN` (hérité de `/admin`). i18n
+en/fr (`consolidatedSync.*`).
+
+**Limite assumée** : l'intervalle des `@Scheduled(fixedDelayString)` reste figé
+au démarrage (changer l'intervalle = redémarrage) ; enabled/URLs/credentials
+sont dynamiques. Documenté dans l'UI (`consolidatedSync.intervalNote`).
+
+**Reste (hors incrément 5)** : dé-duplication `dataexport` (polling
+`RegisterFhirHooksTask`/ `DataExportTaskCheckerServiceImpl` vs écran
+`FhirPushTarget`) — délicat, chantier séparé.
+`pullStatusUpdatesFromConsolidated` (resync SC→OE, optionnel).
+
 **Phase 0 — FONDATION : fiabiliser la population FHIR locale (PRIORITAIRE)**
 
 1. **Auditer** `FhirTransformServiceImpl` + `SampleFhirTransformEventListener` :

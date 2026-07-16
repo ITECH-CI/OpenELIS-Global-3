@@ -58,20 +58,15 @@ public class DataPullTask {
     @Autowired
     private EorderPullCheckpointService checkpointService;
 
-    // Désactivé par défaut (comme la remontée sortante) : n'active le pull que si
-    // enabled=true ET labUuid + serveur consolidé configurés.
-    @Value("${org.openelisglobal.consolidated.pull.enabled:false}")
-    private boolean pullEnabled;
+    /** Config admin dynamique (activation/labUuid), relue à chaque tick. */
+    @Autowired
+    private SyncConfigService config;
 
     @Value("${org.openelisglobal.consolidated.pull.batchSize:50}")
     private int batchSize;
 
     @Value("${org.openelisglobal.consolidated.pull.maxPagesPerRun:50}")
     private int maxPagesPerRun;
-
-    /** Identifiant du labo (platformUuid) : quelles demandes le SC nous sert. */
-    @Value("${org.openelisglobal.consolidated.sync.labUuid:}")
-    private String labUuid;
 
     private static final long LOCK_TIMEOUT_MS = 5 * 60 * 1000L;
     private static final int MAX_CONSECUTIVE_FAILURES = 5;
@@ -86,10 +81,10 @@ public class DataPullTask {
 
     @Scheduled(fixedDelayString = "${org.openelisglobal.consolidated.pull.intervalMs:60000}", initialDelay = 90000)
     public void pullFromConsolidatedServer() {
-        if (!pullEnabled) {
+        if (!config.isPullEnabled()) {
             return;
         }
-        if (GenericValidator.isBlankOrNull(labUuid) || !client.isConfigured()) {
+        if (GenericValidator.isBlankOrNull(config.getLabUuid()) || !client.isConfigured()) {
             LogEvent.logWarn(this.getClass().getSimpleName(), "pullFromConsolidatedServer",
                     "pull activé mais labUuid/serveur consolidé non configuré — ignoré");
             return;
@@ -117,7 +112,7 @@ public class DataPullTask {
         int pages = 0;
         boolean hasMore = true;
         while (hasMore && pages < maxPagesPerRun) {
-            VlRequestPullResponse response = client.pullRequests(labUuid, checkpoint, batchSize);
+            VlRequestPullResponse response = client.pullRequests(config.getLabUuid(), checkpoint, batchSize);
             if (response == null || response.getRequests() == null || !response.getRequests().isArray()
                     || response.getRequests().isEmpty()) {
                 break;
@@ -192,7 +187,7 @@ public class DataPullTask {
         // resterait FAILED à jamais côté SC.
         ack.setEventUuid(deterministicEventUuid(dto.getRequestUuid(), importStatus));
         ack.setRequestUuid(dto.getRequestUuid());
-        ack.setPlatform(labUuid);
+        ack.setPlatform(config.getLabUuid());
         ack.setImportStatus(importStatus);
         if (!result.isSuccess()) {
             ack.setErrorMessage(result.getErrorMessage());

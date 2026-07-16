@@ -16,7 +16,6 @@ package org.openelisglobal.dataexchange.sync.service;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import jakarta.annotation.PostConstruct;
 import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -35,7 +34,6 @@ import org.openelisglobal.dataexchange.sync.dto.VlRequestAckDTO;
 import org.openelisglobal.dataexchange.sync.dto.VlRequestEventDTO;
 import org.openelisglobal.dataexchange.sync.dto.VlRequestPullResponse;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 /**
@@ -55,51 +53,39 @@ public class ConsolidatedServerClient {
     @Autowired
     private CloseableHttpClient httpClient;
 
-    /** Base URL du SC (POST {apiUrl}/syncOrders). */
-    @Value("${org.openelisglobal.consolidated.sync.apiUrl:}")
-    private String apiUrl;
-
-    /** Endpoint d'obtention du JWT (Basic → token). */
-    @Value("${org.openelisglobal.consolidated.sync.auth.url:}")
-    private String authUrl;
-
-    /** Identifiant Basic pour l'obtention du JWT. */
-    @Value("${org.openelisglobal.consolidated.sync.username:}")
-    private String username;
-
-    /** Secret Basic pour l'obtention du JWT. */
-    @Value("${org.openelisglobal.consolidated.sync.password:}")
-    private String password;
-
     /**
-     * Autorise le HTTP CLAIR vers le serveur consolidé (dev/local uniquement). Par
-     * défaut false : les URL http:// sont réécrites en https:// et le payload
-     * (données patient/résultats) + les jetons ne partent jamais en clair.
+     * Source dynamique de la config (SiteInformation admin + fallback properties).
+     * Lue À LA DEMANDE : un changement de cible/credentials par l'admin est pris en
+     * compte au prochain appel, sans redémarrage.
      */
-    @Value("${org.openelisglobal.consolidated.sync.allowHTTP:false}")
-    private boolean allowHttp;
+    @Autowired
+    private SyncConfigService config;
 
     private final ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule())
             .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
     private volatile String jwtToken;
 
-    /**
-     * Force HTTPS sur les URL du serveur consolidé après injection (sauf
-     * allowHTTP=true). Même garde-fou que {@code RegisterFhirHooksTask} : sans TLS,
-     * le Basic (user:pass) et le Bearer JWT transiteraient en clair.
-     */
-    @PostConstruct
-    void normalizeUrls() {
-        apiUrl = enforceHttps(apiUrl);
-        authUrl = enforceHttps(authUrl);
+    /** URL de base résolue + HTTPS forcé (sauf allowHTTP). */
+    private String resolvedApiUrl() {
+        return enforceHttps(config.getApiUrl());
     }
 
+    /** URL d'auth résolue + HTTPS forcé. */
+    private String resolvedAuthUrl() {
+        return enforceHttps(config.getAuthUrl());
+    }
+
+    /**
+     * Force HTTPS (sauf allowHTTP=true). Même garde-fou que
+     * {@code RegisterFhirHooksTask} : sans TLS, le Basic (user:pass) et le Bearer
+     * JWT transiteraient en clair.
+     */
     private String enforceHttps(String url) {
         if (GenericValidator.isBlankOrNull(url)) {
             return url;
         }
-        if (allowHttp && url.startsWith("http://")) {
+        if (config.isAllowHttp() && url.startsWith("http://")) {
             return url; // HTTP clair explicitement autorisé (dev/local).
         }
         if (url.startsWith("http://")) {
@@ -112,7 +98,7 @@ public class ConsolidatedServerClient {
     }
 
     public boolean isConfigured() {
-        return !GenericValidator.isBlankOrNull(apiUrl) && !GenericValidator.isBlankOrNull(authUrl);
+        return config.isConfigured();
     }
 
     /**
@@ -142,7 +128,7 @@ public class ConsolidatedServerClient {
     }
 
     private int post(String body) throws IOException {
-        HttpPost httpPost = new HttpPost(join(apiUrl, "syncOrders"));
+        HttpPost httpPost = new HttpPost(join(resolvedApiUrl(), "syncOrders"));
         httpPost.setHeader("Accept", "application/json");
         if (jwtToken != null) {
             httpPost.setHeader("Authorization", "Bearer " + jwtToken);
@@ -157,10 +143,13 @@ public class ConsolidatedServerClient {
 
     /** Basic Auth → JWT ; stocke le token (accessToken de la réponse). */
     private void authenticate() throws IOException {
+        String authUrl = resolvedAuthUrl();
         if (GenericValidator.isBlankOrNull(authUrl)) {
             throw new IOException("URL d'authentification du serveur consolidé non configurée");
         }
         HttpPost authPost = new HttpPost(authUrl);
+        String username = config.getUsername();
+        String password = config.getPassword();
         String creds = (username == null ? "" : username) + ":" + (password == null ? "" : password);
         authPost.setHeader("Authorization",
                 "Basic " + Base64.getEncoder().encodeToString(creds.getBytes(StandardCharsets.UTF_8)));
@@ -192,7 +181,7 @@ public class ConsolidatedServerClient {
      * @return la page désérialisée, ou null en cas d'échec non récupérable
      */
     public VlRequestPullResponse pullRequests(String platformUuid, String since, int limit) throws IOException {
-        StringBuilder url = new StringBuilder(join(apiUrl, "v1/vl-requests"));
+        StringBuilder url = new StringBuilder(join(resolvedApiUrl(), "v1/vl-requests"));
         url.append("?platformUuid=").append(enc(platformUuid));
         url.append("&limit=").append(limit);
         if (!GenericValidator.isBlankOrNull(since)) {
@@ -226,10 +215,10 @@ public class ConsolidatedServerClient {
         if (jwtToken == null) {
             authenticate();
         }
-        int status = postTo(join(apiUrl, "v1/vl-requests/ack"), body);
+        int status = postTo(join(resolvedApiUrl(), "v1/vl-requests/ack"), body);
         if (status == 401) {
             authenticate();
-            status = postTo(join(apiUrl, "v1/vl-requests/ack"), body);
+            status = postTo(join(resolvedApiUrl(), "v1/vl-requests/ack"), body);
         }
         return status >= 200 && status < 300;
     }
@@ -247,10 +236,10 @@ public class ConsolidatedServerClient {
         if (jwtToken == null) {
             authenticate();
         }
-        int status = postTo(join(apiUrl, "v1/vl-requests/events"), body);
+        int status = postTo(join(resolvedApiUrl(), "v1/vl-requests/events"), body);
         if (status == 401) {
             authenticate();
-            status = postTo(join(apiUrl, "v1/vl-requests/events"), body);
+            status = postTo(join(resolvedApiUrl(), "v1/vl-requests/events"), body);
         }
         return status >= 200 && status < 300;
     }

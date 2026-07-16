@@ -50,17 +50,15 @@ public class DataPushTask {
     @Autowired
     private EorderEventBuilder eventBuilder;
 
-    @Value("${org.openelisglobal.consolidated.push.enabled:false}")
-    private boolean pushEnabled;
+    /** Config admin dynamique (activation/labUuid), relue à chaque tick. */
+    @Autowired
+    private SyncConfigService config;
 
     @Value("${org.openelisglobal.consolidated.push.batchSize:100}")
     private int batchSize;
 
     @Value("${org.openelisglobal.consolidated.push.inProgressTimeoutMinutes:5}")
     private int inProgressTimeoutMinutes;
-
-    @Value("${org.openelisglobal.consolidated.sync.labUuid:}")
-    private String labUuid;
 
     private static final long LOCK_TIMEOUT_MS = 5 * 60 * 1000L;
     private static final int MAX_CONSECUTIVE_FAILURES = 5;
@@ -73,10 +71,10 @@ public class DataPushTask {
 
     @Scheduled(fixedDelayString = "${org.openelisglobal.consolidated.push.intervalMs:60000}", initialDelay = 150000)
     public void pushStatusesToConsolidatedServer() {
-        if (!pushEnabled) {
+        if (!config.isPushEnabled()) {
             return;
         }
-        if (GenericValidator.isBlankOrNull(labUuid) || !client.isConfigured()) {
+        if (GenericValidator.isBlankOrNull(config.getLabUuid()) || !client.isConfigured()) {
             LogEvent.logWarn(this.getClass().getSimpleName(), "pushStatusesToConsolidatedServer",
                     "push activé mais labUuid/serveur consolidé non configuré — ignoré");
             return;

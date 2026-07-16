@@ -82,6 +82,7 @@ import SampleTypeTestAssign from "./testManagementConfigMenu/SampleTypeTestAssig
 import FhirSyncMonitor from "./fhirSync/FhirSyncMonitor.js";
 import FhirGateway from "./fhirGateway/FhirGateway.js";
 import FhirPushTargets from "./fhirPushTargets/FhirPushTargets.js";
+import ConsolidatedSyncConfig from "./consolidatedSync/ConsolidatedSyncConfig.js";
 import TerminologyImport from "./terminology/TerminologyImport.js";
 import UomManagement from "./testManagementConfigMenu/UomManagement.js";
 import UomCreate from "./testManagementConfigMenu/UomCreate.js";
@@ -228,6 +229,13 @@ function Admin() {
             href="#FhirPushTargets"
           >
             <FormattedMessage id="fhir.push.title" />
+          </SideNavLink>
+          <SideNavLink
+            data-cy="consolidatedSyncConfig"
+            renderIcon={ListDropdown}
+            href="#ConsolidatedSyncConfig"
+          >
+            <FormattedMessage id="consolidatedSync.title" />
           </SideNavLink>
           <SideNavLink
             data-cy="terminologyImport"
@@ -430,6 +438,9 @@ function Admin() {
       </PathRoute>
       <PathRoute path="#FhirPushTargets">
         <FhirPushTargets />
+      </PathRoute>
+      <PathRoute path="#ConsolidatedSyncConfig">
+        <ConsolidatedSyncConfig />
       </PathRoute>
       <PathRoute path="#TerminologyImport">
         <TerminologyImport />

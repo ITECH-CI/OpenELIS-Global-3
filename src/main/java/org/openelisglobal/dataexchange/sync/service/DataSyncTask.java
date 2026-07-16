@@ -49,11 +49,11 @@ public class DataSyncTask {
     @Autowired
     private ConsolidatedServerClient consolidatedServerClient;
 
-    // Désactivé par défaut : la remontée consolidée n'est active que si un serveur
-    // consolidé est configuré ET le flag positionné (évite tout POST intempestif en
-    // dev). Miroir du patron FhirSyncRetryTask.
-    @Value("${org.openelisglobal.consolidated.sync.enabled:false}")
-    private boolean syncEnabled;
+    /**
+     * Config admin dynamique (activation/URLs/credentials), relue à chaque tick.
+     */
+    @Autowired
+    private SyncConfigService config;
 
     // Taille de lot (= nombre d'analyses remontées par itération de la boucle).
     @Value("${org.openelisglobal.consolidated.sync.batchSize:100}")
@@ -77,7 +77,7 @@ public class DataSyncTask {
      */
     @Scheduled(fixedDelayString = "${org.openelisglobal.consolidated.sync.intervalMs:300000}", initialDelay = 120000)
     public void syncToConsolidatedServer() {
-        if (!syncEnabled) {
+        if (!config.isSyncEnabled()) {
             return;
         }
         if (!consolidatedServerClient.isConfigured()) {
