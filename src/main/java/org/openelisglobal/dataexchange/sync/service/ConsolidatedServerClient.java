@@ -16,6 +16,7 @@ package org.openelisglobal.dataexchange.sync.service;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import jakarta.annotation.PostConstruct;
 import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -70,10 +71,45 @@ public class ConsolidatedServerClient {
     @Value("${org.openelisglobal.consolidated.sync.password:}")
     private String password;
 
+    /**
+     * Autorise le HTTP CLAIR vers le serveur consolidé (dev/local uniquement). Par
+     * défaut false : les URL http:// sont réécrites en https:// et le payload
+     * (données patient/résultats) + les jetons ne partent jamais en clair.
+     */
+    @Value("${org.openelisglobal.consolidated.sync.allowHTTP:false}")
+    private boolean allowHttp;
+
     private final ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule())
             .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
     private volatile String jwtToken;
+
+    /**
+     * Force HTTPS sur les URL du serveur consolidé après injection (sauf
+     * allowHTTP=true). Même garde-fou que {@code RegisterFhirHooksTask} : sans TLS,
+     * le Basic (user:pass) et le Bearer JWT transiteraient en clair.
+     */
+    @PostConstruct
+    void normalizeUrls() {
+        apiUrl = enforceHttps(apiUrl);
+        authUrl = enforceHttps(authUrl);
+    }
+
+    private String enforceHttps(String url) {
+        if (GenericValidator.isBlankOrNull(url)) {
+            return url;
+        }
+        if (allowHttp && url.startsWith("http://")) {
+            return url; // HTTP clair explicitement autorisé (dev/local).
+        }
+        if (url.startsWith("http://")) {
+            return "https://" + url.substring("http://".length());
+        }
+        if (!url.startsWith("https://")) {
+            return "https://" + url;
+        }
+        return url;
+    }
 
     public boolean isConfigured() {
         return !GenericValidator.isBlankOrNull(apiUrl) && !GenericValidator.isBlankOrNull(authUrl);

@@ -653,8 +653,49 @@ requis).
    analyse re-rejetée avec un `released_date` résiduel remonte REJECTED, pas
    RELEASED) ; `completedDate` ajouté au hash de l'eventUuid.
 
-**Reste (incréments suivants)** : 4e = nettoyage legacy (`vl_analysis_record`,
-colonnes `*_fhir_uuid` mortes) + secrets/HTTPS. Config OE = incrément 5.
+## 6.5 Nettoyage legacy + sécurité (incrément 4e) — audits + garde-fou HTTPS
+
+**Audit legacy (2026-07-16) — le "nettoyage" est SANS OBJET côté OE.** Vérifié
+exhaustivement (src/main + schéma de base + submodule dataexport) :
+
+- `vl_analysis_record`, `resource_sync_status`, table plate
+  `vl_eorder_request_flat`, colonnes `*_fhir_uuid` mortes de l'uploader :
+  **n'existent PAS dans OE** — ce sont des artefacts du repo EXTERNE
+  `oedatauploader`. Rien à supprimer ici (le nettoyage, s'il a lieu, est à faire
+  dans oedatauploader).
+- Les colonnes `fhir_uuid` présentes dans OE (analysis, patient, sample, result,
+  organization, provider, referral, sampleitem,
+  `program.questionnaire_fhir_uuid`) sont **NATIVES et ACTIVES** (FHIR) — ne pas
+  toucher.
+- Nos tables sync (`analysis_sync_status`, `eorder_sync_status`,
+  `eorder_pull_checkpoint`) sont propres (aucune colonne fhir_uuid) et vivantes.
+- **Seul foyer de redondance réel** : les 2 mécanismes `dataexport` (polling
+  `DataExportTaskCheckerServiceImpl` + REST-hook `RegisterFhirHooksTask`, tous
+  deux via `fhir.subscriber`) **+** l'écran natif `FhirPushTarget` qui écrit
+  AUSSI dans `data_export_task`. Câblé à 4+ points d'entrée → **délicat, reporté
+  à l'incrément 5** (avec la config admin).
+
+**Audit sécurité — état + livraison.**
+
+- **Certificats** : le `CloseableHttpClient` partagé (`HttpClientConfig`)
+  vérifie déjà les certificats (PAS de trust-all, truststore JVM). ✅ rien à
+  durcir.
+- **Secrets** : aucun canal d'injection défini pour `consolidated.sync.*` (rien
+  dans `common.properties`) — TROU, mais pas une fuite (le module
+  s'auto-désactive si non configuré). Le stockage propre (base + chiffrement
+  `EncryptionConverter` jasypt, comme `BasicAuthenticationData`) +
+  administrabilité → **incrément 5**. NB : les secrets en clair sont une posture
+  GÉNÉRALE du repo dev (VAPID, `kspass`, `datasource.password`…), pas propre au
+  sync.
+- **LIVRÉ (4e)** : garde-fou HTTPS dans `ConsolidatedServerClient` —
+  `@PostConstruct` réécrit `http://`→`https://` sur `apiUrl`/`authUrl` (option
+  `org.openelisglobal.consolidated.sync.allowHTTP=false` par défaut, comme
+  `RegisterFhirHooksTask`). Sans lui, le Basic (user:pass) et le Bearer JWT
+  partaient en clair. Pas de fuite de jeton dans les logs constatée (les
+  LogEvent ne journalisent que le code HTTP).
+
+**Reste** : dé-dup `dataexport` + secrets en base chiffrés + écrans config →
+**incrément 5**.
 
 **Phase 0 — FONDATION : fiabiliser la population FHIR locale (PRIORITAIRE)**
 
