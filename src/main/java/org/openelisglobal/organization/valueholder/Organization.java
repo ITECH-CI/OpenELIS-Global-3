@@ -87,6 +87,17 @@ public class Organization extends EnumValueItemImpl implements SimpleBaseEntity<
     @SafeHtml(level = SafeHtml.SafeListLevel.NONE)
     private String code;
 
+    // Codes DATIM (colonnes datim_org_code/datim_org_name déjà en base) : exposés
+    // pour la remontée consolidée (module d'échange unifié, incrément 4b) — le
+    // serveur consolidé rattache les sites via DATIM puis DHIS2 (short_name).
+    // Jusque
+    // là lus uniquement via SQL brut dans les report builders.
+    @SafeHtml(level = SafeHtml.SafeListLevel.NONE)
+    private String datimOrgCode;
+
+    @SafeHtml(level = SafeHtml.SafeListLevel.NONE)
+    private String datimOrgName;
+
     private Set<OrganizationType> organizationTypes;
     private UUID fhirUuid;
 
@@ -276,6 +287,22 @@ public class Organization extends EnumValueItemImpl implements SimpleBaseEntity<
 
     public void setCode(String code) {
         this.code = code;
+    }
+
+    public String getDatimOrgCode() {
+        return datimOrgCode;
+    }
+
+    public void setDatimOrgCode(String datimOrgCode) {
+        this.datimOrgCode = datimOrgCode;
+    }
+
+    public String getDatimOrgName() {
+        return datimOrgName;
+    }
+
+    public void setDatimOrgName(String datimOrgName) {
+        this.datimOrgName = datimOrgName;
     }
 
     public Set<OrganizationType> getOrganizationTypes() {

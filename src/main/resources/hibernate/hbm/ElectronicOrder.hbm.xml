@@ -55,5 +55,19 @@
         <property name="rejectComment" type="java.lang.String">
             <column name="reject_comment" length="60" not-null="false" />
         </property>
+        <!-- Colonnes d'affichage dénormalisées (module d'échange unifié, incrément
+            4a) : remplies à la réception, listent les demandes sans appel FHIR. Génériques.
+            Cf. DESIGN_INTEROP_MODULE_CIV.md §6.1. -->
+        <property name="requestingFacilityName"
+            type="java.lang.String">
+            <column name="requesting_facility_name" length="255"
+                not-null="false" />
+        </property>
+        <property name="collectionDate" type="java.sql.Timestamp">
+            <column name="collection_date" not-null="false" />
+        </property>
+        <property name="testName" type="java.lang.String">
+            <column name="test_name" length="255" not-null="false" />
+        </property>
     </class>
 </hibernate-mapping>

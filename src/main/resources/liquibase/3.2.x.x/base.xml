@@ -143,6 +143,14 @@ file="add_study_modifier_menu.xml" />
         file="add_cmu_patient_identity_type.xml" />
     <include relativeToChangelogFile="true"
         file="populate_ucum_codes.xml" />
+    <include relativeToChangelogFile="true"
+        file="add_eorder_display_columns.xml" />
+    <include relativeToChangelogFile="true"
+        file="create_analysis_sync_status.xml" />
+    <include relativeToChangelogFile="true"
+        file="create_eorder_pull_checkpoint.xml" />
+    <include relativeToChangelogFile="true"
+        file="create_eorder_sync_status.xml" />
 
 
 </databaseChangeLog>

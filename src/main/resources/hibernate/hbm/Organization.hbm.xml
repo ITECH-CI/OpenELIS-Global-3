@@ -72,6 +72,14 @@
         </property>
         <property name="code" column="code" type="java.lang.String"
             length="20" />
+        <!-- Codes DATIM (colonnes déjà en base) exposés pour la remontée consolidée
+            (incrément 4b). -->
+        <property name="datimOrgCode" type="java.lang.String">
+            <column name="datim_org_code" length="25" />
+        </property>
+        <property name="datimOrgName" type="java.lang.String">
+            <column name="datim_org_name" length="100" />
+        </property>
         <property name="fhirUuid" column="fhir_uuid"
             type="java.util.UUID" />
 

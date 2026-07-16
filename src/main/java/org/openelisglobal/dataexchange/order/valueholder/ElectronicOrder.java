@@ -67,6 +67,12 @@ public class ElectronicOrder extends BaseObject<String> {
     private String qaAuthorizer;
     private String rejectReasonId;
     private String rejectComment;
+    // Colonnes d'affichage dénormalisées (module d'échange unifié, incrément 4a) :
+    // remplies à la réception, permettent de lister les demandes SANS appel FHIR.
+    // Génériques (tout type d'examen). Cf. DESIGN_INTEROP_MODULE_CIV.md §6.1.
+    private String requestingFacilityName;
+    private Timestamp collectionDate;
+    private String testName;
 
     public ElectronicOrder() {
         patient = new ValueHolder();
@@ -168,5 +174,29 @@ public class ElectronicOrder extends BaseObject<String> {
 
     public void setQaAuthorizer(String qaAuthorizer) {
         this.qaAuthorizer = qaAuthorizer;
+    }
+
+    public String getRequestingFacilityName() {
+        return requestingFacilityName;
+    }
+
+    public void setRequestingFacilityName(String requestingFacilityName) {
+        this.requestingFacilityName = requestingFacilityName;
+    }
+
+    public Timestamp getCollectionDate() {
+        return collectionDate;
+    }
+
+    public void setCollectionDate(Timestamp collectionDate) {
+        this.collectionDate = collectionDate;
+    }
+
+    public String getTestName() {
+        return testName;
+    }
+
+    public void setTestName(String testName) {
+        this.testName = testName;
     }
 }

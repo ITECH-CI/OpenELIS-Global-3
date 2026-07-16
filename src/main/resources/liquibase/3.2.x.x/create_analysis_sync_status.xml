@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+    <!--
+      Module d'échange unifié — incrément 4b (remontée consolidée sortante).
+
+      File CDC `analysis_sync_status` : le service DataSync draine les analyses à
+      remonter (upload_flag 1=TO_INSERT / 2=TO_UPDATE / 3=UP_TO_DATE /
+      4=IN_PROGRESS). Alimentée par les triggers PostgreSQL (fichier SQL joint),
+      qui projettent tout changement métier sans toucher au code OE.
+
+      Rapatrié de oedatauploader (éprouvé en prod). Idempotent : preConditions
+      columnExists/tableExists + onFail=MARK_RAN ; triggers via CREATE OR REPLACE /
+      DROP IF EXISTS. Par NOM, jamais d'ID.
+    -->
+
+    <changeSet id="create_analysis_sync_status_seq" author="itechciv">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <sequenceExists sequenceName="analysis_sync_status_seq" schemaName="clinlims"/>
+            </not>
+        </preConditions>
+        <createSequence sequenceName="analysis_sync_status_seq" incrementBy="1" cycle="false"
+            schemaName="clinlims"/>
+    </changeSet>
+
+    <changeSet id="create_analysis_sync_status_table" author="itechciv">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="analysis_sync_status" schemaName="clinlims"/>
+            </not>
+        </preConditions>
+        <createTable tableName="analysis_sync_status" schemaName="clinlims">
+            <column name="id" type="integer" defaultValueComputed="nextval('analysis_sync_status_seq')">
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="sample_id" type="int">
+                <constraints nullable="false"/>
+            </column>
+            <column name="analysis_id" type="int">
+                <constraints nullable="false"/>
+            </column>
+            <column name="upload_flag" type="smallint" defaultValueNumeric="1">
+                <constraints nullable="true"/>
+            </column>
+            <column name="last_updated" type="datetime" defaultValueComputed="now()">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <!-- Unicité analysis_id : requise par le ON CONFLICT (analysis_id) du trigger
+         d'insertion (une ligne de suivi par analyse). -->
+    <changeSet id="create_analysis_sync_status_analysis_id_unique" author="itechciv">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <indexExists indexName="idx_analysis_sync_status_analysis_id_unique" schemaName="clinlims"/>
+            </not>
+        </preConditions>
+        <createIndex tableName="analysis_sync_status" indexName="idx_analysis_sync_status_analysis_id_unique"
+            schemaName="clinlims" unique="true">
+            <column name="analysis_id"/>
+        </createIndex>
+    </changeSet>
+
+    <!-- Index partiel sur la file à drainer (SELECT WHERE upload_flag IN (1,2)). -->
+    <changeSet id="create_analysis_sync_status_flag_index" author="itechciv">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <indexExists indexName="idx_analysis_sync_flag_updated" schemaName="clinlims"/>
+            </not>
+        </preConditions>
+        <sql>CREATE INDEX idx_analysis_sync_flag_updated ON clinlims.analysis_sync_status (upload_flag,
+            last_updated) WHERE upload_flag IN (1, 2)</sql>
+    </changeSet>
+
+    <!-- Fonctions PL/pgSQL + triggers CDC. Idempotent (DROP IF EXISTS / CREATE OR
+         REPLACE dans le fichier) → runOnChange rejoue si le SQL évolue.
+         endDelimiter="~" : les corps de fonction contiennent des ';'. -->
+    <changeSet id="create_analysis_sync_cdc_triggers" author="itechciv" runOnChange="true">
+        <sqlFile path="sql/analysis_sync_cdc_triggers.sql" relativeToChangelogFile="true"
+            splitStatements="true" stripComments="false" endDelimiter="~"/>
+    </changeSet>
+
+</databaseChangeLog>

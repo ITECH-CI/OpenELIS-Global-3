@@ -32,6 +32,8 @@
         <mapping
             resource="hibernate/hbm/AnalysisQaEventAction.hbm.xml" />
         <mapping resource="hibernate/hbm/Analyte.hbm.xml" />
+        <mapping resource="hibernate/hbm/AnalysisSyncStatus.hbm.xml" />
+        <mapping resource="hibernate/hbm/EorderSyncStatus.hbm.xml" />
         <mapping resource="hibernate/hbm/FhirSyncStatus.hbm.xml" />
         <mapping resource="hibernate/hbm/FhirGatewayClient.hbm.xml" />
         <mapping resource="hibernate/hbm/FhirGatewayToken.hbm.xml" />
