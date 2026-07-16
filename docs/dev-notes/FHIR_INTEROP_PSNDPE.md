@@ -84,9 +84,55 @@ les Observation numériques re-transformées après ce changement.
   ServiceRequest/Observation/DiagnosticReport`).
 - **OID CMU** : confirmer `urn:oid:1.3.6.1.4.1.53864.1.3` avec l'équipe interop
   (ajustable via la property, sans recompilation).
-- **Backfill** : re-transformer l'existant (`GET /OEToFhir?checkAll=true` +
-  `GET /PatientToFhir?checkAll=true`) pour propager CMU + UCUM aux ressources
-  déjà dans le HAPI.
+- **Backfill** (à faire après déploiement) : voir la procédure détaillée
+  ci-dessous.
+- **Organization** : non peuplée aujourd'hui — voir ci-dessous.
+
+## Backfill (re-transformation de l'existant) — procédure vérifiée
+
+Les changements (identifiant CMU, UCUM) ne s'appliquent qu'aux ressources
+(re)transformées APRÈS déploiement. Les ressources déjà dans le HAPI gardent leur
+ancienne forme jusqu'à re-transformation. HAPI régénère `meta.lastUpdated` à
+chaque PUT ; le connecteur reverra donc ces ressources via `_lastUpdated`.
+
+Endpoints (session admin) :
+- `GET /OEToFhir?checkAll=true&waitForResults=true` — re-transforme **tout** :
+  phase 1 patients (avec échantillon), phase 2 échantillons ET leurs objets
+  rattachés (ServiceRequest, Observation, DiagnosticReport). C'est le backfill
+  complet. **Synchrone** avec `waitForResults=true` (la requête ne rend la main
+  qu'à la fin ; peut être longue).
+- `GET /PatientToFhir?checkAll=true` — re-transforme uniquement les patients (plus
+  rapide si seul l'identifiant CMU est concerné).
+- `GET /OEToFhir/info` — état de la transformation en cours (objectType, phase,
+  running).
+
+**Validé** : après un `OEToFhir?checkAll=true`, les Observations numériques
+portent l'UCUM (`valueQuantity.system = http://unitsofmeasure.org` + `code`) et
+les patients l'identifiant CMU.
+
+⚠️ **Piège d'exploitation** : le contrôleur refuse une nouvelle transformation
+tant qu'une précédente est marquée « en cours » (garde `inProcess()` /
+`info.running`). Si une exécution a été interrompue/a échoué sans libérer ce
+verrou, tout nouvel appel `OEToFhir`/`PatientToFhir` **renvoie immédiatement**
+(<0,1 s) l'`info` figé (ex. `phase=Finished`, `objectType=Patient`) **sans rien
+faire** — symptôme : aucun log de transformation, `batchSize` = valeur par défaut
+et non celle demandée. **Contournement : redémarrer la webapp** (réinitialise
+`info.running`), puis relancer le backfill. (Correctif possible : réinitialiser le
+verrou sur timeout / au boot — non fait ici.)
+
+## Organization (non peuplée)
+
+Aucune ressource `Organization` n'est aujourd'hui exposée (`GET
+/fhir/Organization?_summary=count` → 0), alors que ServiceRequest/DiagnosticReport
+peuvent référencer une organisation référente. La transformation métier→FHIR
+d'OpenELIS ne produit une `Organization` que dans certains flux (référence,
+`transformToFhirOrganization`). Si l'IG national exige une `Organization`
+résoluble (ex. laboratoire émetteur, établissement demandeur), il faudra :
+- soit peupler une organisation « établissement » par défaut et la référencer sur
+  les ressources émises,
+- soit renseigner les organisations demandeuses/référentes dans OpenELIS pour
+  qu'elles soient transformées.
+À cadrer avec l'équipe interop selon les cardinalités de l'IG.
 
 ## Provisionner le compte de service LECTURE (connecteur)
 
