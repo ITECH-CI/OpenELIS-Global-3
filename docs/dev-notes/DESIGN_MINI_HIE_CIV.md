@@ -427,38 +427,40 @@ Extension du push distant : les cibles (serveurs FHIR de destination) sont
 désormais **gérées depuis l'admin OE** (écran #FhirPushTargets), et non plus
 uniquement par `common.properties`.
 
-Architecture : une entité OE **`FhirPushTarget`** (table `fhir_push_target`) porte
-les paramètres éditables (nom, description, endpoint, ressources CSV, fréquence,
-auth NONE/BASIC/TOKEN, actif). Le service **projette** chaque cible active dans un
-`DataExportTask` du module `dataexport` (le moteur d'export inchangé) — on ne
-réimplémente pas le transport. Toute modification (create/update/activate/delete)
-appelle `syncToDataExport()` qui réconcilie les `data_export_task`.
+Architecture : une entité OE **`FhirPushTarget`** (table `fhir_push_target`)
+porte les paramètres éditables (nom, description, endpoint, ressources CSV,
+fréquence, auth NONE/BASIC/TOKEN, actif). Le service **projette** chaque cible
+active dans un `DataExportTask` du module `dataexport` (le moteur d'export
+inchangé) — on ne réimplémente pas le transport. Toute modification
+(create/update/activate/delete) appelle `syncToDataExport()` qui réconcilie les
+`data_export_task`.
 
 - **Auth** : posée comme header `Authorization` du DataExportTask (Basic
   base64(user:secret) ou Bearer token) — appliqué par l'interceptor dataexport.
 - **Transactionnalité** : les repositories dataexport sont sous le même contexte
   JPA qu'OE (`@EnableJpaRepositories basePackages org.itech`) → les écritures
   `data_export_task` participent à la transaction OE (rollback cohérent).
-- **Coexistence avec le natif** (garde-fou anti-collision) : un DataExportTask géré
-  par l'écran porte un header marqueur `X-OE-Managed-By: FhirPushTarget`. Le service
-  ne modifie/supprime QUE les tâches marquées → une tâche native
-  (`fhir.subscriber` via RegisterFhirHooksTask) partageant le même endpoint n'est
-  jamais écrasée ni supprimée.
-- **Sécurité** : `/rest/fhir-push-targets/**` sous session admin. Le secret d'auth
-  n'est JAMAIS renvoyé (la liste expose seulement `hasSecret`) ; à l'édition, un
-  secret vide = inchangé. `isActive` forcé à Y à la création (pas d'injection via
-  body) ; `authType` validé (valeur inconnue → NONE) ; champs d'auth sans objet
-  vidés (NONE → ni user ni secret) ; endpoint en collision → 400. DELETE exposé en
-  POST `/{id}/delete` (le conteneur n'autorise que GET/POST/PUT, cf web.xml).
+- **Coexistence avec le natif** (garde-fou anti-collision) : un DataExportTask
+  géré par l'écran porte un header marqueur `X-OE-Managed-By: FhirPushTarget`.
+  Le service ne modifie/supprime QUE les tâches marquées → une tâche native
+  (`fhir.subscriber` via RegisterFhirHooksTask) partageant le même endpoint
+  n'est jamais écrasée ni supprimée.
+- **Sécurité** : `/rest/fhir-push-targets/**` sous session admin. Le secret
+  d'auth n'est JAMAIS renvoyé (la liste expose seulement `hasSecret`) ; à
+  l'édition, un secret vide = inchangé. `isActive` forcé à Y à la création (pas
+  d'injection via body) ; `authType` validé (valeur inconnue → NONE) ; champs
+  d'auth sans objet vidés (NONE → ni user ni secret) ; endpoint en collision
+  → 400. DELETE exposé en POST `/{id}/delete` (le conteneur n'autorise que
+  GET/POST/PUT, cf web.xml).
 
 Endpoints : GET (liste + dernier essai/succès), POST (créer), PUT /{id}, POST
-/{id}/active, POST /{id}/delete. Écran #FhirPushTargets (CRUD + statut) wiré dans
-Admin.js, i18n FR/EN. Migration idempotente `create_fhir_push_target.xml`.
+/{id}/active, POST /{id}/delete. Écran #FhirPushTargets (CRUD + statut) wiré
+dans Admin.js, i18n FR/EN. Migration idempotente `create_fhir_push_target.xml`.
 
-Testé bout-en-bout : CRUD complet + projection data_export_task + auth Bearer/Basic
-posée ; désactiver/supprimer retire la tâche ; collision d'endpoint → 400 ;
-mass-assignment isActive neutralisé ; tâche native protégée du marqueur.
+Testé bout-en-bout : CRUD complet + projection data_export_task + auth
+Bearer/Basic posée ; désactiver/supprimer retire la tâche ; collision d'endpoint
+→ 400 ; mass-assignment isActive neutralisé ; tâche native protégée du marqueur.
 
-Le push distant est donc désormais **pleinement administrable** (plusieurs cibles,
-sans toucher au fichier de config), tout en gardant le mono-cible natif
+Le push distant est donc désormais **pleinement administrable** (plusieurs
+cibles, sans toucher au fichier de config), tout en gardant le mono-cible natif
 `fhir.subscriber` fonctionnel en parallèle.
