@@ -192,7 +192,8 @@ public class FhirSyncMonitorRestController {
                         FhirSyncConstants.TARGET_SAMPLE, sampleId);
                 fhirTransformService().transformPersistObjectsUnderSamples(Arrays.asList(sampleId)).get();
                 if (syncStatusId != null) {
-                    fhirSyncStatusService.markSuccess(syncStatusId);
+                    fhirSyncStatusService.markSuccessWithIssues(syncStatusId,
+                            fhirTransformService().collectCompletenessIssuesForSample(sampleId));
                 }
                 success++;
             } catch (Exception e) {
@@ -231,7 +232,8 @@ public class FhirSyncMonitorRestController {
         }
         try {
             fhirTransformService().transformPersistObjectsUnderSamples(Arrays.asList(event.getTargetId())).get();
-            fhirSyncStatusService.markSuccess(id);
+            fhirSyncStatusService.markSuccessWithIssues(id,
+                    fhirTransformService().collectCompletenessIssuesForSample(event.getTargetId()));
             result.put("success", true);
         } catch (Exception e) {
             Throwable cause = e.getCause() != null ? e.getCause() : e;

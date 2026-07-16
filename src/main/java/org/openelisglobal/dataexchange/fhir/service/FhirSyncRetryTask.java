@@ -88,7 +88,10 @@ public class FhirSyncRetryTask {
             // Attend le résultat (le Future porte l'exception éventuelle) pour savoir
             // si le rejeu a réellement réussi.
             fhirTransformService.transformPersistObjectsUnderSamples(Arrays.asList(event.getTargetId())).get();
-            fhirSyncStatusService.markSuccess(event.getId());
+            // Persistance OK : on qualifie la complétude des ressources produites
+            // (SUCCESS ou SUCCESS_INCOMPLETE si champs manquants).
+            fhirSyncStatusService.markSuccessWithIssues(event.getId(),
+                    fhirTransformService.collectCompletenessIssuesForSample(event.getTargetId()));
         } catch (Exception e) {
             // Cause racine si disponible (ExecutionException enveloppe l'erreur async).
             Throwable cause = e.getCause() != null ? e.getCause() : e;

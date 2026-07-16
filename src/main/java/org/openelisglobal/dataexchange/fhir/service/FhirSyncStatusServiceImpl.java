@@ -142,6 +142,31 @@ public class FhirSyncStatusServiceImpl extends BaseObjectServiceImpl<FhirSyncSta
 
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void markSuccessWithIssues(String syncStatusId, java.util.List<String> issues) {
+        if (syncStatusId == null) {
+            return;
+        }
+        if (issues == null || issues.isEmpty()) {
+            markSuccess(syncStatusId);
+            return;
+        }
+        try {
+            FhirSyncStatus status = get(syncStatusId);
+            if (status == null) {
+                return;
+            }
+            status.setStatus(SyncStatus.SUCCESS_INCOMPLETE.name());
+            status.setErrorMessage(truncate(String.join(" | ", issues)));
+            status.setLastAttemptAt(Timestamp.from(Instant.now()));
+            status.setSysUserId("1");
+            update(status);
+        } catch (Exception e) {
+            LogEvent.logError("FhirSyncStatusServiceImpl", "markSuccessWithIssues", e.toString());
+        }
+    }
+
+    @Override
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void markFailed(String syncStatusId, String errorMessage) {
         if (syncStatusId == null) {
             return;

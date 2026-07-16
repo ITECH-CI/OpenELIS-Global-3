@@ -228,6 +228,8 @@ function FhirSyncMonitor() {
 
   const statusTag = (status) => {
     if (status === "SUCCESS") return <Tag type="green">{status}</Tag>;
+    if (status === "SUCCESS_INCOMPLETE")
+      return <Tag type="magenta">{status}</Tag>;
     if (status === "FAILED") return <Tag type="red">{status}</Tag>;
     return <Tag type="gray">{status}</Tag>;
   };
@@ -255,6 +257,12 @@ function FhirSyncMonitor() {
             </Tag>
             <Tag type="green">
               SUCCESS: {summary.SUCCESS != null ? summary.SUCCESS : 0}
+            </Tag>
+            <Tag type="magenta">
+              SUCCESS_INCOMPLETE:{" "}
+              {summary.SUCCESS_INCOMPLETE != null
+                ? summary.SUCCESS_INCOMPLETE
+                : 0}
             </Tag>
             <Tag type="red">
               FAILED: {summary.FAILED != null ? summary.FAILED : 0}
@@ -335,6 +343,10 @@ function FhirSyncMonitor() {
               onChange={(e) => setStatusFilter(e.target.value)}
             >
               <SelectItem value="FAILED" text="FAILED" />
+              <SelectItem
+                value="SUCCESS_INCOMPLETE"
+                text="SUCCESS_INCOMPLETE"
+              />
               <SelectItem value="PENDING" text="PENDING" />
               <SelectItem value="SUCCESS" text="SUCCESS" />
               <SelectItem

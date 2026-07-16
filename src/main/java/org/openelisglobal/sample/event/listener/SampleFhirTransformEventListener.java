@@ -42,7 +42,14 @@ public class SampleFhirTransformEventListener {
             fhirTransformService.transformPersistOrderEntryFhirObjects(updateData, patientInfo, form.getUseReferral(),
                     form.getReferralItems());
 
-            fhirSyncStatusService.markSuccess(syncId);
+            // Persistance OK : qualifie la complétude des ressources produites
+            // (SUCCESS ou SUCCESS_INCOMPLETE) quand on a l'id d'échantillon.
+            if (sampleId != null) {
+                fhirSyncStatusService.markSuccessWithIssues(syncId,
+                        fhirTransformService.collectCompletenessIssuesForSample(sampleId));
+            } else {
+                fhirSyncStatusService.markSuccess(syncId);
+            }
             LogEvent.logInfo(this.getClass().getSimpleName(), "handleSamplePatientUpdateDataCreatedEvent",
                     String.format("FHIR transformation completed for sample with accession number: %s",
                             updateData.getAccessionNumber()));

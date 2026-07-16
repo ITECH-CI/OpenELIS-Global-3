@@ -47,6 +47,14 @@ public interface FhirSyncStatusService extends BaseObjectService<FhirSyncStatus,
     void markSuccess(String syncStatusId);
 
     /**
+     * Marque un événement selon la complétude des ressources produites : SUCCESS si
+     * {@code issues} est vide, sinon SUCCESS_INCOMPLETE avec le détail des manques
+     * (les ressources ont été persistées mais sont dégradées — à vérifier avant
+     * exposition/interop).
+     */
+    void markSuccessWithIssues(String syncStatusId, java.util.List<String> issues);
+
+    /**
      * Marque un événement FAILED : incrémente attemptCount, stocke le message
      * (tronqué).
      */

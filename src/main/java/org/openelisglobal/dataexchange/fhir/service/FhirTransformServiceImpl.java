@@ -412,6 +412,39 @@ public class FhirTransformServiceImpl implements FhirTransformService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public List<String> collectCompletenessIssuesForSample(String sampleId) {
+        List<String> issues = new ArrayList<>();
+        try {
+            Sample sample = sampleService.get(sampleId);
+            if (sample == null) {
+                return issues;
+            }
+            Patient patient = sampleHumanService.getPatientForSample(sample);
+            if (patient != null) {
+                issues.addAll(FhirResourceCompletenessInspector.inspectPatient(transformToFhirPatient(patient)));
+            }
+            for (Analysis analysis : analysisService.getAnalysesBySampleId(sampleId)) {
+                issues.addAll(
+                        FhirResourceCompletenessInspector.inspectServiceRequest(transformToServiceRequest(analysis)));
+                if (statusService.matches(analysis.getStatusId(), AnalysisStatus.Finalized)) {
+                    issues.addAll(FhirResourceCompletenessInspector
+                            .inspectDiagnosticReport(transformResultToDiagnosticReport(analysis)));
+                }
+            }
+            for (Result result : resultService.getResultsForSample(sample)) {
+                issues.addAll(
+                        FhirResourceCompletenessInspector.inspectObservation(transformResultToObservation(result)));
+            }
+        } catch (RuntimeException e) {
+            // L'inspection ne doit jamais casser le flux : en cas d'erreur on ne
+            // signale pas d'incomplétude (le statut restera SUCCESS).
+            LogEvent.logWarn(this.getClass().getSimpleName(), "collectCompletenessIssuesForSample", e.toString());
+        }
+        return issues;
+    }
+
+    @Override
     @Async
     @Transactional(readOnly = true)
     public void transformPersistPatient(PatientManagementInfo patientInfo, boolean isCreate)
@@ -741,13 +774,19 @@ public class FhirTransformServiceImpl implements FhirTransformService {
         fhirPatient.setId(uuid);
         fhirPatient.setIdentifier(createPatientIdentifiers(subjectNumber, nationalId, cmuNumber, stNumber, guid, uuid));
 
-        HumanName humanName = new HumanName();
-        List<HumanName> humanNameList = new ArrayList<>();
-        humanName.setFamily(patient.getPerson().getLastName());
-        humanName.addGiven(patient.getPerson().getFirstName());
-        humanNameList.add(humanName);
-        fhirPatient.setName(humanNameList);
-        fhirPatient.getNameFirstRep().setUse(HumanName.NameUse.OFFICIAL);
+        // Person peut être absente (donnée OE incomplète) : on garde nom/telecom/
+        // adresse optionnels au lieu de lever une NPE qui ferait planter TOUTE la
+        // transformation (le Patient est central à quasiment tous les flux).
+        Person person = patient.getPerson();
+        if (person != null) {
+            HumanName humanName = new HumanName();
+            List<HumanName> humanNameList = new ArrayList<>();
+            humanName.setFamily(person.getLastName());
+            humanName.addGiven(person.getFirstName());
+            humanNameList.add(humanName);
+            fhirPatient.setName(humanNameList);
+            fhirPatient.getNameFirstRep().setUse(HumanName.NameUse.OFFICIAL);
+        }
 
         try {
             if (patient.getBirthDateForDisplay() != null) {
@@ -763,9 +802,10 @@ public class FhirTransformServiceImpl implements FhirTransformService {
         } else {
             fhirPatient.setGender(AdministrativeGender.FEMALE);
         }
-        fhirPatient.setTelecom(transformToTelecom(patient.getPerson()));
-
-        fhirPatient.addAddress(transformToAddress(patient.getPerson()));
+        if (person != null) {
+            fhirPatient.setTelecom(transformToTelecom(person));
+            fhirPatient.addAddress(transformToAddress(person));
+        }
 
         return fhirPatient;
     }
@@ -919,22 +959,40 @@ public class FhirTransformServiceImpl implements FhirTransformService {
         LogEvent.logTrace(this.getClass().getSimpleName(), "transformToServiceRequest",
                 "transformToServiceRequest called");
 
-        Sample sample = analysis.getSampleItem().getSample();
-        Patient patient = sampleHumanService.getPatientForSample(sample);
-        Provider provider = sampleHumanService.getProviderForSample(sample);
+        // Analyse potentiellement orpheline (sampleItem/sample manquant) : on tolère
+        // en produisant un ServiceRequest minimal (id + code) plutôt que de faire
+        // planter toute la transformation par une NPE.
+        SampleItem sampleItem = analysis.getSampleItem();
+        Sample sample = sampleItem != null ? sampleItem.getSample() : null;
+        Patient patient = sample != null ? sampleHumanService.getPatientForSample(sample) : null;
+        Provider provider = sample != null ? sampleHumanService.getProviderForSample(sample) : null;
 
-        Organization organization = sampleService.getOrganizationRequester(sample,
-                TableIdService.getInstance().REFERRING_ORG_TYPE_ID);
-        Organization organizationDepartment = sampleService.getOrganizationRequester(sample,
-                TableIdService.getInstance().REFERRING_ORG_DEPARTMENT_TYPE_ID);
+        Organization organization = sample != null
+                ? sampleService.getOrganizationRequester(sample, TableIdService.getInstance().REFERRING_ORG_TYPE_ID)
+                : null;
+        Organization organizationDepartment = sample != null
+                ? sampleService.getOrganizationRequester(sample,
+                        TableIdService.getInstance().REFERRING_ORG_DEPARTMENT_TYPE_ID)
+                : null;
 
         Test test = analysis.getTest();
         ServiceRequest serviceRequest = new ServiceRequest();
         serviceRequest.setId(analysis.getFhirUuidAsString());
         serviceRequest.addIdentifier(
                 this.createIdentifier(fhirConfig.getOeFhirSystem() + "/analysis_uuid", analysis.getFhirUuidAsString()));
-        serviceRequest.setRequisition(this.createIdentifier(fhirConfig.getOeFhirSystem() + "/samp_labNo",
-                analysis.getSampleItem().getSample().getAccessionNumber()));
+        if (test != null) {
+            serviceRequest.setCode(transformTestToCodeableConcept(test.getId()));
+        }
+        // Analyse orpheline (pas de sample) : ServiceRequest minimal, on s'arrête ici.
+        if (sample == null) {
+            LogEvent.logWarn(this.getClass().getSimpleName(), "transformToServiceRequest",
+                    "analyse sans sampleItem/sample (id=" + analysis.getId() + ") : ServiceRequest minimal produit.");
+            serviceRequest.setStatus(ServiceRequestStatus.UNKNOWN);
+            serviceRequest.setAuthoredOn(new Date());
+            return serviceRequest;
+        }
+        serviceRequest.setRequisition(
+                this.createIdentifier(fhirConfig.getOeFhirSystem() + "/samp_labNo", sample.getAccessionNumber()));
         // Référence typée Organization (et non Location) : ce sont des Organizations
         // OE, produites comme telles ; typer 'Location/<uuid>' donnait une référence
         // non résolue (aucune ressource Location de cet UUID n'existe).
@@ -978,16 +1036,14 @@ public class FhirTransformServiceImpl implements FhirTransformService {
         if (program != null && !GenericValidator.isBlankOrNull(program.getValue())) {
             serviceRequest.addCategory(transformSampleProgramToCodeableConcept(program));
         }
-        serviceRequest.setPriority(mapServiceRequestPriority(analysis.getSampleItem().getSample().getPriority()));
-        serviceRequest.setCode(transformTestToCodeableConcept(test.getId()));
+        serviceRequest.setPriority(mapServiceRequestPriority(sample.getPriority()));
         serviceRequest.setAuthoredOn(new Date());
         for (Note note : noteService.getNotes(analysis)) {
             serviceRequest.addNote(transformNoteToAnnotation(note));
         }
         // TODO performer type?
 
-        serviceRequest.addSpecimen(
-                this.createReferenceFor(ResourceType.Specimen, analysis.getSampleItem().getFhirUuidAsString()));
+        serviceRequest.addSpecimen(this.createReferenceFor(ResourceType.Specimen, sampleItem.getFhirUuidAsString()));
         Reference srPatientRef = patientReferenceOrNull(patient);
         if (srPatientRef != null) {
             serviceRequest.setSubject(srPatientRef);
@@ -1054,7 +1110,10 @@ public class FhirTransformServiceImpl implements FhirTransformService {
         Specimen specimen = this.transformToSpecimen(sampleTest.item.getId());
         if (sampleTest.initialSampleConditionIdList != null) {
             for (ObservationHistory initialSampleCondition : sampleTest.initialSampleConditionIdList) {
-                specimen.addCondition(transformSampleConditionToCodeableConcept(initialSampleCondition));
+                CodeableConcept conditionCC = transformSampleConditionToCodeableConcept(initialSampleCondition);
+                if (conditionCC != null) {
+                    specimen.addCondition(conditionCC);
+                }
             }
         }
 
@@ -1100,17 +1159,28 @@ public class FhirTransformServiceImpl implements FhirTransformService {
         LogEvent.logTrace(this.getClass().getSimpleName(), "transformSampleConditionToCodeableConcept",
                 "transformSampleConditionToCodeableConcept called");
 
-        String observationValue;
-        String observationDisplay;
+        if (initialSampleCondition == null) {
+            return null;
+        }
+        String observationValue = null;
+        String observationDisplay = "";
+        // Les lookups dictionnaire/localisation peuvent renvoyer null : on garde une
+        // condition sans code plutôt que de lever une NPE.
         if (ValueType.DICTIONARY.getCode().equals(initialSampleCondition.getValueType())) {
-            observationValue = dictionaryService.get(initialSampleCondition.getValue()).getDictEntry();
-            observationDisplay = dictionaryService.get(initialSampleCondition.getValue()).getDictEntryDisplayValue();
+            org.openelisglobal.dictionary.valueholder.Dictionary dict = dictionaryService
+                    .get(initialSampleCondition.getValue());
+            if (dict != null) {
+                observationValue = dict.getDictEntry();
+                observationDisplay = dict.getDictEntryDisplayValue();
+            }
         } else if (ValueType.KEY.getCode().equals(initialSampleCondition.getValueType())) {
-            observationValue = localizationService.get(initialSampleCondition.getValue()).getEnglish();
-            observationDisplay = "";
+            org.openelisglobal.localization.valueholder.Localization loc = localizationService
+                    .get(initialSampleCondition.getValue());
+            if (loc != null) {
+                observationValue = loc.getEnglish();
+            }
         } else {
             observationValue = initialSampleCondition.getValue();
-            observationDisplay = "";
         }
 
         CodeableConcept condition = new CodeableConcept();
@@ -1275,7 +1345,11 @@ public class FhirTransformServiceImpl implements FhirTransformService {
 
         List<Result> allResults = resultService.getResultsByAnalysis(analysis);
         SampleItem sampleItem = analysis.getSampleItem();
-        Patient patient = sampleHumanService.getPatientForSample(sampleItem.getSample());
+        // sampleItem/sample potentiellement absents (analyse orpheline) : le patient
+        // reste optionnel (subject omis) plutôt que NPE.
+        Patient patient = (sampleItem != null && sampleItem.getSample() != null)
+                ? sampleHumanService.getPatientForSample(sampleItem.getSample())
+                : null;
 
         DiagnosticReport diagnosticReport = genNewDiagnosticReport(analysis);
         Test test = analysis.getTest();
@@ -1327,9 +1401,12 @@ public class FhirTransformServiceImpl implements FhirTransformService {
                 "transformResultToObservation called");
 
         Analysis analysis = result.getAnalysis();
-        Test test = analysis.getTest();
-        SampleItem sampleItem = analysis.getSampleItem();
-        Patient patient = sampleHumanService.getPatientForSample(sampleItem.getSample());
+        Test test = analysis != null ? analysis.getTest() : null;
+        SampleItem sampleItem = analysis != null ? analysis.getSampleItem() : null;
+        // sample/patient optionnels (analyse orpheline) : subject omis plutôt que NPE.
+        Patient patient = (sampleItem != null && sampleItem.getSample() != null)
+                ? sampleHumanService.getPatientForSample(sampleItem.getSample())
+                : null;
         Observation observation = new Observation();
 
         observation.setId(result.getFhirUuidAsString());
@@ -1352,7 +1429,7 @@ public class FhirTransformServiceImpl implements FhirTransformService {
         boolean valueSet = false;
         if (!GenericValidator.isBlankOrNull(result.getValue())) {
             // in case of Viral load test
-            if (result.getAnalysis().getTest().getName().equalsIgnoreCase("Viral Load")) {
+            if (test != null && "Viral Load".equalsIgnoreCase(test.getName())) {
                 long finalResult = result.getVLValueAsNumber();
                 observation.setValue(buildQuantity(new BigDecimal(finalResult), result));
                 valueSet = true;
@@ -1371,8 +1448,17 @@ public class FhirTransformServiceImpl implements FhirTransformService {
                     valueSet = true;
                 }
             } else if (TypeOfTestResultServiceImpl.ResultType.isNumeric(result.getResultType())) {
-                observation.setValue(buildQuantity(new BigDecimal(result.getValue(true)), result));
-                valueSet = true;
+                // Résultat "numérique" mais valeur non parseable (ex. "<20", saisie
+                // libre) : on ne casse pas la transformation ; valueSet reste false ->
+                // dataAbsentReason posé plus bas (cohérent avec la branche flore).
+                try {
+                    observation.setValue(buildQuantity(new BigDecimal(result.getValue(true)), result));
+                    valueSet = true;
+                } catch (NumberFormatException e) {
+                    LogEvent.logWarn(this.getClass().getSimpleName(), "transformResultToObservation",
+                            "valeur numérique non parseable pour result " + result.getId() + " : '" + result.getValue()
+                                    + "'");
+                }
             } else if (TypeOfTestResultServiceImpl.ResultType.isTextOnlyVariant(result.getResultType())) {
                 observation.setValue(new StringType(result.getValue()));
                 valueSet = true;
@@ -1384,9 +1470,16 @@ public class FhirTransformServiceImpl implements FhirTransformService {
             observation.setDataAbsentReason(new CodeableConcept().addCoding(
                     new Coding("http://terminology.hl7.org/CodeSystem/data-absent-reason", "unknown", "Unknown")));
         }
-        observation.setCode(transformTestToCodeableConcept(test.getId()));
-        observation.addBasedOn(this.createReferenceFor(ResourceType.ServiceRequest, analysis.getFhirUuidAsString()));
-        observation.setSpecimen(this.createReferenceFor(ResourceType.Specimen, sampleItem.getFhirUuidAsString()));
+        if (test != null) {
+            observation.setCode(transformTestToCodeableConcept(test.getId()));
+        }
+        if (analysis != null) {
+            observation
+                    .addBasedOn(this.createReferenceFor(ResourceType.ServiceRequest, analysis.getFhirUuidAsString()));
+        }
+        if (sampleItem != null) {
+            observation.setSpecimen(this.createReferenceFor(ResourceType.Specimen, sampleItem.getFhirUuidAsString()));
+        }
         Reference obsPatientRef = patientReferenceOrNull(patient);
         if (obsPatientRef != null) {
             observation.setSubject(obsPatientRef);

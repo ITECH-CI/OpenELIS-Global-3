@@ -30,7 +30,9 @@ public class FhirSyncStatus extends BaseObject<String> {
 
     public enum SyncStatus {
         PENDING, // en attente / en cours
-        SUCCESS, // transformation + persistance FHIR OK
+        SUCCESS, // transformation + persistance FHIR OK, ressources complètes
+        SUCCESS_INCOMPLETE, // persisté mais ressources dégradées (voir errorMessage) — à
+                            // vérifier avant exposition/interop
         FAILED // échec (voir errorMessage) — rejouable
     }
 
