@@ -52,6 +52,25 @@
         </createTable>
     </changeSet>
 
+    <!-- Dédoublonnage AVANT l'index unique : une table analysis_sync_status
+         PRÉEXISTANTE (ancien uploader, index NON unique) peut contenir plusieurs
+         lignes pour un même analysis_id. On garde la ligne la plus pertinente à
+         remonter (flag 1/2 en priorité, puis la plus récente, puis id le + grand)
+         et on supprime les autres, sinon la création de l'index unique échoue. -->
+    <changeSet id="dedup_analysis_sync_status_analysis_id" author="itechciv">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <tableExists tableName="analysis_sync_status" schemaName="clinlims"/>
+                <not>
+                    <indexExists indexName="idx_analysis_sync_status_analysis_id_unique" schemaName="clinlims"/>
+                </not>
+            </and>
+        </preConditions>
+        <sql>DELETE FROM clinlims.analysis_sync_status a USING (SELECT id, row_number() OVER (PARTITION BY
+            analysis_id ORDER BY CASE WHEN upload_flag IN (1, 2) THEN 0 ELSE 1 END ASC, last_updated DESC NULLS
+            LAST, id DESC) AS rn FROM clinlims.analysis_sync_status) d WHERE a.id = d.id AND d.rn &gt; 1</sql>
+    </changeSet>
+
     <!-- Unicité analysis_id : requise par le ON CONFLICT (analysis_id) du trigger
          d'insertion (une ligne de suivi par analyse). -->
     <changeSet id="create_analysis_sync_status_analysis_id_unique" author="itechciv">
