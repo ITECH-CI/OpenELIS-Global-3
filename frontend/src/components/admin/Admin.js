@@ -33,6 +33,7 @@ import {
   Popup,
   Search,
   TrashCan,
+  DataShare,
 } from "@carbon/icons-react";
 import PathRoute from "../utils/PathRoute";
 import CalculatedValue from "./calculatedValue/CalculatedValueForm";
@@ -209,34 +210,27 @@ function Admin() {
           >
             <FormattedMessage id="configuration.batch.test.reassignment" />
           </SideNavLink>
-          <SideNavLink
-            data-cy="fhirSyncMonitor"
-            renderIcon={ListDropdown}
-            href="#FhirSyncMonitor"
+          <SideNavMenu
+            data-cy="interoperabilityMenu"
+            renderIcon={DataShare}
+            title={intl.formatMessage({ id: "sidenav.label.admin.interop" })}
           >
-            <FormattedMessage id="fhir.sync.monitor.title" />
-          </SideNavLink>
-          <SideNavLink
-            data-cy="fhirGateway"
-            renderIcon={ListDropdown}
-            href="#FhirGateway"
-          >
-            <FormattedMessage id="fhir.gateway.title" />
-          </SideNavLink>
-          <SideNavLink
-            data-cy="fhirPushTargets"
-            renderIcon={ListDropdown}
-            href="#FhirPushTargets"
-          >
-            <FormattedMessage id="fhir.push.title" />
-          </SideNavLink>
-          <SideNavLink
-            data-cy="consolidatedSyncConfig"
-            renderIcon={ListDropdown}
-            href="#ConsolidatedSyncConfig"
-          >
-            <FormattedMessage id="consolidatedSync.title" />
-          </SideNavLink>
+            <SideNavMenuItem
+              data-cy="consolidatedSyncConfig"
+              href="#ConsolidatedSyncConfig"
+            >
+              <FormattedMessage id="consolidatedSync.title" />
+            </SideNavMenuItem>
+            <SideNavMenuItem data-cy="fhirPushTargets" href="#FhirPushTargets">
+              <FormattedMessage id="fhir.push.title" />
+            </SideNavMenuItem>
+            <SideNavMenuItem data-cy="fhirGateway" href="#FhirGateway">
+              <FormattedMessage id="fhir.gateway.title" />
+            </SideNavMenuItem>
+            <SideNavMenuItem data-cy="fhirSyncMonitor" href="#FhirSyncMonitor">
+              <FormattedMessage id="fhir.sync.monitor.title" />
+            </SideNavMenuItem>
+          </SideNavMenu>
           <SideNavLink
             data-cy="terminologyImport"
             renderIcon={ListDropdown}

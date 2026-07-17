@@ -37,16 +37,6 @@
             <version>2.3.5</version>
         </dependency>
         <dependency>
-            <groupId>org.itech</groupId>
-            <artifactId>dataexport-api</artifactId>
-            <version>0.0.0.9</version>
-        </dependency>
-        <dependency>
-            <groupId>org.itech</groupId>
-            <artifactId>dataexport-core</artifactId>
-            <version>0.0.0.9</version>
-        </dependency>
-        <dependency>
             <groupId>ca.uhn.hapi.fhir</groupId>
             <artifactId>hapi-fhir-structures-r4</artifactId>
             <version>6.6.2</version>
@@ -810,7 +800,6 @@
                                 <exclude>bin/**</exclude>
                                 <exclude>tmp/**</exclude>
                                 <exclude>tools/**</exclude>
-                                <exclude>dataexport/**</exclude>
                                 <exclude>plugins/**</exclude>
                                 <exclude>volume/**</exclude>
                                 <exclude>install/**</exclude>
@@ -842,7 +831,6 @@
                                 <exclude>bin/**</exclude>
                                 <exclude>tmp/**</exclude>
                                 <exclude>tools/Liquibase-Outdated/**</exclude>
-                                <exclude>dataexport/**</exclude>
                                 <exclude>plugins/**</exclude>
                             </excludes>
                             <trimTrailingWhitespace />
@@ -858,7 +846,6 @@
                             <excludes>
                                 <exclude>**/target/**</exclude>
                                 <exclude>tools/Liquibase-Outdated/**</exclude>
-                                <exclude>dataexport/**</exclude>
                                 <exclude>plugins/**</exclude>
                                 <exclude>frontend/**</exclude>
                                 <!-- Notes de version : géré à part (process de release), pas du

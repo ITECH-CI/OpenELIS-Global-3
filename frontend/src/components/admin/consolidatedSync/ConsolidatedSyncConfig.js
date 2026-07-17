@@ -117,145 +117,147 @@ function ConsolidatedSyncConfig() {
   return (
     <>
       {notificationVisible === true ? <AlertDialog /> : ""}
-      <PageBreadCrumb breadcrumbs={breadcrumbs} />
-      <Grid fullWidth={true}>
-        <Column lg={16} md={8} sm={4}>
-          <Section>
-            <Heading>
-              <FormattedMessage id="consolidatedSync.title" />
-            </Heading>
-          </Section>
-        </Column>
-      </Grid>
-      <div className="orderLegendBody">
+      <div className="adminPageContent">
+        <PageBreadCrumb breadcrumbs={breadcrumbs} />
         <Grid fullWidth={true}>
           <Column lg={16} md={8} sm={4}>
-            <InlineNotification
-              kind="info"
-              lowContrast
-              hideCloseButton
-              title={intl.formatMessage({ id: "consolidatedSync.title" })}
-              subtitle={intl.formatMessage({
-                id: "consolidatedSync.intervalNote",
-              })}
-            />
-          </Column>
-
-          {/* Activation des flux */}
-          <Column lg={16} md={8} sm={4}>
-            <br />
-            <Toggle
-              id="syncEnabled"
-              labelText={intl.formatMessage({
-                id: "consolidatedSync.syncEnabled",
-              })}
-              toggled={form.syncEnabled}
-              onToggle={(v) => setField("syncEnabled", v)}
-            />
-          </Column>
-          <Column lg={16} md={8} sm={4}>
-            <Toggle
-              id="pullEnabled"
-              labelText={intl.formatMessage({
-                id: "consolidatedSync.pullEnabled",
-              })}
-              toggled={form.pullEnabled}
-              onToggle={(v) => setField("pullEnabled", v)}
-            />
-          </Column>
-          <Column lg={16} md={8} sm={4}>
-            <Toggle
-              id="pushEnabled"
-              labelText={intl.formatMessage({
-                id: "consolidatedSync.pushEnabled",
-              })}
-              toggled={form.pushEnabled}
-              onToggle={(v) => setField("pushEnabled", v)}
-            />
-          </Column>
-
-          {/* Cible + identifiants */}
-          <Column lg={8} md={8} sm={4}>
-            <br />
-            <TextInput
-              id="apiUrl"
-              labelText={intl.formatMessage({
-                id: "consolidatedSync.apiUrl",
-              })}
-              value={form.apiUrl}
-              onChange={(e) => setField("apiUrl", e.target.value)}
-            />
-          </Column>
-          <Column lg={8} md={8} sm={4}>
-            <br />
-            <TextInput
-              id="authUrl"
-              labelText={intl.formatMessage({
-                id: "consolidatedSync.authUrl",
-              })}
-              value={form.authUrl}
-              onChange={(e) => setField("authUrl", e.target.value)}
-            />
-          </Column>
-          <Column lg={8} md={8} sm={4}>
-            <br />
-            <TextInput
-              id="labUuid"
-              labelText={intl.formatMessage({
-                id: "consolidatedSync.labUuid",
-              })}
-              value={form.labUuid}
-              onChange={(e) => setField("labUuid", e.target.value)}
-            />
-          </Column>
-          <Column lg={8} md={8} sm={4}>
-            <br />
-            <TextInput
-              id="username"
-              labelText={intl.formatMessage({
-                id: "consolidatedSync.username",
-              })}
-              value={form.username}
-              onChange={(e) => setField("username", e.target.value)}
-            />
-          </Column>
-          <Column lg={8} md={8} sm={4}>
-            <br />
-            <TextInput.PasswordInput
-              id="password"
-              labelText={intl.formatMessage({
-                id: "consolidatedSync.password",
-              })}
-              helperText={
-                hasPassword
-                  ? intl.formatMessage({
-                      id: "consolidatedSync.password.unchanged",
-                    })
-                  : ""
-              }
-              value={form.password}
-              onChange={(e) => setField("password", e.target.value)}
-            />
-          </Column>
-          <Column lg={16} md={8} sm={4}>
-            <br />
-            <Checkbox
-              id="allowHttp"
-              labelText={intl.formatMessage({
-                id: "consolidatedSync.allowHttp",
-              })}
-              checked={form.allowHttp}
-              onChange={(_, { checked }) => setField("allowHttp", checked)}
-            />
-          </Column>
-
-          <Column lg={16} md={8} sm={4}>
-            <br />
-            <Button onClick={save} disabled={saving}>
-              <FormattedMessage id="label.button.save" />
-            </Button>
+            <Section>
+              <Heading>
+                <FormattedMessage id="consolidatedSync.title" />
+              </Heading>
+            </Section>
           </Column>
         </Grid>
+        <div className="orderLegendBody">
+          <Grid fullWidth={true}>
+            <Column lg={16} md={8} sm={4}>
+              <InlineNotification
+                kind="info"
+                lowContrast
+                hideCloseButton
+                title={intl.formatMessage({ id: "consolidatedSync.title" })}
+                subtitle={intl.formatMessage({
+                  id: "consolidatedSync.intervalNote",
+                })}
+              />
+            </Column>
+
+            {/* Activation des flux */}
+            <Column lg={16} md={8} sm={4}>
+              <br />
+              <Toggle
+                id="syncEnabled"
+                labelText={intl.formatMessage({
+                  id: "consolidatedSync.syncEnabled",
+                })}
+                toggled={form.syncEnabled}
+                onToggle={(v) => setField("syncEnabled", v)}
+              />
+            </Column>
+            <Column lg={16} md={8} sm={4}>
+              <Toggle
+                id="pullEnabled"
+                labelText={intl.formatMessage({
+                  id: "consolidatedSync.pullEnabled",
+                })}
+                toggled={form.pullEnabled}
+                onToggle={(v) => setField("pullEnabled", v)}
+              />
+            </Column>
+            <Column lg={16} md={8} sm={4}>
+              <Toggle
+                id="pushEnabled"
+                labelText={intl.formatMessage({
+                  id: "consolidatedSync.pushEnabled",
+                })}
+                toggled={form.pushEnabled}
+                onToggle={(v) => setField("pushEnabled", v)}
+              />
+            </Column>
+
+            {/* Cible + identifiants */}
+            <Column lg={8} md={8} sm={4}>
+              <br />
+              <TextInput
+                id="apiUrl"
+                labelText={intl.formatMessage({
+                  id: "consolidatedSync.apiUrl",
+                })}
+                value={form.apiUrl}
+                onChange={(e) => setField("apiUrl", e.target.value)}
+              />
+            </Column>
+            <Column lg={8} md={8} sm={4}>
+              <br />
+              <TextInput
+                id="authUrl"
+                labelText={intl.formatMessage({
+                  id: "consolidatedSync.authUrl",
+                })}
+                value={form.authUrl}
+                onChange={(e) => setField("authUrl", e.target.value)}
+              />
+            </Column>
+            <Column lg={8} md={8} sm={4}>
+              <br />
+              <TextInput
+                id="labUuid"
+                labelText={intl.formatMessage({
+                  id: "consolidatedSync.labUuid",
+                })}
+                value={form.labUuid}
+                onChange={(e) => setField("labUuid", e.target.value)}
+              />
+            </Column>
+            <Column lg={8} md={8} sm={4}>
+              <br />
+              <TextInput
+                id="username"
+                labelText={intl.formatMessage({
+                  id: "consolidatedSync.username",
+                })}
+                value={form.username}
+                onChange={(e) => setField("username", e.target.value)}
+              />
+            </Column>
+            <Column lg={8} md={8} sm={4}>
+              <br />
+              <TextInput.PasswordInput
+                id="password"
+                labelText={intl.formatMessage({
+                  id: "consolidatedSync.password",
+                })}
+                helperText={
+                  hasPassword
+                    ? intl.formatMessage({
+                        id: "consolidatedSync.password.unchanged",
+                      })
+                    : ""
+                }
+                value={form.password}
+                onChange={(e) => setField("password", e.target.value)}
+              />
+            </Column>
+            <Column lg={16} md={8} sm={4}>
+              <br />
+              <Checkbox
+                id="allowHttp"
+                labelText={intl.formatMessage({
+                  id: "consolidatedSync.allowHttp",
+                })}
+                checked={form.allowHttp}
+                onChange={(_, { checked }) => setField("allowHttp", checked)}
+              />
+            </Column>
+
+            <Column lg={16} md={8} sm={4}>
+              <br />
+              <Button onClick={save} disabled={saving}>
+                <FormattedMessage id="label.button.save" />
+              </Button>
+            </Column>
+          </Grid>
+        </div>
       </div>
     </>
   );

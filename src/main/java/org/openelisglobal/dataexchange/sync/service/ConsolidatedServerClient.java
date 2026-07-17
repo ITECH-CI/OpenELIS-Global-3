@@ -77,9 +77,8 @@ public class ConsolidatedServerClient {
     }
 
     /**
-     * Force HTTPS (sauf allowHTTP=true). Même garde-fou que
-     * {@code RegisterFhirHooksTask} : sans TLS, le Basic (user:pass) et le Bearer
-     * JWT transiteraient en clair.
+     * Force HTTPS (sauf allowHTTP=true) : sans TLS, le Basic (user:pass) et le
+     * Bearer JWT transiteraient en clair.
      */
     private String enforceHttps(String url) {
         if (GenericValidator.isBlankOrNull(url)) {

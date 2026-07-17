@@ -6,9 +6,6 @@ import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import org.hl7.fhir.r4.model.Bundle;
-import org.itech.fhir.dataexport.api.service.DataExportService;
-import org.itech.fhir.dataexport.core.model.DataExportTask;
-import org.itech.fhir.dataexport.core.service.DataExportTaskService;
 import org.openelisglobal.common.controller.BaseController;
 import org.openelisglobal.common.log.LogEvent;
 import org.openelisglobal.dataexchange.fhir.exception.FhirLocalPersistingException;
@@ -31,11 +28,6 @@ public class FhirTransformationController extends BaseController {
     private SampleHumanService sampleHumanService;
     @Autowired
     private FhirTransformService fhirTransformService;
-
-    @Autowired
-    private DataExportService dataExportService;
-    @Autowired
-    private DataExportTaskService dataExportTaskService;
 
     // global variable for tracking state as only one process can be run at a time
     private TransformationInfo info;
@@ -239,15 +231,10 @@ public class FhirTransformationController extends BaseController {
                 throw new Exception();
             }
         }
-        // done so if there is a lot of data being processed, we backup to the CS in
-        // tandem
-        runExportTasks();
-    }
-
-    private void runExportTasks() {
-        for (DataExportTask dataExportTask : dataExportTaskService.getDAO().findAll()) {
-            dataExportService.exportNewDataFromLocalToRemote(dataExportTask);
-        }
+        // La transformation OE→FHIR alimente le store FHIR LOCAL. Le push vers les
+        // serveurs distants est désormais assuré par le moteur natif
+        // (FhirPushEngineServiceImpl, @Scheduled), qui lit ce store — plus de "backup
+        // en tandem" couplé à dataexport ici.
     }
 
     @Override

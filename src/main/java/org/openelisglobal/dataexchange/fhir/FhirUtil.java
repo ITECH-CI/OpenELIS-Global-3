@@ -16,12 +16,11 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.util.EntityUtils;
-import org.itech.fhir.dataexport.core.service.FhirClientFetcher;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 @Component
-public class FhirUtil implements FhirClientFetcher {
+public class FhirUtil {
 
     @Autowired
     private FhirConfig fhirConfig;
@@ -30,7 +29,6 @@ public class FhirUtil implements FhirClientFetcher {
     @Autowired
     private CloseableHttpClient closeableHttpClient;
 
-    @Override
     public IGenericClient getFhirClient(String fhirStorePath) {
         IGenericClient fhirClient = fhirContext.newRestfulGenericClient(fhirStorePath);
         if (!GenericValidator.isBlankOrNull(fhirConfig.getUsername())) {
@@ -54,6 +52,16 @@ public class FhirUtil implements FhirClientFetcher {
 
     public IParser getFhirParser() {
         return fhirContext.newJsonParser();
+    }
+
+    /**
+     * Client FHIR NU (sans aucune authentification). À utiliser pour une cible
+     * distante dont l'auth est "NONE" : {@link #getFhirClient(String)} appliquerait
+     * les credentials globaux {@code fhirstore.*} (destinés au store local), ce qui
+     * serait incorrect pour un serveur tiers.
+     */
+    public IGenericClient getFhirClientNoAuth(String fhirStorePath) {
+        return fhirContext.newRestfulGenericClient(fhirStorePath);
     }
 
     public IGenericClient getFhirClient(String fhirStorePath, String token) {

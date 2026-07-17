@@ -59,5 +59,18 @@
         <property name="createdAt" type="timestamp">
             <column name="created_at" not-null="false" />
         </property>
+
+        <!-- Point de reprise + supervision du moteur de push FHIR natif. -->
+        <property name="lastPushed" type="timestamp">
+            <column name="last_pushed" not-null="false" />
+        </property>
+
+        <property name="lastAttempt" type="timestamp">
+            <column name="last_attempt" not-null="false" />
+        </property>
+
+        <property name="lastSuccess" type="timestamp">
+            <column name="last_success" not-null="false" />
+        </property>
     </class>
 </hibernate-mapping>

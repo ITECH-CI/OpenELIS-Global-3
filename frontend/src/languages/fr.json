@@ -301,6 +301,7 @@
   "sidenav.label.admin.testmgt.ManageMethod": "Gérer la méthode",
   "sidenav.label.admin.analyzerTest": "Nom du test de l'analyseur",
   "sidenav.label.admin.program": "Entrée du Programme",
+  "sidenav.label.admin.interop": "Interopérabilité",
   "sidenav.label.admin.organizationmgt": "Gestion de l'Organisation",
   "sidenav.label.admin.usermgt": "Gestion des Utilisateurs",
   "sidenav.label.admin.labNumber": "Gestion des numéros de laboratoire",

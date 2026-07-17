@@ -153,6 +153,10 @@ file="add_study_modifier_menu.xml" />
         file="create_eorder_sync_status.xml" />
     <include relativeToChangelogFile="true"
         file="add_consolidated_sync_config.xml" />
+    <include relativeToChangelogFile="true"
+        file="add_fhir_push_target_checkpoint.xml" />
+    <include relativeToChangelogFile="true"
+        file="drop_data_export_tables.xml" />
 
 
 </databaseChangeLog>

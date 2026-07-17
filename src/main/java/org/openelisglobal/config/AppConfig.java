@@ -52,14 +52,14 @@ import org.springframework.web.servlet.view.InternalResourceViewResolver;
 
 @EnableWebMvc
 @Configuration
-@EnableJpaRepositories(basePackages = { "org.itech", "org.ozeki.sms" })
+@EnableJpaRepositories(basePackages = { "org.ozeki.sms" })
 @PropertySource("classpath:application.properties")
 @PropertySource("file:/run/secrets/common.properties")
 @PropertySource(value = "file:/run/secrets/extra.properties", ignoreResourceNotFound = true)
 @PropertySource(value = "classpath:SystemConfiguration.properties", ignoreResourceNotFound = true)
 @PropertySource(value = "file:/var/lib/openelis-global/properties/TotalSystemConfiguration.properties", ignoreResourceNotFound = true)
 @PropertySource(value = "file:/var/lib/openelis-global/properties/SystemConfiguration.properties", ignoreResourceNotFound = true)
-@ComponentScan(basePackages = { "spring", "org.openelisglobal", "org.itech", "org.ozeki.sms", "oe.plugin" })
+@ComponentScan(basePackages = { "spring", "org.openelisglobal", "org.ozeki.sms", "oe.plugin" })
 public class AppConfig implements WebMvcConfigurer {
 
     @Autowired

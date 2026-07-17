@@ -214,6 +214,7 @@
   "sidenav.label.admin.testmgt.ManageMethod": "Manage Method",
   "sidenav.label.admin.analyzerTest": "Analyzer Test Name",
   "sidenav.label.admin.program": "Program Entry",
+  "sidenav.label.admin.interop": "Interoperability",
   "sidenav.label.admin.organizationmgt": "Organization Management",
   "sidenav.label.admin.usermgt": "User Management",
   "sidenav.label.admin.labNumber": "Lab Number Management",
