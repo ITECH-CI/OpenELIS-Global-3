@@ -342,34 +342,44 @@ public class FhirTransformServiceImpl implements FhirTransformService {
                 }
             }
             if (analysises != null) {
+                // SR = 1 par analyse (inchangé). Les Observations bactério (isolats/
+                // antibiogramme) sont collectées PAR ÉCHANTILLON (sampleItem) pour être
+                // rattachées au DR de leur échantillon (amendement A1 : 1 DR/sampleItem).
+                Map<String, List<Reference>> bacterioRefsBySampleItem = new HashMap<>();
+                boolean anyFinalized = false;
                 for (Analysis analysis : analysises) {
                     ServiceRequest serviceRequest = this.transformToServiceRequest(analysis);
-                    if (serviceRequests.containsKey(serviceRequest.getIdElement().getIdPart())) {
-                        // LogEvent.logWarn(this.getClass().getSimpleName(),
-                        // "transformPersistObjectsUnderSamples",
-                        // "serviceRequest collision with id: " +
-                        // serviceRequest.getIdElement().getIdPart());
-                    }
                     serviceRequests.put(serviceRequest.getIdElement().getIdPart(), serviceRequest);
                     if (statusService.matches(analysis.getStatusId(), AnalysisStatus.Finalized)) {
-                        DiagnosticReport diagnosticReport = this.transformResultToDiagnosticReport(analysis);
-                        if (diagnosticReports.containsKey(analysis.getFhirUuidAsString())) {
-                            // LogEvent.logWarn(this.getClass().getSimpleName(),
-                            // "transformPersistObjectsUnderSamples",
-                            // "diagnosticReport collision with id: "
-                            // + diagnosticReport.getIdElement().getIdPart());
-                        }
-                        // Bactériologie : ajoute les Observations isolat + antibiogramme
-                        // (dérivées de la culture) et les rattache au DiagnosticReport.
-                        // Ancre culture = 1re Observation de résultat de l'analyse si présente.
+                        anyFinalized = true;
                         Reference cultureAnchor = firstResultObservationRef(analysis);
-                        for (Observation bacterioObs : buildBacteriologyObservations(analysis, cultureAnchor)) {
-                            observations.put(bacterioObs.getIdElement().getIdPart(), bacterioObs);
-                            diagnosticReport.addResult(createReferenceFor(ResourceType.Observation,
-                                    bacterioObs.getIdElement().getIdPart()));
+                        List<Observation> bacterioObs = buildBacteriologyObservations(analysis, cultureAnchor);
+                        if (!bacterioObs.isEmpty() && analysis.getSampleItem() != null) {
+                            String siId = analysis.getSampleItem().getId();
+                            List<Reference> refs = bacterioRefsBySampleItem.computeIfAbsent(siId,
+                                    k -> new ArrayList<>());
+                            for (Observation obs : bacterioObs) {
+                                observations.put(obs.getIdElement().getIdPart(), obs);
+                                refs.add(createReferenceFor(ResourceType.Observation, obs.getIdElement().getIdPart()));
+                            }
                         }
-                        diagnosticReports.put(analysis.getFhirUuidAsString(), diagnosticReport);
                     }
+                }
+                // UN DiagnosticReport par ÉCHANTILLON ayant au moins une analyse finalisée.
+                if (anyFinalized && sampleItems != null) {
+                    for (SampleItem sampleItem : sampleItems) {
+                        List<Analysis> siAnalyses = analysisService.getAnalysesBySampleItem(sampleItem);
+                        boolean siHasFinalized = siAnalyses.stream()
+                                .anyMatch(a -> statusService.matches(a.getStatusId(), AnalysisStatus.Finalized));
+                        if (!siHasFinalized) {
+                            continue;
+                        }
+                        DiagnosticReport diagnosticReport = this.transformSampleItemToDiagnosticReport(sampleItem,
+                                bacterioRefsBySampleItem.get(sampleItem.getId()));
+                        diagnosticReports.put(diagnosticReport.getIdElement().getIdPart(), diagnosticReport);
+                    }
+                    // Purge des DR obsolètes du bon (par-analyse + par-bon).
+                    queueObsoleteDiagnosticReportsForDeletion(sample, analysises, fhirOperations);
                 }
             }
             if (results != null) {
@@ -427,10 +437,29 @@ public class FhirTransformServiceImpl implements FhirTransformService {
             for (Analysis analysis : analysisService.getAnalysesBySampleId(sampleId)) {
                 issues.addAll(
                         FhirResourceCompletenessInspector.inspectServiceRequest(transformToServiceRequest(analysis)));
-                if (statusService.matches(analysis.getStatusId(), AnalysisStatus.Finalized)) {
-                    issues.addAll(FhirResourceCompletenessInspector
-                            .inspectDiagnosticReport(transformResultToDiagnosticReport(analysis)));
+            }
+            // 1 DiagnosticReport PAR ÉCHANTILLON finalisé à inspecter (schéma A1). On
+            // reconstruit les refs bactério de l'échantillon pour que l'inspection
+            // reflète le DR réellement persisté (sinon fausse alerte "result vide" sur un
+            // échantillon bactério). Lecture seule : rien n'est persisté ici.
+            for (SampleItem sampleItem : sampleItemService.getSampleItemsBySampleId(sampleId)) {
+                List<Analysis> siAnalyses = analysisService.getAnalysesBySampleItem(sampleItem);
+                if (siAnalyses.stream()
+                        .noneMatch(a -> statusService.matches(a.getStatusId(), AnalysisStatus.Finalized))) {
+                    continue;
                 }
+                List<Reference> bacterioObsRefs = new ArrayList<>();
+                for (Analysis analysis : siAnalyses) {
+                    if (statusService.matches(analysis.getStatusId(), AnalysisStatus.Finalized)) {
+                        Reference cultureAnchor = firstResultObservationRef(analysis);
+                        for (Observation bacterioObs : buildBacteriologyObservations(analysis, cultureAnchor)) {
+                            bacterioObsRefs.add(createReferenceFor(ResourceType.Observation,
+                                    bacterioObs.getIdElement().getIdPart()));
+                        }
+                    }
+                }
+                issues.addAll(FhirResourceCompletenessInspector
+                        .inspectDiagnosticReport(transformSampleItemToDiagnosticReport(sampleItem, bacterioObsRefs)));
             }
             for (Result result : resultService.getResultsForSample(sample)) {
                 issues.addAll(
@@ -705,11 +734,23 @@ public class FhirTransformServiceImpl implements FhirTransformService {
 
         for (Analysis analysis : analysises) {
             task.addBasedOn(this.createReferenceFor(ResourceType.ServiceRequest, analysis.getFhirUuidAsString()));
-            if (sample.getStatusId().equals(statusService.getStatusID(OrderStatus.Finished))) {
+        }
+        // output = les DiagnosticReport du bon, désormais 1 par échantillon (amendement
+        // A1, id = fhirUuid du sampleItem). On n'émet un output QUE pour les
+        // échantillons qui produisent réellement un DR (au moins une analyse
+        // Finalized) — même garde que la production ; sinon on référencerait un DR
+        // inexistant (échantillon 100% annulé d'un bon par ailleurs terminé).
+        if (sample.getStatusId().equals(statusService.getStatusID(OrderStatus.Finished))) {
+            for (SampleItem sampleItem : sampleItemService.getSampleItemsBySampleId(sample.getId())) {
+                boolean hasFinalized = analysisService.getAnalysesBySampleItem(sampleItem).stream()
+                        .anyMatch(a -> statusService.matches(a.getStatusId(), AnalysisStatus.Finalized));
+                if (!hasFinalized) {
+                    continue;
+                }
                 task.addOutput() //
                         .setType(new CodeableConcept().addCoding(new Coding().setCode("reference"))) //
-                        .setValue(
-                                this.createReferenceFor(ResourceType.DiagnosticReport, analysis.getFhirUuidAsString()));
+                        .setValue(this.createReferenceFor(ResourceType.DiagnosticReport,
+                                sampleItem.getFhirUuidAsString()));
             }
         }
         Reference patientRef = patientReferenceOrNull(patient);
@@ -1232,16 +1273,65 @@ public class FhirTransformServiceImpl implements FhirTransformService {
             this.addToOperations(fhirOperations, tempIdGenerator, observation);
         }
 
+        // Samples touchés ayant au moins une analyse finalisée → 1 DR groupé chacun
+        // (dédup par sample, clé = id sample).
+        Map<String, Sample> samplesToReport = new HashMap<>();
         for (Analysis analysis : actionDataSet.getModifiedAnalysis()) {
             ServiceRequest serviceRequest = this.transformToServiceRequest(analysis.getId());
             this.addToOperations(fhirOperations, tempIdGenerator, serviceRequest);
             if (statusService.matches(analysis.getStatusId(), AnalysisStatus.Finalized)) {
-                DiagnosticReport diagnosticReport = this.transformResultToDiagnosticReport(analysis.getId());
-                this.addToOperations(fhirOperations, tempIdGenerator, diagnosticReport);
+                Sample sample = analysis.getSampleItem() != null ? analysis.getSampleItem().getSample() : null;
+                if (sample != null) {
+                    samplesToReport.put(sample.getId(), sample);
+                }
             }
         }
+        addGroupedDiagnosticReports(samplesToReport.values(), fhirOperations, tempIdGenerator);
 
         Bundle responseBundle = fhirPersistanceService.createUpdateFhirResourcesInFhirStore(fhirOperations);
+    }
+
+    /**
+     * Produit UN DiagnosticReport PAR ÉCHANTILLON (sampleItem) pour chaque bon
+     * touché (dédupliqué en amont) et le pousse dans les opérations, en purgeant au
+     * passage les DR obsolètes (par-analyse + par-bon). Utilisé par les
+     * orchestrateurs saisie-résultats et validation.
+     *
+     * <p>
+     * Chaque DR est écrit par PUT sur id = sampleItem.fhirUuid, donc il ÉCRASE tout
+     * DR préexistant de cet échantillon. On reconstruit et RE-PERSISTE les
+     * Observations bactério de l'échantillon (sinon un échantillon bactério validé
+     * via ce chemin perdrait ses isolats/antibiogrammes dans result), comme le
+     * batch.
+     */
+    private void addGroupedDiagnosticReports(java.util.Collection<Sample> samples, FhirOperations fhirOperations,
+            TempIdGenerator tempIdGenerator) {
+        for (Sample sample : samples) {
+            List<Analysis> allAnalyses = analysisService.getAnalysesBySampleId(sample.getId());
+            for (SampleItem sampleItem : sampleItemService.getSampleItemsBySampleId(sample.getId())) {
+                List<Analysis> siAnalyses = analysisService.getAnalysesBySampleItem(sampleItem);
+                if (siAnalyses.stream()
+                        .noneMatch(a -> statusService.matches(a.getStatusId(), AnalysisStatus.Finalized))) {
+                    continue;
+                }
+                List<Reference> bacterioObsRefs = new ArrayList<>();
+                for (Analysis analysis : siAnalyses) {
+                    if (statusService.matches(analysis.getStatusId(), AnalysisStatus.Finalized)) {
+                        Reference cultureAnchor = firstResultObservationRef(analysis);
+                        for (Observation bacterioObs : buildBacteriologyObservations(analysis, cultureAnchor)) {
+                            this.addToOperations(fhirOperations, tempIdGenerator, bacterioObs);
+                            bacterioObsRefs.add(createReferenceFor(ResourceType.Observation,
+                                    bacterioObs.getIdElement().getIdPart()));
+                        }
+                    }
+                }
+                DiagnosticReport diagnosticReport = this.transformSampleItemToDiagnosticReport(sampleItem,
+                        bacterioObsRefs);
+                this.addToOperations(fhirOperations, tempIdGenerator, diagnosticReport);
+            }
+            // Purge des DR obsolètes du bon (par-analyse + par-bon), une fois par sample.
+            queueObsoleteDiagnosticReportsForDeletion(sample, allAnalyses, fhirOperations);
+        }
     }
 
     @Async
@@ -1267,14 +1357,19 @@ public class FhirTransformServiceImpl implements FhirTransformService {
             this.addToOperations(fhirOperations, tempIdGenerator, observation);
         }
 
+        // Samples touchés ayant au moins une analyse finalisée → 1 DR groupé chacun.
+        Map<String, Sample> samplesToReport = new HashMap<>();
         for (Analysis analysis : analysisUpdateList) {
             ServiceRequest serviceRequest = this.transformToServiceRequest(analysis.getId());
             this.addToOperations(fhirOperations, tempIdGenerator, serviceRequest);
             if (statusService.matches(analysis.getStatusId(), AnalysisStatus.Finalized)) {
-                DiagnosticReport diagnosticReport = this.transformResultToDiagnosticReport(analysis.getId());
-                this.addToOperations(fhirOperations, tempIdGenerator, diagnosticReport);
+                Sample sample = analysis.getSampleItem() != null ? analysis.getSampleItem().getSample() : null;
+                if (sample != null) {
+                    samplesToReport.put(sample.getId(), sample);
+                }
             }
         }
+        addGroupedDiagnosticReports(samplesToReport.values(), fhirOperations, tempIdGenerator);
 
         Map<String, Task> referingTaskMap = new HashMap<>();
         Map<String, ServiceRequest> referingServiceRequestMap = new HashMap<>();
@@ -1335,61 +1430,195 @@ public class FhirTransformServiceImpl implements FhirTransformService {
         }
     }
 
-    private DiagnosticReport transformResultToDiagnosticReport(String analysisId) {
-        return transformResultToDiagnosticReport(analysisService.get(analysisId));
-    }
+    // Code LOINC générique de compte-rendu de laboratoire, posé sur le
+    // DiagnosticReport (multi-analytes d'un échantillon) : il ne représente pas un
+    // panel précis mais l'ensemble du rapport de l'échantillon.
+    private static final String LOINC_LAB_REPORT_CODE = "11502-2";
+    private static final String LOINC_LAB_REPORT_DISPLAY = "Laboratory report";
 
-    private DiagnosticReport transformResultToDiagnosticReport(Analysis analysis) {
-        LogEvent.logTrace(this.getClass().getSimpleName(), "transformResultToDiagnosticReport",
-                "transformResultToDiagnosticReport called");
+    /**
+     * Construit UN DiagnosticReport par ÉCHANTILLON (sampleItem) — amendement A1 :
+     * chaque échantillon (et discipline) est validé/publié séparément, donc
+     * {@code status}/{@code issued}/{@code performer} sont propres à l'échantillon
+     * (un DR unique par bon resterait bloqué en PARTIAL). Le regroupement du bon
+     * reste porté par {@code ServiceRequest.requisition = samp_labNo}.
+     *
+     * <ul>
+     * <li>{@code identifier} = {@code /sampleItem_uuid} (clé d'idempotence) +
+     * {@code /samp_labNo} (facilite le regroupement).
+     * <li>{@code category} = la discipline (nom de la section de test).
+     * <li>{@code result} = Observations des analyses de CET échantillon uniquement
+     * (+ bactério fournie via {@code extraObservationRefs}).
+     * <li>{@code basedOn} = ServiceRequest des tests de cet échantillon.
+     * <li>{@code specimen} = LE Specimen de cet échantillon.
+     * <li>{@code status} agrégé sur les analyses de l'échantillon.
+     * </ul>
+     *
+     * @param sampleItem           l'échantillon
+     * @param extraObservationRefs Observations supplémentaires
+     *                             (isolats/antibiogramme bactério déjà transformés)
+     *                             ; peut être null/vide.
+     */
+    private DiagnosticReport transformSampleItemToDiagnosticReport(SampleItem sampleItem,
+            List<Reference> extraObservationRefs) {
+        LogEvent.logTrace(this.getClass().getSimpleName(), "transformSampleItemToDiagnosticReport",
+                "transformSampleItemToDiagnosticReport called");
 
-        List<Result> allResults = resultService.getResultsByAnalysis(analysis);
-        SampleItem sampleItem = analysis.getSampleItem();
-        // sampleItem/sample potentiellement absents (analyse orpheline) : le patient
-        // reste optionnel (subject omis) plutôt que NPE.
-        Patient patient = (sampleItem != null && sampleItem.getSample() != null)
-                ? sampleHumanService.getPatientForSample(sampleItem.getSample())
-                : null;
+        List<Analysis> analyses = analysisService.getAnalysesBySampleItem(sampleItem);
+        Sample sample = sampleItem.getSample();
+        Patient patient = (sample != null) ? sampleHumanService.getPatientForSample(sample) : null;
 
-        DiagnosticReport diagnosticReport = genNewDiagnosticReport(analysis);
-        Test test = analysis.getTest();
+        DiagnosticReport diagnosticReport = genNewDiagnosticReport(sampleItem);
 
-        if (analysis.getStatusId().equals(statusService.getStatusID(AnalysisStatus.Finalized))) {
-            diagnosticReport.setStatus(DiagnosticReportStatus.FINAL);
-        } else if (analysis.getStatusId().equals(statusService.getStatusID(AnalysisStatus.TechnicalAcceptance))) {
-            diagnosticReport.setStatus(DiagnosticReportStatus.PRELIMINARY);
-        } else if (analysis.getStatusId().equals(statusService.getStatusID(AnalysisStatus.TechnicalRejected))) {
-            diagnosticReport.setStatus(DiagnosticReportStatus.PARTIAL);
-        } else if (analysis.getStatusId().equals(statusService.getStatusID(AnalysisStatus.NotStarted))) {
-            diagnosticReport.setStatus(DiagnosticReportStatus.REGISTERED);
-        } else {
-            diagnosticReport.setStatus(DiagnosticReportStatus.UNKNOWN);
+        diagnosticReport.setStatus(aggregateDiagnosticReportStatus(analyses));
+
+        CodeableConcept category = sampleItemDisciplineCategory(analyses);
+        if (category != null) {
+            diagnosticReport.addCategory(category);
         }
 
-        diagnosticReport
-                .addBasedOn(this.createReferenceFor(ResourceType.ServiceRequest, analysis.getFhirUuidAsString()));
+        // basedOn = ServiceRequest des tests de CET échantillon (reliés par
+        // requisition = samp_labNo). result = Observations de ces analyses.
+        for (Analysis analysis : analyses) {
+            diagnosticReport
+                    .addBasedOn(this.createReferenceFor(ResourceType.ServiceRequest, analysis.getFhirUuidAsString()));
+            for (Result curResult : resultService.getResultsByAnalysis(analysis)) {
+                diagnosticReport
+                        .addResult(this.createReferenceFor(ResourceType.Observation, curResult.getFhirUuidAsString()));
+            }
+        }
+        // specimen = LE Specimen de cet échantillon.
         diagnosticReport.addSpecimen(this.createReferenceFor(ResourceType.Specimen, sampleItem.getFhirUuidAsString()));
+
         Reference drPatientRef = patientReferenceOrNull(patient);
         if (drPatientRef != null) {
             diagnosticReport.setSubject(drPatientRef);
         }
-        for (Result curResult : allResults) {
-            diagnosticReport
-                    .addResult(this.createReferenceFor(ResourceType.Observation, curResult.getFhirUuidAsString()));
+        // Observations supplémentaires (bactério) fournies par l'appelant.
+        if (extraObservationRefs != null) {
+            for (Reference ref : extraObservationRefs) {
+                diagnosticReport.addResult(ref);
+            }
         }
-        diagnosticReport.setCode(transformTestToCodeableConcept(test.getId()));
+
+        diagnosticReport.setCode(new CodeableConcept().addCoding(new Coding().setSystem("http://loinc.org")
+                .setCode(LOINC_LAB_REPORT_CODE).setDisplay(LOINC_LAB_REPORT_DISPLAY)));
 
         return diagnosticReport;
     }
 
-    private DiagnosticReport genNewDiagnosticReport(Analysis analysis) {
+    /**
+     * Catégorie (discipline) du DiagnosticReport d'un échantillon, dérivée de la
+     * section de test des analyses. OE n'a pas de code v2-0074 : on pose le nom de
+     * section en {@code text} + un coding local
+     * {@code openelis-global.org/testSection}. On prend la section de la 1re
+     * analyse en portant une section (un échantillon est en pratique
+     * mono-discipline). null si aucune section connue.
+     */
+    private CodeableConcept sampleItemDisciplineCategory(List<Analysis> analyses) {
+        if (analyses == null) {
+            return null;
+        }
+        for (Analysis analysis : analyses) {
+            org.openelisglobal.test.valueholder.TestSection section = analysis.getTestSection();
+            if (section != null && !GenericValidator.isBlankOrNull(section.getTestSectionName())) {
+                CodeableConcept cc = new CodeableConcept();
+                cc.setText(section.getTestSectionName());
+                cc.addCoding(new Coding().setSystem(fhirConfig.getOeFhirSystem() + "/testSection")
+                        .setCode(section.getId()).setDisplay(section.getTestSectionName()));
+                return cc;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Statut clinique agrégé du rapport groupé : FINAL si TOUTES les analyses sont
+     * Finalized ; sinon le plus « avancé » raisonnable (PARTIAL dès qu'au moins une
+     * est finalized/rejetée alors que d'autres ne le sont pas, PRELIMINARY en
+     * acceptation technique, REGISTERED si rien n'est encore commencé).
+     */
+    private DiagnosticReportStatus aggregateDiagnosticReportStatus(List<Analysis> analyses) {
+        if (analyses == null || analyses.isEmpty()) {
+            return DiagnosticReportStatus.REGISTERED;
+        }
+        boolean allFinalized = true;
+        boolean anyFinalized = false;
+        boolean anyStarted = false;
+        for (Analysis analysis : analyses) {
+            boolean finalized = statusService.matches(analysis.getStatusId(), AnalysisStatus.Finalized);
+            allFinalized = allFinalized && finalized;
+            anyFinalized = anyFinalized || finalized;
+            if (!statusService.matches(analysis.getStatusId(), AnalysisStatus.NotStarted)) {
+                anyStarted = true;
+            }
+        }
+        if (allFinalized) {
+            return DiagnosticReportStatus.FINAL;
+        }
+        if (anyFinalized) {
+            return DiagnosticReportStatus.PARTIAL;
+        }
+        return anyStarted ? DiagnosticReportStatus.PRELIMINARY : DiagnosticReportStatus.REGISTERED;
+    }
+
+    private DiagnosticReport genNewDiagnosticReport(SampleItem sampleItem) {
         LogEvent.logTrace(this.getClass().getSimpleName(), "genNewDiagnosticReport", "genNewDiagnosticReport called");
 
         DiagnosticReport diagnosticReport = new DiagnosticReport();
-        diagnosticReport.setId(analysis.getFhirUuidAsString());
-        diagnosticReport.addIdentifier(this.createIdentifier(fhirConfig.getOeFhirSystem() + "/analysisResult_uuid",
-                analysis.getFhirUuidAsString()));
+        diagnosticReport.setId(sampleItem.getFhirUuidAsString());
+        // Clé d'idempotence du rapport = l'échantillon (1 DR = 1 sampleItem).
+        diagnosticReport.addIdentifier(this.createIdentifier(fhirConfig.getOeFhirSystem() + "/sampleItem_uuid",
+                sampleItem.getFhirUuidAsString()));
+        // 2e identifier = n° de bon : facilite le regroupement des rapports d'un bon.
+        Sample sample = sampleItem.getSample();
+        if (sample != null && !GenericValidator.isBlankOrNull(sample.getAccessionNumber())) {
+            diagnosticReport.addIdentifier(
+                    this.createIdentifier(fhirConfig.getOeFhirSystem() + "/samp_labNo", sample.getAccessionNumber()));
+        }
         return diagnosticReport;
+    }
+
+    /**
+     * Met en file de SUPPRESSION les DiagnosticReport de schémas OBSOLÈTES d'un
+     * bon, remplacés par les DR par-échantillon (amendement A1) :
+     * <ol>
+     * <li>l'ancien DR 1-par-analyse (identifier {@code /analysisResult_uuid}, id =
+     * fhirUuid analyse) — schéma d'origine ;
+     * <li>le DR 1-par-bon (identifier {@code /samp_labNo}, id = fhirUuid sample) —
+     * schéma intermédiaire.
+     * </ol>
+     * Idempotent (DELETE toléré si absent) et dans la MÊME transaction que
+     * l'écriture des nouveaux DR (pas de fenêtre sans rapport). Best-effort : une
+     * recherche qui échoue ne casse pas la transformation.
+     */
+    private void queueObsoleteDiagnosticReportsForDeletion(Sample sample, List<Analysis> analyses,
+            FhirOperations fhirOperations) {
+        // (1) anciens DR par-analyse (recherche par identifier /analysisResult_uuid)
+        if (analyses != null) {
+            for (Analysis analysis : analyses) {
+                try {
+                    Optional<DiagnosticReport> old = fhirPersistanceService
+                            .getDiagnosticReportByAnalysisUuid(analysis.getFhirUuidAsString());
+                    if (old.isPresent()) {
+                        DiagnosticReport oldDr = old.get();
+                        fhirOperations.deleteResources
+                                .put(oldDr.getResourceType() + "/" + oldDr.getIdElement().getIdPart(), oldDr);
+                    }
+                } catch (Exception e) {
+                    LogEvent.logWarn(this.getClass().getSimpleName(), "queueObsoleteDiagnosticReportsForDeletion",
+                            "recherche ancien DR par-analyse échouée pour analyse " + analysis.getId() + " : " + e);
+                }
+            }
+        }
+        // (2) DR par-bon (schéma intermédiaire) : id = fhirUuid du sample. DELETE
+        // direct par id (idempotent), sans recherche — HAPI tolère l'absence.
+        if (sample != null && !GenericValidator.isBlankOrNull(sample.getFhirUuidAsString())) {
+            DiagnosticReport perOrderDr = new DiagnosticReport();
+            perOrderDr.setId(sample.getFhirUuidAsString());
+            fhirOperations.deleteResources.put(ResourceType.DiagnosticReport + "/" + sample.getFhirUuidAsString(),
+                    perOrderDr);
+        }
     }
 
     private Observation transformResultToObservation(String resultId) {

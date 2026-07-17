@@ -39,20 +39,26 @@ public class FhirPersistanceServiceImpl implements FhirPersistanceService {
         // the map key is not used otherwise
         Map<String, Resource> createResources; // will do a put with a new uuid
         Map<String, Resource> updateResources; // will do a put with the id used in the resource
+        // key = "ResourceType/id" ; entry.request DELETE. Sert notamment à purger les
+        // anciens DiagnosticReport par-analyse remplacés par un DR groupé par bon.
+        Map<String, Resource> deleteResources;
 
         public FhirOperations() {
             createResources = new HashMap<>();
             updateResources = new HashMap<>();
+            deleteResources = new HashMap<>();
         }
 
         public FhirOperations(int createSize, int updateSize) {
             createResources = new HashMap<>(createSize);
             updateResources = new HashMap<>(updateSize);
+            deleteResources = new HashMap<>();
         }
 
         public void addAll(FhirOperations fhirOperationLists) {
             createResources.putAll(fhirOperationLists.createResources);
             updateResources.putAll(fhirOperationLists.updateResources);
+            deleteResources.putAll(fhirOperationLists.deleteResources);
         }
     }
 
@@ -146,6 +152,10 @@ public class FhirPersistanceServiceImpl implements FhirPersistanceService {
         Bundle transactionBundle = new Bundle();
         transactionBundle.setType(BundleType.TRANSACTION);
         for (FhirOperations fhirOperations : fhirOperationsList) {
+            // DELETE d'abord : purge des ressources obsolètes (ex. anciens DR
+            // par-analyse) avant d'écrire les nouvelles. Ids disjoints des create/update,
+            // mais l'ordre DELETE→write reste le plus sûr.
+            addDeletesToTransactionBundle(fhirOperations.deleteResources, transactionBundle);
             addCreateToTransactionBundle(fhirOperations.createResources, transactionBundle);
             addUpdatesToTransactionBundle(fhirOperations.updateResources, transactionBundle);
         }
@@ -313,6 +323,19 @@ public class FhirPersistanceServiceImpl implements FhirPersistanceService {
             transactionBundle.addEntry().setFullUrl(resource.getIdElement().getValue()).setResource(resource)
                     .getRequest().setUrl(resource.getResourceType() + "/" + resource.getIdElement().getIdPart())
                     .setMethod(Bundle.HTTPVerb.PUT);
+        }
+        return transactionBundle;
+    }
+
+    // Ajoute un entry DELETE par ressource (aucun corps, juste request.url =
+    // "ResourceType/id"). Utilisé pour purger des ressources devenues obsolètes
+    // dans
+    // la même transaction que l'écriture des nouvelles.
+    public Bundle addDeletesToTransactionBundle(Map<String, Resource> deleteResources, Bundle transactionBundle) {
+        for (Resource resource : deleteResources.values()) {
+            transactionBundle.addEntry().getRequest()
+                    .setUrl(resource.getResourceType() + "/" + resource.getIdElement().getIdPart())
+                    .setMethod(Bundle.HTTPVerb.DELETE);
         }
         return transactionBundle;
     }
