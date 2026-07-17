@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+     http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+    <!--
+        Mini-HIE Phase C (durcissement) : config d'accès par tiers, administrable
+        depuis OE et appliquée dynamiquement par l'endpoint /auth (nginx auth_request).
+        - fhir_gateway_client.allowed_resources : liste CSV des types FHIR autorisés
+          en lecture (ex. "Patient,ServiceRequest"). NULL/vide = tous autorisés.
+        - fhir_gateway_client.rate_limit_per_min : quota de requêtes/minute. NULL/0 =
+          illimité.
+        - fhir_gateway_access_log : journal d'audit des accès tiers (client, date,
+          méthode, ressource, statut).
+        Idempotent (preConditions).
+    -->
+
+    <changeSet author="itechciv" id="fhir-gateway-client-add-allowed-resources-1">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists schemaName="clinlims" tableName="fhir_gateway_client"
+                    columnName="allowed_resources" />
+            </not>
+        </preConditions>
+        <addColumn schemaName="clinlims" tableName="fhir_gateway_client">
+            <column name="allowed_resources" type="VARCHAR(1000)">
+                <constraints nullable="true" />
+            </column>
+        </addColumn>
+        <rollback>
+            <dropColumn schemaName="clinlims" tableName="fhir_gateway_client"
+                columnName="allowed_resources" />
+        </rollback>
+    </changeSet>
+
+    <changeSet author="itechciv" id="fhir-gateway-client-add-rate-limit-1">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists schemaName="clinlims" tableName="fhir_gateway_client"
+                    columnName="rate_limit_per_min" />
+            </not>
+        </preConditions>
+        <addColumn schemaName="clinlims" tableName="fhir_gateway_client">
+            <column name="rate_limit_per_min" type="INT">
+                <constraints nullable="true" />
+            </column>
+        </addColumn>
+        <rollback>
+            <dropColumn schemaName="clinlims" tableName="fhir_gateway_client"
+                columnName="rate_limit_per_min" />
+        </rollback>
+    </changeSet>
+
+    <changeSet author="itechciv" id="create-fhir-gateway-access-log-seq-1">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <sequenceExists schemaName="clinlims"
+                    sequenceName="fhir_gateway_access_log_seq" />
+            </not>
+        </preConditions>
+        <createSequence schemaName="clinlims"
+            sequenceName="fhir_gateway_access_log_seq" startValue="1" incrementBy="1" />
+        <rollback>
+            <dropSequence schemaName="clinlims"
+                sequenceName="fhir_gateway_access_log_seq" />
+        </rollback>
+    </changeSet>
+
+    <changeSet author="itechciv" id="create-fhir-gateway-access-log-table-1">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists schemaName="clinlims" tableName="fhir_gateway_access_log" />
+            </not>
+        </preConditions>
+        <createTable schemaName="clinlims" tableName="fhir_gateway_access_log">
+            <column name="id" type="BIGINT">
+                <constraints primaryKey="true" nullable="false" />
+            </column>
+            <!-- client_id nullable : un accès refusé pour jeton inconnu n'a pas de
+                 client identifié. -->
+            <column name="client_id" type="VARCHAR(10)">
+                <constraints nullable="true" />
+            </column>
+            <column name="accessed_at" type="TIMESTAMP">
+                <constraints nullable="false" />
+            </column>
+            <column name="method" type="VARCHAR(10)">
+                <constraints nullable="true" />
+            </column>
+            <column name="resource_type" type="VARCHAR(100)">
+                <constraints nullable="true" />
+            </column>
+            <column name="request_uri" type="VARCHAR(1000)">
+                <constraints nullable="true" />
+            </column>
+            <!-- Résultat de la décision : http status renvoyé à nginx (200/401/403/429). -->
+            <column name="status" type="INT">
+                <constraints nullable="true" />
+            </column>
+            <column name="lastupdated" type="TIMESTAMP">
+                <constraints nullable="true" />
+            </column>
+        </createTable>
+        <rollback>
+            <dropTable schemaName="clinlims" tableName="fhir_gateway_access_log" />
+        </rollback>
+    </changeSet>
+
+    <changeSet author="itechciv" id="create-fhir-gateway-access-log-index-1">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <indexExists schemaName="clinlims"
+                    indexName="idx_fhir_gateway_access_log_client_time" />
+            </not>
+        </preConditions>
+        <createIndex schemaName="clinlims" tableName="fhir_gateway_access_log"
+            indexName="idx_fhir_gateway_access_log_client_time">
+            <column name="client_id" />
+            <column name="accessed_at" />
+        </createIndex>
+        <rollback>
+            <dropIndex schemaName="clinlims" tableName="fhir_gateway_access_log"
+                indexName="idx_fhir_gateway_access_log_client_time" />
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

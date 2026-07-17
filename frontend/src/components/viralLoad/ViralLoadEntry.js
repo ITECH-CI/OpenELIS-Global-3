@@ -239,7 +239,11 @@ const computeAgeMonths = (birthDate) => {
 };
 
 // ─── Composant principal ──────────────────────────────────────────────────────
-const ViralLoadEntry = ({ initialPatientData = null, embedded = false, onSuccess = null } = {}) => {
+const ViralLoadEntry = ({
+  initialPatientData = null,
+  embedded = false,
+  onSuccess = null,
+} = {}) => {
   const intl = useIntl();
   const location = useLocation();
   const componentMounted = useRef(false);
@@ -475,7 +479,8 @@ const ViralLoadEntry = ({ initialPatientData = null, embedded = false, onSuccess
       : ["", "", "", ""];
 
     setForm((prev) => {
-      const resolvedProject = pd.project || pd.studyId || prev.project || "VL_Id";
+      const resolvedProject =
+        pd.project || pd.studyId || prev.project || "VL_Id";
       return {
         ...prev,
         project: resolvedProject,
@@ -4044,11 +4049,11 @@ const ViralLoadEntry = ({ initialPatientData = null, embedded = false, onSuccess
         )}
         {!embedded && (
           <div style={{ marginTop: "12px" }}>
-            <Button
-              kind="tertiary"
-              onClick={() => setShowSuccess(false)}
-            >
-              <FormattedMessage id="label.newentry" defaultMessage="Nouvelle saisie" />
+            <Button kind="tertiary" onClick={() => setShowSuccess(false)}>
+              <FormattedMessage
+                id="label.newentry"
+                defaultMessage="Nouvelle saisie"
+              />
             </Button>
           </div>
         )}

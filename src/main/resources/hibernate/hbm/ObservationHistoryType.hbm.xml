@@ -27,6 +27,12 @@
                 <comment>a long description of this type.</comment>
             </column>
         </property>
+        <property name="loincCode" type="java.lang.String">
+            <column name="loinc_code" length="20" />
+        </property>
+        <property name="snomedCode" type="java.lang.String">
+            <column name="snomed_code" length="20" />
+        </property>
         <property name="lastupdated" type="java.sql.Timestamp">
             <column name="lastupdated" length="35">
                 <comment>the last time this item was written to the database.</comment>

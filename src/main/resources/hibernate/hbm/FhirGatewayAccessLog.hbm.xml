@@ -1,0 +1,45 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping>
+    <class
+        name="org.openelisglobal.dataexchange.fhir.valueholder.FhirGatewayAccessLog"
+        table="fhir_gateway_access_log" optimistic-lock="version"
+        dynamic-update="true">
+        <id name="id"
+            type="org.openelisglobal.hibernate.resources.usertype.LIMSStringNumberUserType">
+            <column name="ID" precision="10" scale="0" />
+            <generator
+                class="org.openelisglobal.hibernate.resources.StringSequenceGenerator">
+                <param name="sequence_name">fhir_gateway_access_log_seq</param>
+            </generator>
+        </id>
+        <version name="lastupdated" column="LASTUPDATED"
+            type="timestamp" access="field" />
+
+        <property name="clientId" type="java.lang.String">
+            <column name="client_id" length="10" not-null="false" />
+        </property>
+
+        <property name="accessedAt" type="timestamp">
+            <column name="accessed_at" not-null="true" />
+        </property>
+
+        <property name="method" type="java.lang.String">
+            <column name="method" length="10" not-null="false" />
+        </property>
+
+        <property name="resourceType" type="java.lang.String">
+            <column name="resource_type" length="100" not-null="false" />
+        </property>
+
+        <property name="requestUri" type="java.lang.String">
+            <column name="request_uri" length="1000" not-null="false" />
+        </property>
+
+        <property name="status" type="java.lang.Integer">
+            <column name="status" not-null="false" />
+        </property>
+    </class>
+</hibernate-mapping>

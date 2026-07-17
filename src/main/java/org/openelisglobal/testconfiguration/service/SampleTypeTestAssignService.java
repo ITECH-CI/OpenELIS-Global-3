@@ -8,4 +8,9 @@ public interface SampleTypeTestAssignService {
     void update(TypeOfSample typeOfSample, String testId, List<String> typeOfSamplesTestIDs, String sampleTypeId,
             boolean deleteExistingTypeOfSampleTest, boolean updateTypeOfSample, TypeOfSample deActivateTypeOfSample,
             String systemUserId);
+
+    // Synchronise les types d'échantillon d'un test avec la liste fournie :
+    // ajoute les nouveaux, retire ceux qui n'y sont plus. Réactive un type
+    // d'échantillon inactif qui redevient utilisé.
+    void syncAssignments(String testId, List<String> desiredSampleTypeIds, String systemUserId);
 }

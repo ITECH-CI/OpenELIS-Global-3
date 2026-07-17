@@ -1,0 +1,63 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<!-- Suivi du push des statuts e-order (module d'échange unifié, incrément
+    4d). Table alimentée par des triggers PostgreSQL (INSERT via SERIAL) ; côté
+    Java on ne fait que LIRE et METTRE À JOUR des lignes existantes (jamais d'insert
+    Hibernate), d'où le générateur 'identity' aligné sur la colonne SERIAL. Pas
+    de version optimiste (transitions par UPDATE ciblé). Cf. eorder_status_cdc_triggers.sql. -->
+<hibernate-mapping>
+    <class
+        name="org.openelisglobal.dataexchange.sync.valueholder.EorderSyncStatus"
+        table="eorder_sync_status" dynamic-update="true">
+        <id name="id"
+            type="org.openelisglobal.hibernate.resources.usertype.LIMSStringNumberUserType">
+            <column name="id" />
+            <generator class="identity" />
+        </id>
+        <property name="requestUuid" type="java.lang.String">
+            <column name="request_uuid" length="100" not-null="true" />
+        </property>
+        <property name="labno" type="java.lang.String">
+            <column name="labno" length="100" not-null="false" />
+        </property>
+        <property name="sampleId"
+            type="org.openelisglobal.hibernate.resources.usertype.LIMSStringNumberUserType">
+            <column name="sample_id" not-null="false" />
+        </property>
+        <property name="analysisId"
+            type="org.openelisglobal.hibernate.resources.usertype.LIMSStringNumberUserType">
+            <column name="analysis_id" not-null="false" />
+        </property>
+        <property name="electronicOrderId"
+            type="org.openelisglobal.hibernate.resources.usertype.LIMSStringNumberUserType">
+            <column name="electronic_order_id" not-null="false" />
+        </property>
+        <property name="labStatus" type="java.lang.String">
+            <column name="lab_status" length="50" not-null="false" />
+        </property>
+        <property name="lastSentLabStatus" type="java.lang.String">
+            <column name="last_sent_lab_status" length="50"
+                not-null="false" />
+        </property>
+        <property name="lastSentResult" type="java.lang.String">
+            <column name="last_sent_result" length="255" not-null="false" />
+        </property>
+        <property name="lastEventUuid" type="java.lang.String">
+            <column name="last_event_uuid" length="100" not-null="false" />
+        </property>
+        <property name="syncFlag" type="java.lang.Short">
+            <column name="sync_flag" not-null="false" />
+        </property>
+        <property name="lastSyncedAt" type="java.sql.Timestamp">
+            <column name="last_synced_at" not-null="false" />
+        </property>
+        <property name="createdAt" type="java.sql.Timestamp">
+            <column name="created_at" not-null="false" />
+        </property>
+        <property name="updatedAt" type="java.sql.Timestamp">
+            <column name="updated_at" not-null="false" />
+        </property>
+    </class>
+</hibernate-mapping>

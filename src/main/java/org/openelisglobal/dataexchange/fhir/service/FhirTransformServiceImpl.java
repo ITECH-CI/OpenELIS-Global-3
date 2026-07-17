@@ -170,6 +170,12 @@ public class FhirTransformServiceImpl implements FhirTransformService {
     private OrganizationService organizationService;
     @Autowired
     private FhirUtil fhirUtil;
+    @Autowired
+    private org.openelisglobal.bacteriology.service.BacteriologyOrganismService bacteriologyOrganismService;
+    @Autowired
+    private org.openelisglobal.bacteriology.service.BacteriologyAntibiogramService bacteriologyAntibiogramService;
+    @Autowired
+    private org.openelisglobal.bacteriology.service.BacteriologyFloraService bacteriologyFloraService;
 
     private String ADDRESS_PART_VILLAGE_ID;
     private String ADDRESS_PART_COMMUNE_ID;
@@ -353,6 +359,15 @@ public class FhirTransformServiceImpl implements FhirTransformService {
                             // "diagnosticReport collision with id: "
                             // + diagnosticReport.getIdElement().getIdPart());
                         }
+                        // Bactériologie : ajoute les Observations isolat + antibiogramme
+                        // (dérivées de la culture) et les rattache au DiagnosticReport.
+                        // Ancre culture = 1re Observation de résultat de l'analyse si présente.
+                        Reference cultureAnchor = firstResultObservationRef(analysis);
+                        for (Observation bacterioObs : buildBacteriologyObservations(analysis, cultureAnchor)) {
+                            observations.put(bacterioObs.getIdElement().getIdPart(), bacterioObs);
+                            diagnosticReport.addResult(createReferenceFor(ResourceType.Observation,
+                                    bacterioObs.getIdElement().getIdPart()));
+                        }
                         diagnosticReports.put(analysis.getFhirUuidAsString(), diagnosticReport);
                     }
                 }
@@ -394,6 +409,39 @@ public class FhirTransformServiceImpl implements FhirTransformService {
 
         Bundle responseBundle = fhirPersistanceService.createUpdateFhirResourcesInFhirStore(fhirOperations);
         return new AsyncResult<>(responseBundle);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<String> collectCompletenessIssuesForSample(String sampleId) {
+        List<String> issues = new ArrayList<>();
+        try {
+            Sample sample = sampleService.get(sampleId);
+            if (sample == null) {
+                return issues;
+            }
+            Patient patient = sampleHumanService.getPatientForSample(sample);
+            if (patient != null) {
+                issues.addAll(FhirResourceCompletenessInspector.inspectPatient(transformToFhirPatient(patient)));
+            }
+            for (Analysis analysis : analysisService.getAnalysesBySampleId(sampleId)) {
+                issues.addAll(
+                        FhirResourceCompletenessInspector.inspectServiceRequest(transformToServiceRequest(analysis)));
+                if (statusService.matches(analysis.getStatusId(), AnalysisStatus.Finalized)) {
+                    issues.addAll(FhirResourceCompletenessInspector
+                            .inspectDiagnosticReport(transformResultToDiagnosticReport(analysis)));
+                }
+            }
+            for (Result result : resultService.getResultsForSample(sample)) {
+                issues.addAll(
+                        FhirResourceCompletenessInspector.inspectObservation(transformResultToObservation(result)));
+            }
+        } catch (RuntimeException e) {
+            // L'inspection ne doit jamais casser le flux : en cas d'erreur on ne
+            // signale pas d'incomplétude (le statut restera SUCCESS).
+            LogEvent.logWarn(this.getClass().getSimpleName(), "collectCompletenessIssuesForSample", e.toString());
+        }
+        return issues;
     }
 
     @Override
@@ -583,9 +631,13 @@ public class FhirTransformServiceImpl implements FhirTransformService {
         practitioner.setId(provider.getFhirUuidAsString());
         practitioner.addIdentifier(
                 this.createIdentifier(fhirConfig.getOeFhirSystem() + "/provider_uuid", provider.getFhirUuidAsString()));
-        practitioner.addName(new HumanName().setFamily(provider.getPerson().getLastName())
-                .addGiven(provider.getPerson().getFirstName()));
-        practitioner.setTelecom(transformToTelecom(provider.getPerson()));
+        // Un provider peut ne pas avoir de Person associée : garder le nom/telecom
+        // optionnels au lieu de lever une NPE.
+        if (provider.getPerson() != null) {
+            practitioner.addName(new HumanName().setFamily(provider.getPerson().getLastName())
+                    .addGiven(provider.getPerson().getFirstName()));
+            practitioner.setTelecom(transformToTelecom(provider.getPerson()));
+        }
         practitioner.setActive(provider.getActive());
 
         return practitioner;
@@ -645,7 +697,7 @@ public class FhirTransformServiceImpl implements FhirTransformService {
             task.setStatus(TaskStatus.NULL);
         }
         task.setAuthoredOn(sample.getEnteredDate());
-        task.setPriority(TaskPriority.ROUTINE);
+        task.setPriority(mapTaskPriority(sample.getPriority()));
         task.addIdentifier(
                 this.createIdentifier(fhirConfig.getOeFhirSystem() + "/order_uuid", sample.getFhirUuidAsString()));
         task.addIdentifier(this.createIdentifier(fhirConfig.getOeFhirSystem() + "/order_accessionNumber",
@@ -660,7 +712,10 @@ public class FhirTransformServiceImpl implements FhirTransformService {
                                 this.createReferenceFor(ResourceType.DiagnosticReport, analysis.getFhirUuidAsString()));
             }
         }
-        task.setFor(this.createReferenceFor(ResourceType.Patient, patient.getFhirUuidAsString()));
+        Reference patientRef = patientReferenceOrNull(patient);
+        if (patientRef != null) {
+            task.setFor(patientRef);
+        }
 
         return task;
     }
@@ -709,6 +764,7 @@ public class FhirTransformServiceImpl implements FhirTransformService {
         org.hl7.fhir.r4.model.Patient fhirPatient = new org.hl7.fhir.r4.model.Patient();
         String subjectNumber = patientService.getSubjectNumber(patient);
         String nationalId = patientService.getNationalId(patient);
+        String cmuNumber = patientService.getCMUNumber(patient);
         String guid = patientService.getGUID(patient);
         String stNumber = patientService.getSTNumber(patient);
         String uuid = patient.getFhirUuidAsString();
@@ -716,15 +772,21 @@ public class FhirTransformServiceImpl implements FhirTransformService {
                 "transforming patient with id: " + patient.getId() + " fhirUuid: " + uuid);
 
         fhirPatient.setId(uuid);
-        fhirPatient.setIdentifier(createPatientIdentifiers(subjectNumber, nationalId, stNumber, guid, uuid));
+        fhirPatient.setIdentifier(createPatientIdentifiers(subjectNumber, nationalId, cmuNumber, stNumber, guid, uuid));
 
-        HumanName humanName = new HumanName();
-        List<HumanName> humanNameList = new ArrayList<>();
-        humanName.setFamily(patient.getPerson().getLastName());
-        humanName.addGiven(patient.getPerson().getFirstName());
-        humanNameList.add(humanName);
-        fhirPatient.setName(humanNameList);
-        fhirPatient.getNameFirstRep().setUse(HumanName.NameUse.OFFICIAL);
+        // Person peut être absente (donnée OE incomplète) : on garde nom/telecom/
+        // adresse optionnels au lieu de lever une NPE qui ferait planter TOUTE la
+        // transformation (le Patient est central à quasiment tous les flux).
+        Person person = patient.getPerson();
+        if (person != null) {
+            HumanName humanName = new HumanName();
+            List<HumanName> humanNameList = new ArrayList<>();
+            humanName.setFamily(person.getLastName());
+            humanName.addGiven(person.getFirstName());
+            humanNameList.add(humanName);
+            fhirPatient.setName(humanNameList);
+            fhirPatient.getNameFirstRep().setUse(HumanName.NameUse.OFFICIAL);
+        }
 
         try {
             if (patient.getBirthDateForDisplay() != null) {
@@ -740,9 +802,10 @@ public class FhirTransformServiceImpl implements FhirTransformService {
         } else {
             fhirPatient.setGender(AdministrativeGender.FEMALE);
         }
-        fhirPatient.setTelecom(transformToTelecom(patient.getPerson()));
-
-        fhirPatient.addAddress(transformToAddress(patient.getPerson()));
+        if (person != null) {
+            fhirPatient.setTelecom(transformToTelecom(person));
+            fhirPatient.addAddress(transformToAddress(person));
+        }
 
         return fhirPatient;
     }
@@ -761,6 +824,13 @@ public class FhirTransformServiceImpl implements FhirTransformService {
 
             if ("http://openelis-global.org/pat_nationalId".equals(system)) {
                 patientSearchResults.setNationalId(value);
+            } else if (!GenericValidator.isBlankOrNull(fhirConfig.getCmuIdentifierSystem())
+                    && fhirConfig.getCmuIdentifierSystem().equals(system)) {
+                // Un patient entrant identifié par son matricule CMU (OID national)
+                // alimente le nationalId OE (qui héberge ce code), sauf s'il est déjà posé.
+                if (GenericValidator.isBlankOrNull(patientSearchResults.getNationalId())) {
+                    patientSearchResults.setNationalId(value);
+                }
             } else if ("http://openelis-global.org/pat_guid".equals(system)) {
                 patientSearchResults.setExternalId(value);
             } else if ("http://openelis-global.org/pat_uuid".equals(system)) {
@@ -838,8 +908,8 @@ public class FhirTransformServiceImpl implements FhirTransformService {
         return address;
     }
 
-    private List<Identifier> createPatientIdentifiers(String subjectNumber, String nationalId, String stNumber,
-            String guid, String fhirUuid) {
+    private List<Identifier> createPatientIdentifiers(String subjectNumber, String nationalId, String cmuNumber,
+            String stNumber, String guid, String fhirUuid) {
         LogEvent.logTrace(this.getClass().getSimpleName(), "transformToAddress", "transformToAddress called");
 
         List<Identifier> identifierList = new ArrayList<>();
@@ -848,6 +918,13 @@ public class FhirTransformServiceImpl implements FhirTransformService {
         }
         if (!GenericValidator.isBlankOrNull(nationalId)) {
             identifierList.add(createIdentifier(fhirConfig.getOeFhirSystem() + "/pat_nationalId", nationalId));
+        }
+        // Matricule CMU/CNAM exposé avec l'OID national (clé de rapprochement
+        // inter-systèmes PSNDPE), en plus des identifiants OpenELIS internes. Émis
+        // seulement si un system OID est configuré et le matricule présent.
+        if (!GenericValidator.isBlankOrNull(cmuNumber)
+                && !GenericValidator.isBlankOrNull(fhirConfig.getCmuIdentifierSystem())) {
+            identifierList.add(createIdentifier(fhirConfig.getCmuIdentifierSystem(), cmuNumber));
         }
         if (!GenericValidator.isBlankOrNull(stNumber)) {
             identifierList.add(createIdentifier(fhirConfig.getOeFhirSystem() + "/pat_stNumber", stNumber));
@@ -882,29 +959,50 @@ public class FhirTransformServiceImpl implements FhirTransformService {
         LogEvent.logTrace(this.getClass().getSimpleName(), "transformToServiceRequest",
                 "transformToServiceRequest called");
 
-        Sample sample = analysis.getSampleItem().getSample();
-        Patient patient = sampleHumanService.getPatientForSample(sample);
-        Provider provider = sampleHumanService.getProviderForSample(sample);
+        // Analyse potentiellement orpheline (sampleItem/sample manquant) : on tolère
+        // en produisant un ServiceRequest minimal (id + code) plutôt que de faire
+        // planter toute la transformation par une NPE.
+        SampleItem sampleItem = analysis.getSampleItem();
+        Sample sample = sampleItem != null ? sampleItem.getSample() : null;
+        Patient patient = sample != null ? sampleHumanService.getPatientForSample(sample) : null;
+        Provider provider = sample != null ? sampleHumanService.getProviderForSample(sample) : null;
 
-        Organization organization = sampleService.getOrganizationRequester(sample,
-                TableIdService.getInstance().REFERRING_ORG_TYPE_ID);
-        Organization organizationDepartment = sampleService.getOrganizationRequester(sample,
-                TableIdService.getInstance().REFERRING_ORG_DEPARTMENT_TYPE_ID);
+        Organization organization = sample != null
+                ? sampleService.getOrganizationRequester(sample, TableIdService.getInstance().REFERRING_ORG_TYPE_ID)
+                : null;
+        Organization organizationDepartment = sample != null
+                ? sampleService.getOrganizationRequester(sample,
+                        TableIdService.getInstance().REFERRING_ORG_DEPARTMENT_TYPE_ID)
+                : null;
 
         Test test = analysis.getTest();
         ServiceRequest serviceRequest = new ServiceRequest();
         serviceRequest.setId(analysis.getFhirUuidAsString());
         serviceRequest.addIdentifier(
                 this.createIdentifier(fhirConfig.getOeFhirSystem() + "/analysis_uuid", analysis.getFhirUuidAsString()));
-        serviceRequest.setRequisition(this.createIdentifier(fhirConfig.getOeFhirSystem() + "/samp_labNo",
-                analysis.getSampleItem().getSample().getAccessionNumber()));
-        if (organization != null) {
-            serviceRequest.addLocationReference(
-                    this.createReferenceFor(ResourceType.Location, organization.getFhirUuidAsString()));
+        if (test != null) {
+            serviceRequest.setCode(transformTestToCodeableConcept(test.getId()));
         }
-        if (organizationDepartment != null) {
+        // Analyse orpheline (pas de sample) : ServiceRequest minimal, on s'arrête ici.
+        if (sample == null) {
+            LogEvent.logWarn(this.getClass().getSimpleName(), "transformToServiceRequest",
+                    "analyse sans sampleItem/sample (id=" + analysis.getId() + ") : ServiceRequest minimal produit.");
+            serviceRequest.setStatus(ServiceRequestStatus.UNKNOWN);
+            serviceRequest.setAuthoredOn(new Date());
+            return serviceRequest;
+        }
+        serviceRequest.setRequisition(
+                this.createIdentifier(fhirConfig.getOeFhirSystem() + "/samp_labNo", sample.getAccessionNumber()));
+        // Référence typée Organization (et non Location) : ce sont des Organizations
+        // OE, produites comme telles ; typer 'Location/<uuid>' donnait une référence
+        // non résolue (aucune ressource Location de cet UUID n'existe).
+        if (organization != null && organization.getFhirUuid() != null) {
             serviceRequest.addLocationReference(
-                    this.createReferenceFor(ResourceType.Location, organizationDepartment.getFhirUuidAsString()));
+                    this.createReferenceFor(ResourceType.Organization, organization.getFhirUuidAsString()));
+        }
+        if (organizationDepartment != null && organizationDepartment.getFhirUuid() != null) {
+            serviceRequest.addLocationReference(
+                    this.createReferenceFor(ResourceType.Organization, organizationDepartment.getFhirUuidAsString()));
         }
 
         List<ElectronicOrder> eOrders = electronicOrderService.getElectronicOrdersByExternalId(sample.getReferringId());
@@ -938,17 +1036,18 @@ public class FhirTransformServiceImpl implements FhirTransformService {
         if (program != null && !GenericValidator.isBlankOrNull(program.getValue())) {
             serviceRequest.addCategory(transformSampleProgramToCodeableConcept(program));
         }
-        serviceRequest.setPriority(ServiceRequestPriority.ROUTINE);
-        serviceRequest.setCode(transformTestToCodeableConcept(test.getId()));
+        serviceRequest.setPriority(mapServiceRequestPriority(sample.getPriority()));
         serviceRequest.setAuthoredOn(new Date());
         for (Note note : noteService.getNotes(analysis)) {
             serviceRequest.addNote(transformNoteToAnnotation(note));
         }
         // TODO performer type?
 
-        serviceRequest.addSpecimen(
-                this.createReferenceFor(ResourceType.Specimen, analysis.getSampleItem().getFhirUuidAsString()));
-        serviceRequest.setSubject(this.createReferenceFor(ResourceType.Patient, patient.getFhirUuidAsString()));
+        serviceRequest.addSpecimen(this.createReferenceFor(ResourceType.Specimen, sampleItem.getFhirUuidAsString()));
+        Reference srPatientRef = patientReferenceOrNull(patient);
+        if (srPatientRef != null) {
+            serviceRequest.setSubject(srPatientRef);
+        }
         if (provider != null && provider.getFhirUuid() != null) {
             serviceRequest
                     .setRequester(this.createReferenceFor(ResourceType.Practitioner, provider.getFhirUuidAsString()));
@@ -988,8 +1087,20 @@ public class FhirTransformServiceImpl implements FhirTransformService {
                 "transformTestToCodeableConcept test called");
 
         CodeableConcept codeableConcept = new CodeableConcept();
-        codeableConcept
-                .addCoding(new Coding("http://loinc.org", test.getLoinc(), test.getLocalizedTestName().getEnglish()));
+        String display = test.getLocalizedTestName() == null ? test.getName()
+                : test.getLocalizedTestName().getEnglish();
+        // Coding LOINC seulement si le test a un code LOINC (sinon on produisait un
+        // Coding système LOINC avec code null = CodeableConcept invalide).
+        if (!GenericValidator.isBlankOrNull(test.getLoinc())) {
+            codeableConcept.addCoding(new Coding("http://loinc.org", test.getLoinc(), display));
+        }
+        // Coding SNOMED CT si renseigné (alimenté via l'import terminologique).
+        if (!GenericValidator.isBlankOrNull(test.getSnomedCode())) {
+            codeableConcept.addCoding(new Coding("http://snomed.info/sct", test.getSnomedCode(), display));
+        }
+        // Coding local OE : identifie toujours le test, même sans LOINC.
+        codeableConcept.addCoding(new Coding(fhirConfig.getOeFhirSystem() + "/test", test.getId(), display));
+        codeableConcept.setText(display);
         return codeableConcept;
     }
 
@@ -999,7 +1110,10 @@ public class FhirTransformServiceImpl implements FhirTransformService {
         Specimen specimen = this.transformToSpecimen(sampleTest.item.getId());
         if (sampleTest.initialSampleConditionIdList != null) {
             for (ObservationHistory initialSampleCondition : sampleTest.initialSampleConditionIdList) {
-                specimen.addCondition(transformSampleConditionToCodeableConcept(initialSampleCondition));
+                CodeableConcept conditionCC = transformSampleConditionToCodeableConcept(initialSampleCondition);
+                if (conditionCC != null) {
+                    specimen.addCondition(conditionCC);
+                }
             }
         }
 
@@ -1028,7 +1142,10 @@ public class FhirTransformServiceImpl implements FhirTransformService {
         for (Analysis analysis : analysisService.getAnalysesBySampleItem(sampleItem)) {
             specimen.addRequest(this.createReferenceFor(ResourceType.ServiceRequest, analysis.getFhirUuidAsString()));
         }
-        specimen.setSubject(this.createReferenceFor(ResourceType.Patient, patient.getFhirUuidAsString()));
+        Reference specimenPatientRef = patientReferenceOrNull(patient);
+        if (specimenPatientRef != null) {
+            specimen.setSubject(specimenPatientRef);
+        }
 
         return specimen;
     }
@@ -1042,17 +1159,28 @@ public class FhirTransformServiceImpl implements FhirTransformService {
         LogEvent.logTrace(this.getClass().getSimpleName(), "transformSampleConditionToCodeableConcept",
                 "transformSampleConditionToCodeableConcept called");
 
-        String observationValue;
-        String observationDisplay;
+        if (initialSampleCondition == null) {
+            return null;
+        }
+        String observationValue = null;
+        String observationDisplay = "";
+        // Les lookups dictionnaire/localisation peuvent renvoyer null : on garde une
+        // condition sans code plutôt que de lever une NPE.
         if (ValueType.DICTIONARY.getCode().equals(initialSampleCondition.getValueType())) {
-            observationValue = dictionaryService.get(initialSampleCondition.getValue()).getDictEntry();
-            observationDisplay = dictionaryService.get(initialSampleCondition.getValue()).getDictEntryDisplayValue();
+            org.openelisglobal.dictionary.valueholder.Dictionary dict = dictionaryService
+                    .get(initialSampleCondition.getValue());
+            if (dict != null) {
+                observationValue = dict.getDictEntry();
+                observationDisplay = dict.getDictEntryDisplayValue();
+            }
         } else if (ValueType.KEY.getCode().equals(initialSampleCondition.getValueType())) {
-            observationValue = localizationService.get(initialSampleCondition.getValue()).getEnglish();
-            observationDisplay = "";
+            org.openelisglobal.localization.valueholder.Localization loc = localizationService
+                    .get(initialSampleCondition.getValue());
+            if (loc != null) {
+                observationValue = loc.getEnglish();
+            }
         } else {
             observationValue = initialSampleCondition.getValue();
-            observationDisplay = "";
         }
 
         CodeableConcept condition = new CodeableConcept();
@@ -1217,7 +1345,11 @@ public class FhirTransformServiceImpl implements FhirTransformService {
 
         List<Result> allResults = resultService.getResultsByAnalysis(analysis);
         SampleItem sampleItem = analysis.getSampleItem();
-        Patient patient = sampleHumanService.getPatientForSample(sampleItem.getSample());
+        // sampleItem/sample potentiellement absents (analyse orpheline) : le patient
+        // reste optionnel (subject omis) plutôt que NPE.
+        Patient patient = (sampleItem != null && sampleItem.getSample() != null)
+                ? sampleHumanService.getPatientForSample(sampleItem.getSample())
+                : null;
 
         DiagnosticReport diagnosticReport = genNewDiagnosticReport(analysis);
         Test test = analysis.getTest();
@@ -1237,7 +1369,10 @@ public class FhirTransformServiceImpl implements FhirTransformService {
         diagnosticReport
                 .addBasedOn(this.createReferenceFor(ResourceType.ServiceRequest, analysis.getFhirUuidAsString()));
         diagnosticReport.addSpecimen(this.createReferenceFor(ResourceType.Specimen, sampleItem.getFhirUuidAsString()));
-        diagnosticReport.setSubject(this.createReferenceFor(ResourceType.Patient, patient.getFhirUuidAsString()));
+        Reference drPatientRef = patientReferenceOrNull(patient);
+        if (drPatientRef != null) {
+            diagnosticReport.setSubject(drPatientRef);
+        }
         for (Result curResult : allResults) {
             diagnosticReport
                     .addResult(this.createReferenceFor(ResourceType.Observation, curResult.getFhirUuidAsString()));
@@ -1266,9 +1401,12 @@ public class FhirTransformServiceImpl implements FhirTransformService {
                 "transformResultToObservation called");
 
         Analysis analysis = result.getAnalysis();
-        Test test = analysis.getTest();
-        SampleItem sampleItem = analysis.getSampleItem();
-        Patient patient = sampleHumanService.getPatientForSample(sampleItem.getSample());
+        Test test = analysis != null ? analysis.getTest() : null;
+        SampleItem sampleItem = analysis != null ? analysis.getSampleItem() : null;
+        // sample/patient optionnels (analyse orpheline) : subject omis plutôt que NPE.
+        Patient patient = (sampleItem != null && sampleItem.getSample() != null)
+                ? sampleHumanService.getPatientForSample(sampleItem.getSample())
+                : null;
         Observation observation = new Observation();
 
         observation.setId(result.getFhirUuidAsString());
@@ -1288,55 +1426,64 @@ public class FhirTransformServiceImpl implements FhirTransformService {
             observation.setStatus(ObservationStatus.PRELIMINARY);
         }
 
+        boolean valueSet = false;
         if (!GenericValidator.isBlankOrNull(result.getValue())) {
             // in case of Viral load test
-            if (result.getAnalysis().getTest().getName().equalsIgnoreCase("Viral Load")) {
-                Quantity quantity = new Quantity();
+            if (test != null && "Viral Load".equalsIgnoreCase(test.getName())) {
                 long finalResult = result.getVLValueAsNumber();
-                quantity.setValue(finalResult);
-                quantity.setUnit(resultService.getUOM(result));
-                observation.setValue(quantity);
+                observation.setValue(buildQuantity(new BigDecimal(finalResult), result));
+                valueSet = true;
             } else if (TypeOfTestResultServiceImpl.ResultType.isMultiSelectVariant(result.getResultType())
                     && !"0".equals(result.getValue())) {
                 Dictionary dictionary = dictionaryService.getDataForId(result.getValue());
-                CodeableConcept codeableConcept = new CodeableConcept();
-                if (dictionary.getLoincCode() != null && !dictionary.getLoincCode().isEmpty()) {
-                    codeableConcept.addCoding(new Coding("http://loinc.org", dictionary.getLoincCode(),
-                            dictionary.getLocalizedDictionaryName() == null ? dictionary.getDictEntry()
-                                    : dictionary.getLocalizedDictionaryName().getEnglish()));
+                if (dictionary != null) {
+                    observation.setValue(buildDictionaryCodeableConcept(dictionary));
+                    valueSet = true;
                 }
-                codeableConcept.addCoding(
-                        new Coding(fhirConfig.getOeFhirSystem() + "/dictionary_entry", dictionary.getDictEntry(),
-                                dictionary.getLocalizedDictionaryName() == null ? dictionary.getDictEntry()
-                                        : dictionary.getLocalizedDictionaryName().getEnglish()));
-                observation.setValue(codeableConcept);
             } else if (TypeOfTestResultServiceImpl.ResultType.isDictionaryVariant(result.getResultType())
                     && !"0".equals(result.getValue())) {
                 Dictionary dictionary = dictionaryService.getDataForId(result.getValue());
-                CodeableConcept codeableConcept = new CodeableConcept();
-                if (dictionary.getLoincCode() != null && !dictionary.getLoincCode().isEmpty()) {
-                    codeableConcept.addCoding(new Coding("http://loinc.org", dictionary.getLoincCode(),
-                            dictionary.getLocalizedDictionaryName() == null ? dictionary.getDictEntry()
-                                    : dictionary.getLocalizedDictionaryName().getEnglish()));
+                if (dictionary != null) {
+                    observation.setValue(buildDictionaryCodeableConcept(dictionary));
+                    valueSet = true;
                 }
-                codeableConcept.addCoding(
-                        new Coding(fhirConfig.getOeFhirSystem() + "/dictionary_entry", dictionary.getDictEntry(),
-                                dictionary.getLocalizedDictionaryName() == null ? dictionary.getDictEntry()
-                                        : dictionary.getLocalizedDictionaryName().getEnglish()));
-                observation.setValue(codeableConcept);
             } else if (TypeOfTestResultServiceImpl.ResultType.isNumeric(result.getResultType())) {
-                Quantity quantity = new Quantity();
-                quantity.setValue(new BigDecimal(result.getValue(true)));
-                quantity.setUnit(resultService.getUOM(result));
-                observation.setValue(quantity);
+                // Résultat "numérique" mais valeur non parseable (ex. "<20", saisie
+                // libre) : on ne casse pas la transformation ; valueSet reste false ->
+                // dataAbsentReason posé plus bas (cohérent avec la branche flore).
+                try {
+                    observation.setValue(buildQuantity(new BigDecimal(result.getValue(true)), result));
+                    valueSet = true;
+                } catch (NumberFormatException e) {
+                    LogEvent.logWarn(this.getClass().getSimpleName(), "transformResultToObservation",
+                            "valeur numérique non parseable pour result " + result.getId() + " : '" + result.getValue()
+                                    + "'");
+                }
             } else if (TypeOfTestResultServiceImpl.ResultType.isTextOnlyVariant(result.getResultType())) {
                 observation.setValue(new StringType(result.getValue()));
+                valueSet = true;
             }
         }
-        observation.setCode(transformTestToCodeableConcept(test.getId()));
-        observation.addBasedOn(this.createReferenceFor(ResourceType.ServiceRequest, analysis.getFhirUuidAsString()));
-        observation.setSpecimen(this.createReferenceFor(ResourceType.Specimen, sampleItem.getFhirUuidAsString()));
-        observation.setSubject(this.createReferenceFor(ResourceType.Patient, patient.getFhirUuidAsString()));
+        // Ne jamais produire une Observation FINAL sans value[x] ni raison :
+        // marquer explicitement l'absence de donnée exploitable (dataAbsentReason).
+        if (!valueSet) {
+            observation.setDataAbsentReason(new CodeableConcept().addCoding(
+                    new Coding("http://terminology.hl7.org/CodeSystem/data-absent-reason", "unknown", "Unknown")));
+        }
+        if (test != null) {
+            observation.setCode(transformTestToCodeableConcept(test.getId()));
+        }
+        if (analysis != null) {
+            observation
+                    .addBasedOn(this.createReferenceFor(ResourceType.ServiceRequest, analysis.getFhirUuidAsString()));
+        }
+        if (sampleItem != null) {
+            observation.setSpecimen(this.createReferenceFor(ResourceType.Specimen, sampleItem.getFhirUuidAsString()));
+        }
+        Reference obsPatientRef = patientReferenceOrNull(patient);
+        if (obsPatientRef != null) {
+            observation.setSubject(obsPatientRef);
+        }
         // observation.setIssued(result.getOriginalLastupdated());
         observation.setIssued(analysis.getReleasedDate()); // update to get Released Date instead of commpleted date
         // observation.setEffective(new
@@ -1346,8 +1493,381 @@ public class FhirTransformServiceImpl implements FhirTransformService {
         } else {
             observation.setEffective(new DateTimeType(analysis.getStartedDate()));
         }
-        // observation.setIssued(new Date());
+        // referenceRange : les bornes normales du résultat existent en OE
+        // (min/maxNormal) — les exposer quand présentes (donnée clinique utile).
+        if (result.getMinNormal() != null || result.getMaxNormal() != null) {
+            Observation.ObservationReferenceRangeComponent range = observation.addReferenceRange();
+            if (result.getMinNormal() != null) {
+                range.setLow(new Quantity().setValue(result.getMinNormal()));
+            }
+            if (result.getMaxNormal() != null) {
+                range.setHigh(new Quantity().setValue(result.getMaxNormal()));
+            }
+        }
         return observation;
+    }
+
+    // ====================================================================
+    // Bactériologie classique : mapping FHIR des organismes identifiés et
+    // des antibiogrammes. Ces données ne vivent pas dans la table `result`
+    // (transformResultToObservation ne les voit donc pas) mais dans les
+    // tables bacteriology_organism / bacteriology_antibiogram. On produit
+    // des Observations dérivées, reliées à la culture par derivedFrom, et
+    // toutes rattachées au DiagnosticReport de l'analyse.
+    // ====================================================================
+
+    // Codes LOINC génériques (fallback quand le dictionnaire n'en porte pas).
+    private static final String LOINC_BACTERIA_IDENTIFIED = "634-6"; // Bacteria identified
+    private static final String LOINC_SUSCEPTIBILITY = "18769-0"; // Microbial susceptibility
+
+    /**
+     * UUID déterministe à partir d'une clé métier stable. Garantit l'idempotence du
+     * rejeu (même resource id à chaque passage) pour les entités bactério qui n'ont
+     * pas de colonne fhir_uuid persistée. La clé inclut le fhirUuid de l'analyse
+     * pour éviter toute collision entre analyses.
+     */
+    private String deterministicFhirId(String key) {
+        return UUID.nameUUIDFromBytes(key.getBytes(java.nio.charset.StandardCharsets.UTF_8)).toString();
+    }
+
+    /**
+     * Construit les Observations bactério (isolats + antibiogrammes) pour une
+     * analyse donnée. Retourne une liste vide si l'analyse ne porte aucun organisme
+     * (analyse non bactério, ou culture négative) — comportement neutre.
+     *
+     * @param analysis      l'analyse (déjà pourvue d'un fhirUuid)
+     * @param cultureAnchor référence FHIR de l'Observation "culture" dont dérivent
+     *                      les isolats (le premier Result de l'analyse), ou null →
+     *                      on retombe sur le ServiceRequest de l'analyse.
+     */
+    private List<Observation> buildBacteriologyObservations(Analysis analysis, Reference cultureAnchor) {
+        List<Observation> out = new ArrayList<>();
+        int analysisIdInt;
+        try {
+            analysisIdInt = Integer.parseInt(analysis.getId());
+        } catch (NumberFormatException e) {
+            return out;
+        }
+
+        List<org.openelisglobal.bacteriology.valueholder.BacteriologyOrganism> organisms = bacteriologyOrganismService
+                .getOrganismsByAnalysisId(analysisIdInt);
+        List<org.openelisglobal.bacteriology.valueholder.BacteriologyFlora> floras = bacteriologyFloraService
+                .getByAnalysisId(analysisIdInt);
+        boolean hasOrganisms = organisms != null && !organisms.isEmpty();
+        boolean hasFloras = floras != null && !floras.isEmpty();
+        if (!hasOrganisms && !hasFloras) {
+            return out;
+        }
+
+        SampleItem sampleItem = analysis.getSampleItem();
+        Patient patient = sampleItem != null ? sampleHumanService.getPatientForSample(sampleItem.getSample()) : null;
+        Reference patientRef = patientReferenceOrNull(patient);
+        Reference specimenRef = (sampleItem != null && sampleItem.getFhirUuid() != null)
+                ? createReferenceFor(ResourceType.Specimen, sampleItem.getFhirUuidAsString())
+                : null;
+        Reference serviceRequestRef = createReferenceFor(ResourceType.ServiceRequest, analysis.getFhirUuidAsString());
+        // Ancre de dérivation des isolats : UNIQUEMENT l'Observation culture. FHIR R4
+        // n'autorise sur Observation.derivedFrom que DocumentReference, ImagingStudy,
+        // Media, QuestionnaireResponse, Observation, MolecularSequence — surtout PAS
+        // ServiceRequest (HAPI-0931). Sans culture, on omet derivedFrom ; le lien vers
+        // la demande passe par basedOn (valide), déjà posé.
+        Reference isolateDerivedFrom = cultureAnchor;
+
+        boolean finalized = statusService.matches(analysis.getStatusId(), AnalysisStatus.Finalized);
+        ObservationStatus obsStatus = finalized ? ObservationStatus.FINAL : ObservationStatus.PRELIMINARY;
+
+        for (org.openelisglobal.bacteriology.valueholder.BacteriologyOrganism organism : (hasOrganisms ? organisms
+                : new ArrayList<org.openelisglobal.bacteriology.valueholder.BacteriologyOrganism>())) {
+            String isolateId = deterministicFhirId(
+                    analysis.getFhirUuidAsString() + "/bacteriology_organism/" + organism.getId());
+            Observation isolate = new Observation();
+            isolate.setId(isolateId);
+            isolate.addIdentifier(createIdentifier(fhirConfig.getOeFhirSystem() + "/bacteriology_organism",
+                    String.valueOf(organism.getId())));
+            isolate.setStatus(obsStatus);
+            isolate.setCode(buildBacteriaIdentifiedCode());
+            isolate.setValue(buildOrganismCodeableConcept(organism));
+            if (isolateDerivedFrom != null) {
+                isolate.addDerivedFrom(isolateDerivedFrom);
+            }
+            isolate.addBasedOn(serviceRequestRef);
+            if (specimenRef != null) {
+                isolate.setSpecimen(specimenRef);
+            }
+            if (patientRef != null) {
+                isolate.setSubject(patientRef);
+            }
+            if (analysis.getReleasedDate() != null) {
+                isolate.setEffective(new DateTimeType(analysis.getReleasedDate()));
+                isolate.setIssued(analysis.getReleasedDate());
+            }
+            // Caractéristiques de l'organisme en composants (données réellement
+            // produites par OE) : type de germe, présence de capsule.
+            addOrganismComponents(isolate, organism);
+            out.add(isolate);
+
+            // Antibiogramme : une Observation "sensibilité" par couple organisme ×
+            // antibiotique, dérivée de l'Observation isolat.
+            Reference isolateRef = createReferenceFor(ResourceType.Observation, isolateId);
+            List<org.openelisglobal.bacteriology.valueholder.BacteriologyAntibiogram> antibiograms = bacteriologyAntibiogramService
+                    .getAntibiogramsByOrganismId(organism.getId());
+            if (antibiograms != null) {
+                for (org.openelisglobal.bacteriology.valueholder.BacteriologyAntibiogram abg : antibiograms) {
+                    Observation susceptibility = buildSusceptibilityObservation(analysis, abg, obsStatus, isolateRef,
+                            specimenRef, patientRef);
+                    if (susceptibility != null) {
+                        out.add(susceptibility);
+                    }
+                }
+            }
+        }
+
+        // Flore (nombre de flore) : une Observation par BacteriologyFlora, dérivée de
+        // la culture. Indépendante des organismes (une culture peut n'avoir que de la
+        // flore, ex. flore polymicrobienne sans identification d'organisme).
+        if (hasFloras) {
+            for (org.openelisglobal.bacteriology.valueholder.BacteriologyFlora flora : floras) {
+                Observation floraObs = buildFloraObservation(analysis, flora, obsStatus, isolateDerivedFrom,
+                        serviceRequestRef, specimenRef, patientRef);
+                if (floraObs != null) {
+                    out.add(floraObs);
+                }
+            }
+        }
+        return out;
+    }
+
+    /**
+     * Référence FHIR de la 1re Observation de résultat de l'analyse (ancre de
+     * dérivation des isolats), ou null si l'analyse n'a pas de Result exploitable.
+     * Utilise le fhirUuid déjà attribué au Result par la boucle appelante.
+     */
+    private Reference firstResultObservationRef(Analysis analysis) {
+        List<Result> results = resultService.getResultsByAnalysis(analysis);
+        if (results != null) {
+            for (Result r : results) {
+                if (r.getFhirUuid() != null) {
+                    return createReferenceFor(ResourceType.Observation, r.getFhirUuidAsString());
+                }
+            }
+        }
+        return null;
+    }
+
+    private CodeableConcept buildBacteriaIdentifiedCode() {
+        CodeableConcept code = new CodeableConcept();
+        code.addCoding(new Coding("http://loinc.org", LOINC_BACTERIA_IDENTIFIED, "Bacteria identified"));
+        return code;
+    }
+
+    // Valeur de l'Observation isolat = l'organisme. Priorité au dictionnaire
+    // (avec son éventuel LOINC/SNOMED référentiel), sinon texte libre saisi.
+    private CodeableConcept buildOrganismCodeableConcept(
+            org.openelisglobal.bacteriology.valueholder.BacteriologyOrganism organism) {
+        if (organism.getOrganismNameDictId() != null) {
+            Dictionary dictionary = dictionaryService.getDataForId(String.valueOf(organism.getOrganismNameDictId()));
+            if (dictionary != null) {
+                return buildDictionaryCodeableConcept(dictionary);
+            }
+        }
+        String text = !GenericValidator.isBlankOrNull(organism.getResolvedOrganismName())
+                ? organism.getResolvedOrganismName()
+                : organism.getOrganismNameText();
+        CodeableConcept code = new CodeableConcept();
+        if (!GenericValidator.isBlankOrNull(text)) {
+            code.setText(text);
+        } else {
+            code.addCoding(
+                    new Coding("http://terminology.hl7.org/CodeSystem/data-absent-reason", "unknown", "Unknown"));
+        }
+        return code;
+    }
+
+    private void addOrganismComponents(Observation isolate,
+            org.openelisglobal.bacteriology.valueholder.BacteriologyOrganism organism) {
+        if (!GenericValidator.isBlankOrNull(organism.getOrganismType())) {
+            Observation.ObservationComponentComponent typeComp = isolate.addComponent();
+            typeComp.setCode(new CodeableConcept().addCoding(
+                    new Coding(fhirConfig.getOeFhirSystem() + "/bacteriology", "organism_type", "Germ type")));
+            typeComp.setValue(new CodeableConcept()
+                    .addCoding(new Coding(fhirConfig.getOeFhirSystem() + "/bacteriology_organism_type",
+                            organism.getOrganismType(), organism.getOrganismType())));
+        }
+        if (organism.getCapsulePresence() != null) {
+            Observation.ObservationComponentComponent capsuleComp = isolate.addComponent();
+            capsuleComp.setCode(new CodeableConcept().addCoding(
+                    new Coding(fhirConfig.getOeFhirSystem() + "/bacteriology", "capsule_presence", "Capsule present")));
+            capsuleComp.setValue(new org.hl7.fhir.r4.model.BooleanType(organism.getCapsulePresence()));
+        }
+    }
+
+    private Observation buildSusceptibilityObservation(Analysis analysis,
+            org.openelisglobal.bacteriology.valueholder.BacteriologyAntibiogram abg, ObservationStatus obsStatus,
+            Reference isolateRef, Reference specimenRef, Reference patientRef) {
+        String susceptId = deterministicFhirId(
+                analysis.getFhirUuidAsString() + "/bacteriology_antibiogram/" + abg.getId());
+        Observation obs = new Observation();
+        obs.setId(susceptId);
+        obs.addIdentifier(createIdentifier(fhirConfig.getOeFhirSystem() + "/bacteriology_antibiogram",
+                String.valueOf(abg.getId())));
+        obs.setStatus(obsStatus);
+        obs.setCode(buildAntibioticCode(abg));
+        // value[x] = interprétation S/I/R (donnée clinique principale).
+        if (!GenericValidator.isBlankOrNull(abg.getResult())) {
+            obs.setValue(buildSirCodeableConcept(abg.getResult()));
+        } else {
+            obs.setDataAbsentReason(new CodeableConcept().addCoding(
+                    new Coding("http://terminology.hl7.org/CodeSystem/data-absent-reason", "unknown", "Unknown")));
+        }
+        // L'antibiogramme dérive de l'isolat (organisme).
+        if (isolateRef != null) {
+            obs.addDerivedFrom(isolateRef);
+        }
+        if (specimenRef != null) {
+            obs.setSpecimen(specimenRef);
+        }
+        if (patientRef != null) {
+            obs.setSubject(patientRef);
+        }
+        if (analysis.getReleasedDate() != null) {
+            obs.setEffective(new DateTimeType(analysis.getReleasedDate()));
+            obs.setIssued(analysis.getReleasedDate());
+        }
+        // Composants quantitatifs : diamètre d'inhibition (mm) et CMI.
+        if (abg.getDiameterMm() != null) {
+            Observation.ObservationComponentComponent diamComp = obs.addComponent();
+            diamComp.setCode(
+                    new CodeableConcept().addCoding(new Coding("http://loinc.org", "27196-9", "Zone of inhibition")));
+            diamComp.setValue(new Quantity().setValue(abg.getDiameterMm()).setUnit("mm"));
+        }
+        if (!GenericValidator.isBlankOrNull(abg.getMicValue())) {
+            Observation.ObservationComponentComponent micComp = obs.addComponent();
+            micComp.setCode(new CodeableConcept()
+                    .addCoding(new Coding("http://loinc.org", "20578-1", "Minimum inhibitory concentration")));
+            micComp.setValue(new StringType(abg.getMicValue()));
+        }
+        return obs;
+    }
+
+    // Code de l'antibiotique testé : dictionnaire OE (avec LOINC/SNOMED référentiel
+    // si présent), sinon texte résolu.
+    private CodeableConcept buildAntibioticCode(
+            org.openelisglobal.bacteriology.valueholder.BacteriologyAntibiogram abg) {
+        if (abg.getAntibioticDictId() != null) {
+            Dictionary dictionary = dictionaryService.getDataForId(String.valueOf(abg.getAntibioticDictId()));
+            if (dictionary != null) {
+                CodeableConcept code = buildDictionaryCodeableConcept(dictionary);
+                code.addCoding(new Coding("http://loinc.org", LOINC_SUSCEPTIBILITY, "Microbial susceptibility"));
+                return code;
+            }
+        }
+        CodeableConcept code = new CodeableConcept();
+        if (!GenericValidator.isBlankOrNull(abg.getAntibioticNameText())) {
+            code.setText(abg.getAntibioticNameText());
+        }
+        code.addCoding(new Coding("http://loinc.org", LOINC_SUSCEPTIBILITY, "Microbial susceptibility"));
+        return code;
+    }
+
+    // S/I/R vers le CodeSystem HL7 d'interprétation de sensibilité.
+    private CodeableConcept buildSirCodeableConcept(String sir) {
+        String system = "http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation";
+        String code;
+        String display;
+        switch (sir.toUpperCase()) {
+        case "S":
+            code = "S";
+            display = "Susceptible";
+            break;
+        case "I":
+            code = "I";
+            display = "Intermediate";
+            break;
+        case "R":
+            code = "R";
+            display = "Resistant";
+            break;
+        default:
+            return new CodeableConcept().setText(sir);
+        }
+        return new CodeableConcept().addCoding(new Coding(system, code, display));
+    }
+
+    // Observation "nombre de flore" : value = le compte (numérique si possible),
+    // composants = caractéristiques de chaque flore détaillée (Gram, regroupement,
+    // autre caractéristique), résolues via dictionnaire.
+    private Observation buildFloraObservation(Analysis analysis,
+            org.openelisglobal.bacteriology.valueholder.BacteriologyFlora flora, ObservationStatus obsStatus,
+            Reference cultureAnchor, Reference serviceRequestRef, Reference specimenRef, Reference patientRef) {
+        String floraFhirId = deterministicFhirId(
+                analysis.getFhirUuidAsString() + "/bacteriology_flora/" + flora.getId());
+        Observation obs = new Observation();
+        obs.setId(floraFhirId);
+        obs.addIdentifier(
+                createIdentifier(fhirConfig.getOeFhirSystem() + "/bacteriology_flora", String.valueOf(flora.getId())));
+        obs.setStatus(obsStatus);
+        // code = le test "nombre de flore" associé (LOINC si présent + coding OE).
+        if (flora.getFloraCountTestId() != null) {
+            obs.setCode(transformTestToCodeableConcept(String.valueOf(flora.getFloraCountTestId())));
+        } else {
+            obs.setCode(new CodeableConcept().addCoding(
+                    new Coding(fhirConfig.getOeFhirSystem() + "/bacteriology", "flora_count", "Flora count")));
+        }
+        // value = le compte de flore. Numérique si parseable, sinon chaîne.
+        String count = flora.getFloraCount();
+        if (!GenericValidator.isBlankOrNull(count)) {
+            try {
+                obs.setValue(new Quantity().setValue(new BigDecimal(count.trim())));
+            } catch (NumberFormatException e) {
+                obs.setValue(new StringType(count));
+            }
+        } else {
+            obs.setDataAbsentReason(new CodeableConcept().addCoding(
+                    new Coding("http://terminology.hl7.org/CodeSystem/data-absent-reason", "unknown", "Unknown")));
+        }
+        if (cultureAnchor != null) {
+            obs.addDerivedFrom(cultureAnchor);
+        }
+        if (serviceRequestRef != null) {
+            obs.addBasedOn(serviceRequestRef);
+        }
+        if (specimenRef != null) {
+            obs.setSpecimen(specimenRef);
+        }
+        if (patientRef != null) {
+            obs.setSubject(patientRef);
+        }
+        if (analysis.getReleasedDate() != null) {
+            obs.setEffective(new DateTimeType(analysis.getReleasedDate()));
+            obs.setIssued(analysis.getReleasedDate());
+        }
+        // Détails par flore identifiée : Gram, mode de regroupement, autre
+        // caractéristique. Chacun résolu via dictionnaire quand renseigné.
+        if (flora.getDetails() != null) {
+            for (org.openelisglobal.bacteriology.valueholder.BacteriologyFloraDetail detail : flora.getDetails()) {
+                addDictionaryComponent(obs, "gram_type", "Gram type", detail.getGramTypeDictId());
+                addDictionaryComponent(obs, "grouping_mode", "Grouping mode", detail.getGroupingModeDictId());
+                addDictionaryComponent(obs, "other_characteristic", "Other characteristic",
+                        detail.getOtherCharacteristicDictId());
+            }
+        }
+        return obs;
+    }
+
+    // Ajoute un composant Observation dont la valeur est un CodeableConcept résolu
+    // depuis le dictionnaire (no-op si dictId null ou dictionnaire introuvable).
+    private void addDictionaryComponent(Observation obs, String code, String display, Integer dictId) {
+        if (dictId == null) {
+            return;
+        }
+        Dictionary dictionary = dictionaryService.getDataForId(String.valueOf(dictId));
+        if (dictionary == null) {
+            return;
+        }
+        Observation.ObservationComponentComponent comp = obs.addComponent();
+        comp.setCode(new CodeableConcept()
+                .addCoding(new Coding(fhirConfig.getOeFhirSystem() + "/bacteriology", code, display)));
+        comp.setValue(buildDictionaryCodeableConcept(dictionary));
     }
 
     @Override
@@ -1449,7 +1969,10 @@ public class FhirTransformServiceImpl implements FhirTransformService {
             fhirOrganization.addIdentifier(new Identifier().setSystem(fhirConfig.getOeFhirSystem() + "/org_code")
                     .setValue(organization.getCode()));
         }
-        if (!GenericValidator.isBlankOrNull(organization.getCode())) {
+        // Garde sur l'UUID (et non sur getCode() — copier-coller du bloc précédent) :
+        // sinon une organisation avec UUID mais sans code perdait son identifiant
+        // org_uuid.
+        if (organization.getFhirUuid() != null) {
             fhirOrganization.addIdentifier(new Identifier().setSystem(fhirConfig.getOeFhirSystem() + "/org_uuid")
                     .setValue(organization.getFhirUuidAsString()));
         }
@@ -1567,6 +2090,76 @@ public class FhirTransformServiceImpl implements FhirTransformService {
         return reference;
     }
 
+    // Référence Patient sûre : retourne null si le patient (ou son UUID FHIR) est
+    // absent, au lieu de lever une NPE qui faisait planter TOUTE la transformation
+    // (échantillon sans human associé). La ressource sort alors sans subject/for
+    // (valide FHIR) plutôt que de tout casser.
+    private Reference patientReferenceOrNull(Patient patient) {
+        if (patient == null || patient.getFhirUuid() == null) {
+            return null;
+        }
+        return createReferenceFor(ResourceType.Patient, patient.getFhirUuidAsString());
+    }
+
+    // Mappe la priorité métier OE (OrderPriority) vers la priorité FHIR. OE
+    // produit une vraie priorité (ROUTINE/ASAP/STAT/TIMED/FUTURE_STAT) qui était
+    // ignorée (ROUTINE en dur).
+    private ServiceRequestPriority mapServiceRequestPriority(org.openelisglobal.sample.valueholder.OrderPriority p) {
+        if (p == null) {
+            return ServiceRequestPriority.ROUTINE;
+        }
+        switch (p) {
+        case STAT:
+        case FUTURE_STAT:
+            return ServiceRequestPriority.STAT;
+        case ASAP:
+            return ServiceRequestPriority.ASAP;
+        case TIMED:
+            return ServiceRequestPriority.URGENT;
+        case ROUTINE:
+        default:
+            return ServiceRequestPriority.ROUTINE;
+        }
+    }
+
+    private TaskPriority mapTaskPriority(org.openelisglobal.sample.valueholder.OrderPriority p) {
+        if (p == null) {
+            return TaskPriority.ROUTINE;
+        }
+        switch (p) {
+        case STAT:
+        case FUTURE_STAT:
+            return TaskPriority.STAT;
+        case ASAP:
+            return TaskPriority.ASAP;
+        case TIMED:
+            return TaskPriority.URGENT;
+        case ROUTINE:
+        default:
+            return TaskPriority.ROUTINE;
+        }
+    }
+
+    // Construit un CodeableConcept à partir d'un Dictionary (valeur de résultat) :
+    // coding LOINC si disponible + coding dictionary_entry OE. Factorise le code
+    // dupliqué entre multiselect et dictionary variants, avec i18n sûre.
+    private CodeableConcept buildDictionaryCodeableConcept(Dictionary dictionary) {
+        CodeableConcept codeableConcept = new CodeableConcept();
+        String display = dictionary.getLocalizedDictionaryName() == null ? dictionary.getDictEntry()
+                : dictionary.getLocalizedDictionaryName().getEnglish();
+        if (dictionary.getLoincCode() != null && !dictionary.getLoincCode().isEmpty()) {
+            codeableConcept.addCoding(new Coding("http://loinc.org", dictionary.getLoincCode(), display));
+        }
+        // Coding SNOMED CT si le dictionnaire référentiel le porte (organismes,
+        // antibiotiques…). Alimenté via la colonne dictionary.snomed_code.
+        if (dictionary.getSnomedCode() != null && !dictionary.getSnomedCode().isEmpty()) {
+            codeableConcept.addCoding(new Coding("http://snomed.info/sct", dictionary.getSnomedCode(), display));
+        }
+        codeableConcept.addCoding(
+                new Coding(fhirConfig.getOeFhirSystem() + "/dictionary_entry", dictionary.getDictEntry(), display));
+        return codeableConcept;
+    }
+
     @Override
     public String getIdFromLocation(String location) {
         LogEvent.logTrace(this.getClass().getSimpleName(), "getIdFromLocation", "getIdFromLocation called");
@@ -1578,6 +2171,27 @@ public class FhirTransformServiceImpl implements FhirTransformService {
         return id;
     }
 
+    /**
+     * Construit une Quantity FHIR pour un résultat numérique : valeur + libellé
+     * d'unité, et si l'unité a un code UCUM renseigné, le system UCUM
+     * (http://unitsofmeasure.org) + le code — requis par la plupart des IG pour la
+     * validation des mesures. Sans code UCUM, seul le libellé (display) est posé.
+     */
+    private Quantity buildQuantity(BigDecimal value, Result result) {
+        Quantity quantity = new Quantity();
+        quantity.setValue(value);
+        String unit = resultService.getUOM(result);
+        if (!GenericValidator.isBlankOrNull(unit)) {
+            quantity.setUnit(unit);
+        }
+        String ucum = resultService.getUcumCode(result);
+        if (!GenericValidator.isBlankOrNull(ucum)) {
+            quantity.setSystem("http://unitsofmeasure.org");
+            quantity.setCode(ucum);
+        }
+        return quantity;
+    }
+
     @Override
     public Identifier createIdentifier(String system, String value) {
         LogEvent.logTrace(this.getClass().getSimpleName(), "createIdentifier", "createIdentifier called");
@@ -1585,7 +2199,8 @@ public class FhirTransformServiceImpl implements FhirTransformService {
         Identifier identifier = new Identifier();
         identifier.setValue(value);
 
-        if (Objects.equals(system, fhirConfig.getOeFhirSystem() + "/pat_nationalId")) {
+        if (Objects.equals(system, fhirConfig.getOeFhirSystem() + "/pat_nationalId")
+                || Objects.equals(system, fhirConfig.getCmuIdentifierSystem())) {
             identifier.setUse(Identifier.IdentifierUse.OFFICIAL);
         } else {
             identifier.setUse(Identifier.IdentifierUse.USUAL);

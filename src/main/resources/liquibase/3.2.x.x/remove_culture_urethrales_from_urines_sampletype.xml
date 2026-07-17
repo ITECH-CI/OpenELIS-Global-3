@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+     http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+    <!--
+        Retirer l'association du test 'Culture - Sécrétions urétrales' au type
+        d'échantillon 'Urines'. Elle avait été créée par le CROSS JOIN massif du
+        changeSet '16-map-others-bacterio-tests-to-sampletypes' (associe ce test
+        à tous les types sauf Selles), ce qui n'a pas lieu d'être pour Urines.
+        Résolution par name / description — aucun id codé en dur.
+        NB : ne supprime PAS les analyses existantes, empêche seulement de
+        proposer ce test pour de futurs échantillons de type Urines.
+    -->
+    <changeSet author="pkomena" id="remove-culture-urethrales-from-urines-sampletype-1">
+        <comment>Retirer 'Culture - Sécrétions urétrales' du type d'échantillon 'Urines' (sampletype_test)</comment>
+        <sql><![CDATA[
+            DELETE FROM clinlims.sampletype_test st
+            USING clinlims.type_of_sample tos, clinlims.test t
+            WHERE st.sample_type_id = tos.id
+              AND st.test_id = t.id
+              AND tos.description = 'Urines'
+              AND t.name = 'Culture - Sécrétions urétrales';
+        ]]></sql>
+    </changeSet>
+
+</databaseChangeLog>

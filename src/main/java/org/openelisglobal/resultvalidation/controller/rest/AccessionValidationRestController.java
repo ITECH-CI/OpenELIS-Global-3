@@ -107,6 +107,7 @@ public class AccessionValidationRestController extends BaseResultValidationContr
     private ResultValidationService resultValidationService;
     private NoteService noteService;
     private FhirTransformService fhirTransformService;
+    private org.openelisglobal.dataexchange.fhir.service.FhirSyncStatusService fhirSyncStatusService;
 
     private final String RESULT_SUBJECT = "Result Note";
     private final String RESULT_TABLE_ID;
@@ -117,8 +118,10 @@ public class AccessionValidationRestController extends BaseResultValidationContr
             TestSectionService testSectionService, SystemUserService systemUserService,
             ReferenceTablesService referenceTablesService, DocumentTypeService documentTypeService,
             ResultValidationService resultValidationService, NoteService noteService,
-            FhirTransformService fhirTransformService) {
+            FhirTransformService fhirTransformService,
+            org.openelisglobal.dataexchange.fhir.service.FhirSyncStatusService fhirSyncStatusService) {
 
+        this.fhirSyncStatusService = fhirSyncStatusService;
         this.analysisService = analysisService;
         this.testResultService = testResultService;
         this.sampleHumanService = sampleHumanService;
@@ -314,10 +317,23 @@ public class AccessionValidationRestController extends BaseResultValidationContr
             // Save sample interpretation (one per sample, not per result)
             saveSampleInterpretations(resultItemList, getSysUserId(request));
 
+            // Trace la transformation FHIR (une ligne par sample, rejouable). Les
+            // sampleIds sont dérivés des analyses validées (source la plus fiable).
+            java.util.Set<String> validationSampleIds = new java.util.HashSet<>();
+            for (Analysis analysis : analysisUpdateList) {
+                if (analysis.getSampleItem() != null && analysis.getSampleItem().getSample() != null
+                        && analysis.getSampleItem().getSample().getId() != null) {
+                    validationSampleIds.add(analysis.getSampleItem().getSample().getId());
+                }
+            }
+            java.util.Map<String, String> validationSyncIds = fhirSyncStatusService.recordPendingForSamples(
+                    org.openelisglobal.dataexchange.fhir.FhirSyncConstants.TRIGGER_VALIDATION, validationSampleIds);
             try {
                 fhirTransformService.transformPersistResultValidationFhirObjects(deletableList, analysisUpdateList,
                         resultUpdateList, resultItemList, sampleUpdateList, noteUpdateList);
+                fhirSyncStatusService.markSuccessForAll(validationSyncIds.values());
             } catch (FhirLocalPersistingException e) {
+                fhirSyncStatusService.markFailedForAll(validationSyncIds.values(), e.toString());
                 LogEvent.logError(e);
             }
         } catch (LIMSRuntimeException e) {

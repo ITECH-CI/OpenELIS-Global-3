@@ -39,8 +39,7 @@ public class StringToReceptionTimeListConverter implements Converter<String, Lis
         // (Firefox uniquement) qui fuitent dans le binding form. Cf. note du
         // converter StringToOrderPriorityListConverter.
         String trimmedSource = source.trim();
-        if (trimmedSource.startsWith("u=") || "undefined".equals(trimmedSource)
-                || "null".equals(trimmedSource)) {
+        if (trimmedSource.startsWith("u=") || "undefined".equals(trimmedSource) || "null".equals(trimmedSource)) {
             return result;
         }
 

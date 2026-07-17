@@ -1242,6 +1242,16 @@ public class BacteriologyResultController extends BaseController {
                 }
             }
 
+            // Le workflow bactério classique ne passe pas par ResultsUpdateDataSet :
+            // aucune synchro FHIR n'était déclenchée à la validation. On régénère ici
+            // le FHIR complet du sample (Task/Specimen/ServiceRequest/DiagnosticReport/
+            // Observation) via transformPersistObjectsUnderSamples (PUT idempotent).
+            // Non bloquant : une erreur FHIR ne doit pas casser la validation métier.
+            if (validatedCount > 0 && primaryAnalysis.getSampleItem() != null
+                    && primaryAnalysis.getSampleItem().getSample() != null) {
+                triggerFhirSyncForSample(primaryAnalysis.getSampleItem().getSample().getId());
+            }
+
             return ResponseEntity.ok("Bacteriology results validated successfully: " + validatedCount + " validated, "
                     + rejectedCount + " rejected");
         } catch (Exception e) {
@@ -1445,5 +1455,46 @@ public class BacteriologyResultController extends BaseController {
     @Override
     protected String getPageSubtitleKey() {
         return "bacteriology.result.subtitle";
+    }
+
+    /**
+     * Régénère et persiste le FHIR complet d'un sample bactério après validation.
+     * Traçage via FhirSyncStatus (visible dans le monitoring). Non bloquant : toute
+     * exception est capturée et enregistrée (markFailed), jamais propagée à
+     * l'appelant.
+     */
+    private void triggerFhirSyncForSample(String sampleId) {
+        if (sampleId == null) {
+            return;
+        }
+        // Résolution paresseuse via SpringContext : injecter FhirTransformService en
+        // champ crée une référence circulaire (fhirTransformServiceImpl <->
+        // fhirReferral)
+        // qui empêche le démarrage du contexte.
+        org.openelisglobal.dataexchange.fhir.service.FhirSyncStatusService fhirSyncStatusService = SpringContext
+                .getBean(org.openelisglobal.dataexchange.fhir.service.FhirSyncStatusService.class);
+        org.openelisglobal.dataexchange.fhir.service.FhirTransformService fhirTransformService = SpringContext
+                .getBean(org.openelisglobal.dataexchange.fhir.service.FhirTransformService.class);
+        String syncStatusId = null;
+        try {
+            syncStatusId = fhirSyncStatusService.recordPending(
+                    org.openelisglobal.dataexchange.fhir.FhirSyncConstants.TRIGGER_VALIDATION,
+                    org.openelisglobal.dataexchange.fhir.FhirSyncConstants.TARGET_SAMPLE, sampleId);
+            fhirTransformService.transformPersistObjectsUnderSamples(java.util.Arrays.asList(sampleId)).get();
+            if (syncStatusId != null) {
+                fhirSyncStatusService.markSuccess(syncStatusId);
+            }
+        } catch (Exception e) {
+            Throwable cause = e.getCause() != null ? e.getCause() : e;
+            LogEvent.logWarn("BacteriologyResultController", "triggerFhirSyncForSample",
+                    "FHIR sync failed for sample " + sampleId + ": " + cause);
+            if (syncStatusId != null) {
+                try {
+                    fhirSyncStatusService.markFailed(syncStatusId, cause.toString());
+                } catch (Exception ignored) {
+                    // markFailed est déjà défensif ; on ne relaie rien.
+                }
+            }
+        }
     }
 }

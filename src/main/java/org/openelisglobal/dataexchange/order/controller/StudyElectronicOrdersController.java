@@ -213,6 +213,21 @@ public class StudyElectronicOrdersController extends BaseController {
                 String errorMsg = "error in data collection - Patient was a null resource";
                 displayItem.setWarnings(Arrays.asList(errorMsg));
             }
+            // Colonnes d'affichage dénormalisées (module d'échange unifié §6.1) :
+            // renseignées à la réception, elles permettent d'afficher la liste SANS
+            // aucun appel au serveur FHIR (le vrai coût mesuré). On ne retombe sur les
+            // lectures FHIR ci-dessous que pour les demandes ANCIENNES (colonnes nulles,
+            // reçues avant la migration) ou pour les champs non dénormalisés.
+            if (StringUtils.isNotBlank(electronicOrder.getTestName())) {
+                displayItem.setTestName(electronicOrder.getTestName());
+            }
+            if (electronicOrder.getCollectionDate() != null) {
+                displayItem.setCollectionDateDisplay(DateUtil.formatDateAsText(electronicOrder.getCollectionDate()));
+            }
+            if (StringUtils.isNotBlank(electronicOrder.getRequestingFacilityName())) {
+                displayItem.setRequestingFacility(electronicOrder.getRequestingFacilityName());
+            }
+
             Task task = fhirUtil.getFhirParser().parseResource(Task.class, electronicOrder.getData());
             displayItem.setRequestDateDisplay(DateUtil.formatDateAsText(task.getAuthoredOn()));
             for (ParameterComponent parameter : task.getInput()) {
@@ -227,70 +242,90 @@ public class StudyElectronicOrdersController extends BaseController {
                     }
                 }
             }
-            Organization organization = organizationService.getOrganizationByFhirId(
-                    task.getRestriction().getRecipientFirstRep().getReferenceElement().getIdPart());
-            if (organization != null) {
-                displayItem.setRequestingFacility(organization.getOrganizationName());
+            if (displayItem.getRequestingFacility() == null && task.hasRestriction()
+                    && task.getRestriction().hasRecipient()) {
+                Organization organization = organizationService.getOrganizationByFhirId(
+                        task.getRestriction().getRecipientFirstRep().getReferenceElement().getIdPart());
+                if (organization != null) {
+                    displayItem.setRequestingFacility(organization.getOrganizationName());
+                }
             }
 
             Sample sample = sampleService.getSampleByReferringId(electronicOrder.getExternalId());
             if (sample != null) {
                 displayItem.setLabNumber(sample.getAccessionNumber());
             }
-            IGenericClient fhirClient = fhirUtil.getFhirClient(fhirConfig.getLocalFhirStorePath());
 
-            ServiceRequest serviceRequest = fhirClient.read().resource(ServiceRequest.class)
-                    .withId(electronicOrder.getExternalId()).execute();
-            if (serviceRequest.getRequisition() != null) {
-                displayItem.setReferringLabNumber(serviceRequest.getRequisition().getValue());
-            }
-            org.hl7.fhir.r4.model.Patient fhirPatient = fhirClient.read() //
-                    .resource(org.hl7.fhir.r4.model.Patient.class) //
-                    .withId(serviceRequest.getSubject().getReferenceElement().getIdPart()) //
-                    .execute();
-            if (fhirPatient != null) {
-                for (Identifier identifier : fhirPatient.getIdentifier()) {
-                    // get patient UPID
-                    if (("https://openmrs.org/UPI").equals(identifier.getSystem())) {
-                        displayItem.setPatientUpid(identifier.getValue());
-                        break;
-                    }
-                    // get location name
-                    if (("http://fhir.openmrs.org/ext/patient/identifier#location")
-                            .equals(identifier.getExtensionFirstRep().getUrl())) {
-                        Extension extension = identifier.getExtensionFirstRep();
-                        Reference locationReference = (Reference) extension.getValue();
-                        String display = locationReference.getDisplay();
-                        displayItem.setRequestingFacility(display);
-                    }
-                }
-            }
+            // Lectures FHIR de repli : UNIQUEMENT si un des champs de LISTE dénormalisés
+            // manque encore (demande ancienne reçue avant la migration 4a). La garde ne
+            // porte QUE sur les 3 colonnes dénormalisées affichées en liste (testName,
+            // collectionDate, requestingFacility) : les autres champs enrichis par le
+            // repli (referringLabNumber, UPID OpenMRS) ne sont PAS affichés dans cette
+            // liste (studyElectronicOrderView.jsp) et ne doivent donc pas forcer un
+            // aller-retour réseau. patientUpid/patientNationalId de la liste viennent
+            // déjà de l'entité Patient locale (ci-dessus), sans FHIR.
+            boolean needsFhirLookup = displayItem.getTestName() == null
+                    || displayItem.getCollectionDateDisplay() == null || displayItem.getRequestingFacility() == null;
+            if (needsFhirLookup) {
+                IGenericClient fhirClient = fhirUtil.getFhirClient(fhirConfig.getLocalFhirStorePath());
 
-            Encounter encounter = fhirUtil.getFhirClient(defaultRemoteServer).read().resource(Encounter.class)
-                    .withId(serviceRequest.getEncounter().getReferenceElement().getIdPart()).execute();
-            if (ObjectUtils.isNotEmpty(encounter)) { // get Collection Date
-                Period period = encounter.getPeriod();
-                if (ObjectUtils.isNotEmpty(period)) {
-                    Date collectionDate = encounter.getPeriod().getStart();
-                    if (ObjectUtils.isNotEmpty(collectionDate)) {
-                        displayItem.setCollectionDateDisplay(DateUtil.formatDateAsText(collectionDate));
-                    }
+                ServiceRequest serviceRequest = fhirClient.read().resource(ServiceRequest.class)
+                        .withId(electronicOrder.getExternalId()).execute();
+                if (serviceRequest.getRequisition() != null) {
+                    displayItem.setReferringLabNumber(serviceRequest.getRequisition().getValue());
                 }
-            }
-            Test test = null;
-            for (Coding coding : serviceRequest.getCode().getCoding()) {
-                if (coding.hasSystem()) {
-                    if (coding.getSystem().equalsIgnoreCase("http://loinc.org")) {
-                        List<Test> tests = testService.getActiveTestsByLoinc(coding.getCode());
-                        if (tests.size() != 0) {
-                            test = tests.get(0);
+                org.hl7.fhir.r4.model.Patient fhirPatient = fhirClient.read() //
+                        .resource(org.hl7.fhir.r4.model.Patient.class) //
+                        .withId(serviceRequest.getSubject().getReferenceElement().getIdPart()) //
+                        .execute();
+                if (fhirPatient != null) {
+                    for (Identifier identifier : fhirPatient.getIdentifier()) {
+                        // get patient UPID
+                        if (("https://openmrs.org/UPI").equals(identifier.getSystem())) {
+                            displayItem.setPatientUpid(identifier.getValue());
                             break;
+                        }
+                        // get location name
+                        if (("http://fhir.openmrs.org/ext/patient/identifier#location")
+                                .equals(identifier.getExtensionFirstRep().getUrl())) {
+                            Extension extension = identifier.getExtensionFirstRep();
+                            Reference locationReference = (Reference) extension.getValue();
+                            String display = locationReference.getDisplay();
+                            displayItem.setRequestingFacility(display);
                         }
                     }
                 }
-            }
-            if (test != null) {
-                displayItem.setTestName(test.getLocalizedTestName().getLocalizedValue());
+
+                if (displayItem.getCollectionDateDisplay() == null && serviceRequest.hasEncounter()) {
+                    Encounter encounter = fhirUtil.getFhirClient(defaultRemoteServer).read().resource(Encounter.class)
+                            .withId(serviceRequest.getEncounter().getReferenceElement().getIdPart()).execute();
+                    if (ObjectUtils.isNotEmpty(encounter)) { // get Collection Date
+                        Period period = encounter.getPeriod();
+                        if (ObjectUtils.isNotEmpty(period)) {
+                            Date collectionDate = encounter.getPeriod().getStart();
+                            if (ObjectUtils.isNotEmpty(collectionDate)) {
+                                displayItem.setCollectionDateDisplay(DateUtil.formatDateAsText(collectionDate));
+                            }
+                        }
+                    }
+                }
+                if (displayItem.getTestName() == null) {
+                    Test test = null;
+                    for (Coding coding : serviceRequest.getCode().getCoding()) {
+                        if (coding.hasSystem()) {
+                            if (coding.getSystem().equalsIgnoreCase("http://loinc.org")) {
+                                List<Test> tests = testService.getActiveTestsByLoinc(coding.getCode());
+                                if (tests.size() != 0) {
+                                    test = tests.get(0);
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    if (test != null) {
+                        displayItem.setTestName(test.getLocalizedTestName().getLocalizedValue());
+                    }
+                }
             }
         } catch (ResourceNotFoundException e) {
             String errorMsg = "error in data collection - FHIR resource not found";

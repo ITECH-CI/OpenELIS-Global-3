@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+     http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+    <!--
+        Jetons d'accès des tiers au mini-HIE (gateway FHIR). Un jeton par client.
+        Le jeton n'est jamais stocké en clair : seul son hash SHA-256 est conservé.
+        Révocable via is_active. Idempotent (preConditions).
+    -->
+    <changeSet author="itechciv" id="create-fhir-gateway-token-seq-1">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <sequenceExists schemaName="clinlims" sequenceName="fhir_gateway_token_seq" />
+            </not>
+        </preConditions>
+        <createSequence schemaName="clinlims" sequenceName="fhir_gateway_token_seq"
+            startValue="1" incrementBy="1" />
+        <rollback>
+            <dropSequence schemaName="clinlims" sequenceName="fhir_gateway_token_seq" />
+        </rollback>
+    </changeSet>
+
+    <changeSet author="itechciv" id="create-fhir-gateway-token-table-1">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists schemaName="clinlims" tableName="fhir_gateway_token" />
+            </not>
+        </preConditions>
+        <createTable schemaName="clinlims" tableName="fhir_gateway_token">
+            <column name="id" type="BIGINT">
+                <constraints primaryKey="true" nullable="false" />
+            </column>
+            <column name="client_name" type="VARCHAR(200)">
+                <constraints nullable="false" />
+            </column>
+            <column name="token_hash" type="VARCHAR(64)">
+                <constraints nullable="false" unique="true" />
+            </column>
+            <column name="is_active" type="VARCHAR(1)" defaultValue="Y">
+                <constraints nullable="false" />
+            </column>
+            <column name="created_at" type="TIMESTAMP">
+                <constraints nullable="true" />
+            </column>
+            <column name="last_used_at" type="TIMESTAMP">
+                <constraints nullable="true" />
+            </column>
+            <column name="lastupdated" type="TIMESTAMP">
+                <constraints nullable="true" />
+            </column>
+        </createTable>
+
+        <!-- Index sur token_hash : le lookup d'auth se fait par hash à chaque requête. -->
+        <createIndex schemaName="clinlims" tableName="fhir_gateway_token"
+            indexName="idx_fhir_gateway_token_hash">
+            <column name="token_hash" />
+        </createIndex>
+
+        <rollback>
+            <dropTable schemaName="clinlims" tableName="fhir_gateway_token" />
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

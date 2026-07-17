@@ -202,12 +202,12 @@ public class AppConfig implements WebMvcConfigurer {
      * FormattingConversionService utilisé par @ModelAttribute / @RequestParam.
      *
      * <p>
-     * En Spring MVC traditionnel, un Converter annoté @Component n'est PAS
-     * piqué automatiquement par ce service (contrairement au comportement
-     * Spring Boot autoscan). Sans cet enregistrement, les binders ignoraient
-     * nos converters et retombaient sur Enum.valueOf — ce qui faisait planter
-     * la conversion de la valeur "u=0" envoyée par Firefox via le header HTTP
-     * RFC 9218 "Priority" (impression PDF cassée sur Firefox uniquement).
+     * En Spring MVC traditionnel, un Converter annoté @Component n'est PAS piqué
+     * automatiquement par ce service (contrairement au comportement Spring Boot
+     * autoscan). Sans cet enregistrement, les binders ignoraient nos converters et
+     * retombaient sur Enum.valueOf — ce qui faisait planter la conversion de la
+     * valeur "u=0" envoyée par Firefox via le header HTTP RFC 9218 "Priority"
+     * (impression PDF cassée sur Firefox uniquement).
      */
     @Override
     public void addFormatters(org.springframework.format.FormatterRegistry registry) {

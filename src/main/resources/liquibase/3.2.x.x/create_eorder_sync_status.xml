@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+    <!--
+      Module d'échange unifié — incrément 4d (push statuts/résultats e-order).
+
+      Suivi du push des statuts d'une demande CV importée vers le serveur
+      consolidé. sync_flag : 0=PENDING, 1=IMPORTED, 2=TO_UPDATE (à pousser),
+      3=SYNCED, 4=IN_PROGRESS, 6=SEND_FAILED. Alimentée par les triggers CDC
+      (eorder_status_cdc_triggers.sql) via le lien natif sample.clinical_order_id
+      → electronic_order. Repris de oedatauploader, SANS la réconciliation
+      (lien direct).
+
+      Idempotent : preConditions tableExists/columnExists + onFail=MARK_RAN.
+    -->
+
+    <changeSet id="create_eorder_sync_status_table" author="itechciv">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="eorder_sync_status" schemaName="clinlims"/>
+            </not>
+        </preConditions>
+        <createTable tableName="eorder_sync_status" schemaName="clinlims">
+            <column name="id" type="SERIAL" autoIncrement="true">
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="request_uuid" type="VARCHAR(100)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="labno" type="VARCHAR(100)"/>
+            <column name="sample_id" type="BIGINT"/>
+            <column name="analysis_id" type="BIGINT"/>
+            <column name="electronic_order_id" type="BIGINT"/>
+            <column name="lab_status" type="VARCHAR(50)"/>
+            <column name="last_sent_lab_status" type="VARCHAR(50)"/>
+            <column name="last_sent_result" type="VARCHAR(255)"/>
+            <column name="last_event_uuid" type="VARCHAR(100)"/>
+            <column name="sync_flag" type="SMALLINT" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="last_synced_at" type="TIMESTAMP"/>
+            <column name="created_at" type="TIMESTAMP" defaultValueComputed="now()"/>
+            <column name="updated_at" type="TIMESTAMP" defaultValueComputed="now()"/>
+        </createTable>
+    </changeSet>
+
+    <!-- Index UNIQUE explicite sur request_uuid : requis par le ON CONFLICT
+         (request_uuid) du trigger d'upsert. Aligné sur le pattern analysis_sync
+         (index unique dédié) plutôt que sur la seule contrainte de colonne. -->
+    <changeSet id="create_eorder_sync_status_request_uuid_unique" author="itechciv">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <indexExists indexName="idx_eorder_sync_request_uuid_unique" schemaName="clinlims"/>
+            </not>
+        </preConditions>
+        <createIndex tableName="eorder_sync_status" indexName="idx_eorder_sync_request_uuid_unique"
+            schemaName="clinlims" unique="true">
+            <column name="request_uuid"/>
+        </createIndex>
+    </changeSet>
+
+    <!-- Index de la file à pousser (sync_flag IN (2,6)). -->
+    <changeSet id="create_eorder_sync_status_flag_index" author="itechciv">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <indexExists indexName="idx_eorder_sync_flag_updated" schemaName="clinlims"/>
+            </not>
+        </preConditions>
+        <createIndex tableName="eorder_sync_status" indexName="idx_eorder_sync_flag_updated"
+            schemaName="clinlims">
+            <column name="sync_flag"/>
+            <column name="updated_at"/>
+        </createIndex>
+    </changeSet>
+
+    <!-- Index sur analysis_id (jointure des triggers). -->
+    <changeSet id="create_eorder_sync_status_analysis_index" author="itechciv">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <indexExists indexName="idx_eorder_sync_analysis_id" schemaName="clinlims"/>
+            </not>
+        </preConditions>
+        <createIndex tableName="eorder_sync_status" indexName="idx_eorder_sync_analysis_id"
+            schemaName="clinlims">
+            <column name="analysis_id"/>
+        </createIndex>
+    </changeSet>
+
+    <!-- Fonctions + triggers CDC. Idempotent (DROP IF EXISTS / CREATE OR REPLACE) ;
+         runOnChange rejoue si le SQL évolue. endDelimiter="~". -->
+    <changeSet id="create_eorder_status_cdc_triggers" author="itechciv" runOnChange="true">
+        <sqlFile path="sql/eorder_status_cdc_triggers.sql" relativeToChangelogFile="true"
+            splitStatements="true" stripComments="false" endDelimiter="~"/>
+    </changeSet>
+
+</databaseChangeLog>

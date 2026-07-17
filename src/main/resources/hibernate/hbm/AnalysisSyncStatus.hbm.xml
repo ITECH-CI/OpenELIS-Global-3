@@ -1,0 +1,36 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<!-- File CDC de remontée consolidée (module d'échange unifié, incrément
+    4b). Table alimentée par des triggers PostgreSQL ; pas de version optimiste
+    (les transitions d'état passent par UPDATE ciblé côté DAO). Cf. analysis_sync_cdc_triggers.sql
+    + DESIGN_INTEROP_MODULE_CIV.md. -->
+<hibernate-mapping>
+    <class
+        name="org.openelisglobal.dataexchange.sync.valueholder.AnalysisSyncStatus"
+        table="analysis_sync_status" dynamic-update="true">
+        <id name="id"
+            type="org.openelisglobal.hibernate.resources.usertype.LIMSStringNumberUserType">
+            <column name="id" precision="10" scale="0" />
+            <generator
+                class="org.openelisglobal.hibernate.resources.StringSequenceGenerator">
+                <param name="sequence_name">analysis_sync_status_seq</param>
+            </generator>
+        </id>
+        <property name="sampleId"
+            type="org.openelisglobal.hibernate.resources.usertype.LIMSStringNumberUserType">
+            <column name="sample_id" not-null="true" />
+        </property>
+        <property name="analysisId"
+            type="org.openelisglobal.hibernate.resources.usertype.LIMSStringNumberUserType">
+            <column name="analysis_id" not-null="true" />
+        </property>
+        <property name="uploadFlag" type="java.lang.Short">
+            <column name="upload_flag" not-null="false" />
+        </property>
+        <property name="lastUpdated" type="java.sql.Timestamp">
+            <column name="last_updated" not-null="false" />
+        </property>
+    </class>
+</hibernate-mapping>

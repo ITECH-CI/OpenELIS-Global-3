@@ -477,7 +477,11 @@ public class ResultsValidationRetroCIUtility {
 
         List<TestResult> testResults = getPossibleResultsForTest(test);
 
-        String displayTestName = TestServiceImpl.getLocalizedTestNameWithType(test);
+        // Suffixe le nom du test avec le type d'échantillon de l'ANALYSE courante
+        // (et non le 1er sample type associé au test).
+        String displayTestName = TestServiceImpl.getLocalizedTestNameWithType(test,
+                analysis != null && analysis.getSampleItem() != null ? analysis.getSampleItem().getTypeOfSampleId()
+                        : null);
         // displayTestName = augmentTestNameWithRange(displayTestName, result);
 
         ResultValidationItem testItem = new ResultValidationItem();

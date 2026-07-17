@@ -1,0 +1,211 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+    <!--
+      Module d'échange unifié — incrément 5 (config admin des flux de sync).
+
+      Réglages du serveur consolidé stockés en SiteInformation (clé/valeur admin,
+      éditables sans redémarrage via un écran dédié). Le mot de passe est
+      `encrypted=true` : chiffré au repos par jasypt (SiteInformationServiceImpl),
+      masqué à l'affichage. Les clés SiteInformation.name font AU PLUS 32 caractères
+      (contrainte de colonne). Domaine dédié `consolidatedSync`.
+
+      Idempotent : preConditions sqlCheck (n'insère la ligne que si absente).
+      Les tasks (DataSyncTask/DataPullTask/DataPushTask) lisent ces valeurs à chaque
+      tick via SyncConfigService ; l'intervalle @Scheduled reste figé au démarrage.
+    -->
+
+    <property name="now" value="now()" dbms="postgresql"/>
+
+    <changeSet id="add_consolidated_sync_domain" author="itechciv">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">SELECT count(*) FROM clinlims.site_information_domain WHERE name =
+                'consolidatedSync'</sqlCheck>
+        </preConditions>
+        <insert schemaName="clinlims" tableName="site_information_domain">
+            <column name="id" valueSequenceNext="site_information_domain_seq"/>
+            <column name="name" value="consolidatedSync"/>
+            <column name="description" value="Configuration de la synchronisation vers le serveur consolidé"/>
+        </insert>
+    </changeSet>
+
+    <!-- Flags d'activation par flux (booléens). -->
+    <changeSet id="add_consolidated_sync_enabled" author="itechciv">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">SELECT count(*) FROM clinlims.site_information WHERE name =
+                'consolidatedSyncEnabled'</sqlCheck>
+        </preConditions>
+        <insert schemaName="clinlims" tableName="site_information">
+            <column name="id" valueSequenceNext="site_information_seq"/>
+            <column name="name" value="consolidatedSyncEnabled"/>
+            <column name="lastupdated" valueComputed="${now}"/>
+            <column name="description" value="Activer la remontée sortante (analyses/résultats) vers le serveur consolidé"/>
+            <column name="encrypted" value="false"/>
+            <column name="domain_id"
+                valueComputed="(SELECT id FROM site_information_domain WHERE name = 'consolidatedSync')"/>
+            <column name="value_type" value="boolean"/>
+            <!-- Vide au seed (pas "false") : tant que l'admin n'a rien saisi,
+                 SyncConfigService retombe sur la property (rétro-compat). Une fois
+                 sauvegardé via l'écran, la valeur DB fait autorité. -->
+            <column name="value" value=""/>
+            <column name="group" value="0"/>
+        </insert>
+    </changeSet>
+
+    <changeSet id="add_consolidated_pull_enabled" author="itechciv">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">SELECT count(*) FROM clinlims.site_information WHERE name =
+                'consolidatedPullEnabled'</sqlCheck>
+        </preConditions>
+        <insert schemaName="clinlims" tableName="site_information">
+            <column name="id" valueSequenceNext="site_information_seq"/>
+            <column name="name" value="consolidatedPullEnabled"/>
+            <column name="lastupdated" valueComputed="${now}"/>
+            <column name="description" value="Activer le pull entrant des demandes de charge virale"/>
+            <column name="encrypted" value="false"/>
+            <column name="domain_id"
+                valueComputed="(SELECT id FROM site_information_domain WHERE name = 'consolidatedSync')"/>
+            <column name="value_type" value="boolean"/>
+            <column name="value" value=""/>
+            <column name="group" value="0"/>
+        </insert>
+    </changeSet>
+
+    <changeSet id="add_consolidated_push_enabled" author="itechciv">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">SELECT count(*) FROM clinlims.site_information WHERE name =
+                'consolidatedPushEnabled'</sqlCheck>
+        </preConditions>
+        <insert schemaName="clinlims" tableName="site_information">
+            <column name="id" valueSequenceNext="site_information_seq"/>
+            <column name="name" value="consolidatedPushEnabled"/>
+            <column name="lastupdated" valueComputed="${now}"/>
+            <column name="description" value="Activer le push des statuts/résultats vers le serveur consolidé"/>
+            <column name="encrypted" value="false"/>
+            <column name="domain_id"
+                valueComputed="(SELECT id FROM site_information_domain WHERE name = 'consolidatedSync')"/>
+            <column name="value_type" value="boolean"/>
+            <column name="value" value=""/>
+            <column name="group" value="0"/>
+        </insert>
+    </changeSet>
+
+    <!-- URLs + identifiants (texte). Le mot de passe est chiffré (encrypted=true). -->
+    <changeSet id="add_consolidated_sync_apiurl" author="itechciv">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">SELECT count(*) FROM clinlims.site_information WHERE name =
+                'consolidatedSyncApiUrl'</sqlCheck>
+        </preConditions>
+        <insert schemaName="clinlims" tableName="site_information">
+            <column name="id" valueSequenceNext="site_information_seq"/>
+            <column name="name" value="consolidatedSyncApiUrl"/>
+            <column name="lastupdated" valueComputed="${now}"/>
+            <column name="description" value="URL de base de l'API du serveur consolidé (ex https://.../api/)"/>
+            <column name="encrypted" value="false"/>
+            <column name="domain_id"
+                valueComputed="(SELECT id FROM site_information_domain WHERE name = 'consolidatedSync')"/>
+            <column name="value_type" value="text"/>
+            <column name="value" value=""/>
+            <column name="group" value="0"/>
+        </insert>
+    </changeSet>
+
+    <changeSet id="add_consolidated_sync_authurl" author="itechciv">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">SELECT count(*) FROM clinlims.site_information WHERE name =
+                'consolidatedSyncAuthUrl'</sqlCheck>
+        </preConditions>
+        <insert schemaName="clinlims" tableName="site_information">
+            <column name="id" valueSequenceNext="site_information_seq"/>
+            <column name="name" value="consolidatedSyncAuthUrl"/>
+            <column name="lastupdated" valueComputed="${now}"/>
+            <column name="description" value="URL d'obtention du jeton JWT du serveur consolidé"/>
+            <column name="encrypted" value="false"/>
+            <column name="domain_id"
+                valueComputed="(SELECT id FROM site_information_domain WHERE name = 'consolidatedSync')"/>
+            <column name="value_type" value="text"/>
+            <column name="value" value=""/>
+            <column name="group" value="0"/>
+        </insert>
+    </changeSet>
+
+    <changeSet id="add_consolidated_sync_username" author="itechciv">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">SELECT count(*) FROM clinlims.site_information WHERE name =
+                'consolidatedSyncUsername'</sqlCheck>
+        </preConditions>
+        <insert schemaName="clinlims" tableName="site_information">
+            <column name="id" valueSequenceNext="site_information_seq"/>
+            <column name="name" value="consolidatedSyncUsername"/>
+            <column name="lastupdated" valueComputed="${now}"/>
+            <column name="description" value="Identifiant Basic pour l'obtention du jeton (serveur consolidé)"/>
+            <column name="encrypted" value="false"/>
+            <column name="domain_id"
+                valueComputed="(SELECT id FROM site_information_domain WHERE name = 'consolidatedSync')"/>
+            <column name="value_type" value="text"/>
+            <column name="value" value=""/>
+            <column name="group" value="0"/>
+        </insert>
+    </changeSet>
+
+    <changeSet id="add_consolidated_sync_password" author="itechciv">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">SELECT count(*) FROM clinlims.site_information WHERE name =
+                'consolidatedSyncPassword'</sqlCheck>
+        </preConditions>
+        <insert schemaName="clinlims" tableName="site_information">
+            <column name="id" valueSequenceNext="site_information_seq"/>
+            <column name="name" value="consolidatedSyncPassword"/>
+            <column name="lastupdated" valueComputed="${now}"/>
+            <column name="description" value="Mot de passe Basic (serveur consolidé) — chiffré au repos"/>
+            <column name="encrypted" value="true"/>
+            <column name="domain_id"
+                valueComputed="(SELECT id FROM site_information_domain WHERE name = 'consolidatedSync')"/>
+            <column name="value_type" value="text"/>
+            <column name="value" value=""/>
+            <column name="group" value="0"/>
+        </insert>
+    </changeSet>
+
+    <changeSet id="add_consolidated_sync_labuuid" author="itechciv">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">SELECT count(*) FROM clinlims.site_information WHERE name =
+                'consolidatedSyncLabUuid'</sqlCheck>
+        </preConditions>
+        <insert schemaName="clinlims" tableName="site_information">
+            <column name="id" valueSequenceNext="site_information_seq"/>
+            <column name="name" value="consolidatedSyncLabUuid"/>
+            <column name="lastupdated" valueComputed="${now}"/>
+            <column name="description" value="Identifiant du labo (platformUuid) attendu par le serveur consolidé"/>
+            <column name="encrypted" value="false"/>
+            <column name="domain_id"
+                valueComputed="(SELECT id FROM site_information_domain WHERE name = 'consolidatedSync')"/>
+            <column name="value_type" value="text"/>
+            <column name="value" value=""/>
+            <column name="group" value="0"/>
+        </insert>
+    </changeSet>
+
+    <changeSet id="add_consolidated_sync_allowhttp" author="itechciv">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">SELECT count(*) FROM clinlims.site_information WHERE name =
+                'consolidatedSyncAllowHttp'</sqlCheck>
+        </preConditions>
+        <insert schemaName="clinlims" tableName="site_information">
+            <column name="id" valueSequenceNext="site_information_seq"/>
+            <column name="name" value="consolidatedSyncAllowHttp"/>
+            <column name="lastupdated" valueComputed="${now}"/>
+            <column name="description" value="Autoriser le HTTP clair vers le serveur consolidé (dev/local uniquement)"/>
+            <column name="encrypted" value="false"/>
+            <column name="domain_id"
+                valueComputed="(SELECT id FROM site_information_domain WHERE name = 'consolidatedSync')"/>
+            <column name="value_type" value="boolean"/>
+            <column name="value" value=""/>
+            <column name="group" value="0"/>
+        </insert>
+    </changeSet>
+
+</databaseChangeLog>

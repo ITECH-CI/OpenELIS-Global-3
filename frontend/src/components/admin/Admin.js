@@ -79,6 +79,11 @@ import TestSectionTestAssign from "./testManagementConfigMenu/TestSectionTestAss
 import SampleTypeOrder from "./testManagementConfigMenu/SampleTypeOrder.js";
 import SampleTypeCreate from "./testManagementConfigMenu/SampleTypeCreate.js";
 import SampleTypeTestAssign from "./testManagementConfigMenu/SampleTypeTestAssign.js";
+import FhirSyncMonitor from "./fhirSync/FhirSyncMonitor.js";
+import FhirGateway from "./fhirGateway/FhirGateway.js";
+import FhirPushTargets from "./fhirPushTargets/FhirPushTargets.js";
+import ConsolidatedSyncConfig from "./consolidatedSync/ConsolidatedSyncConfig.js";
+import TerminologyImport from "./terminology/TerminologyImport.js";
 import UomManagement from "./testManagementConfigMenu/UomManagement.js";
 import UomCreate from "./testManagementConfigMenu/UomCreate.js";
 import PanelManagement from "./testManagementConfigMenu/PanelManagement.js";
@@ -203,6 +208,41 @@ function Admin() {
             href="#batchTestReassignment"
           >
             <FormattedMessage id="configuration.batch.test.reassignment" />
+          </SideNavLink>
+          <SideNavLink
+            data-cy="fhirSyncMonitor"
+            renderIcon={ListDropdown}
+            href="#FhirSyncMonitor"
+          >
+            <FormattedMessage id="fhir.sync.monitor.title" />
+          </SideNavLink>
+          <SideNavLink
+            data-cy="fhirGateway"
+            renderIcon={ListDropdown}
+            href="#FhirGateway"
+          >
+            <FormattedMessage id="fhir.gateway.title" />
+          </SideNavLink>
+          <SideNavLink
+            data-cy="fhirPushTargets"
+            renderIcon={ListDropdown}
+            href="#FhirPushTargets"
+          >
+            <FormattedMessage id="fhir.push.title" />
+          </SideNavLink>
+          <SideNavLink
+            data-cy="consolidatedSyncConfig"
+            renderIcon={ListDropdown}
+            href="#ConsolidatedSyncConfig"
+          >
+            <FormattedMessage id="consolidatedSync.title" />
+          </SideNavLink>
+          <SideNavLink
+            data-cy="terminologyImport"
+            renderIcon={ListDropdown}
+            href="#TerminologyImport"
+          >
+            <FormattedMessage id="terminology.import.title" />
           </SideNavLink>
           <SideNavLink
             data-cy="testManagementConfigMenu"
@@ -389,6 +429,21 @@ function Admin() {
       </PathRoute>
       <PathRoute path="#batchTestReassignment">
         <BatchTestReassignmentAndCancelation />
+      </PathRoute>
+      <PathRoute path="#FhirSyncMonitor">
+        <FhirSyncMonitor />
+      </PathRoute>
+      <PathRoute path="#FhirGateway">
+        <FhirGateway />
+      </PathRoute>
+      <PathRoute path="#FhirPushTargets">
+        <FhirPushTargets />
+      </PathRoute>
+      <PathRoute path="#ConsolidatedSyncConfig">
+        <ConsolidatedSyncConfig />
+      </PathRoute>
+      <PathRoute path="#TerminologyImport">
+        <TerminologyImport />
       </PathRoute>
       <PathRoute path="#userEdit">
         <UserAddModify />

@@ -1,0 +1,46 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping>
+    <class
+        name="org.openelisglobal.dataexchange.fhir.valueholder.FhirGatewayClient"
+        table="fhir_gateway_client" optimistic-lock="version"
+        dynamic-update="true">
+        <id name="id"
+            type="org.openelisglobal.hibernate.resources.usertype.LIMSStringNumberUserType">
+            <column name="ID" precision="10" scale="0" />
+            <generator
+                class="org.openelisglobal.hibernate.resources.StringSequenceGenerator">
+                <param name="sequence_name">fhir_gateway_client_seq</param>
+            </generator>
+        </id>
+        <version name="lastupdated" column="LASTUPDATED"
+            type="timestamp" access="field" />
+
+        <property name="name" type="java.lang.String">
+            <column name="name" length="200" not-null="true" unique="true" />
+        </property>
+
+        <property name="description" type="java.lang.String">
+            <column name="description" length="500" not-null="false" />
+        </property>
+
+        <property name="isActive" type="java.lang.String">
+            <column name="is_active" length="1" not-null="true" />
+        </property>
+
+        <property name="allowedResources" type="java.lang.String">
+            <column name="allowed_resources" length="1000"
+                not-null="false" />
+        </property>
+
+        <property name="rateLimitPerMin" type="java.lang.Integer">
+            <column name="rate_limit_per_min" not-null="false" />
+        </property>
+
+        <property name="createdAt" type="timestamp">
+            <column name="created_at" not-null="false" />
+        </property>
+    </class>
+</hibernate-mapping>

@@ -58,6 +58,14 @@ public interface FhirTransformService {
 
     Future<Bundle> transformPersistObjectsUnderSamples(List<String> sampleIds) throws FhirLocalPersistingException;
 
+    /**
+     * Transforme (sans persister) les ressources FHIR d'un échantillon et renvoie
+     * la liste des manques de complétude détectés (subject/code/valeur absents…),
+     * ou une liste vide si tout est complet. Sert au monitoring (marquer
+     * SUCCESS_INCOMPLETE) sans bloquer la transformation.
+     */
+    List<String> collectCompletenessIssuesForSample(String sampleId);
+
     Future<Bundle> transformPersistPatients(List<String> patientIds) throws FhirLocalPersistingException;
 
     Practitioner transformNameToPractitioner(String practitionerName);

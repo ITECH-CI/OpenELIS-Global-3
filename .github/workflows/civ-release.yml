@@ -1,0 +1,135 @@
+# Release CIV : sur tag v* (ex. v3.3.1.0), produit une release complète —
+#   1. build des 5 images CIV + assemblage de l'installeur offline (build-civ.sh) ;
+#   2. push des 5 images sur ghcr.io taggées :<version> + :latest ;
+#   3. GitHub Release avec l'installeur .tar.gz (déploiement offline multi-sites) en asset.
+# Auth ghcr via GITHUB_TOKEN. Images amd64 (serveurs cibles). Packages à rendre publics.
+name: CIV - Release (images ghcr + installeur offline)
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version à publier (ex. 3.3.1.0). Sinon déduite du tag."
+        required: false
+
+env:
+  REGISTRY: ghcr.io
+  TARGET_PLATFORM: linux/amd64
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # créer la Release + attacher l'asset
+      packages: write # pousser sur ghcr
+    steps:
+      - name: Checkout (avec submodules pour dataexport)
+        uses: actions/checkout@v5
+        with:
+          submodules: recursive
+
+      - name: Set up JDK 21 (pour lire la version via maven au besoin)
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Déterminer version + owner (minuscules)
+        id: prep
+        run: |
+          if [ -n "${{ github.event.inputs.version }}" ]; then
+            version="${{ github.event.inputs.version }}"
+          else
+            # refs/tags/v3.3.1.0 -> 3.3.1.0
+            version="${GITHUB_REF_NAME#v}"
+          fi
+          owner_lc="$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')"
+          echo "version=${version}" >> "$GITHUB_OUTPUT"
+          echo "owner_lc=${owner_lc}" >> "$GITHUB_OUTPUT"
+          echo "ns=${{ env.REGISTRY }}/${owner_lc}" >> "$GITHUB_OUTPUT"
+
+      - name: Login ghcr.io
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # build-civ.sh build les 5 images CIV en :latest (openelisglobal,
+      # openelisglobal-frontend, hapi-fhir-jpaserver, nginx-proxy,
+      # openelisglobal-dnsmasq), pull postgres/autoheal, et assemble l'installeur
+      # offline .tar.gz sous OEInstaller/linux/. VERSION est passée en env pour
+      # nommer l'installeur de façon déterministe (pas de dépendance au plugin exec).
+      - name: Build images CIV + installeur offline
+        run: |
+          chmod +x ./build-civ.sh
+          VERSION="${{ steps.prep.outputs.version }}" TARGET_PLATFORM="${{ env.TARGET_PLATFORM }}" ./build-civ.sh
+
+      # Re-tag des images CIV locales (:latest) vers ghcr :<version> + :latest, puis push.
+      # Les 5 images sont buildées côté CIV ; postgres/autoheal restent tiers (non poussés).
+      - name: Tag & push images CIV sur ghcr
+        run: |
+          set -euo pipefail
+          NS="${{ steps.prep.outputs.ns }}"
+          VERSION="${{ steps.prep.outputs.version }}"
+          # Paires "image_locale:repo_ghcr" (postgres/autoheal restent tiers, non poussés).
+          pairs=(
+            "openelisglobal:openelis-global-civ"
+            "openelisglobal-frontend:openelis-global-civ-frontend"
+            "hapi-fhir-jpaserver:openelis-global-civ-fhir"
+            "nginx-proxy:openelis-global-civ-nginx"
+            "openelisglobal-dnsmasq:openelis-global-civ-dnsmasq"
+          )
+          for pair in "${pairs[@]}"; do
+            local_img="${pair%%:*}"
+            ghcr_repo="${pair##*:}"
+            for tag in "$VERSION" latest; do
+              docker tag "${local_img}:latest" "${NS}/${ghcr_repo}:${tag}"
+              docker push "${NS}/${ghcr_repo}:${tag}"
+            done
+          done
+
+      - name: Localiser l'installeur produit
+        id: installer
+        run: |
+          f="$(ls OEInstaller/linux/*.tar.gz | head -1)"
+          [ -n "$f" ] || { echo "installeur introuvable" >&2; exit 1; }
+          echo "path=${f}" >> "$GITHUB_OUTPUT"
+          echo "name=$(basename "$f")" >> "$GITHUB_OUTPUT"
+          ls -lh "$f"
+
+      - name: Créer la GitHub Release + attacher l'installeur
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: OpenELIS CIV ${{ steps.prep.outputs.version }}
+          generate_release_notes: true
+          files: ${{ steps.installer.outputs.path }}
+          body: |
+            Release CIV **${{ steps.prep.outputs.version }}**.
+
+            **Déploiement en ligne** (sites connectés) : images sur ghcr
+            `${{ steps.prep.outputs.ns }}/openelis-global-civ*:${{ steps.prep.outputs.version }}`.
+
+            **Déploiement offline** (zones à connexion limitée) : télécharger
+            l'installeur `${{ steps.installer.outputs.name }}` ci-dessous, le
+            transférer sur le serveur et suivre `docs/dev-notes/INSTALL_CIV.md`.
+
+      - name: Récapitulatif
+        run: |
+          {
+            echo "### Release CIV ${{ steps.prep.outputs.version }}"
+            echo "Images ghcr (\`:${{ steps.prep.outputs.version }}\` + \`:latest\`) :"
+            echo "- ${{ steps.prep.outputs.ns }}/openelis-global-civ"
+            echo "- ${{ steps.prep.outputs.ns }}/openelis-global-civ-frontend"
+            echo "- ${{ steps.prep.outputs.ns }}/openelis-global-civ-fhir"
+            echo "- ${{ steps.prep.outputs.ns }}/openelis-global-civ-nginx"
+            echo "- ${{ steps.prep.outputs.ns }}/openelis-global-civ-dnsmasq"
+            echo ""
+            echo "Installeur offline : \`${{ steps.installer.outputs.name }}\` (asset de la Release)"
+          } >> "$GITHUB_STEP_SUMMARY"

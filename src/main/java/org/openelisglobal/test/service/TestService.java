@@ -95,6 +95,20 @@ public interface TestService extends BaseObjectService<Test, String> {
 
     TypeOfSample getTypeOfSample(Test test);
 
+    /**
+     * Tous les types d'échantillon associés au test (un test peut en avoir
+     * plusieurs, ex. "Culture" lié à Urines/Pus/LCR). Contrairement à
+     * {@link #getTypeOfSample(Test)} qui ne renvoie que le premier, utile pour
+     * l'affichage catalogue où aucun échantillon contextuel n'existe.
+     */
+    List<TypeOfSample> getAllTypeOfSamplesForTest(Test test);
+
+    /**
+     * Noms localisés de tous les types d'échantillon du test, joints par ", " (ex.
+     * "Urines, Pus, LCR"). Renvoie "n/a" si aucun. Pour l'affichage catalogue.
+     */
+    String getAllSampleTypesDisplay(Test test);
+
     List<Panel> getPanels(Test test);
 
     String getTestSectionName(Test test);

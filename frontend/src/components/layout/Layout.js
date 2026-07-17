@@ -22,7 +22,9 @@ export default function Layout(props) {
     // shown twice in a row (e.g. re-submitting a form still missing a required
     // field). Without it the toast keeps a stable key, never re-renders after
     // its first timeout, and the notification silently fails to reappear.
-    setNotifications([{ ...notificationBody, _id: Date.now() + Math.random() }]);
+    setNotifications([
+      { ...notificationBody, _id: Date.now() + Math.random() },
+    ]);
   };
 
   const removeNotification = (index) => {

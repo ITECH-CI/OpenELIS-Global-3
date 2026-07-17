@@ -210,6 +210,36 @@ public class TestServiceImpl extends AuditableBaseObjectServiceImpl<Test, String
 
     @Override
     @Transactional(readOnly = true)
+    public List<TypeOfSample> getAllTypeOfSamplesForTest(Test test) {
+        List<TypeOfSample> result = new ArrayList<>();
+        if (test == null) {
+            return result;
+        }
+        List<TypeOfSampleTest> typeOfSampleTests = typeOfSampleTestService.getTypeOfSampleTestsForTest(test.getId());
+        if (typeOfSampleTests == null) {
+            return result;
+        }
+        for (TypeOfSampleTest tost : typeOfSampleTests) {
+            TypeOfSample tos = typeOfSampleService.getTypeOfSampleById(tost.getTypeOfSampleId());
+            if (tos != null) {
+                result.add(tos);
+            }
+        }
+        return result;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public String getAllSampleTypesDisplay(Test test) {
+        List<TypeOfSample> types = getAllTypeOfSamplesForTest(test);
+        if (types.isEmpty()) {
+            return "n/a";
+        }
+        return types.stream().map(TypeOfSample::getLocalizedName).collect(Collectors.joining(", "));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public List<Panel> getPanels(Test test) {
         List<Panel> panelList = new ArrayList<>();
         if (test != null) {
@@ -300,15 +330,16 @@ public class TestServiceImpl extends AuditableBaseObjectServiceImpl<Test, String
     }
 
     /**
-     * Variant qui prend le sample type de l'échantillon courant pour le suffixe,
-     * au lieu du premier sample type associé au test (cas problématique : un test
+     * Variant qui prend le sample type de l'échantillon courant pour le suffixe, au
+     * lieu du premier sample type associé au test (cas problématique : un test
      * "Culture" lié à Urines/Pus/LCR... renvoyait toujours "Culture(Urines)"). Le
      * sample type passé en paramètre prime, ce qui produit l'augmentation correcte
      * pour les rapports, l'audit et la saisie de résultats.
      *
      * @param test           Le test
      * @param typeOfSampleId L'id du TypeOfSample du sample item courant (peut être
-     *                       null — dans ce cas on retombe sur l'ancien comportement).
+     *                       null — dans ce cas on retombe sur l'ancien
+     *                       comportement).
      * @return Le nom du test, suffixé du sample type quand TEST_NAME_AUGMENTED est
      *         activé et que le sample type est connu.
      */

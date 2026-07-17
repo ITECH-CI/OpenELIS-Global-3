@@ -40,6 +40,17 @@ public class UnitOfMeasureServiceTest extends BaseWebContextSensitiveTest {
         assertEquals("Milligrams per deciliter", unitOfMeasure.getDescription());
     }
 
+    /**
+     * Le code UCUM est bien mappé et lisible (exposé ensuite sur les Quantity
+     * FHIR).
+     */
+    @Test
+    public void getUnitOfMeasureById_shouldExposeUcumCode() {
+        UnitOfMeasure unitOfMeasure = unitOfMeasureService.getUnitOfMeasureById("1");
+        assertNotNull(unitOfMeasure);
+        assertEquals("mg/dL", unitOfMeasure.getUcumCode());
+    }
+
     @Test
     public void getUnitOfMeasureByName_shouldReturnCorrectUnitOfMeasure() {
         UnitOfMeasure searchUnit = new UnitOfMeasure();

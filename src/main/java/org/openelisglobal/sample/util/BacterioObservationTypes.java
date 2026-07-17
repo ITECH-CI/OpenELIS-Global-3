@@ -11,10 +11,10 @@ import java.util.List;
  * <p>
  * These lists drive both persistence (which types are written) and cleanup
  * (which types are deleted/replaced on edit) as well as the "has any bacterio
- * observation" gate in the edit controller. Keeping them in one place avoids the
- * silent duplicate-row bugs that happened when the same arrays were copied into
- * SamplePatientEntryServiceImpl and SampleEditRestController and drifted out of
- * sync.
+ * observation" gate in the edit controller. Keeping them in one place avoids
+ * the silent duplicate-row bugs that happened when the same arrays were copied
+ * into SamplePatientEntryServiceImpl and SampleEditRestController and drifted
+ * out of sync.
  *
  * <p>
  * When a new observation type is added to persistBacterioObservations() or
@@ -32,9 +32,9 @@ public final class BacterioObservationTypes {
             "HOSP_3M", "HOSP_3M_COUNT", "INVASIVE_GESTURE", "INDWELLING_DEVICES"));
 
     /** TB order observation type names. */
-    public static final List<String> TB = Collections.unmodifiableList(
-            Arrays.asList("TbOrderReason", "TbDiagnosticReason", "TbFollowupReason", "TbSampleAspects",
-                    "TbFollowupReasonPeriodLine1", "TbFollowupReasonPeriodLine2", "TbSpecimenNature", "TbAnalysisMethod"));
+    public static final List<String> TB = Collections.unmodifiableList(Arrays.asList("TbOrderReason",
+            "TbDiagnosticReason", "TbFollowupReason", "TbSampleAspects", "TbFollowupReasonPeriodLine1",
+            "TbFollowupReasonPeriodLine2", "TbSpecimenNature", "TbAnalysisMethod"));
 
     public static String[] bacterioArray() {
         return BACTERIO.toArray(new String[0]);

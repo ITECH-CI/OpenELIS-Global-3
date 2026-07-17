@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+    <!--
+      Module d'échange unifié — incrément 4a (modèle e-order GÉNÉRIQUE).
+
+      Colonnes d'AFFICHAGE dénormalisées sur electronic_order, remplies à la
+      réception d'une demande, pour lister les demandes électroniques SANS appel
+      REST au serveur FHIR (le vrai coût mesuré : cf. EorderLoadBenchmark +
+      DESIGN_INTEROP_MODULE_CIV.md §6.1). Le détail d'une demande reste lu depuis
+      electronic_order.data (JSON), générique par type d'examen.
+
+      Ces colonnes sont GÉNÉRIQUES (tout examen), pas cliniques CV. Le
+      patient/gender/birthDate/statut/priorité sont déjà accessibles via la
+      relation patient (lazy=false) et status_id — inutile de les dupliquer.
+
+      Idempotent : preConditions columnExists + onFail=MARK_RAN. Par NOM, jamais
+      d'ID. collection_date porte volontairement le même nom que la table plate du
+      dépôt avancé (facilite un futur alignement).
+    -->
+
+    <changeSet id="add_eorder_requesting_facility_name" author="itechciv">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="electronic_order" columnName="requesting_facility_name"
+                    schemaName="clinlims"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="electronic_order" schemaName="clinlims">
+            <column name="requesting_facility_name" type="VARCHAR(255)"/>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="add_eorder_collection_date" author="itechciv">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="electronic_order" columnName="collection_date"
+                    schemaName="clinlims"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="electronic_order" schemaName="clinlims">
+            <column name="collection_date" type="TIMESTAMP"/>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="add_eorder_test_name" author="itechciv">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="electronic_order" columnName="test_name"
+                    schemaName="clinlims"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="electronic_order" schemaName="clinlims">
+            <column name="test_name" type="VARCHAR(255)"/>
+        </addColumn>
+    </changeSet>
+
+</databaseChangeLog>

@@ -22,7 +22,6 @@ import org.openelisglobal.test.valueholder.TestCatalog;
 import org.openelisglobal.testconfiguration.beans.ResultLimitBean;
 import org.openelisglobal.testconfiguration.form.TestCatalogForm;
 import org.openelisglobal.testresult.valueholder.TestResult;
-import org.openelisglobal.typeofsample.valueholder.TypeOfSample;
 import org.openelisglobal.typeoftestresult.service.TypeOfTestResultServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -104,8 +103,10 @@ public class TestCatalogController extends BaseController {
             catalog.setTestUnit(testService.getTestSectionName(test));
             catalog.setPanel(createPanelList(testService, test));
             catalog.setResultType(resultType);
-            TypeOfSample typeOfSample = testService.getTypeOfSample(test);
-            catalog.setSampleType(typeOfSample != null ? typeOfSample.getLocalizedName() : "n/a");
+            // Tous les types d'échantillon du test (un test peut valoir pour
+            // plusieurs, ex. Culture -> Urines/Pus/LCR) ; on les liste tous plutôt
+            // que d'afficher seulement le premier.
+            catalog.setSampleType(testService.getAllSampleTypesDisplay(test));
             catalog.setOrderable(test.getOrderable() ? "Orderable" : "Not orderable");
             catalog.setLoinc(test.getLoinc());
             catalog.setActive(test.isActive() ? "Active" : "Not active");

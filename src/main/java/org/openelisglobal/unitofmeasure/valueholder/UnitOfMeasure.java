@@ -25,6 +25,11 @@ public class UnitOfMeasure extends EnumValueItemImpl {
 
     private String description;
 
+    // Code UCUM (http://unitsofmeasure.org) correspondant à cette unité, pour
+    // exposer les Quantity FHIR avec system/code UCUM (interop / validation IG).
+    // Null/vide = pas de correspondance UCUM connue.
+    private String ucumCode;
+
     private ValueHolderInterface localization;
 
     public UnitOfMeasure() {
@@ -55,6 +60,14 @@ public class UnitOfMeasure extends EnumValueItemImpl {
 
     public String getDescription() {
         return description;
+    }
+
+    public void setUcumCode(String ucumCode) {
+        this.ucumCode = ucumCode;
+    }
+
+    public String getUcumCode() {
+        return ucumCode;
     }
 
     @Override

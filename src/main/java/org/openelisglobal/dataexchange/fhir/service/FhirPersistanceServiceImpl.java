@@ -93,6 +93,7 @@ public class FhirPersistanceServiceImpl implements FhirPersistanceService {
             LogEvent.logError(e);
             throw new FhirLocalPersistingException(e);
         }
+        verifyResponseBundle(transactionResponseBundle);
         return transactionResponseBundle;
     }
 
@@ -106,6 +107,7 @@ public class FhirPersistanceServiceImpl implements FhirPersistanceService {
             LogEvent.logError(e);
             throw new FhirLocalPersistingException(e);
         }
+        verifyResponseBundle(transactionResponseBundle);
         return transactionResponseBundle;
     }
 
@@ -127,6 +129,7 @@ public class FhirPersistanceServiceImpl implements FhirPersistanceService {
             LogEvent.logError(e);
             throw new FhirLocalPersistingException(e);
         }
+        verifyResponseBundle(transactionResponseBundle);
         return transactionResponseBundle;
     }
 
@@ -157,7 +160,30 @@ public class FhirPersistanceServiceImpl implements FhirPersistanceService {
             LogEvent.logError(e);
             throw new FhirLocalPersistingException(e);
         }
+        verifyResponseBundle(transactionResponseBundle);
         return transactionResponseBundle;
+    }
+
+    // Une transaction FHIR peut renvoyer 200 avec des entrées en ERREUR partielle.
+    // Sans cette vérif, une persistance FHIR partiellement échouée passait pour un
+    // succès (fhirUuid marqué en base alors que la ressource n'existe pas côté
+    // store). On inspecte le statut de chaque entrée du bundle réponse : un statut
+    // qui ne commence pas par "2" (2xx) est un échec -> on lève une exception, que
+    // le listener trace en FAILED et rend rejouable.
+    private void verifyResponseBundle(Bundle responseBundle) throws FhirLocalPersistingException {
+        if (responseBundle == null || responseBundle.getEntry() == null) {
+            return;
+        }
+        for (BundleEntryComponent entry : responseBundle.getEntry()) {
+            if (entry.getResponse() != null && entry.getResponse().hasStatus()) {
+                String status = entry.getResponse().getStatus();
+                if (status != null && !status.trim().startsWith("2")) {
+                    String msg = "FHIR transaction entry failed with status: " + status;
+                    LogEvent.logError(this.getClass().getSimpleName(), "verifyResponseBundle", msg);
+                    throw new FhirLocalPersistingException(msg);
+                }
+            }
+        }
     }
 
     @Override

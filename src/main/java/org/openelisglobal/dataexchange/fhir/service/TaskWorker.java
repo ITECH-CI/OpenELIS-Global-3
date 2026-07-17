@@ -200,7 +200,50 @@ public class TaskWorker {
         eOrder.setSysUserId(persister.getServiceUserId());
         eOrder.setType(ElectronicOrderType.FHIR);
         eOrder.setPriority(orderPriority);
+        populateDisplayFields(eOrder);
 
         persister.persist(patient, eOrder);
+    }
+
+    /**
+     * Renseigne les colonnes d'AFFICHAGE dénormalisées de l'ordre (module d'échange
+     * unifié, incrément 4a), pour lister les demandes SANS appel au serveur FHIR
+     * (cf. DESIGN_INTEROP_MODULE_CIV.md §6.1). Best-effort et générique (tout type
+     * d'examen) : chaque champ absent reste {@code null}, le détail complet demeure
+     * disponible dans {@code electronic_order.data}. Ne doit jamais faire échouer
+     * la réception d'un ordre — d'où le try/catch défensif.
+     */
+    private void populateDisplayFields(ElectronicOrder eOrder) {
+        try {
+            // Nom du test : le test déjà résolu par l'interpréteur (LOINC -> Test).
+            // On utilise EXACTEMENT la même source que l'affichage de la liste
+            // (getLocalizedTestName().getLocalizedValue(), cf.
+            // StudyElectronicOrdersController) pour que le libellé dénormalisé et
+            // celui du repli FHIR soient identiques — sinon deux demandes du même test
+            // s'afficheraient différemment selon leur ancienneté. Pas de type de
+            // prélèvement accolé : à la réception aucun échantillon n'existe encore.
+            if (interpreter != null && interpreter.getTest() != null
+                    && interpreter.getTest().getLocalizedTestName() != null) {
+                eOrder.setTestName(interpreter.getTest().getLocalizedTestName().getLocalizedValue());
+            }
+            if (serviceRequest != null) {
+                // Date de prélèvement : occurrenceDateTime du ServiceRequest si présent.
+                if (serviceRequest.hasOccurrenceDateTimeType()
+                        && serviceRequest.getOccurrenceDateTimeType().getValue() != null) {
+                    eOrder.setCollectionDate(
+                            new java.sql.Timestamp(serviceRequest.getOccurrenceDateTimeType().getValue().getTime()));
+                }
+                // Nom du site demandeur : display du requester s'il est porté par le SR.
+                if (serviceRequest.hasRequester() && serviceRequest.getRequester().hasDisplay()) {
+                    eOrder.setRequestingFacilityName(serviceRequest.getRequester().getDisplay());
+                }
+            }
+        } catch (Exception e) {
+            // Best-effort strict : renseigner ces colonnes d'affichage ne doit JAMAIS
+            // faire échouer la réception d'un ordre. On rattrape donc tout (y compris une
+            // éventuelle exception de résolution du nom localisé / session Hibernate).
+            LogEvent.logWarn(this.getClass().getSimpleName(), "populateDisplayFields",
+                    "colonnes d'affichage e-order non renseignées (non bloquant) : " + e.getMessage());
+        }
     }
 }

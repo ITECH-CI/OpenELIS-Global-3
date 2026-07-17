@@ -163,6 +163,8 @@ public class LogbookResultsRestController extends LogbookResultsBaseController {
     @Autowired
     private FhirTransformService fhirTransformService;
     @Autowired
+    private org.openelisglobal.dataexchange.fhir.service.FhirSyncStatusService fhirSyncStatusService;
+    @Autowired
     private UserService userService;
     @Autowired
     private RoleService roleService;
@@ -502,9 +504,25 @@ public class LogbookResultsRestController extends LogbookResultsBaseController {
                     .map(e -> analysisService.getOrderAccessionNumber(e)).collect(Collectors.toList()));
             reflexMap.put("calculated", reflexAnalysises.stream().filter(e -> e.getResultCalculated())
                     .map(e -> analysisService.getOrderAccessionNumber(e)).collect(Collectors.toList()));
+            // Trace la transformation FHIR (une ligne par sample du lot, rejouable).
+            java.util.Set<String> resultSampleIds = new java.util.HashSet<>();
+            actionDataSet.getModifiedResults().forEach(rs -> {
+                if (rs.sample != null && rs.sample.getId() != null) {
+                    resultSampleIds.add(rs.sample.getId());
+                }
+            });
+            actionDataSet.getNewResults().forEach(rs -> {
+                if (rs.sample != null && rs.sample.getId() != null) {
+                    resultSampleIds.add(rs.sample.getId());
+                }
+            });
+            java.util.Map<String, String> resultSyncIds = fhirSyncStatusService.recordPendingForSamples(
+                    org.openelisglobal.dataexchange.fhir.FhirSyncConstants.TRIGGER_RESULTS, resultSampleIds);
             try {
                 fhirTransformService.transformPersistResultsEntryFhirObjects(actionDataSet);
+                fhirSyncStatusService.markSuccessForAll(resultSyncIds.values());
             } catch (FhirTransformationException | FhirPersistanceException e) {
+                fhirSyncStatusService.markFailedForAll(resultSyncIds.values(), e.toString());
                 LogEvent.logError(e);
             }
             List<Analysis> newResultAnalyses = actionDataSet.getNewResults().stream().map(a -> a.result.getAnalysis())

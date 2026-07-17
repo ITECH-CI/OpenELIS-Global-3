@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+    <!--
+      Module d'échange unifié — incrément 4c (pull Eorder entrant).
+
+      Curseur de pagination du pull des demandes VL : une seule ligne (id=1)
+      portant le checkpoint opaque `"<updatedAt>|<id>"` renvoyé par le serveur
+      consolidé (keyset pagination). Repris de oedatauploader.
+
+      Idempotent : preConditions tableExists + onFail=MARK_RAN. La ligne unique est
+      insérée avec un checkpoint vide (premier pull = depuis le début).
+    -->
+
+    <changeSet id="create_eorder_pull_checkpoint_table" author="itechciv">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="eorder_pull_checkpoint" schemaName="clinlims"/>
+            </not>
+        </preConditions>
+        <createTable tableName="eorder_pull_checkpoint" schemaName="clinlims">
+            <column name="id" type="integer" defaultValueNumeric="1">
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="checkpoint" type="VARCHAR(200)"/>
+            <column name="updated_at" type="datetime" defaultValueComputed="now()"/>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="seed_eorder_pull_checkpoint_row" author="itechciv">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">SELECT count(*) FROM clinlims.eorder_pull_checkpoint WHERE id = 1</sqlCheck>
+        </preConditions>
+        <insert tableName="eorder_pull_checkpoint" schemaName="clinlims">
+            <column name="id" valueNumeric="1"/>
+            <column name="checkpoint" value=""/>
+        </insert>
+    </changeSet>
+
+</databaseChangeLog>

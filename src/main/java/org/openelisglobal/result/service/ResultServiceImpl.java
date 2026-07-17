@@ -461,6 +461,16 @@ public class ResultServiceImpl extends AuditableBaseObjectServiceImpl<Result, St
         return test != null && test.getUnitOfMeasure() != null ? test.getUnitOfMeasure().getUnitOfMeasureName() : "";
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public String getUcumCode(Result result) {
+        Test test = result.getAnalysis() != null ? result.getAnalysis().getTest() : null;
+        if (test != null && test.getUnitOfMeasure() != null && test.getUnitOfMeasure().getUcumCode() != null) {
+            return test.getUnitOfMeasure().getUcumCode();
+        }
+        return "";
+    }
+
     // SI Unit Conversion methods implementation
 
     @Override

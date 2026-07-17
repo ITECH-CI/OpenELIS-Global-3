@@ -1,12 +1,6 @@
 import { useContext, useState } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
-import {
-  Button,
-  Select,
-  SelectItem,
-  TextInput,
-  Loading,
-} from "@carbon/react";
+import { Button, Select, SelectItem, TextInput, Loading } from "@carbon/react";
 import PageBreadCrumb from "../common/PageBreadCrumb";
 import { AlertDialog } from "../common/CustomNotification";
 import { NotificationContext } from "../layout/Layout";

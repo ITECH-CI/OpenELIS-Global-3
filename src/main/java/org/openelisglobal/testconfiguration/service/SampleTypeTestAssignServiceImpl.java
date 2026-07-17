@@ -1,6 +1,8 @@
 package org.openelisglobal.testconfiguration.service;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 import org.openelisglobal.typeofsample.service.TypeOfSampleService;
 import org.openelisglobal.typeofsample.service.TypeOfSampleTestService;
 import org.openelisglobal.typeofsample.valueholder.TypeOfSample;
@@ -42,6 +44,43 @@ public class SampleTypeTestAssignServiceImpl implements SampleTypeTestAssignServ
 
         if (deActivateTypeOfSample != null) {
             typeOfSampleService.update(deActivateTypeOfSample);
+        }
+    }
+
+    @Override
+    @Transactional
+    public void syncAssignments(String testId, List<String> desiredSampleTypeIds, String systemUserId) {
+        List<String> desired = desiredSampleTypeIds == null ? new ArrayList<>() : desiredSampleTypeIds;
+
+        // Types actuellement associés au test
+        List<TypeOfSampleTest> existing = typeOfSampleTestService.getTypeOfSampleTestsForTest(testId);
+        List<String> currentSampleTypeIds = existing == null ? new ArrayList<>()
+                : existing.stream().map(TypeOfSampleTest::getTypeOfSampleId).collect(Collectors.toList());
+
+        // 1) Retirer les associations qui ne sont plus voulues
+        for (TypeOfSampleTest tost : existing) {
+            if (!desired.contains(tost.getTypeOfSampleId())) {
+                typeOfSampleTestService.delete(tost.getId(), systemUserId);
+            }
+        }
+
+        // 2) Ajouter les nouvelles associations (et réactiver un type inactif)
+        for (String sampleTypeId : desired) {
+            if (!currentSampleTypeIds.contains(sampleTypeId)) {
+                TypeOfSample typeOfSample = typeOfSampleService.getTransientTypeOfSampleById(sampleTypeId);
+                if (typeOfSample != null && typeOfSample.getIsActive() == false) {
+                    typeOfSample.setIsActive(true);
+                    typeOfSample.setSysUserId(systemUserId);
+                    typeOfSampleService.update(typeOfSample);
+                }
+
+                TypeOfSampleTest typeOfSampleTest = new TypeOfSampleTest();
+                typeOfSampleTest.setTestId(testId);
+                typeOfSampleTest.setTypeOfSampleId(sampleTypeId);
+                typeOfSampleTest.setSysUserId(systemUserId);
+                typeOfSampleTest.setLastupdatedFields();
+                typeOfSampleTestService.insert(typeOfSampleTest);
+            }
         }
     }
 }
