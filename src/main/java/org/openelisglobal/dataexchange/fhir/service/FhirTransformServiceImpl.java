@@ -68,6 +68,7 @@ import org.openelisglobal.common.services.IStatusService;
 import org.openelisglobal.common.services.SampleAddService.SampleTestCollection;
 import org.openelisglobal.common.services.StatusService.AnalysisStatus;
 import org.openelisglobal.common.services.StatusService.OrderStatus;
+import org.openelisglobal.common.services.StatusService.SampleStatus;
 import org.openelisglobal.common.services.TableIdService;
 import org.openelisglobal.common.util.ConfigurationProperties;
 import org.openelisglobal.common.util.ConfigurationProperties.Property;
@@ -99,6 +100,8 @@ import org.openelisglobal.patient.valueholder.Patient;
 import org.openelisglobal.person.valueholder.Person;
 import org.openelisglobal.provider.service.ProviderService;
 import org.openelisglobal.provider.valueholder.Provider;
+import org.openelisglobal.qaevent.dao.QaEventDAO;
+import org.openelisglobal.qaevent.valueholder.QaEvent;
 import org.openelisglobal.referral.action.beanitems.ReferralItem;
 import org.openelisglobal.referral.service.ReferralSetService;
 import org.openelisglobal.result.action.util.ResultSet;
@@ -148,6 +151,8 @@ public class FhirTransformServiceImpl implements FhirTransformService {
     private FhirPersistanceService fhirPersistanceService;
     @Autowired
     private DictionaryService dictionaryService;
+    @Autowired
+    private QaEventDAO qaEventDAO;
     @Autowired
     private LocalizationService localizationService;
     @Autowired
@@ -720,10 +725,39 @@ public class FhirTransformServiceImpl implements FhirTransformService {
         } else if (sample.getStatusId().equals(statusService.getStatusID(OrderStatus.NonConforming_depricated))
                 || sample.getStatusId().equals(statusService.getStatusID(AnalysisStatus.BiologistRejected))) {
             task.setStatus(TaskStatus.REJECTED);
+        } else if (statusService.matches(sample.getStatusId(), SampleStatus.Canceled)) {
+            // Demande annulée (spec SHR : test annulé → Task cancelled).
+            task.setStatus(TaskStatus.CANCELLED);
         } else if (sample.getStatusId().equals(statusService.getStatusID(OrderStatus.Finished))) {
             task.setStatus(TaskStatus.COMPLETED);
         } else {
             task.setStatus(TaskStatus.NULL);
+        }
+        // Le statut du SAMPLE peut rester nominal (ex. « Entered ») alors que TOUTES
+        // ses analyses sont annulées/rejetées (rejet d'échantillon porté sur les
+        // sample_item/analysis, pas sur le sample). Dans ce cas la Task doit refléter
+        // le rejet. On n'ESCALADE que depuis un état non terminal (READY / INPROGRESS
+        // / NULL) : ne jamais écraser un REJECTED / FAILED / COMPLETED déjà déduit du
+        // statut du bon (sinon on perdrait la distinction rejet biologiste/technique).
+        boolean nonTerminalTask = task.getStatus() == TaskStatus.READY || task.getStatus() == TaskStatus.INPROGRESS
+                || task.getStatus() == TaskStatus.NULL;
+        if (nonTerminalTask && analysises != null && !analysises.isEmpty()
+                && analysises.stream().allMatch(this::isCancelledOrRejected)) {
+            task.setStatus(TaskStatus.CANCELLED);
+        }
+        // Motif (Task.statusReason) sur un état non-nominal : d'abord une Note de
+        // rejet/non-conformité du bon, sinon le motif de rejet du 1er échantillon
+        // rejeté (reject_reason_id). Le motif d'annulation de test n'ayant pas de
+        // champ dédié côté OE, on le remonte au mieux.
+        if (task.getStatus() == TaskStatus.CANCELLED || task.getStatus() == TaskStatus.REJECTED
+                || task.getStatus() == TaskStatus.FAILED) {
+            CodeableConcept reason = sampleStatusReason(sample);
+            if (reason == null) {
+                reason = firstSampleItemRejectReason(sample);
+            }
+            if (reason != null) {
+                task.setStatusReason(reason);
+            }
         }
         task.setAuthoredOn(sample.getEnteredDate());
         task.setPriority(mapTaskPriority(sample.getPriority()));
@@ -1066,9 +1100,14 @@ public class FhirTransformServiceImpl implements FhirTransformService {
         } else if (analysis.getStatusId().equals(statusService.getStatusID(AnalysisStatus.Finalized))) {
             serviceRequest.setStatus(ServiceRequestStatus.COMPLETED);
         } else if (analysis.getStatusId().equals(statusService.getStatusID(AnalysisStatus.Canceled))) {
+            // Test annulé → commande révoquée (spec SHR).
             serviceRequest.setStatus(ServiceRequestStatus.REVOKED);
         } else if (analysis.getStatusId().equals(statusService.getStatusID(AnalysisStatus.SampleRejected))) {
-            serviceRequest.setStatus(ServiceRequestStatus.ENTEREDINERROR);
+            // Échantillon rejeté / non conforme après réception : la commande était
+            // légitime mais ne peut aboutir → REVOKED (cohérent avec Specimen
+            // UNSATISFACTORY et Task CANCELLED, et non ENTEREDINERROR qui signifierait
+            // une commande créée par erreur).
+            serviceRequest.setStatus(ServiceRequestStatus.REVOKED);
         } else {
             serviceRequest.setStatus(ServiceRequestStatus.UNKNOWN);
         }
@@ -1175,7 +1214,23 @@ public class FhirTransformServiceImpl implements FhirTransformService {
                 sampleItem.getFhirUuidAsString()));
         specimen.setAccessionIdentifier(this.createIdentifier(fhirConfig.getOeFhirSystem() + "/sampleItem_labNo",
                 sampleItem.getSample().getAccessionNumber() + "-" + sampleItem.getSortOrder()));
-        specimen.setStatus(SpecimenStatus.AVAILABLE);
+        // Cycle de vie de l'échantillon (spec SHR) : rejeté/non conforme →
+        // UNSATISFACTORY (+ condition = motif) ; sinon AVAILABLE.
+        // NB : on NE mappe PAS voided → ENTEREDINERROR. Le void le plus courant est
+        // l'aliquotage (SampleItemController#Aliquot void le parent avec le motif
+        // « Aliquoted into new sample items ») : un parent aliquoté est légitime, pas
+        // une saisie erronée. Faute de signal fiable « entré par erreur » distinct de
+        // l'aliquotage, un échantillon voidé non rejeté reste AVAILABLE (comportement
+        // antérieur). Un item à la fois voidé ET rejeté passe par la branche rejet.
+        if (sampleItem.isRejected() || statusService.matches(sampleItem.getStatusId(), SampleStatus.SampleRejected)) {
+            specimen.setStatus(SpecimenStatus.UNSATISFACTORY);
+        } else {
+            specimen.setStatus(SpecimenStatus.AVAILABLE);
+        }
+        CodeableConcept rejectCondition = specimenRejectCondition(sampleItem);
+        if (rejectCondition != null) {
+            specimen.addCondition(rejectCondition);
+        }
         specimen.setType(transformTypeOfSampleToCodeableConcept(sampleItem.getTypeOfSample()));
         specimen.setReceivedTime(new Date());
         specimen.setCollection(transformToCollection(sampleItem.getCollectionDate(), sampleItem.getCollector()));
@@ -1228,6 +1283,81 @@ public class FhirTransformServiceImpl implements FhirTransformService {
         condition.addCoding(
                 new Coding(fhirConfig.getOeFhirSystem() + "/sample_condition", observationValue, observationDisplay));
         return condition;
+    }
+
+    /**
+     * Motif de rejet/non-conformité d'un échantillon, en
+     * {@code Specimen.condition}. Source : {@code sample_item.reject_reason_id},
+     * qui référence SOIT un {@code qa_event} (rejet via l'écran /SampleRejection —
+     * {@code RejectionController} y stocke {@code form.getQaEventId()}), SOIT un
+     * dictionnaire {@code resultRejectionReasons} (rejet posé à la demande —
+     * {@code SampleAddService}). null si aucun motif n'est renseigné.
+     */
+    private CodeableConcept specimenRejectCondition(SampleItem sampleItem) {
+        String reasonId = sampleItem.getRejectReasonId();
+        if (GenericValidator.isBlankOrNull(reasonId)) {
+            return null;
+        }
+        // Résolution qa_event puis dictionnaire, avec des lectures NON bloquantes :
+        // qaEventDAO.get() renvoie un Optional et dictionaryService.getDataForId()
+        // renvoie null si absent. Surtout ne PAS utiliser les .get(id) des services
+        // (ObjectNotFoundException) : l'id n'étant présent que dans UNE des deux
+        // tables, l'autre lèverait et marquerait la transaction rollback-only, même
+        // exception attrapée (poison de transaction → UnexpectedRollbackException au
+        // commit). Les plages d'id sont disjointes en pratique (qa_event 21..72,
+        // dictionnaire resultRejectionReasons 1140+), donc l'ordre d'essai est sûr.
+        Optional<QaEvent> qaEvent = qaEventDAO.get(reasonId);
+        if (qaEvent.isPresent() && !GenericValidator.isBlankOrNull(qaEvent.get().getDescription())) {
+            return new CodeableConcept().addCoding(
+                    new Coding(fhirConfig.getOeFhirSystem() + "/qa_event", reasonId, qaEvent.get().getDescription()));
+        }
+        org.openelisglobal.dictionary.valueholder.Dictionary dict = dictionaryService.getDataForId(reasonId);
+        if (dict != null) {
+            return new CodeableConcept().addCoding(new Coding(fhirConfig.getOeFhirSystem() + "/sample_reject_reason",
+                    dict.getDictEntry(), dict.getDictEntryDisplayValue()));
+        }
+        return null;
+    }
+
+    /**
+     * Motif d'un état non-nominal du bon (annulation/rejet/non-conformité), en
+     * {@code Task.statusReason}. OE ne stocke pas de champ « motif » dédié sur le
+     * bon : on remonte au mieux la première Note de rejet ({@code "R"}) ou de
+     * non-conformité ({@code "N"}) attachée au sample. null si aucune.
+     */
+    private CodeableConcept sampleStatusReason(Sample sample) {
+        try {
+            for (Note note : noteService.getNotes(sample)) {
+                if (note != null
+                        && (Note.REJECT_REASON.equals(note.getNoteType())
+                                || Note.NON_CONFORMITY.equals(note.getNoteType()))
+                        && !GenericValidator.isBlankOrNull(note.getText())) {
+                    return new CodeableConcept().setText(note.getText());
+                }
+            }
+        } catch (Exception e) {
+            LogEvent.logWarn(this.getClass().getSimpleName(), "sampleStatusReason", e.toString());
+        }
+        return null;
+    }
+
+    /**
+     * Motif de rejet du premier échantillon rejeté du bon (repli pour
+     * {@code Task.statusReason} quand aucune Note n'existe) : réutilise la
+     * résolution qa_event/dictionnaire de {@link #specimenRejectCondition}.
+     */
+    private CodeableConcept firstSampleItemRejectReason(Sample sample) {
+        try {
+            for (SampleItem sampleItem : sampleItemService.getSampleItemsBySampleId(sample.getId())) {
+                CodeableConcept reason = specimenRejectCondition(sampleItem);
+                if (reason != null) {
+                    return reason;
+                }
+            }
+        } catch (Exception e) {
+            LogEvent.logWarn(this.getClass().getSimpleName(), "firstSampleItemRejectReason", e.toString());
+        }
+        return null;
     }
 
     private SpecimenCollectionComponent transformToCollection(Timestamp collectionDate, String collector) {
@@ -1545,6 +1675,7 @@ public class FhirTransformServiceImpl implements FhirTransformService {
         boolean allFinalized = true;
         boolean anyFinalized = false;
         boolean anyStarted = false;
+        boolean allTerminalCancelled = true; // toutes les analyses annulées/rejetées ?
         for (Analysis analysis : analyses) {
             boolean finalized = statusService.matches(analysis.getStatusId(), AnalysisStatus.Finalized);
             allFinalized = allFinalized && finalized;
@@ -1552,6 +1683,7 @@ public class FhirTransformServiceImpl implements FhirTransformService {
             if (!statusService.matches(analysis.getStatusId(), AnalysisStatus.NotStarted)) {
                 anyStarted = true;
             }
+            allTerminalCancelled = allTerminalCancelled && isCancelledOrRejected(analysis);
         }
         if (allFinalized) {
             return DiagnosticReportStatus.FINAL;
@@ -1559,7 +1691,20 @@ public class FhirTransformServiceImpl implements FhirTransformService {
         if (anyFinalized) {
             return DiagnosticReportStatus.PARTIAL;
         }
+        // Aucune finalisée mais toutes annulées/rejetées → rapport annulé (sinon la
+        // logique "démarrée" renverrait PRELIMINARY à tort).
+        if (allTerminalCancelled) {
+            return DiagnosticReportStatus.CANCELLED;
+        }
         return anyStarted ? DiagnosticReportStatus.PRELIMINARY : DiagnosticReportStatus.REGISTERED;
+    }
+
+    /** true si l'analyse est dans un état terminal d'annulation/rejet. */
+    private boolean isCancelledOrRejected(Analysis analysis) {
+        return statusService.matches(analysis.getStatusId(), AnalysisStatus.Canceled)
+                || statusService.matches(analysis.getStatusId(), AnalysisStatus.BiologistRejected)
+                || statusService.matches(analysis.getStatusId(), AnalysisStatus.TechnicalRejected)
+                || statusService.matches(analysis.getStatusId(), AnalysisStatus.SampleRejected);
     }
 
     private DiagnosticReport genNewDiagnosticReport(SampleItem sampleItem) {
@@ -1647,6 +1792,10 @@ public class FhirTransformServiceImpl implements FhirTransformService {
         // to list
         if (result.getAnalysis().getStatusId().equals(statusService.getStatusID(AnalysisStatus.Finalized))) {
             observation.setStatus(ObservationStatus.FINAL);
+        } else if (analysis != null && isCancelledOrRejected(analysis)) {
+            // Analyse annulée/rejetée : résultat non exploitable (spec SHR). Le
+            // dataAbsentReason est posé plus bas si aucune valeur n'est produite.
+            observation.setStatus(ObservationStatus.CANCELLED);
         } else if (result.getAnalysis().getStatusId().equals(statusService.getStatusID(AnalysisStatus.NotStarted))) {
             LogEvent.logError(this.getClass().getSimpleName(), "transformResultToObservation",
                     "recording result for analysis that is not started.");
