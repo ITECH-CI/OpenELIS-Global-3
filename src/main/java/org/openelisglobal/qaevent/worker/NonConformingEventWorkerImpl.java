@@ -6,6 +6,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
+import org.apache.commons.validator.GenericValidator;
 import org.dom4j.Document;
 import org.dom4j.DocumentException;
 import org.dom4j.DocumentHelper;
@@ -28,6 +29,7 @@ import org.openelisglobal.systemuser.service.SystemUserService;
 import org.openelisglobal.systemuser.valueholder.SystemUser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class NonConformingEventWorkerImpl implements NonConformingEventWorker {
@@ -48,6 +50,7 @@ public class NonConformingEventWorkerImpl implements NonConformingEventWorker {
     private NceActionLogService nceActionLogService;
 
     @Override
+    @Transactional
     public NcEvent create(String labOrderId, List<String> specimens, String sysUserId, String nceNumber) {
         NcEvent event = new NcEvent();
         event.setSysUserId(sysUserId);
@@ -65,6 +68,7 @@ public class NonConformingEventWorkerImpl implements NonConformingEventWorker {
     }
 
     @Override
+    @Transactional
     public boolean update(NonConformingEventForm form) {
         NcEvent ncEvent = ncEventService.get(form.getId());
         if (ncEvent != null) {
@@ -73,7 +77,7 @@ public class NonConformingEventWorkerImpl implements NonConformingEventWorker {
             Date dateOfEvent = getDate(form.getDateOfEvent(), "dd/MM/yyyy");
             Date reportDate = getDate(form.getReportDate(), "dd/MM/yyyy");
 
-            ncEvent.setStatus("Pending");
+            ncEvent.setStatus(NcEvent.STATUS_PENDING);
             ncEvent.setReportDate(reportDate);
             ncEvent.setDateOfEvent(dateOfEvent);
             ncEvent.setName(form.getName());
@@ -95,10 +99,11 @@ public class NonConformingEventWorkerImpl implements NonConformingEventWorker {
     }
 
     @Override
+    @Transactional
     public boolean updateFollowUp(NonConformingEventForm form) {
         NcEvent ncEvent = ncEventService.get(form.getId());
         if (ncEvent != null) {
-            ncEvent.setStatus("CAPA");
+            ncEvent.setStatus(NcEvent.STATUS_CAPA);
             ncEvent.setLaboratoryComponent(form.getLaboratoryComponent());
             ncEvent.setNceCategoryId(Integer.valueOf(form.getNceCategory()));
             ncEvent.setNceTypeId(Integer.valueOf(form.getNceType()));
@@ -152,7 +157,10 @@ public class NonConformingEventWorkerImpl implements NonConformingEventWorker {
         SystemUser systemUser = systemUserService.getUserById(form.getCurrentUserId());
         form.setName(systemUser.getFirstName() + " " + systemUser.getLastName());
         form.setNceNumber(System.currentTimeMillis() + "");
-        NcEvent event = ncEventService.getMatch("nceNumber", nceNumber).get();
+        // getMatch renvoie Optional.empty() si 0 OU >1 correspondance : .orElse(null)
+        // pour que le test de nullité ci-dessous fonctionne (au lieu de
+        // NoSuchElementException sur un .get()).
+        NcEvent event = ncEventService.getMatch("nceNumber", nceNumber).orElse(null);
         if (event != null) {
             form.setReportDate(DateUtil.formatDateAsText(event.getReportDate()));
             form.setDateOfEvent(DateUtil.formatDateAsText(event.getDateOfEvent()));
@@ -183,7 +191,10 @@ public class NonConformingEventWorkerImpl implements NonConformingEventWorker {
     public void initFormForCorrectiveAction(String nceNumber, NonConformingEventForm form)
             throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
         this.initFormForFollowUp(nceNumber, form);
-        NcEvent event = ncEventService.getMatch("nceNumber", nceNumber).get();
+        // getMatch renvoie Optional.empty() si 0 OU >1 correspondance : .orElse(null)
+        // pour que le test de nullité ci-dessous fonctionne (au lieu de
+        // NoSuchElementException sur un .get()).
+        NcEvent event = ncEventService.getMatch("nceNumber", nceNumber).orElse(null);
         if (event != null) {
             form.setActionTypeList(
                     DisplayListService.getInstance().getList(DisplayListService.ListType.ACTION_TYPE_LIST));
@@ -257,19 +268,29 @@ public class NonConformingEventWorkerImpl implements NonConformingEventWorker {
     }
 
     private void setActionLogs(NonConformingEventForm form, NcEvent ncEvent) {
-        if (form.getActionLog() != null) {
-            List<NceActionLog> actionLogs = form.getActionLog();
-            if (actionLogs != null) {
-                for (NceActionLog actionLog : actionLogs) {
-                    actionLog.setNcEventId(Integer.parseInt(ncEvent.getId()));
-                    actionLog.setSysUserId(form.getCurrentUserId());
-                    nceActionLogService.save(actionLog);
-                }
+        List<NceActionLog> actionLogs = form.getActionLog();
+        if (actionLogs == null) {
+            return;
+        }
+        for (NceActionLog actionLog : actionLogs) {
+            if (actionLog == null) {
+                continue;
             }
+            // Le formulaire renvoie l'historique COMPLET (anciennes lignes + la
+            // nouvelle). Les lignes déjà persistées portent un id : on ne les ré-écrit
+            // PAS (sinon doublons ou UPDATE + ligne d'audit inutiles à chaque envoi).
+            // On n'insère que les nouvelles (id absent).
+            if (!GenericValidator.isBlankOrNull(actionLog.getId())) {
+                continue;
+            }
+            actionLog.setNcEventId(Integer.parseInt(ncEvent.getId()));
+            actionLog.setSysUserId(form.getCurrentUserId());
+            nceActionLogService.insert(actionLog);
         }
     }
 
     @Override
+    @Transactional
     public boolean updateCorrectiveAction(NonConformingEventForm form) {
         NcEvent ncEvent = ncEventService.get(form.getId());
         if (ncEvent != null) {
@@ -285,17 +306,25 @@ public class NonConformingEventWorkerImpl implements NonConformingEventWorker {
     }
 
     @Override
+    @Transactional
     public boolean resolveNCEvent(NonConformingEventForm form) {
         NcEvent ncEvent = ncEventService.get(form.getId());
         if (ncEvent != null) {
             ncEvent.setDiscussionDate(form.getDiscussionDate());
             setActionLogs(form, ncEvent);
-            ncEvent.setStatus("Completed");
+            ncEvent.setStatus(NcEvent.STATUS_COMPLETED);
             ncEvent.setEffective(form.getEffective());
-            SystemUser systemUser = systemUserService.getUserById(form.getCurrentUserId());
-            ncEvent.setSignature(systemUser.getNameForDisplay());
+            // Signature = nom de l'utilisateur courant (au mieux) : ne PAS faire
+            // échouer la résolution si l'id est absent/introuvable (getUserById(null)
+            // lèverait, et une signature manquante ne doit pas bloquer la clôture).
+            if (!GenericValidator.isBlankOrNull(form.getCurrentUserId())) {
+                SystemUser systemUser = systemUserService.getUserById(form.getCurrentUserId());
+                if (systemUser != null) {
+                    ncEvent.setSignature(systemUser.getNameForDisplay());
+                }
+                ncEvent.setSysUserId(form.getCurrentUserId());
+            }
             ncEvent.setDateCompleted(getDate(form.getDateCompleted(), "dd/MM/yyyy"));
-            ncEvent.setSysUserId(form.getCurrentUserId());
             ncEventService.update(ncEvent);
             return true;
         }

@@ -114,7 +114,8 @@ export const NCECorrectiveAction = () => {
   };
 
   const handleNCEFormSubmit = () => {
-    if (!submit) {
+    // La question de résolution doit être répondue (Oui ou Non) avant d'envoyer.
+    if (submit === null || submit === undefined) {
       return;
     }
 
@@ -124,17 +125,24 @@ export const NCECorrectiveAction = () => {
 
     formData.actionLog.turnAroundTime = turnAroundTime;
 
-    // correctiveAction
+    // La question de résolution (radio) pilote la clôture : "Oui" => on résout
+    // l'événement (statut Completed) via /ResolveNonConformingEvent ; "Non" => on
+    // enregistre seulement l'action corrective (l'événement reste en CAPA).
+    const resolve = submit === true;
+
+    // correctiveAction : on renvoie l'historique existant (peut être absent) + la
+    // nouvelle ligne. Le `?? []` évite un crash si l'événement n'a encore aucun log.
     let body = {
       id: data.id,
-      actionLog: [...data["actionLog"], formData["actionLog"]],
+      actionLog: [...(data["actionLog"] ?? []), formData["actionLog"]],
 
       dateCompleted: formData[`dateCompleted`] ?? "",
       discussionDate: formData[`discussionDate`] ?? "",
+      effective: resolve ? "Yes" : "No",
     };
 
     postToOpenElisServerJsonResponse(
-      "/rest/NCECorrectiveAction",
+      resolve ? "/rest/ResolveNonConformingEvent" : "/rest/NCECorrectiveAction",
       JSON.stringify(body),
       (df) => {
         setNotificationVisible(true);
@@ -878,7 +886,7 @@ export const NCECorrectiveAction = () => {
 
                 <Button
                   type="button"
-                  disabled={!submit}
+                  disabled={submit === null || submit === undefined}
                   onClick={handleNCEFormSubmit}
                   data-testid="nce-submit-button"
                 >

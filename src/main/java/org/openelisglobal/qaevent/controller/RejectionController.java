@@ -11,6 +11,7 @@ import org.apache.commons.lang3.ObjectUtils;
 import org.openelisglobal.common.controller.BaseController;
 import org.openelisglobal.common.exception.LIMSInvalidConfigurationException;
 import org.openelisglobal.common.exception.LIMSRuntimeException;
+import org.openelisglobal.common.log.LogEvent;
 import org.openelisglobal.common.provider.validation.IAccessionNumberGenerator;
 import org.openelisglobal.common.services.DisplayListService;
 import org.openelisglobal.common.services.DisplayListService.ListType;
@@ -214,16 +215,25 @@ public class RejectionController extends BaseController {
             sampItem.setRejectReasonId(form.getQaEventId());
             sampItem = sampleItemService.save(sampItem);
 
-            // NCEvent
+            // NCEvent : le rejet d'échantillon ouvre un événement de non-conformité,
+            // visible ensuite dans le workflow NCE (suivi / action corrective).
             NcEvent event = new NcEvent();
             event.setLabOrderNumber(rejectedSample.getAccessionNumber());
             event.setComments(form.getComment());
             event.setNameOfReporter(form.getBiologist());
             event.setReportDate(DateUtil.convertDateTimeToSqlDate(today));
+            event.setDateOfEvent(DateUtil.convertDateTimeToSqlDate(today));
             event.setSite(organization.getName());
             event.setPrescriberName(form.getDoctor());
             event.setReportingUnitId(Integer.parseInt(form.getSectionId()));
-            event.setNceTypeId(Integer.parseInt(form.getQaEventId()));
+            // NE PAS mettre l'id qa_event (motif de rejet) dans nce_type_id : ce champ
+            // est une FK vers nce_type, un référentiel DISTINCT des motifs de rejet
+            // (qa_event). Réutiliser l'id produisait soit un type erroné (collision
+            // d'ids au sens différent), soit une violation de FK (qa_event > 39) qui
+            // faisait échouer TOUT le rejet en silence. Le motif de rejet reste porté
+            // par sample_item.reject_reason_id (+ commentaire ci-dessus).
+            event.setStatus(NcEvent.STATUS_PENDING);
+            event.setSysUserId(getSysUserId(request));
             event = ncEventService.save(event);
 
             // NCESpecimen
@@ -238,6 +248,12 @@ public class RejectionController extends BaseController {
             return findForward(FWD_SUCCESS_INSERT, form);
         } catch (LIMSRuntimeException | NoSuchMethodException | InvocationTargetException
                 | LIMSInvalidConfigurationException | IllegalAccessException e) {
+            // Ne pas avaler l'erreur en silence : un échec ici (ex. contrainte DB)
+            // laissait l'utilisateur sans explication et masquait des rejets qui ne
+            // persistaient pas.
+            LogEvent.logError("RejectionController", "showNonConformityUpdate",
+                    "échec de l'enregistrement du rejet pour labNo=" + form.getLabNo() + " : " + e.toString());
+            LogEvent.logError(e.getMessage(), e);
             return findForward(FWD_FAIL_INSERT, form);
         }
     }
