@@ -84,6 +84,7 @@ import FhirSyncMonitor from "./fhirSync/FhirSyncMonitor.js";
 import FhirGateway from "./fhirGateway/FhirGateway.js";
 import FhirPushTargets from "./fhirPushTargets/FhirPushTargets.js";
 import ConsolidatedSyncConfig from "./consolidatedSync/ConsolidatedSyncConfig.js";
+import InteropEndpoints from "./interopEndpoints/InteropEndpoints.js";
 import TerminologyImport from "./terminology/TerminologyImport.js";
 import UomManagement from "./testManagementConfigMenu/UomManagement.js";
 import UomCreate from "./testManagementConfigMenu/UomCreate.js";
@@ -215,6 +216,12 @@ function Admin() {
             renderIcon={DataShare}
             title={intl.formatMessage({ id: "sidenav.label.admin.interop" })}
           >
+            <SideNavMenuItem
+              data-cy="interopEndpoints"
+              href="#InteropEndpoints"
+            >
+              <FormattedMessage id="interop.endpoints.title" />
+            </SideNavMenuItem>
             <SideNavMenuItem
               data-cy="consolidatedSyncConfig"
               href="#ConsolidatedSyncConfig"
@@ -435,6 +442,9 @@ function Admin() {
       </PathRoute>
       <PathRoute path="#ConsolidatedSyncConfig">
         <ConsolidatedSyncConfig />
+      </PathRoute>
+      <PathRoute path="#InteropEndpoints">
+        <InteropEndpoints />
       </PathRoute>
       <PathRoute path="#TerminologyImport">
         <TerminologyImport />
