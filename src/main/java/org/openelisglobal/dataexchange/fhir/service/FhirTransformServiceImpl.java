@@ -2323,11 +2323,23 @@ public class FhirTransformServiceImpl implements FhirTransformService {
     // absent, au lieu de lever une NPE qui faisait planter TOUTE la transformation
     // (échantillon sans human associé). La ressource sort alors sans subject/for
     // (valide FHIR) plutôt que de tout casser.
+    //
+    // Interop (spec SHR) : la référence porte À LA FOIS l'identité métier CNAM
+    // (Reference.identifier = matricule CMU/CNAM sous l'OID national) — pour le
+    // rapprochement MPI côté HIE sans connaître l'UUID interne d'OE — ET la
+    // référence littérale Patient/<uuid> (résolution intra-Bundle, valide FHIR). Si
+    // le CNAM est absent, on n'ajoute que la référence littérale.
     private Reference patientReferenceOrNull(Patient patient) {
         if (patient == null || patient.getFhirUuid() == null) {
             return null;
         }
-        return createReferenceFor(ResourceType.Patient, patient.getFhirUuidAsString());
+        Reference reference = createReferenceFor(ResourceType.Patient, patient.getFhirUuidAsString());
+        String cmuNumber = patientService.getCMUNumber(patient);
+        if (!GenericValidator.isBlankOrNull(cmuNumber)
+                && !GenericValidator.isBlankOrNull(fhirConfig.getCmuIdentifierSystem())) {
+            reference.setIdentifier(createIdentifier(fhirConfig.getCmuIdentifierSystem(), cmuNumber));
+        }
+        return reference;
     }
 
     // Mappe la priorité métier OE (OrderPriority) vers la priorité FHIR. OE
