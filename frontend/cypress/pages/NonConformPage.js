@@ -30,6 +30,8 @@ class NonConform {
       submitButton: "[data-testid='nce-submit-button']",
       radioTable: "table",
       radioButton: 'input[type="radio"][name="radio-group"]',
+      successToast: ".cds--toast-notification--success",
+      errorToast: ".cds--toast-notification--error",
     };
   }
 
@@ -160,6 +162,17 @@ class NonConform {
 
   clickSubmitButton() {
     cy.get(this.selectors.submitButton).should("be.visible").click();
+  }
+
+  // Vérifie qu'un enregistrement (action corrective / résolution) a bien abouti :
+  // un toast de succès apparaît et AUCUN toast d'erreur. Régression ciblée : la
+  // résolution renvoyait un HTTP 500 (currentUserId absent) et l'événement restait
+  // bloqué en CAPA sans que l'UI ne le signale.
+  assertSaveSuccess() {
+    cy.get(this.selectors.successToast, { timeout: 15000 }).should(
+      "be.visible",
+    );
+    cy.get(this.selectors.errorToast).should("not.exist");
   }
 
   checkRadioButton() {

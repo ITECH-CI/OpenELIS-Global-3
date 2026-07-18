@@ -192,6 +192,9 @@ describe("Corrective Actions", function () {
       nonConform.enterProposedCorrectiveAction(nce.proposedCorrectiveAction);
       nonConform.enterDateCompleted0(nce.dateOfEvent);
       nonConform.clickSubmitButton();
+      // Résolution (checkResolution => "Oui") : doit aboutir, NON renvoyer 500 et
+      // ne pas laisser l'événement bloqué en CAPA (régression corrigée).
+      nonConform.assertSaveSuccess();
     });
   });
 
@@ -215,6 +218,9 @@ describe("Corrective Actions", function () {
       nonConform.enterProposedCorrectiveAction(nce.proposedCorrectiveAction);
       nonConform.enterDateCompleted0(nce.dateOfEvent);
       nonConform.clickSubmitButton();
+      // Résolution (checkResolution => "Oui") : doit aboutir, NON renvoyer 500 et
+      // ne pas laisser l'événement bloqué en CAPA (régression corrigée).
+      nonConform.assertSaveSuccess();
     });
   });
 });
