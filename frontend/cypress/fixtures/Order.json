@@ -1,16 +1,16 @@
 {
   "samples": [
     {
-      "sampleType": "Serum",
+      "sampleType": "Sérum",
       "collectionDate": "30/04/2025",
       "receivedDate": "01/05/2025"
     }
   ],
   "siteName": "CAMES MAN",
   "requester": {
-    "fullName": "Prime, Optimus",
-    "firstName": "Optimus",
-    "lastName": "Prime"
+    "fullName": "KONE, ISSOUF",
+    "firstName": "ISSOUF",
+    "lastName": "KONE"
   },
   "labNo": "",
   "invalidLabNo": "DEV0124000000000000"
