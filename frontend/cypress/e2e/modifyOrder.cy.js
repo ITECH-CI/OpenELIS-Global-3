@@ -90,8 +90,7 @@ describe("Modify Order search by patient ", function () {
 
   it("Should be able to search patients By gender", function () {
     cy.wait(1000);
-    patientPage.getMaleGenderRadioButton().should("be.visible");
-    patientPage.getMaleGenderRadioButton().click();
+    patientPage.selectMaleGender();
     cy.wait(200);
     modifyOrderPage.clickSearchPatientButton();
     cy.fixture("Patient").then((patient) => {
