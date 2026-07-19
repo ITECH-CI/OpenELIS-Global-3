@@ -92,7 +92,9 @@ class LoginPage {
     cy.wait(1000);
     cy.url().then((url) => {
       if (url.includes("/login")) {
-        cy.contains("button", "Login", { timeout: 10000 }).should("be.visible");
+        // Sélecteur data-cy (langue-agnostique) au lieu du texte "Login" qui
+        // n'existe pas dans une UI non anglaise (ex. « Se Connecter » en français).
+        cy.get(SELECTORS.LOGIN_BUTTON, { timeout: 10000 }).should("be.visible");
         this.enterUsername(this.testProperties.getUsername());
         this.enterPassword(this.testProperties.getPassword());
         this.signIn();

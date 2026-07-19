@@ -13,9 +13,9 @@ describe("Report Non-Conforming Event", function () {
   it("User visits Report Non-Conforming Event Page", function () {
     homePage = loginPage.goToHomePage();
     nonConform = homePage.goToReportNCE();
-    nonConform
-      .getReportNonConformTitle()
-      .should("contain.text", "Report Non-Conforming Event (NCE)");
+    cy.t("nonconform.report").then((title) => {
+      nonConform.getReportNonConformTitle().should("contain.text", title);
+    });
   });
 
   it("Report NCE by Last Name", function () {
@@ -115,9 +115,9 @@ describe("View New Non-Conforming Event", function () {
   it("User visits View Non-Conforming Event Page", function () {
     homePage = loginPage.goToHomePage();
     nonConform = homePage.goToViewNCE();
-    nonConform
-      .getViewNonConformTitle()
-      .should("contain.text", "View New Non Conform Event");
+    cy.t("nonconform.view.report").then((title) => {
+      nonConform.getViewNonConformTitle().should("contain.text", title);
+    });
   });
   it("View New NCE by Lab Number", function () {
     cy.fixture("Patient").then((patient) => {
@@ -169,9 +169,9 @@ describe("Corrective Actions", function () {
   it("User visits Corrective Actions Page", function () {
     homePage = loginPage.goToHomePage();
     nonConform = homePage.goToCorrectiveActions();
-    nonConform
-      .getViewNonConformTitle()
-      .should("contain.text", "Nonconforming Events Corrective Action");
+    cy.t("nonconform.corrective.title").then((title) => {
+      nonConform.getViewNonConformTitle().should("contain.text", title);
+    });
   });
   it("Search by Lab Number and Validate the results", function () {
     cy.fixture("Patient").then((patient) => {

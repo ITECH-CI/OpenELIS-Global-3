@@ -15,9 +15,9 @@ describe("Add New Patient", function () {
   });
 
   it("Add|Modify Patient page should appear with search field", function () {
-    patientPage
-      .getPatientEntryPageTitle()
-      .should("contain.text", "Add Or Modify Patient");
+    cy.t("patient.label.modify").then((title) => {
+      patientPage.getPatientEntryPageTitle().should("contain.text", title);
+    });
   });
 
   it("External search button should be deactivated", function () {

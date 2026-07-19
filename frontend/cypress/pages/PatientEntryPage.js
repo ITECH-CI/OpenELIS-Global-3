@@ -53,7 +53,10 @@ class PatientEntryPage {
   }
 
   getMaleGenderRadioButton() {
-    return cy.contains("span", "Male").click();
+    // Libellé du genre selon la langue active (« Male » / « Homme »...).
+    return cy
+      .t("patient.male")
+      .then((label) => cy.contains("span", label).click());
   }
 
   enterPreviousLabNumber(value) {
