@@ -884,20 +884,20 @@ admin.
   posait l'`Authorization` (Bearer/Basic) sur l'endpoint de la cible TEL QUEL —
   un endpoint `http://` aurait fait transiter le secret EN CLAIR (régression vs
   `ConsolidatedServerClient.enforceHttps` et l'ancien `RegisterFhirHooksTask`).
-  **Corrigé** : `enforceHttps()` ajouté (réécrit `http://`→`https://` avant toute
-  pose de credentials), flag `org.openelisglobal.fhir.push.allowHTTP=false` par
-  défaut.
+  **Corrigé** : `enforceHttps()` ajouté (réécrit `http://`→`https://` avant
+  toute pose de credentials), flag
+  `org.openelisglobal.fhir.push.allowHTTP=false` par défaut.
 - **M1 (MOYENNE, perte de données) — skew d'horloge OE↔HAPI local.** La borne
   haute `windowEnd` était l'horloge d'OE, mais le store est un HAPI SÉPARÉ
   (horloge dérivante + indexation asynchrone). Une ressource tamponnée juste
-  avant le tick mais visible après, horloge HAPI en retard, passait sous la borne
-  basse `gt lastPushed` du tick suivant → perte silencieuse. **Corrigé** :
+  avant le tick mais visible après, horloge HAPI en retard, passait sous la
+  borne basse `gt lastPushed` du tick suivant → perte silencieuse. **Corrigé** :
   `windowEnd = now − LAG_SAFETY_SECONDS (30 s)` (ces ressources sont reprises au
   tick d'après, jamais perdues).
-- **M2 (MOYENNE) — `markPushAttempt` hors du try.** Une `OptimisticLockException`
-  (édition admin concurrente d'un tick) remontait et sautait les cibles SUIVANTES
-  du tick (isolation par-cible cassée). **Corrigé** : `markPushAttempt` déplacé
-  DANS le try par-cible.
+- **M2 (MOYENNE) — `markPushAttempt` hors du try.** Une
+  `OptimisticLockException` (édition admin concurrente d'un tick) remontait et
+  sautait les cibles SUIVANTES du tick (isolation par-cible cassée). **Corrigé**
+  : `markPushAttempt` déplacé DANS le try par-cible.
 - **L1 (BASSE) — BASIC sans username** tombait en push muet sans auth (401 en
   boucle) : **log explicite** ajouté. **Nettoyage** : `org.itech` retiré du
   `@ComponentScan` de `AppConfig` (résidu bénin, plus aucune classe sous ce
