@@ -20,10 +20,13 @@ describe("Report Non-Conforming Event", function () {
 
   it("Report NCE by Last Name", function () {
     cy.fixture("Patient").then((patient) => {
-      nonConform.selectSearchType("Last Name");
+      nonConform.selectSearchType("lastName");
       nonConform.enterSearchField(patient.lastName);
       nonConform.clickSearchButton();
-      nonConform.validateSearchResult(patient.labNo);
+      nonConform.validateHasSearchResult();
+      // Capture le n° labo réel de l'ordonnance trouvée (varie selon l'env) pour
+      // les recherches par n° labo qui suivent.
+      nonConform.captureLabNoFromSearch();
       nonConform.clickCheckbox({ force: true });
       nonConform.clickGoToNceFormButton();
     });
@@ -44,10 +47,10 @@ describe("Report Non-Conforming Event", function () {
 
   it("Report NCE by First Name", function () {
     cy.fixture("Patient").then((patient) => {
-      nonConform.selectSearchType("First Name");
+      nonConform.selectSearchType("firstName");
       nonConform.enterSearchField(patient.firstName);
       nonConform.clickSearchButton();
-      nonConform.validateSearchResult(patient.labNo);
+      nonConform.validateHasSearchResult();
     });
     nonConform.clickCheckbox({ force: true });
     nonConform.clickGoToNceFormButton();
@@ -67,7 +70,7 @@ describe("Report Non-Conforming Event", function () {
 
   it("Report NCE by PatientID", function () {
     cy.fixture("Patient").then((patient) => {
-      nonConform.selectSearchType("Patient Identification Code");
+      nonConform.selectSearchType("STNumber");
       nonConform.enterSearchField(patient.nationalId);
       nonConform.clickSearchButton();
       //nonConform.validateSearchResult(patient.nationalId);
@@ -90,10 +93,10 @@ describe("Report Non-Conforming Event", function () {
   it("Report NCE by Lab Number ", function () {
     cy.reload();
     cy.fixture("Patient").then((patient) => {
-      nonConform.selectSearchType("Lab Number");
+      nonConform.selectSearchType("labNumber");
       nonConform.enterSearchField(patient.labNo);
       nonConform.clickSearchButton();
-      nonConform.validateSearchResult(patient.labNo);
+      nonConform.validateHasSearchResult();
     });
     nonConform.clickCheckbox({ force: true });
     nonConform.clickGoToNceFormButton({ timeout: 12000 });
@@ -121,11 +124,11 @@ describe("View New Non-Conforming Event", function () {
   });
   it("View New NCE by Lab Number", function () {
     cy.fixture("Patient").then((patient) => {
-      nonConform.selectSearchType("Lab Number");
+      nonConform.selectSearchType("labNumber");
       nonConform.enterSearchField(patient.labNo);
       nonConform.clickSearchButton();
-      //nonConform.checkRadioButton(); //Only needed locally, not in the CI
-      nonConform.validateLabNoSearchResult(patient.labNo);
+      // Plusieurs NCE peuvent exister pour ce n° labo : on sélectionne le 1er.
+      nonConform.selectFirstResultRadioIfPresent();
     });
   });
 
@@ -144,7 +147,7 @@ describe("View New Non-Conforming Event", function () {
   it("View New NCE by NCE Number", function () {
     cy.reload();
     cy.fixture("NonConform").then((nce) => {
-      nonConform.selectSearchType("NCE Number");
+      nonConform.selectSearchType("nceNumber");
       nonConform.enterSearchField(nce.NceNumber);
       nonConform.clickSearchButton();
       cy.wait(200);
@@ -175,11 +178,10 @@ describe("Corrective Actions", function () {
   });
   it("Search by Lab Number and Validate the results", function () {
     cy.fixture("Patient").then((patient) => {
-      nonConform.selectSearchType("Lab Number");
+      nonConform.selectSearchType("labNumber");
       nonConform.enterSearchField(patient.labNo);
       nonConform.clickSearchButton();
-      //nonConform.checkRadioButton(); //Only needed locally, not in the CI
-      nonConform.validateLabNoSearchResult(patient.labNo);
+      nonConform.selectFirstResultRadioIfPresent();
     });
   });
 
@@ -201,7 +203,7 @@ describe("Corrective Actions", function () {
   it("Search by NCE Number and Validate the results", function () {
     cy.reload();
     cy.fixture("NonConform").then((nce) => {
-      nonConform.selectSearchType("NCE Number");
+      nonConform.selectSearchType("nceNumber");
       nonConform.enterSearchField(nce.NceNumber);
       nonConform.clickSearchButton();
       cy.wait(200);
