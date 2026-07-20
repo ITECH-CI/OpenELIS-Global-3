@@ -5,7 +5,7 @@
 #
 # Contrairement au build.sh upstream, ce script :
 #   - ne fait AUCUN git checkout/pull destructif (build ce qui est là) ;
-#   - vérifie ses prérequis (docker, submodule dataexport) et échoue proprement ;
+#   - vérifie ses prérequis (docker) et échoue proprement ;
 #   - produit un installeur .tar.gz autonome (images embarquées) prêt à déployer
 #     en zone déconnectée.
 #
@@ -16,7 +16,6 @@
 #
 # Prérequis sur la machine de build :
 #   - docker (avec buildx) et docker compose
-#   - le submodule dataexport initialisé (git submodule update --init --recursive)
 #
 set -euo pipefail
 
@@ -43,9 +42,8 @@ fail() { echo "[build-civ][ERREUR] $*" >&2; exit 1; }
 # --- Prérequis ---
 command -v docker >/dev/null 2>&1 || fail "docker introuvable. Installez Docker."
 docker compose version >/dev/null 2>&1 || fail "docker compose introuvable."
-if [ ! -f "${PROJECT_DIR}/dataexport/pom.xml" ]; then
-  fail "submodule 'dataexport' non initialisé. Lancez: git submodule update --init --recursive"
-fi
+# NB : plus de dépendance au submodule 'dataexport' — il a été retiré (moteur de
+# push FHIR natif l'a remplacé) et le Dockerfile backend est autonome.
 
 # --- Version (depuis pom.xml sauf override) ---
 if [ -z "${VERSION:-}" ]; then
@@ -80,7 +78,7 @@ IMG_DNSMASQ="openelisglobal-dnsmasq"
 # ============================================================
 # 1) Build des images à partir du code courant
 # ============================================================
-log "Build backend (${IMG_BACKEND}) — WAR + dataexport dans le Dockerfile multi-stage"
+log "Build backend (${IMG_BACKEND}) — WAR dans le Dockerfile multi-stage"
 docker build --platform "${TARGET_PLATFORM}" -f "${PROJECT_DIR}/Dockerfile" \
   --build-arg SKIP_SPOTLESS=true \
   -t "${IMG_BACKEND}:latest" "${PROJECT_DIR}"
