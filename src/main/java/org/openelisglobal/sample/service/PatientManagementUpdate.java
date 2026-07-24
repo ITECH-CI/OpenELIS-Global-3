@@ -154,6 +154,11 @@ public class PatientManagementUpdate extends ControllerUtills implements IPatien
         persistIdentityType(patientInfo.getHealthRegion(), "HEALTH REGION");
         persistIdentityType(patientInfo.getOtherNationality(), "OTHER NATIONALITY");
         persistIdentityType(patientInfo.getGuid(), "GUID");
+        // Sur ce déploiement CIV, le champ "nationalId" porte le numéro d'assuré
+        // CMU/CNAM (libellé UI "code CMU"). On l'enregistre AUSSI comme identité de
+        // type "CMU" dédiée (interop PSNDPE : getCMUNumber la lit en priorité), en
+        // plus de la colonne patient.national_id conservée pour la rétro-compat.
+        persistIdentityType(patientInfo.getNationalId(), "CMU");
     }
 
     private void persistExtraPatientAddressInfo(PatientManagementInfo patientInfo) {

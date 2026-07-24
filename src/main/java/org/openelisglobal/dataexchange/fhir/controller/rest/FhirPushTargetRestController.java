@@ -13,15 +13,12 @@
  */
 package org.openelisglobal.dataexchange.fhir.controller.rest;
 
-import java.time.Instant;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Supplier;
 import org.apache.commons.validator.GenericValidator;
-import org.itech.fhir.dataexport.core.model.DataExportTask;
-import org.itech.fhir.dataexport.core.service.DataExportTaskService;
 import org.openelisglobal.dataexchange.fhir.service.FhirPushTargetService;
 import org.openelisglobal.dataexchange.fhir.valueholder.FhirPushTarget;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,9 +34,11 @@ import org.springframework.web.bind.annotation.RestController;
 
 /**
  * Administration des cibles de <b>push FHIR distant</b> (mini-HIE, session OE
- * requise). CRUD des cibles + supervision (dernier essai/succès de l'export).
- * Les modifications sont projetées dans le moteur d'export (dataexport) par le
- * service.
+ * requise). CRUD des cibles + supervision (dernier essai / dernier succès du
+ * push). L'état de supervision est lu directement sur la cible (colonnes
+ * {@code last_attempt}/{@code last_success} tenues à jour par le moteur natif
+ * {@code FhirPushEngineServiceImpl}) — plus aucune dépendance au module
+ * {@code dataexport}.
  */
 @RestController
 @RequestMapping("/rest/fhir-push-targets")
@@ -48,11 +47,8 @@ public class FhirPushTargetRestController {
     @Autowired
     private FhirPushTargetService fhirPushTargetService;
 
-    @Autowired
-    private DataExportTaskService dataExportTaskService;
-
     /**
-     * Liste des cibles + leur état d'export (dernier essai/succès). Secret jamais
+     * Liste des cibles + leur état de push (dernier essai/succès). Secret jamais
      * renvoyé.
      */
     @GetMapping
@@ -71,7 +67,8 @@ public class FhirPushTargetRestController {
             // Indique si un secret est défini, sans le divulguer.
             row.put("hasSecret", !GenericValidator.isBlankOrNull(t.getAuthSecret()));
             row.put("active", "Y".equals(t.getIsActive()));
-            addExportStatus(row, t.getEndpoint());
+            row.put("lastAttempt", isoOrNull(t.getLastAttempt()));
+            row.put("lastSuccess", isoOrNull(t.getLastSuccess()));
             out.add(row);
         }
         return out;
@@ -124,32 +121,7 @@ public class FhirPushTargetRestController {
         return ResponseEntity.ok().build();
     }
 
-    private void addExportStatus(Map<String, Object> row, String endpoint) {
-        DataExportTask task = safeTask(endpoint);
-        if (task == null) {
-            row.put("lastAttempt", null);
-            row.put("lastSuccess", null);
-            return;
-        }
-        Instant lastAttempt = safeInstant(() -> dataExportTaskService.getLatestInstantForDataExportTask(task));
-        Instant lastSuccess = safeInstant(() -> dataExportTaskService.getLatestSuccessInstantForDataExportTask(task));
-        row.put("lastAttempt", lastAttempt == null ? null : lastAttempt.toString());
-        row.put("lastSuccess", lastSuccess == null ? null : lastSuccess.toString());
-    }
-
-    private DataExportTask safeTask(String endpoint) {
-        try {
-            return dataExportTaskService.getDAO().findByEndpoint(endpoint).orElse(null);
-        } catch (RuntimeException e) {
-            return null;
-        }
-    }
-
-    private Instant safeInstant(Supplier<Instant> supplier) {
-        try {
-            return supplier.get();
-        } catch (RuntimeException e) {
-            return null;
-        }
+    private static String isoOrNull(Timestamp ts) {
+        return ts == null ? null : ts.toInstant().toString();
     }
 }

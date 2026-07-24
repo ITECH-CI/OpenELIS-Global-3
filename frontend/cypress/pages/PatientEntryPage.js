@@ -44,7 +44,10 @@ class PatientEntryPage {
     cy.enterText(this.lastNameSelector, lastName);
     cy.enterText(this.firstNameSelector, firstName);
     cy.enterText(this.dateOfBirth, dateOfBirth);
-    this.getMaleGenderRadioButton().click();
+    // Fermer l'éventuel calendrier (flatpickr) ouvert par le champ date avant de
+    // cliquer le genre, sinon son overlay recouvre le radio.
+    cy.get("body").click(0, 0);
+    this.selectMaleGender();
     //cy.getElement("#submit").click();
   }
 
@@ -52,8 +55,13 @@ class PatientEntryPage {
     this.getSubmitButton().click();
   }
 
-  getMaleGenderRadioButton() {
-    return cy.contains("span", "Male").click();
+  // Sélectionne le genre masculin (libellé selon la langue active « Male » /
+  // « Homme »...). Ne renvoie PAS d'élément chaînable (le clic est fait ici) : les
+  // appelants ne doivent donc pas ré-enchaîner un .click().
+  selectMaleGender() {
+    return cy.t("patient.male").then((label) => {
+      cy.contains("span", label).scrollIntoView().click({ force: true });
+    });
   }
 
   enterPreviousLabNumber(value) {

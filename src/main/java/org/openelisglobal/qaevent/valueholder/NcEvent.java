@@ -8,6 +8,20 @@ import java.util.Objects;
 import org.openelisglobal.common.valueholder.BaseObject;
 
 public class NcEvent extends BaseObject<String> {
+
+    /**
+     * Cycle de vie d'un événement de non-conformité, stocké dans
+     * {@code nc_event.status}. {@code PENDING} (signalé) → {@code CAPA}
+     * (suivi/analyse en cours) → {@code COMPLETED} (résolu). Les écrans de suivi et
+     * d'action corrective filtrent sur ces valeurs ; centraliser ici évite les
+     * littéraux divergents.
+     */
+    public static final String STATUS_PENDING = "Pending";
+
+    public static final String STATUS_CAPA = "CAPA";
+
+    public static final String STATUS_COMPLETED = "Completed";
+
     private String id;
     private Date reportDate;
     private String name;

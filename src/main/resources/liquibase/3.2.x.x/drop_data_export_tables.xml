@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+    <!--
+        Retrait du module dataexport (submodule supprimé).
+
+        Le moteur de push FHIR est désormais NATIF (FhirPushEngineServiceImpl), qui
+        lit le store FHIR local et pousse vers les cibles fhir_push_target. Les tables
+        de l'ancien moteur dataexport (créées par 2.0.x.x/fhir_data_export.xml) ne
+        sont plus mappées par aucune entité et deviennent orphelines : on les
+        supprime.
+
+        Ordre de drop : les 3 tables enfants (FK vers data_export_task) AVANT le
+        parent. cascadeConstraints en filet. Idempotent : chaque drop est gardé par
+        tableExists → MARK_RAN si la table n'existe pas (base fraîche où le module
+        n'a jamais tourné). Par NOM, jamais d'ID.
+    -->
+
+    <changeSet author="itechciv" id="drop-data-export-fhir-resources">
+        <preConditions onFail="MARK_RAN">
+            <tableExists schemaName="clinlims" tableName="data_export_fhir_resources"/>
+        </preConditions>
+        <dropTable schemaName="clinlims" tableName="data_export_fhir_resources" cascadeConstraints="true"/>
+    </changeSet>
+
+    <changeSet author="itechciv" id="drop-data-export-headers">
+        <preConditions onFail="MARK_RAN">
+            <tableExists schemaName="clinlims" tableName="data_export_headers"/>
+        </preConditions>
+        <dropTable schemaName="clinlims" tableName="data_export_headers" cascadeConstraints="true"/>
+    </changeSet>
+
+    <changeSet author="itechciv" id="drop-data-export-attempt">
+        <preConditions onFail="MARK_RAN">
+            <tableExists schemaName="clinlims" tableName="data_export_attempt"/>
+        </preConditions>
+        <dropTable schemaName="clinlims" tableName="data_export_attempt" cascadeConstraints="true"/>
+    </changeSet>
+
+    <changeSet author="itechciv" id="drop-data-export-task">
+        <preConditions onFail="MARK_RAN">
+            <tableExists schemaName="clinlims" tableName="data_export_task"/>
+        </preConditions>
+        <dropTable schemaName="clinlims" tableName="data_export_task" cascadeConstraints="true"/>
+    </changeSet>
+
+</databaseChangeLog>

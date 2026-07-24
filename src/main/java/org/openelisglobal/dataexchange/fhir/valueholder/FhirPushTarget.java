@@ -19,10 +19,11 @@ import org.openelisglobal.common.valueholder.BaseObject;
 /**
  * Cible de <b>push FHIR distant</b> administrable depuis OE (mini-HIE, sens
  * sortant). Porte les paramètres éditables par l'admin (endpoint, ressources,
- * fréquence, auth, actif) et est projetée dans un {@code DataExportTask} du
- * module {@code dataexport} (le moteur d'export effectif) par le service de
- * synchronisation. Désactiver une cible ({@code isActive=N}) retire la tâche
- * d'export correspondante.
+ * fréquence, auth, actif) ainsi que le point de reprise + la supervision du
+ * moteur natif ({@code lastPushed}/{@code lastAttempt}/{@code lastSuccess}). Le
+ * moteur {@code FhirPushEngineServiceImpl} lit cette table à chaque tick et
+ * pousse le delta du store FHIR local vers chaque cible active ; désactiver une
+ * cible ({@code isActive=N}) suffit à ce qu'il cesse de la pousser.
  */
 public class FhirPushTarget extends BaseObject<String> {
 
@@ -53,10 +54,22 @@ public class FhirPushTarget extends BaseObject<String> {
     // Mot de passe (BASIC) ou jeton (TOKEN).
     private String authSecret;
 
-    // Révocation de la cible : "Y"/"N". "N" retire la tâche d'export.
+    // Révocation de la cible : "Y"/"N". "N" met la cible en pause (le moteur natif
+    // ne la pousse plus).
     private String isActive = "Y";
 
     private Timestamp createdAt;
+
+    // Point de reprise du moteur de push FHIR natif : borne HAUTE du dernier delta
+    // poussé avec succès (sert de borne BASSE exclusive de la prochaine fenêtre
+    // _lastUpdated). null = jamais poussé (première fenêtre = tout l'historique).
+    private Timestamp lastPushed;
+
+    // Supervision : dernier tick ayant tenté un push (succès ou échec).
+    private Timestamp lastAttempt;
+
+    // Supervision : dernier push réussi (affiché dans l'écran admin).
+    private Timestamp lastSuccess;
 
     @Override
     public String getId() {
@@ -146,6 +159,30 @@ public class FhirPushTarget extends BaseObject<String> {
 
     public void setCreatedAt(Timestamp createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public Timestamp getLastPushed() {
+        return lastPushed;
+    }
+
+    public void setLastPushed(Timestamp lastPushed) {
+        this.lastPushed = lastPushed;
+    }
+
+    public Timestamp getLastAttempt() {
+        return lastAttempt;
+    }
+
+    public void setLastAttempt(Timestamp lastAttempt) {
+        this.lastAttempt = lastAttempt;
+    }
+
+    public Timestamp getLastSuccess() {
+        return lastSuccess;
+    }
+
+    public void setLastSuccess(Timestamp lastSuccess) {
+        this.lastSuccess = lastSuccess;
     }
 
     @Override

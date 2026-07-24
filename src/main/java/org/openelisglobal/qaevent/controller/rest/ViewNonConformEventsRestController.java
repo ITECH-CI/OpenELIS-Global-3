@@ -71,9 +71,11 @@ public class ViewNonConformEventsRestController extends BaseRestController {
             return ResponseEntity.ok().body("No results found for search criteria.");
         }
 
-        String newNceNumber = searchResults.get(0).getNceNumber();
-
-        NcEvent event = ncEventService.getMatch("nceNumber", newNceNumber).get();
+        // Le premier résultat EST l'événement recherché : l'utiliser directement
+        // plutôt que de le re-résoudre par nceNumber via getMatch().get(), qui levait
+        // NoSuchElementException en cas de nceNumber dupliqué (getMatch renvoie
+        // Optional.empty() quand il y a plusieurs correspondances).
+        NcEvent event = searchResults.get(0);
 
         NonConformingEventForm response = new NonConformingEventForm();
 

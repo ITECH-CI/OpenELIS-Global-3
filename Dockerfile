@@ -18,37 +18,16 @@ WORKDIR /build
 RUN ./install/createDefaultPassword.sh -c -p ${DEFAULT_PW}
 
 ##
-# Build DataExport
-#
-COPY ./dataexport /build/dataexport
-WORKDIR /build/dataexport/dataexport-core
-RUN --mount=type=cache,target=/root/.m2,sharing=locked \
-    mvn dependency:go-offline 
-RUN --mount=type=cache,target=/root/.m2,sharing=locked \
-    mvn clean install -DskipTests
-WORKDIR /build/dataexport/
-RUN --mount=type=cache,target=/root/.m2,sharing=locked \
-    mvn dependency:go-offline 
-RUN --mount=type=cache,target=/root/.m2,sharing=locked \
-    mvn clean install -DskipTests
-
-##
 # Build the Project
-#  
+#
 WORKDIR /build
 
 COPY ./pom.xml /build/pom.xml
-# PAS de `dependency:go-offline` ici : il tente de résoudre EN LIGNE toutes les
-# dépendances dont dataexport-api/core:0.0.0.9, qui n'existent QUE localement
-# (buildés ci-dessus, sur aucun repo distant). Sur un cache .m2 froid il échoue ET
-# Maven MET EN CACHE cet échec (*.lastUpdated) -> le `clean install` suivant refuse
-# alors de réessayer la résolution ("failure was cached"), même si l'artefact est
-# bien dans .m2. Le `clean install` télécharge de toute façon ce qu'il faut.
+RUN --mount=type=cache,target=/root/.m2,sharing=locked \
+    mvn dependency:go-offline
 
 ARG SKIP_SPOTLESS="false"
 COPY ./src /build/src
-# -U force la mise à jour des dépendances (ignore un éventuel cache d'échec négatif
-# de résolution) ; garantit la prise en compte de dataexport fraîchement installé.
 RUN --mount=type=cache,target=/root/.m2,sharing=locked \
     mvn -U clean install -DskipTests -Dspotless.check.skip=${SKIP_SPOTLESS}
 

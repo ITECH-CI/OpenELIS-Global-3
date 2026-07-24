@@ -696,6 +696,11 @@ public class PatientServiceImpl extends AuditableBaseObjectServiceImpl<Patient, 
         persistIdentityType(patientInfo.getHealthRegion(), "HEALTH REGION", patientInfo, patient, sysUserId);
         persistIdentityType(patientInfo.getOtherNationality(), "OTHER NATIONALITY", patientInfo, patient, sysUserId);
         persistIdentityType(patientInfo.getGuid(), "GUID", patientInfo, patient, sysUserId);
+        // Sur ce déploiement CIV, le champ "nationalId" porte le numéro d'assuré
+        // CMU/CNAM (libellé UI "code CMU"). On l'enregistre AUSSI comme identité de
+        // type "CMU" dédiée (interop PSNDPE : getCMUNumber la lit en priorité), en
+        // plus de la colonne patient.national_id conservée pour la rétro-compat.
+        persistIdentityType(patientInfo.getNationalId(), "CMU", patientInfo, patient, sysUserId);
     }
 
     private void persistExtraPatientAddressInfo(PatientManagementInfo patientInfo, Patient patient, String sysUserId) {

@@ -2,22 +2,6 @@
 # Build Stage
 #
 FROM maven:3-eclipse-temurin-21 AS build
-COPY ./dataexport /build/dataexport
-##
-# Build DataExport
-
-WORKDIR /build/dataexport/dataexport-core
-RUN --mount=type=cache,target=/root/.m2,sharing=locked \
-    mvn dependency:go-offline 
-RUN --mount=type=cache,target=/root/.m2,sharing=locked \
-    mvn clean install -DskipTests
-WORKDIR /build/dataexport/
-RUN --mount=type=cache,target=/root/.m2,sharing=locked \
-    mvn dependency:go-offline 
-RUN --mount=type=cache,target=/root/.m2,sharing=locked \
-    mvn clean install -DskipTests
-
-
 
 RUN --mount=target=/var/lib/apt/lists,type=cache,sharing=locked \
     --mount=target=/var/cache/apt,type=cache,sharing=locked \
@@ -33,7 +17,6 @@ RUN --mount=target=/var/lib/apt/lists,type=cache,sharing=locked \
 ADD ./pom.xml /build/pom.xml
 ADD ./tools /build/tools
 ADD ./src /build/src
-ADD ./dataexport /build/dataexport
 
 WORKDIR /build
 

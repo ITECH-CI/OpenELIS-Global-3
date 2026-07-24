@@ -15,9 +15,9 @@ describe("Add New Patient", function () {
   });
 
   it("Add|Modify Patient page should appear with search field", function () {
-    patientPage
-      .getPatientEntryPageTitle()
-      .should("contain.text", "Add Or Modify Patient");
+    cy.t("patient.label.modify").then((title) => {
+      patientPage.getPatientEntryPageTitle().should("contain.text", title);
+    });
   });
 
   it("External search button should be deactivated", function () {
@@ -58,8 +58,11 @@ describe("Add New Patient", function () {
   });
   it("Save new patient information button", function () {
     patientPage.clickSavePatientButton();
-    cy.wait(1000);
-    cy.get("div[role='status']").should("be.visible");
+    // Toast de succès Carbon (« Patient enregistré avec succès ») plutôt qu'un
+    // div[role='status'] générique qui n'apparaissait pas de façon fiable.
+    cy.get(".cds--toast-notification--success", { timeout: 15000 }).should(
+      "be.visible",
+    );
     cy.wait(200).reload();
   });
 });
@@ -67,7 +70,7 @@ describe("Add New Patient", function () {
 describe("Search Patient", function () {
   it("Search patients By gender", function () {
     cy.wait(1000);
-    patientPage.getMaleGenderRadioButton();
+    patientPage.selectMaleGender();
     cy.wait(200);
     patientPage.clickSearchPatientButton();
     cy.fixture("Patient").then((patient) => {

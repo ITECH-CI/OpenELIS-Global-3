@@ -637,6 +637,11 @@ public class SamplePatientEntryRestController extends BaseSampleEntryController 
                 if (forward != null) {
                     populateDisplayLists(form);
                     if (FWD_SUCCESS_INSERT.equals(forward)) {
+                        // Le bon est committé (accessioner.save() a sa propre transaction) :
+                        // on transforme/persiste le FHIR (SR/Task/Specimen/Patient), que la
+                        // saisie standard obtient via l'event mais que les Accessioner ne
+                        // déclenchent pas.
+                        triggerFhirSyncForSample(form.getLabNo());
                         return ResponseEntity.ok(form);
                     } else {
                         return ResponseEntity.badRequest().body(form);
@@ -658,6 +663,11 @@ public class SamplePatientEntryRestController extends BaseSampleEntryController 
                 if (forward != null) {
                     populateDisplayLists(form);
                     if (FWD_SUCCESS_INSERT.equals(forward)) {
+                        // Le bon est committé (accessioner.save() a sa propre transaction) :
+                        // on transforme/persiste le FHIR (SR/Task/Specimen/Patient), que la
+                        // saisie standard obtient via l'event mais que les Accessioner ne
+                        // déclenchent pas.
+                        triggerFhirSyncForSample(form.getLabNo());
                         return ResponseEntity.ok(form);
                     } else {
                         return ResponseEntity.badRequest().body(form);
@@ -680,6 +690,11 @@ public class SamplePatientEntryRestController extends BaseSampleEntryController 
                 if (forward != null) {
                     populateDisplayLists(form);
                     if (FWD_SUCCESS_INSERT.equals(forward)) {
+                        // Le bon est committé (accessioner.save() a sa propre transaction) :
+                        // on transforme/persiste le FHIR (SR/Task/Specimen/Patient), que la
+                        // saisie standard obtient via l'event mais que les Accessioner ne
+                        // déclenchent pas.
+                        triggerFhirSyncForSample(form.getLabNo());
                         return ResponseEntity.ok(form);
                     } else {
                         return ResponseEntity.badRequest().body(form);
@@ -703,6 +718,11 @@ public class SamplePatientEntryRestController extends BaseSampleEntryController 
                 if (forward != null) {
                     populateDisplayLists(form);
                     if (FWD_SUCCESS_INSERT.equals(forward)) {
+                        // Le bon est committé (accessioner.save() a sa propre transaction) :
+                        // on transforme/persiste le FHIR (SR/Task/Specimen/Patient), que la
+                        // saisie standard obtient via l'event mais que les Accessioner ne
+                        // déclenchent pas.
+                        triggerFhirSyncForSample(form.getLabNo());
                         return ResponseEntity.ok(form);
                     } else {
                         return ResponseEntity.badRequest().body(form);
@@ -953,6 +973,37 @@ public class SamplePatientEntryRestController extends BaseSampleEntryController 
         } else {
             updateData.setPatientErrors(new BaseErrors());
         }
+    }
+
+    /**
+     * Déclenche la transformation/persistance FHIR d'un bon après une saisie
+     * réussie via les {@code Accessioner} (workflow charge virale /
+     * {@code SampleEntryByProjectSudyViralLoad}). Contrairement au POST
+     * {@code SamplePatientEntry} standard — qui publie
+     * {@code SamplePatientUpdateDataCreatedEvent} —, les Accessioner n'exposent pas
+     * le {@code SamplePatientUpdateData} nécessaire à l'event. On relit donc le bon
+     * persisté par son n° d'accession et on délègue à {@link SampleFhirSyncTrigger}
+     * (composant {@code @Async}) : la saisie rend la main IMMÉDIATEMENT, la transfo
+     * FHIR se fait en arrière-plan, tracée et rejouable — la demande n'est jamais
+     * ralentie ni mise en échec par le FHIR (effet de bord).
+     *
+     * <p>
+     * À appeler UNIQUEMENT après commit (au retour d'un {@code handleSave} réussi).
+     * Résolution paresseuse via {@code SpringContext} pour éviter tout cycle
+     * d'injection au démarrage.
+     */
+    private void triggerFhirSyncForSample(String labNo) {
+        if (GenericValidator.isBlankOrNull(labNo)) {
+            return;
+        }
+        Sample sample = sampleService.getSampleByAccessionNumber(labNo);
+        if (sample == null || GenericValidator.isBlankOrNull(sample.getId())) {
+            LogEvent.logWarn(this.getClass().getSimpleName(), "triggerFhirSyncForSample",
+                    "bon introuvable après saisie pour n° " + labNo + " — sync FHIR ignorée");
+            return;
+        }
+        SpringContext.getBean(org.openelisglobal.dataexchange.fhir.service.SampleFhirSyncTrigger.class)
+                .triggerForSample(sample.getId());
     }
 
     @Override

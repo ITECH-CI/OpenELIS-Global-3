@@ -18,38 +18,44 @@ import org.openelisglobal.common.service.BaseObjectService;
 import org.openelisglobal.dataexchange.fhir.valueholder.FhirPushTarget;
 
 /**
- * Gestion administrable des cibles de push FHIR distant (mini-HIE). Chaque
- * cible est projetée dans un {@code DataExportTask} du module
- * {@code dataexport} (le moteur d'export). Toute modification déclenche une
- * synchronisation : upsert des tâches d'export pour les cibles actives,
- * suppression pour les cibles inactives/supprimées.
+ * Gestion administrable des cibles de push FHIR distant (mini-HIE). L'écran
+ * admin écrit cette table ; le {@code FhirPushEngineServiceImpl} (moteur natif)
+ * la lit à chaque tick et pousse le delta du store FHIR local vers chaque cible
+ * active. Activer/désactiver/supprimer une cible suffit — le moteur en tient
+ * compte au tick suivant, sans réconciliation d'une table tierce.
  */
 public interface FhirPushTargetService extends BaseObjectService<FhirPushTarget, String> {
 
     /** Toutes les cibles déclarées (plus récentes en tête). */
     List<FhirPushTarget> getTargets();
 
-    /**
-     * Crée une cible puis synchronise le moteur d'export. Renvoie l'entité créée.
-     */
+    /** Crée une cible. Renvoie l'entité créée. */
     FhirPushTarget createTarget(FhirPushTarget target);
 
-    /** Met à jour une cible (par id) puis synchronise. */
+    /** Met à jour une cible (par id). */
     FhirPushTarget updateTarget(String id, FhirPushTarget changes);
 
-    /**
-     * Active/désactive une cible puis synchronise (désactiver retire la tâche
-     * d'export).
-     */
+    /** Active/désactive une cible (le moteur cesse/reprend de la pousser). */
     void setTargetActive(String id, boolean active);
 
-    /** Supprime une cible puis synchronise (retire la tâche d'export). */
+    /** Supprime une cible (le moteur cesse de la pousser). */
     void deleteTarget(String id);
 
+    /** Cibles actives à pousser par le moteur natif (isActive="Y"). */
+    List<FhirPushTarget> getActiveTargets();
+
     /**
-     * Réconcilie l'état des {@code DataExportTask} avec les cibles : upsert pour
-     * chaque cible active, suppression de la tâche pour chaque cible inactive.
-     * Idempotent ; appelé après chaque modification.
+     * Enregistre une TENTATIVE de push (met {@code lastAttempt=now}) dans sa propre
+     * transaction, avant l'appel réseau — pour que la supervision reflète le tick
+     * même si le POST échoue ensuite.
      */
-    void syncToDataExport();
+    void markPushAttempt(String id);
+
+    /**
+     * Enregistre un push RÉUSSI : avance le point de reprise
+     * ({@code lastPushed=checkpoint}) et met {@code lastSuccess=now}, dans sa
+     * propre transaction. Le {@code checkpoint} est la borne haute de la fenêtre
+     * poussée.
+     */
+    void markPushSuccess(String id, java.sql.Timestamp checkpoint);
 }

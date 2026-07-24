@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+     http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+    <!--
+        Moteur de push FHIR NATIF (remplace le module dataexport).
+
+        Le moteur natif lit le delta du store FHIR local par _lastUpdated et pousse
+        vers chaque cible fhir_push_target active. Il lui faut donc mémoriser, PAR
+        cible, un point de reprise (le dernier _lastUpdated poussé) + un état de
+        supervision (dernier essai / dernier succès) — ce que dataexport stockait
+        dans sa table data_export_attempt (qui disparaît avec le submodule).
+
+        3 colonnes additives, idempotentes (columnExists → MARK_RAN) :
+          - last_pushed  : borne HAUTE du dernier delta poussé avec succès. Sert de
+                           borne BASSE (exclusive) de la prochaine fenêtre _lastUpdated.
+          - last_attempt : horodatage du dernier tick ayant tenté un push (succès ou non).
+          - last_success : horodatage du dernier push réussi (pour l'écran admin).
+    -->
+
+    <changeSet author="itechciv" id="add-fhir-push-target-last-pushed">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists schemaName="clinlims" tableName="fhir_push_target" columnName="last_pushed" />
+            </not>
+        </preConditions>
+        <addColumn schemaName="clinlims" tableName="fhir_push_target">
+            <column name="last_pushed" type="TIMESTAMP">
+                <constraints nullable="true" />
+            </column>
+        </addColumn>
+        <rollback>
+            <dropColumn schemaName="clinlims" tableName="fhir_push_target" columnName="last_pushed" />
+        </rollback>
+    </changeSet>
+
+    <changeSet author="itechciv" id="add-fhir-push-target-last-attempt">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists schemaName="clinlims" tableName="fhir_push_target" columnName="last_attempt" />
+            </not>
+        </preConditions>
+        <addColumn schemaName="clinlims" tableName="fhir_push_target">
+            <column name="last_attempt" type="TIMESTAMP">
+                <constraints nullable="true" />
+            </column>
+        </addColumn>
+        <rollback>
+            <dropColumn schemaName="clinlims" tableName="fhir_push_target" columnName="last_attempt" />
+        </rollback>
+    </changeSet>
+
+    <changeSet author="itechciv" id="add-fhir-push-target-last-success">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists schemaName="clinlims" tableName="fhir_push_target" columnName="last_success" />
+            </not>
+        </preConditions>
+        <addColumn schemaName="clinlims" tableName="fhir_push_target">
+            <column name="last_success" type="TIMESTAMP">
+                <constraints nullable="true" />
+            </column>
+        </addColumn>
+        <rollback>
+            <dropColumn schemaName="clinlims" tableName="fhir_push_target" columnName="last_success" />
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

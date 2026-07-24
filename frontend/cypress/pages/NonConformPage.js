@@ -30,6 +30,8 @@ class NonConform {
       submitButton: "[data-testid='nce-submit-button']",
       radioTable: "table",
       radioButton: 'input[type="radio"][name="radio-group"]',
+      successToast: ".cds--toast-notification--success",
+      errorToast: ".cds--toast-notification--error",
     };
   }
 
@@ -66,6 +68,49 @@ class NonConform {
 
   validateLabNoSearchResult(labNo) {
     cy.get(this.selectors.searchResult).invoke("text").should("eq", labNo);
+  }
+
+  // Vérifie simplement qu'AU MOINS un résultat de recherche est présent (sans
+  // coder en dur un numéro de laboratoire qui varie d'un environnement à l'autre).
+  validateHasSearchResult() {
+    cy.get(this.selectors.searchResult, { timeout: 15000 })
+      .first()
+      .should("be.visible")
+      .invoke("text")
+      .should("have.length.greaterThan", 0);
+  }
+
+  // Écrans View/Corrective : quand la recherche par n° labo renvoie PLUSIEURS
+  // événements (cas fréquent en local), ils s'affichent en tableau avec des radios ;
+  // avec un seul résultat, le formulaire se charge directement. On sélectionne le
+  // 1er radio s'il est présent pour couvrir les deux cas.
+  selectFirstResultRadioIfPresent() {
+    cy.get("body").then(($body) => {
+      if ($body.find(this.selectors.radioButton).length) {
+        cy.get(this.selectors.radioButton).first().click({ force: true });
+        // Le clic déclenche le chargement du formulaire de suivi (GET) : on attend
+        // que le champ catégorie apparaisse avant de poursuivre.
+        cy.get(this.selectors.nceCategory, { timeout: 15000 }).should("exist");
+      }
+    });
+  }
+
+  // Capture le numéro de laboratoire réel du 1er résultat et le sauvegarde dans la
+  // fixture Patient (clé labNo), pour que les recherches ultérieures par n° labo
+  // utilisent une valeur qui existe vraiment dans l'environnement courant.
+  captureLabNoFromSearch() {
+    cy.get(this.selectors.searchResult, { timeout: 15000 })
+      .first()
+      .invoke("text")
+      .then((text) => {
+        const labNo = text.trim().split(/\s+/)[0];
+        cy.readFile("cypress/fixtures/Patient.json").then((existing) => {
+          cy.writeFile("cypress/fixtures/Patient.json", {
+            ...existing,
+            labNo,
+          });
+        });
+      });
   }
 
   validateNCESearchResult(NCENo) {
@@ -147,7 +192,10 @@ class NonConform {
   }
 
   checkResolution() {
-    cy.get(this.selectors.resolutionYes).click();
+    // Radio « Oui » de la résolution (libellé selon la langue active).
+    cy.t("yes.option").then((label) =>
+      cy.contains("span", new RegExp("^\\s*" + label + "\\s*$")).click(),
+    );
   }
 
   enterDateCompleted0(date) {
@@ -160,6 +208,17 @@ class NonConform {
 
   clickSubmitButton() {
     cy.get(this.selectors.submitButton).should("be.visible").click();
+  }
+
+  // Vérifie qu'un enregistrement (action corrective / résolution) a bien abouti :
+  // un toast de succès apparaît et AUCUN toast d'erreur. Régression ciblée : la
+  // résolution renvoyait un HTTP 500 (currentUserId absent) et l'événement restait
+  // bloqué en CAPA sans que l'UI ne le signale.
+  assertSaveSuccess() {
+    cy.get(this.selectors.successToast, { timeout: 15000 }).should(
+      "be.visible",
+    );
+    cy.get(this.selectors.errorToast).should("not.exist");
   }
 
   checkRadioButton() {

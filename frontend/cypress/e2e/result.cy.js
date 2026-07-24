@@ -87,7 +87,7 @@ describe("Result By Patient", function () {
   });
 
   it("Search by sex", function () {
-    patientPage.getMaleGenderRadioButton();
+    patientPage.selectMaleGender();
     patientPage.clickSearchPatientButton();
     cy.reload();
   });
@@ -106,7 +106,7 @@ describe("Result By Patient", function () {
         patient.lastName,
       );
     });
-    patientPage.getMaleGenderRadioButton();
+    patientPage.selectMaleGender();
     patientPage.clickSearchPatientButton();
     cy.wait(1000);
     result.selectPatientFromSearchResults();

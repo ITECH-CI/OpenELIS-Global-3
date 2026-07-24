@@ -1,11 +1,14 @@
 # Conception — Module d'échange de données unifié (interopérabilité CIV)
 
-> **Statut** : cadrage / design (2026-07-10). Fusionne les chantiers 8
-> (interop), 9 (conteneuriser oedatauploader) et 10 (refonte dataexport v2).
-> **Objectif** : UN SEUL module d'échange de données, simple / efficace /
-> robuste, paramétrable et piloté depuis OpenELIS, avec exposition API des
-> ressources FHIR métier (ServiceRequest, Patient, Organization,
-> DiagnosticReport, Observation, Specimen, Task, Practitioner, Encounter…).
+> **Statut** : incréments 4a→5 IMPLÉMENTÉS et poussés (portage oedatauploader →
+> module natif `dataexchange.sync`). Modernisation §6.7 IMPLÉMENTÉE en local
+> (2026-07-17, non poussée) : moteur de push FHIR natif remplaçant `dataexport`,
+> submodule retiré, config admin regroupée. Fusionne les chantiers 8 (interop),
+> 9 (conteneuriser oedatauploader) et 10 (refonte dataexport v2). **Objectif** :
+> UN SEUL module d'échange de données, simple / efficace / robuste, paramétrable
+> et piloté depuis OpenELIS, avec exposition API des ressources FHIR métier
+> (ServiceRequest, Patient, Organization, DiagnosticReport, Observation,
+> Specimen, Task, Practitioner, Encounter…).
 >
 > Ce document part de l'audit détaillé des 2 composants existants
 > (`oedatauploader` + `dataexport`) et du FHIR métier déjà présent dans OE.
@@ -784,6 +787,137 @@ CI ghcr** (rejoint le chantier 7).
 
 ---
 
+## 6.7 Moteur de push FHIR NATIF + retrait de `dataexport` — IMPLÉMENTÉ (local)
+
+**Contexte / déclencheur.** Audit approfondi (2026-07-17) sur la modernisation
+demandée : réduire les flux/canaux de push, se défaire de `dataexport`
+(submodule Java 11 frozen) si possible. **Fait décisif confirmé par Pascal** :
+le push FHIR de `dataexport` n'était **pas réellement utilisé** — c'est le SC
+(oedatarepo) qui pousse la charge virale vers le serveur FHIR central lu par
+SIGDEP-3. Deux audits READ-ONLY (rôle 2 du SC + usage réel de
+`data_export_task`) ont établi :
+
+- La boucle d'interop ENTRANTE est **déjà complète** : SIGDEP-3 → HAPI central →
+  `[SC] FhirIngestionServiceImpl` → `vl_electronic_request_flat` →
+  `GET /v1/vl-requests` → `[OE] DataPullTask` (mon incrément 4c) →
+  `EorderImportServiceImpl`. Le pull `/statuses` manquant N'EST PAS un trou (la
+  direction des statuts est couverte par le push 4d). **Rien à ajouter côté
+  entrée.**
+- Le moteur de push `dataexport` est **mort/redondant** : `data_export_task`
+  n'est alimentée par AUCUN événement métier (0 insert depuis
+  sample/result/analysis) ; sa source est le **FHIR store LOCAL** (pas la base
+  OE) ; les `Subscription` REST-hook sont **inopérantes en déploiement local**
+  (pas d'IP publique → le HAPI ne peut pas rappeler OE).
+
+**Décision (validée Pascal, étape par étape).** GARDER la capacité multi-cibles
+`fhir_push_target` (Pascal : OE doit pouvoir pousser vers des serveurs FHIR
+configurables — étude, HIE… — indépendamment du serveur d'interop OE↔SIGDEP) ;
+REMPLACER le moteur `dataexport` par un **moteur natif** qui lit le **HAPI FHIR
+local** (données déjà transformées → requêtes rapides, pas de reconstruction à
+la volée) ; RETIRER le submodule + les subscriptions REST-hook ; REGROUPER la
+config admin.
+
+**Étape 1 — Moteur FHIR natif.**
+
+- `FhirPushEngineServiceImpl` (`@Scheduled`, flag
+  `org.openelisglobal.fhir.push.enabled=false` par défaut) : pour chaque cible
+  active dont l'intervalle propre est écoulé, lit le delta du store local
+  `search(resource).lastUpdated((lastPushed, windowEnd])` — **borne basse
+  EXCLUSIVE** (pas de re-push), **borne haute FIGÉE** au début du traitement de
+  la cible (pas de ressource sautée pendant le push) — puis POST en Bundle
+  **transaction PUT** (upsert idempotent `Type/id`) **par lots de 200** (le 1er
+  push rapatrie tout l'historique). Auth **par cible** : `TOKEN`→Bearer /
+  `BASIC`→user:pwd / `NONE`→client nu (`FhirUtil.getFhirClientNoAuth`, pour ne
+  pas fuiter les creds `fhirstore.*` vers un tiers). Verrou mono-tick +
+  vol-timeout + circuit breaker (patron `DataPushTask`) ; cibles ISOLÉES.
+- **Checkpoint sur `fhir_push_target`** (pas de table dédiée — décision Pascal)
+  : migration `add_fhir_push_target_checkpoint.xml` (3 colonnes idempotentes
+  `last_pushed`/`last_attempt`/`last_success`) + hbm + valueholder. Service :
+  `getActiveTargets()` + `markPushAttempt()` + `markPushSuccess(checkpoint)` en
+  **transactions isolées** (le tick `@Scheduled` n'est pas transactionnel). Le
+  checkpoint n'avance qu'après le **dernier lot** réussi ; jamais en arrière.
+
+**Étape 2 — Découpler `fhir_push_target` de `dataexport`.**
+`FhirPushTargetServiceImpl` réécrit : SUPPRIMÉ
+`syncToDataExport`/`upsertDataExportTask`/
+`removeDataExportTask`/`isManaged`/`resolveResourceTypes`/`buildHeaders` + le
+marqueur `MANAGED_HEADER` (garde-fou devenu inutile) + l'import `org.itech.*`.
+L'écran **écrit juste la table** ; le moteur la lit au tick. Activer/désactiver/
+supprimer une cible suffit (plus de projection à réconcilier). Changement
+d'endpoint → `lastPushed=null` (la nouvelle destination reçoit tout
+l'historique). `FhirPushTargetRestController` : supervision lue depuis les
+**colonnes natives** (retiré `DataExportTaskService`). Interface nettoyée.
+
+**Étape 3 — Retrait du submodule `dataexport`.** SUPPRIMÉ :
+`RegisterFhirHooksTask` (subscription + tâche dataexport),
+`FhirExportController` (100 % dataexport), **submodule `dataexport`** (gitlink +
+entrée `.gitmodules` ; autres submodules intacts), 2 deps
+`org.itech:dataexport-*` du `pom.xml` (+ 3 exclusions spotless), 4 lignes
+`persistence.xml` (2 converters + 2 entités), `org.itech` du
+`@ComponentScan`/`@EnableJpaRepositories` de `AppConfig` (vérifié : AUCUN code
+OE ne déclare `package org.itech` — les `org.itech.login.*` sont des PROPRIÉTÉS
+SAML/OAuth, à ne pas toucher), blocs "Build DataExport" des deux Dockerfiles,
+propriétés `fhir.subscriber.*` mortes de `application.properties` (→ remplacées
+par `fhir.push.*`). ALLÉGÉ : `FhirTransformationController` (retiré
+`runExportTasks()` ; la transformation OE→FHIR vers le store local RESTE =
+source du moteur natif), `FhirUtil` (ne `implements` plus `FhirClientFetcher`).
+Migration `drop_data_export_tables.xml` : drop idempotent des 4 tables
+`data_export_*` (ordre FK : 3 enfants avant le parent, `cascadeConstraints`,
+`tableExists`→MARK_RAN, par nom). **Validé par un `mvn clean compile` SANS le
+submodule → BUILD SUCCESS, 0 `org.itech` dans le war.**
+
+**Étape 4 — Config admin regroupée.** `Admin.js` : les 4 `SideNavLink`
+d'interopérabilité dispersés (Sync consolidé, Push FHIR, Passerelle FHIR, Suivi
+sync FHIR) remplacés par UN `SideNavMenu` déroulant « Interopérabilité » (icône
+`DataShare`) ; les 4 `PathRoute #hash` restent inchangées. i18n
+`sidenav.label.admin.interop` (fr/en).
+
+**Résultat vs vision Pascal.** Flux réduits (1 moteur natif remplace
+dataexport + subscription REST-hook) ; capacité multi-cibles préservée et
+modernisée (push FHIR configurable via UI, auth par cible, Java 21/HAPI 6.6.2) ;
+app allégée (1 submodule Java 11 en moins) ; config regroupée sous une entrée
+admin.
+
+**Revue de code (2026-07-17) — 3 bugs corrigés + 1 nettoyage :**
+
+- **H1 (HAUTE, sécurité) — fuite de secret : aucun forçage HTTPS.** Le moteur
+  posait l'`Authorization` (Bearer/Basic) sur l'endpoint de la cible TEL QUEL —
+  un endpoint `http://` aurait fait transiter le secret EN CLAIR (régression vs
+  `ConsolidatedServerClient.enforceHttps` et l'ancien `RegisterFhirHooksTask`).
+  **Corrigé** : `enforceHttps()` ajouté (réécrit `http://`→`https://` avant
+  toute pose de credentials), flag
+  `org.openelisglobal.fhir.push.allowHTTP=false` par défaut.
+- **M1 (MOYENNE, perte de données) — skew d'horloge OE↔HAPI local.** La borne
+  haute `windowEnd` était l'horloge d'OE, mais le store est un HAPI SÉPARÉ
+  (horloge dérivante + indexation asynchrone). Une ressource tamponnée juste
+  avant le tick mais visible après, horloge HAPI en retard, passait sous la
+  borne basse `gt lastPushed` du tick suivant → perte silencieuse. **Corrigé** :
+  `windowEnd = now − LAG_SAFETY_SECONDS (30 s)` (ces ressources sont reprises au
+  tick d'après, jamais perdues).
+- **M2 (MOYENNE) — `markPushAttempt` hors du try.** Une
+  `OptimisticLockException` (édition admin concurrente d'un tick) remontait et
+  sautait les cibles SUIVANTES du tick (isolation par-cible cassée). **Corrigé**
+  : `markPushAttempt` déplacé DANS le try par-cible.
+- **L1 (BASSE) — BASIC sans username** tombait en push muet sans auth (401 en
+  boucle) : **log explicite** ajouté. **Nettoyage** : `org.itech` retiré du
+  `@ComponentScan` de `AppConfig` (résidu bénin, plus aucune classe sous ce
+  package).
+
+**Limites assumées.** (1) Un type FHIR invalide saisi dans une cible fait
+échouer son push (rejeu en boucle) — non bloquant (UI = checkboxes, pas de
+saisie libre). (2) Push FHIR temps-réel abandonné (les subscriptions REST-hook,
+inopérantes en local, sont remplacées par le polling `@Scheduled`) — cohérent
+avec « ne pas surcharger ». (3) Pas encore testé à l'exécution (compilé +
+spotless OK) ; le test réel (push vers un serveur FHIR) reste à faire côté
+Pascal.
+
+**Config prod à vérifier (Pascal).** Si un déploiement CIV existant a
+`org.openelisglobal.fhir.subscriber=...` dans `/run/secrets/common.properties`,
+cette propriété est désormais **ignorée** (plus de code qui la lit) ; le push se
+configure via l'écran `fhir_push_target` + `fhir.push.enabled=true`.
+
+---
+
 ## 7. Fichiers pivots (référence)
 
 - Uploader : `DataSyncServiceImpl.java`, `EorderSyncServiceImpl.java` (1640 l.,
@@ -793,7 +927,15 @@ CI ghcr** (rejoint le chantier 7).
   delta), `DataExportTaskCheckerServiceImpl.java` (scheduler),
   `DataExportAttempt.java` / `DataExportTask.java` (état).
 - OE : `FhirTransformServiceImpl.java` (métier→FHIR, 1668 l.), `FhirUtil.java`
-  (client, `FhirClientFetcher` impl), `FhirPersistanceServiceImpl.java`,
-  `RegisterFhirHooksTask.java` (provisioning + subscriptions),
-  `FhirExportController.java` / `FhirTransformationController.java`
-  (déclencheurs).
+  (client FHIR ; N'implémente PLUS `FhirClientFetcher` depuis §6.7),
+  `FhirPersistanceServiceImpl.java`, `FhirTransformationController.java`
+  (transformation OE→FHIR vers le store local).
+- Push FHIR natif (§6.7, remplace dataexport) : `FhirPushEngineServiceImpl.java`
+  (moteur `@Scheduled`, delta store local → Bundle transaction PUT par lots →
+  cibles), `FhirPushTargetServiceImpl.java` + `FhirPushTarget.java` (cibles +
+  checkpoint `last_pushed`/`last_attempt`/ `last_success`),
+  `FhirPushTargetRestController.java` (CRUD + supervision native), écran React
+  `FhirPushTargets.js`. Migrations `create_fhir_push_target.xml` +
+  `add_fhir_push_target_checkpoint.xml` + `drop_data_export_tables.xml`.
+  **SUPPRIMÉS** avec le submodule : `RegisterFhirHooksTask.java`,
+  `FhirExportController.java`, `dataexport/*`.

@@ -235,6 +235,43 @@ Mapping côté OpenELIS :
 
 ### 5.2 Publication des résultats — `DiagnosticReport` + `Observation`
 
+> **DiagnosticReport par échantillon (corrigé 2026-07-17, amendement A1).** Le
+> `DiagnosticReport` est produit **1 par échantillon (`sampleItem`)**, PAS 1 par
+> analyse ni 1 par bon. Motif : `status`/`issued`/`performer` s'appliquent d'un
+> bloc, or chaque échantillon/discipline est validé et publié séparément (un DR
+> unique par bon resterait bloqué en `partial`). Avant correction, OpenELIS
+> éclatait chaque analyse en son propre triplet → 148 DR pour 15 bons. Désormais
+> :
+>
+> - **1 `DiagnosticReport` par `sampleItem`** : `id` = fhirUuid du sampleItem,
+>   `identifier` = `{oeFhirSystem}/sampleItem_uuid` (**clé d'idempotence**) +
+>   `{oeFhirSystem}/samp_labNo` (2ᵉ identifier, facilite le regroupement du
+>   bon), `category` = la discipline (nom de la section de test + coding local
+>   `{oeFhirSystem}/testSection`), `status` agrégé sur les analyses **de
+>   l'échantillon**, `code` = LOINC générique `11502-2`, `basedOn` = les
+>   ServiceRequest des tests **de cet échantillon**, `specimen` = **le**
+>   Specimen de l'échantillon, `result` = les Observations **de cet
+>   échantillon** (résultats + isolats/antibiogramme bactério).
+> - **Les `ServiceRequest` restent 1 par analyse**, reliés par
+>   `requisition = {oeFhirSystem}/samp_labNo`. **Le regroupement du bon vit dans
+>   `requisition`, pas dans le DR.**
+> - **Migration transparente** : lors d'une (re)transformation, les DR de
+>   schémas obsolètes sont **supprimés dans la même transaction** que l'écriture
+>   des nouveaux DR — l'ancien DR 1-par-analyse (identifier
+>   `/analysisResult_uuid`) ET le DR 1-par-bon (identifier `/samp_labNo`, id =
+>   fhirUuid du sample, schéma intermédiaire).
+> - **Requêtes HIE** :
+>   `GET /fhir/DiagnosticReport?identifier={sys}/sampleItem_uuid|<uuid>` → **1**
+>   DR de cet échantillon ; reconstitution du bon via
+>   `GET /fhir/ServiceRequest?requisition={sys}/samp_labNo|<n°>`.
+>
+> Implémentation :
+> `FhirTransformServiceImpl.transformSampleItemToDiagnosticReport` (+
+> `sampleItemDisciplineCategory`, `aggregateDiagnosticReportStatus`, purge via
+> `queueObsoleteDiagnosticReportsForDeletion`) ;
+> `FhirPersistanceServiceImpl.FhirOperations.deleteResources` (+
+> `addDeletesToTransactionBundle`).
+
 Quand `analysis.status_id = Finalized` (6), OpenELIS publie :
 
 ```http
