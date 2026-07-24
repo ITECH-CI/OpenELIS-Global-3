@@ -321,7 +321,12 @@ public class DBSearchResultsDAOImpl implements SearchResultsDAO {
 
         queryBuilder.append(" ( false or ");
         if (subjectNumber) {
+            // Le code patient est désormais stocké dans patient_identity (type SUBJECT),
+            // mais les patients créés avant cette migration l'ont encore dans
+            // patient.national_id : on vérifie les deux pour ne pas les perdre.
             queryBuilder.append(" CAST(piSN.identity_data AS TEXT) ilike :");
+            queryBuilder.append(SUBJECT_NUMBER_PARAM);
+            queryBuilder.append(" or p.national_id ilike :");
             queryBuilder.append(SUBJECT_NUMBER_PARAM);
             queryBuilder.append(" or");
         }

@@ -84,8 +84,7 @@ public class DigitAccessionValidator implements IAccessionNumberGenerator {
         case LENGTH_FAIL:
             return MessageUtil.getMessage("sample.entry.invalid.accession.number.length");
         case USED_FAIL:
-            return MessageUtil.getMessage("sample.entry.invalid.accession.number.suggestion") + " "
-                    + getNextAvailableAccessionNumber(null, true);
+            return MessageUtil.getMessage("sample.entry.invalid.accession.number.suggestion");
         case FORMAT_FAIL:
             return getInvalidFormatMessage(results);
         default:

@@ -6,6 +6,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -17,8 +18,13 @@ import java.util.stream.Collectors;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.validator.GenericValidator;
 import org.hibernate.StaleObjectStateException;
+import org.hl7.fhir.r4.model.BooleanType;
+import org.hl7.fhir.r4.model.DateTimeType;
+import org.hl7.fhir.r4.model.DecimalType;
 import org.hl7.fhir.r4.model.Enumerations.ResourceType;
+import org.hl7.fhir.r4.model.IntegerType;
 import org.hl7.fhir.r4.model.Reference;
+import org.hl7.fhir.r4.model.StringType;
 import org.hl7.fhir.r4.model.Task;
 import org.openelisglobal.analysis.valueholder.Analysis;
 import org.openelisglobal.common.constants.Constants;
@@ -370,7 +376,9 @@ public class SamplePatientEntryRestController extends BaseSampleEntryController 
         result.put("lastName", person != null ? person.getLastName() : "");
         result.put("gender", patient.getGender());
         result.put("dob", patient.getBirthDateForDisplay());
-        result.put("nationalId", patient.getNationalId());
+        String subjectNumber = patientService.getSubjectNumber(patient);
+        result.put("nationalId",
+                !GenericValidator.isBlankOrNull(subjectNumber) ? subjectNumber : patient.getNationalId());
         result.put("externalId", patient.getExternalId());
 
         if (mostRecentSample != null) {
@@ -816,6 +824,18 @@ public class SamplePatientEntryRestController extends BaseSampleEntryController 
                         form.getSampleOrderItems().setReferringSiteId(organization.getId());
                     }
                 }
+                // Repli : pour la plupart des demandes réelles observées, task.location et
+                // task.restriction sont vides - le site demandeur n'est alors résolvable que
+                // via electronic_order.organization_id (colonne renseignée hors-Liquibase par
+                // l'ancien uploader, cf. DESIGN_INTEROP_MODULE_CIV.md §6.1).
+                if (StringUtils.isBlank(form.getSampleOrderItems().getReferringSiteName())
+                        && StringUtils.isNotBlank(eOrder.getOrganizationId())) {
+                    Organization organization = organizationService.getOrganizationById(eOrder.getOrganizationId());
+                    if (organization != null) {
+                        form.getSampleOrderItems().setReferringSiteName(organization.getOrganizationName());
+                        form.getSampleOrderItems().setReferringSiteId(organization.getId());
+                    }
+                }
                 if (!task.getOwner().isEmpty()) {
                     if (StringUtils.isBlank(form.getSampleOrderItems().getProviderPersonId())) {
                         Reference providerReference = task.getOwner();
@@ -826,6 +846,20 @@ public class SamplePatientEntryRestController extends BaseSampleEntryController 
                         }
                     }
                 }
+                if (eOrder.getPatient() != null) {
+                    form.getSampleOrderItems()
+                            .setPatientSubjectNumber(patientService.getSubjectNumber(eOrder.getPatient()));
+                    // "Site Sujet No." : le code patient (national ID) est la source utilisée
+                    // en pratique (cf. SampleEntryByProjectController de DIGI-UW/OpenELIS-Global-2,
+                    // qui mappe l'identifiant FHIR pat_nationalId sur ce même champ) ; l'identité
+                    // ORG_SITE, plus rarement renseignée, sert de repli.
+                    String siteSubjectNumber = eOrder.getPatient().getNationalId();
+                    if (StringUtils.isBlank(siteSubjectNumber)) {
+                        siteSubjectNumber = patientService.getOrgSite(eOrder.getPatient());
+                    }
+                    form.getSampleOrderItems().setPatientSiteSubjectNumber(siteSubjectNumber);
+                }
+                form.getSampleOrderItems().setElectronicOrderItems(extractElectronicOrderItems(task));
             }
         }
         form.setPatientProperties(new PatientManagementInfo());
@@ -852,6 +886,63 @@ public class SamplePatientEntryRestController extends BaseSampleEntryController 
         if (FormFields.getInstance().useField(FormFields.Field.SampleNature)) {
             form.setSampleNatureList(DisplayListService.getInstance().getList(ListType.SAMPLE_NATURE));
         }
+    }
+
+    /**
+     * Convertit les paramètres d'entrée (Task.input) d'une demande électronique en
+     * items code/label/valeur génériques, pour le pré-remplissage du formulaire de
+     * saisie (aucune interprétation métier ici - c'est le frontend qui associe
+     * chaque item au champ correspondant, cf. DESIGN_INTEROP_MODULE_CIV.md §6.1,
+     * générique par nature). Le code CIEL (coding[0].code) est un identifiant
+     * stable, contrairement au libellé texte (type.text) qui peut varier ; le
+     * frontend matche en priorité par code, avec repli sur le texte.
+     */
+    private List<Map<String, String>> extractElectronicOrderItems(Task task) {
+        List<Map<String, String>> items = new ArrayList<>();
+        for (Task.ParameterComponent parameter : task.getInput()) {
+            String label = parameter.hasType() ? parameter.getType().getText() : null;
+            if (StringUtils.isBlank(label)) {
+                continue;
+            }
+            String value = extractParameterValueAsString(parameter);
+            if (StringUtils.isBlank(value)) {
+                continue;
+            }
+            String code = parameter.hasType() && parameter.getType().hasCoding()
+                    ? parameter.getType().getCodingFirstRep().getCode()
+                    : null;
+            Map<String, String> item = new HashMap<>();
+            item.put("code", code);
+            item.put("label", label);
+            item.put("value", value);
+            items.add(item);
+        }
+        return items;
+    }
+
+    private String extractParameterValueAsString(Task.ParameterComponent parameter) {
+        org.hl7.fhir.r4.model.Type value = parameter.getValue();
+        if (value == null) {
+            return null;
+        }
+        if (value instanceof StringType) {
+            return ((StringType) value).getValue();
+        }
+        if (value instanceof DateTimeType) {
+            Date dateValue = ((DateTimeType) value).getValue();
+            return dateValue != null ? DateUtil.formatDateAsText(dateValue) : null;
+        }
+        if (value instanceof BooleanType) {
+            Boolean boolValue = ((BooleanType) value).getValue();
+            return boolValue != null ? boolValue.toString() : null;
+        }
+        if (value instanceof IntegerType) {
+            return String.valueOf(((IntegerType) value).getValue());
+        }
+        if (value instanceof DecimalType) {
+            return ((DecimalType) value).getValueAsString();
+        }
+        return value.toString();
     }
 
     private void setContactTracingInfo(SamplePatientUpdateData updateData, SampleOrderItem sampleOrder) {

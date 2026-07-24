@@ -25,6 +25,7 @@ import java.text.SimpleDateFormat;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import org.hl7.fhir.r4.model.QuestionnaireResponse;
 import org.openelisglobal.common.formfields.FormFields.Field;
 import org.openelisglobal.common.util.IdValuePair;
@@ -119,6 +120,18 @@ public class SampleOrderItem implements Serializable {
 
     // for display
     private List<IdValuePair> referringSiteList;
+
+    // for display : pré-remplissage du formulaire depuis la demande électronique
+    // (Task.input, cf. StudyElectronicOrdersController) - code patient local et
+    // paire label/valeur brute par item, interprétés côté frontend.
+    private String patientSubjectNumber;
+
+    // for display : identité patient de type ORG_SITE (distincte de SUBJECT
+    // ci-dessus) - alimente le champ "Site Sujet No." du formulaire VL.
+    private String patientSiteSubjectNumber;
+
+    // for display
+    private List<Map<String, String>> electronicOrderItems;
 
     // for display
     private List<IdValuePair> referringSiteDepartmentList;
@@ -401,6 +414,30 @@ public class SampleOrderItem implements Serializable {
 
     public void setReferringSiteList(List<IdValuePair> referringSiteList) {
         this.referringSiteList = referringSiteList;
+    }
+
+    public String getPatientSubjectNumber() {
+        return patientSubjectNumber;
+    }
+
+    public void setPatientSubjectNumber(String patientSubjectNumber) {
+        this.patientSubjectNumber = patientSubjectNumber;
+    }
+
+    public String getPatientSiteSubjectNumber() {
+        return patientSiteSubjectNumber;
+    }
+
+    public void setPatientSiteSubjectNumber(String patientSiteSubjectNumber) {
+        this.patientSiteSubjectNumber = patientSiteSubjectNumber;
+    }
+
+    public List<Map<String, String>> getElectronicOrderItems() {
+        return electronicOrderItems;
+    }
+
+    public void setElectronicOrderItems(List<Map<String, String>> electronicOrderItems) {
+        this.electronicOrderItems = electronicOrderItems;
     }
 
     public List<IdValuePair> getReferringSiteDepartmentList() {

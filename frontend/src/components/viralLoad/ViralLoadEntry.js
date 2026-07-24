@@ -247,6 +247,16 @@ const ViralLoadEntry = ({
   const intl = useIntl();
   const location = useLocation();
   const componentMounted = useRef(false);
+  // Items bruts de la demande électronique en attente d'un rapprochement
+  // dictionnaire (cf. applyElectronicOrderPrefillFromDictionaries) : les listes
+  // YES_NO/HIV_TYPES/ARV_REGIME/ARV_REASON_FOR_VL_DEMAND arrivent via des appels
+  // /rest/dictionary/category/* séparés et asynchrones, indépendants de
+  // /rest/SamplePatientEntry (qui fait bien plus de travail côté backend -
+  // parsing FHIR, résolution site/prestataire - et répond donc typiquement
+  // APRÈS les dictionnaires). État (pas ref) : sa mise à jour doit re-déclencher
+  // l'effet de rapprochement même si les dictionnaires étaient déjà tous prêts
+  // au moment où cette réponse arrive - une ref seule ne l'aurait pas fait.
+  const [pendingEOrderItems, setPendingEOrderItems] = useState(null);
   const { configurationProperties } = useContext(ConfigurationContext);
   const { notificationVisible, addNotification, setNotificationVisible } =
     useContext(NotificationContext);
@@ -299,7 +309,21 @@ const ViralLoadEntry = ({
   useEffect(() => {
     componentMounted.current = true;
 
-    getFromOpenElisServer("/rest/SamplePatientEntry", (data) => {
+    // Pré-remplissage depuis une demande électronique (Étude > Demande
+    // electronique > Editer, cf. VleOrder.js) : l'URL porte l'id externe de la
+    // demande (?ID=...) et éventuellement un numéro de labo déjà saisi. On le
+    // transmet à /rest/SamplePatientEntry qui, côté backend, enrichit déjà la
+    // réponse (site référent, prestataire) et - pour ce besoin - la liste brute
+    // des items de la demande (sampleOrderItems.electronicOrderItems) et le
+    // code patient local (sampleOrderItems.patientSubjectNumber).
+    const searchParams = new URLSearchParams(location.search);
+    const eOrderExternalId = searchParams.get("ID");
+    const eOrderLabNumber = searchParams.get("labNumber");
+    const samplePatientEntryUrl = eOrderExternalId
+      ? "/rest/SamplePatientEntry?ID=" + encodeURIComponent(eOrderExternalId)
+      : "/rest/SamplePatientEntry";
+
+    getFromOpenElisServer(samplePatientEntryUrl, (data) => {
       if (!componentMounted.current) return;
       if (data) {
         if (data.formLists?.GENDERS) setGenders(data.formLists.GENDERS);
@@ -320,6 +344,16 @@ const ViralLoadEntry = ({
             REFERRING_SITES: data.referralOrganizations,
           }));
         }
+        if (eOrderExternalId && data.sampleOrderItems?.externalOrderNumber) {
+          applyElectronicOrderPrefillImmediate(
+            data,
+            eOrderExternalId,
+            eOrderLabNumber,
+          );
+          setPendingEOrderItems(
+            data.sampleOrderItems.electronicOrderItems || [],
+          );
+        }
       }
       setLoading(false);
     });
@@ -332,7 +366,15 @@ const ViralLoadEntry = ({
     getFromOpenElisServer("/rest/dictionary/category/HIV%20Status", (data) => {
       if (!componentMounted.current) return;
       if (Array.isArray(data))
-        setDictionaryLists((prev) => ({ ...prev, HIV_STATUSES: data }));
+        // Le dictionnaire "HIV Status" (VIH1/VIH2/VIH1+2) alimente à la fois
+        // HIV_STATUSES (nom historique) et HIV_TYPES : c'est ce dernier que lit
+        // le select "Type VIH" du formulaire VL (fldHivStatus("HIV_TYPES", ...)),
+        // qui restait vide faute d'un fetch dédié.
+        setDictionaryLists((prev) => ({
+          ...prev,
+          HIV_STATUSES: data,
+          HIV_TYPES: data,
+        }));
     });
     getFromOpenElisServer(
       "/rest/dictionary/category/ARV%20Treatment%20Regime",
@@ -465,6 +507,38 @@ const ViralLoadEntry = ({
     };
   }, []);
 
+  // ─── Pré-remplissage (suite) : champs dépendant des dictionnaires ────────────
+  // Les items de la demande électronique sont reçus dès /rest/SamplePatientEntry
+  // (cf. applyElectronicOrderPrefillImmediate), mais leur rapprochement avec les
+  // dictionnaires YES_NO/HIV_TYPES/ARV_REGIME/ARV_REASON_FOR_VL_DEMAND doit
+  // attendre que ces listes (fetches /rest/dictionary/category/* séparés,
+  // ci-dessus) soient effectivement chargées en état. Dépend à la fois de
+  // dictionaryLists ET de pendingEOrderItems (état, pas ref) car l'ordre
+  // d'arrivée des réponses réseau n'est pas garanti : si les dictionnaires sont
+  // TOUS déjà prêts au moment où /rest/SamplePatientEntry répond (le cas le
+  // plus courant, cette requête faisant plus de travail backend que les
+  // dictionnaires), il n'y a plus de mise à jour de dictionaryLists à venir
+  // pour re-déclencher l'effet - seul le setPendingEOrderItems le fait alors.
+  // Ne s'exécute qu'une fois (pendingEOrderItems vidé après application).
+  useEffect(() => {
+    if (!pendingEOrderItems) return;
+    const requiredLists = [
+      "YES_NO",
+      "HIV_TYPES",
+      "ARV_REGIME",
+      "ARV_REASON_FOR_VL_DEMAND",
+    ];
+    const ready = requiredLists.every(
+      (key) =>
+        Array.isArray(dictionaryLists[key]) && dictionaryLists[key].length > 0,
+    );
+    if (!ready) return;
+    const items = pendingEOrderItems;
+    setPendingEOrderItems(null);
+    applyElectronicOrderPrefillFromDictionaries(items, dictionaryLists);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dictionaryLists, pendingEOrderItems]);
+
   // ─── Pré-remplissage depuis la page Modifier (prop ou router state) ──────────
   useEffect(() => {
     const pd = initialPatientData ?? location?.state?.patientData;
@@ -547,6 +621,407 @@ const ViralLoadEntry = ({
   // ─── Helpers ─────────────────────────────────────────────────────────────────
   const set = (field, value) =>
     setForm((prev) => ({ ...prev, [field]: value }));
+
+  // ─── Pré-remplissage depuis une demande électronique (Charge Virale) ────────
+  // Chaque item de la demande (Task.input[]) porte un code CIEL stable
+  // (coding[0].code) ET un libellé texte français (type.text). Le code est
+  // identique à celui utilisé par SampleEntryByProjectController côté
+  // DIGI-UW/OpenELIS-Global-2 (vérifié par lecture de leur source + recoupement
+  // avec les items réels observés dans notre base) : on matche donc en priorité
+  // par code, avec repli sur le texte pour les items sans code exploitable.
+  // Les dictionnaires OE (valeurs/libellés) restent, eux, propres à notre fork
+  // (SIGDEP ne transmet aucun id de dictionnaire OE), d'où le rapprochement par
+  // texte pour les champs de type Select (cf. findDictionaryId/findYesNoId). En
+  // cas de doute un champ reste vide plutôt que de risquer une valeur clinique
+  // erronée saisie à la place du biologiste.
+  const EORDER_CODES = {
+    hivStatus: "CI0030001AAAAAAAAAAAAAAAAAAAAAAAAAAA",
+    arvTreatmentRegimeLine: "166073AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+    vlSuckle: "5632AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+    sampleType: "CI0050007AAAAAAAAAAAAAAAAAAAAAAAAAAA",
+    vlPregnancy: "5272AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+    arvRegimen: "162240AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+    vlBenefit: "CI0050004AAAAAAAAAAAAAAAAAAAAAAAAAAA",
+    arvTreatmentInitDate: "159599AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+    vlReasonForRequest: "CI0050002AAAAAAAAAAAAAAAAAAAAAAAAAAA",
+    currentARVTreatment: "160533AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+    vlOtherReasonForRequest: "CI0050001AAAAAAAAAAAAAAAAAAAAAAAAAAA",
+    priorVLDate: "163281AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+    priorVLValue: "CI0050030AAAAAAAAAAAAAAAAAAAAAAAAAAA",
+    priorVLLab: "CI0050020AAAAAAAAAAAAAAAAAAAAAAAAAAA",
+    demandcd4Date: "160103AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+    demandcd4Count: "5497AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+    demandcd4Percent: "730AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+    initcd4Date: "159376AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+    initcd4Count: "164429AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+    initcd4Percent: "164792AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+  };
+
+  const normalizeText = (s) =>
+    (s || "")
+      .toString()
+      .normalize("NFD")
+      .replace(/[̀-ͯ]/g, "")
+      .replace(/[^a-z0-9]/gi, "")
+      .toLowerCase();
+
+  const findItemByCodeOrLabel = (items, code, labelMatches) => {
+    if (code) {
+      const byCode = items.find((it) => it.code === code);
+      if (byCode) return byCode;
+    }
+    if (labelMatches && labelMatches.length) {
+      return items.find((it) =>
+        labelMatches.some((m) =>
+          normalizeText(it.label).includes(normalizeText(m)),
+        ),
+      );
+    }
+    return undefined;
+  };
+
+  const findDictionaryId = (list, candidateTexts) => {
+    const candidates = (candidateTexts || [])
+      .map(normalizeText)
+      .filter(Boolean);
+    const found = (list || []).find((d) => {
+      const dv = normalizeText(d.value);
+      if (!dv) return false;
+      return candidates.some(
+        (c) => dv === c || dv.includes(c) || c.includes(dv),
+      );
+    });
+    return found ? found.id : "";
+  };
+
+  // Le dictionnaire "Yes No" a des libellés localisés du type "Demographic
+  // Response Yes (in Yes or No)" / "... No (in Yes or No)" : les DEUX entrées
+  // contiennent "yes" ET "no" en substring à cause du suffixe partagé
+  // "(in Yes or No)" - un rapprochement texte sur d.value matcherait donc
+  // presque toujours la première entrée trouvée, quelle que soit la réponse.
+  // On matche sur d.displayKey ("answer.yes"/"answer.no"), un identifiant
+  // stable et sans ambiguïté.
+  const findYesNoId = (list, text) => {
+    const norm = normalizeText(text);
+    let target = null;
+    if (["oui", "yes", "true", "1"].includes(norm)) {
+      target = "yes";
+    } else if (["non", "no", "false", "0"].includes(norm)) {
+      target = "no";
+    }
+    if (!target) return "";
+    const found = (list || []).find((d) => {
+      const key = (d.displayKey || "").toLowerCase();
+      return key === target || key.endsWith("." + target);
+    });
+    return found ? found.id : "";
+  };
+
+  // Partie 1 (immédiate, sans dépendance dictionnaire) : liaison de la demande
+  // (electronicOrder.externalId - condition sine qua non pour qu'Accessioner
+  // pose sample.clinical_order_id à la saisie), sélection de l'étude VL, champs
+  // texte/date directs, et recherche patient par code sujet local.
+  const applyElectronicOrderPrefillImmediate = (
+    data,
+    eOrderExternalId,
+    eOrderLabNumber,
+  ) => {
+    const items = data.sampleOrderItems?.electronicOrderItems || [];
+    const findItem = (code, labelMatches) =>
+      findItemByCodeOrLabel(items, code, labelMatches);
+
+    setForm((prev) => {
+      const next = {
+        ...prev,
+        project: "VL_Id",
+        labNo: eOrderLabNumber || prev.labNo,
+        electronicOrder: { externalId: eOrderExternalId },
+        observations: { ...prev.observations, projectFormName: "VL_Id" },
+        projectData: { ...prev.projectData, viralLoadTest: true },
+      };
+
+      // Site demandeur (résolu côté backend via task.location, ou à défaut
+      // via electronic_order.organization_id - cf. setupForm). ARVcenterCode
+      // porte l'id local de l'Organization, ce qui permet ensuite au champ de
+      // se comporter comme s'il avait été choisi dans l'autocomplete.
+      const referringSiteName = data.sampleOrderItems?.referringSiteName;
+      const referringSiteId = data.sampleOrderItems?.referringSiteId;
+      if (referringSiteName) {
+        next.projectData = {
+          ...next.projectData,
+          ARVcenterName: referringSiteName,
+          ARVcenterCode: referringSiteId || "",
+        };
+      }
+
+      const arvInitDateItem = findItem(EORDER_CODES.arvTreatmentInitDate, [
+        "DEBUT DES ANTIRETROVIRAUX",
+        "ARV start date",
+      ]);
+      if (arvInitDateItem) {
+        next.observations.arvTreatmentInitDate = arvInitDateItem.value;
+      }
+
+      const regimeItem = findItem(EORDER_CODES.arvRegimen, ["Regime ARV"]);
+      if (regimeItem) {
+        const parts = regimeItem.value.split(" ").filter(Boolean);
+        const list = ["", "", "", ""];
+        parts.forEach((p, i) => {
+          if (i < 4) list[i] = p;
+        });
+        next.observations.currentARVTreatmentINNsList = list;
+      }
+
+      // Type de prélèvement -> cases à cocher "Échantillons" (mapping vérifié
+      // sur SampleEntryByProjectController de DIGI-UW/OpenELIS-Global-2 :
+      // Plasma = tube EDTA, DBS/PSC = leurs propres cases).
+      const sampleTypeItem = findItem(EORDER_CODES.sampleType, [
+        "Type de prelevement",
+      ]);
+      if (sampleTypeItem) {
+        const norm = normalizeText(sampleTypeItem.value);
+        if (norm === "plasma") {
+          next.projectData = { ...next.projectData, edtaTubeTaken: true };
+        } else if (norm === "dbs") {
+          next.projectData = { ...next.projectData, dbsvlTaken: true };
+        } else if (norm === "psc") {
+          next.projectData = { ...next.projectData, pscvlTaken: true };
+        }
+      }
+
+      // CV antérieure : valeur / date / laboratoire (le Oui/Non "CV antérieure ?"
+      // lui-même - vlBenefit - est un Select dictionnaire, traité en partie 2).
+      const priorVLValueItem = findItem(EORDER_CODES.priorVLValue, [
+        "derniere valeur de la charge virale",
+      ]);
+      if (priorVLValueItem) {
+        next.observations.priorVLValue = priorVLValueItem.value;
+      }
+      const priorVLDateItem = findItem(EORDER_CODES.priorVLDate, [
+        "charge virale du VIH rapport",
+      ]);
+      if (priorVLDateItem) {
+        next.observations.priorVLDate = priorVLDateItem.value;
+      }
+      const priorVLLabItem = findItem(EORDER_CODES.priorVLLab, [
+        "dernier laboratoire de charge virale",
+      ]);
+      if (priorVLLabItem) {
+        next.observations.priorVLLab = priorVLLabItem.value;
+      }
+
+      // CD4 à l'initiation du traitement / à la demande de charge virale : deux
+      // cohortes distinctes (codes CIEL différents), cf. SampleEntryByProjectController.
+      const initCd4CountItem = findItem(EORDER_CODES.initcd4Count, [
+        "total de tests realises",
+      ]);
+      if (initCd4CountItem) {
+        next.observations.initcd4Count = initCd4CountItem.value.replace(
+          ".",
+          ",",
+        );
+      }
+      const initCd4PercentItem = findItem(EORDER_CODES.initcd4Percent, [
+        "cd4 m60",
+      ]);
+      if (initCd4PercentItem) {
+        next.observations.initcd4Percent = initCd4PercentItem.value.replace(
+          ".",
+          ",",
+        );
+      }
+      const initCd4DateItem = findItem(EORDER_CODES.initcd4Date, [
+        "date of reported cd4",
+      ]);
+      if (initCd4DateItem) {
+        next.observations.initcd4Date = initCd4DateItem.value;
+      }
+      const demandCd4CountItem = findItem(EORDER_CODES.demandcd4Count, [
+        "numeration des lymphocytes cd4",
+      ]);
+      if (demandCd4CountItem) {
+        next.observations.demandcd4Count = demandCd4CountItem.value.replace(
+          ".",
+          ",",
+        );
+      }
+      const demandCd4PercentItem = findItem(EORDER_CODES.demandcd4Percent, [
+        "cd4%",
+      ]);
+      if (demandCd4PercentItem) {
+        next.observations.demandcd4Percent = demandCd4PercentItem.value.replace(
+          ".",
+          ",",
+        );
+      }
+      const demandCd4DateItem = findItem(EORDER_CODES.demandcd4Date, [
+        "last cd4 count date",
+      ]);
+      if (demandCd4DateItem) {
+        next.observations.demandcd4Date = demandCd4DateItem.value;
+      }
+
+      const otherReasonItem = findItem(EORDER_CODES.vlOtherReasonForRequest, [
+        "autre motif",
+      ]);
+      if (otherReasonItem) {
+        next.observations.vlOtherReasonForRequest = otherReasonItem.value;
+      }
+
+      return next;
+    });
+
+    // Sujet No. (identité SUBJECT) et Site Sujet No. (identité ORG_SITE) sont
+    // deux identités patient DISTINCTES (cf. PatientServiceImpl.getSubjectNumber
+    // vs getOrgSite) - ne pas les confondre, l'une ou l'autre peut être absente.
+    const subjectNumber = data.sampleOrderItems?.patientSubjectNumber;
+    const siteSubjectNumber = data.sampleOrderItems?.patientSiteSubjectNumber;
+    if (subjectNumber) {
+      setVlSearchSubjectNumber(subjectNumber);
+      set("subjectNumber", subjectNumber);
+    }
+    if (siteSubjectNumber) {
+      setVlSearchSiteSubjectNumber(siteSubjectNumber);
+      set("siteSubjectNumber", siteSubjectNumber);
+    }
+    if (subjectNumber || siteSubjectNumber) {
+      // Même préférence que la recherche manuelle (searchVLPatient) : le
+      // numéro site, plus spécifique, prime sur le numéro national.
+      const searchParam = siteSubjectNumber
+        ? "subjectNumber=" + encodeURIComponent(siteSubjectNumber)
+        : "nationalID=" + encodeURIComponent(subjectNumber);
+      setPatientLookupStatus("searching");
+      getFromOpenElisServer(
+        "/rest/patient-search-results?" +
+          searchParam +
+          "&suppressExternalSearch=true",
+        (res) => {
+          if (!componentMounted.current) return;
+          const results =
+            res && res.patientSearchResults ? res.patientSearchResults : [];
+          if (results.length > 0) {
+            const p = results[0];
+            setPatientLookupStatus("found");
+            if (p.birthdate) set("birthDateForDisplay", p.dob);
+            if (p.gender) set("gender", p.gender);
+          } else {
+            setPatientLookupStatus("notfound");
+          }
+          setVlPatientSearchDone(true);
+        },
+      );
+    }
+  };
+
+  // Partie 2 (différée jusqu'à ce que les dictionnaires soient chargés) :
+  // champs Select dont la valeur est un id de dictionnaire OE, rapproché du
+  // libellé texte reçu par correspondance best-effort (cf. commentaire plus
+  // haut sur normalizeText/findDictionaryId).
+  const applyElectronicOrderPrefillFromDictionaries = (items, dictLists) => {
+    const findItem = (code, labelMatches) =>
+      findItemByCodeOrLabel(items, code, labelMatches);
+
+    setForm((prev) => {
+      const next = {
+        ...prev,
+        observations: { ...prev.observations },
+      };
+
+      const hivItem = findItem(EORDER_CODES.hivStatus, [
+        "Type de VIH",
+        "HIV Type",
+      ]);
+      if (hivItem) {
+        const id = findDictionaryId(dictLists.HIV_TYPES, [hivItem.value]);
+        if (id) next.observations.hivStatus = id;
+      }
+
+      const pregnancyItem = findItem(EORDER_CODES.vlPregnancy, [
+        "Grossesse en cours",
+        "pregnan",
+      ]);
+      if (pregnancyItem) {
+        const id = findYesNoId(dictLists.YES_NO, pregnancyItem.value);
+        if (id) next.observations.vlPregnancy = id;
+      }
+
+      const suckleItem = findItem(EORDER_CODES.vlSuckle, [
+        "BREASTFEEDING",
+        "Allaitement",
+      ]);
+      if (suckleItem) {
+        const id = findYesNoId(dictLists.YES_NO, suckleItem.value);
+        if (id) next.observations.vlSuckle = id;
+      }
+
+      const onArvItem = findItem(EORDER_CODES.currentARVTreatment, [
+        "antiretroviral treatment",
+        "traitement antiretroviral",
+      ]);
+      if (onArvItem) {
+        const id = findYesNoId(dictLists.YES_NO, onArvItem.value);
+        if (id) next.observations.currentARVTreatment = id;
+      }
+
+      const lineItem = findItem(EORDER_CODES.arvTreatmentRegimeLine, [
+        "Ligne de traitement ART",
+        "treatment line",
+      ]);
+      if (lineItem) {
+        const norm = normalizeText(lineItem.value);
+        const lineIndex = norm.startsWith("premi")
+          ? 0
+          : norm.startsWith("deuxi")
+            ? 1
+            : norm.startsWith("troisi")
+              ? 2
+              : -1;
+        const sortedRegime = [...(dictLists.ARV_REGIME || [])].sort(
+          (a, b) => Number(a.id) - Number(b.id),
+        );
+        if (lineIndex >= 0 && sortedRegime[lineIndex]) {
+          next.observations.arvTreatmentRegime = sortedRegime[lineIndex].id;
+        }
+      }
+
+      const reasonItem = findItem(EORDER_CODES.vlReasonForRequest, [
+        "Motif de r",
+        "reason for viral load",
+        "Motif de la demande",
+      ]);
+      if (reasonItem) {
+        const norm = normalizeText(reasonItem.value);
+        let englishLabel = null;
+        if (norm.includes("controle") || norm.includes("suivi")) {
+          englishLabel = "VL under ARV control";
+        } else if (norm.includes("virologique")) {
+          englishLabel = "Virological Failure";
+        } else if (norm.includes("clinique")) {
+          englishLabel = "Clinical Failure";
+        } else if (norm.includes("immunologique")) {
+          englishLabel = "Immunological Failure";
+        }
+        if (englishLabel) {
+          const id = findDictionaryId(dictLists.ARV_REASON_FOR_VL_DEMAND, [
+            englishLabel,
+          ]);
+          if (id) next.observations.vlReasonForRequest = id;
+        }
+      }
+
+      const benefitItem = findItem(EORDER_CODES.vlBenefit, [
+        "beneficie",
+        "prior VL",
+        "CV anterieure",
+      ]);
+      if (benefitItem) {
+        const id = findYesNoId(dictLists.YES_NO, benefitItem.value);
+        if (id) next.observations.vlBenefit = id;
+      }
+
+      return next;
+    });
+  };
   const setPD = (field, value) =>
     setForm((prev) => ({
       ...prev,
@@ -789,6 +1264,15 @@ const ViralLoadEntry = ({
       if (!val) errors.push(`${label} est obligatoire.`);
     };
 
+    // Grossesse/Allaitement obligatoires dès que le sexe du patient est
+    // féminin (non pertinent pour EID/HPV, cf. fldPregnancyAndSuckle).
+    const reqPregnancySuckleIfFemale = () => {
+      if (isFemale) {
+        req(form.observations.vlPregnancy, "Grossesse en cours");
+        req(form.observations.vlSuckle, "Allaitement en cours");
+      }
+    };
+
     // Champs communs à toutes les études
     req(form.receivedDateForDisplay, "Date de Réception");
     req(form.interviewDate, "Date de Prélèvements");
@@ -823,6 +1307,7 @@ const ViralLoadEntry = ({
         req(form.projectData.ARVcenterCode, "Code du Centre");
         req(form.gender, "Sexe");
         req(form.birthDateForDisplay, "Date de Naissance");
+        reqPregnancySuckleIfFemale();
         if (!form.subjectNumber && !form.siteSubjectNumber)
           errors.push("Numéro Sujet ou Numéro Site Sujet est requis.");
         break;
@@ -830,6 +1315,7 @@ const ViralLoadEntry = ({
         req(form.labNo, "N° Lab");
         req(form.gender, "Sexe");
         req(form.birthDateForDisplay, "Date de Naissance");
+        reqPregnancySuckleIfFemale();
         break;
       case "EID_Id":
         req(form.gender, "Sexe");
@@ -840,18 +1326,21 @@ const ViralLoadEntry = ({
         req(form.projectData.INDsiteName, "Nom du Centre");
         req(form.gender, "Sexe");
         req(form.birthDateForDisplay, "Date de Naissance");
+        reqPregnancySuckleIfFemale();
         if (!form.subjectNumber && !form.siteSubjectNumber)
           errors.push("Numéro Sujet ou Numéro Site Sujet est requis.");
         break;
       case "Special_Request_Id":
         req(form.labNo, "N° Lab");
         req(form.gender, "Sexe");
+        reqPregnancySuckleIfFemale();
         if (!form.subjectNumber && !form.siteSubjectNumber)
           errors.push("Numéro Sujet ou Numéro Site Sujet est requis.");
         break;
       case "VL_Id":
         req(form.gender, "Sexe");
         req(form.birthDateForDisplay, "Date de Naissance");
+        reqPregnancySuckleIfFemale();
         if (serologyControlEnabled && serologyStatus === "notfound") {
           if (!form.projectData.serologyHIVTest) {
             errors.push(
@@ -872,6 +1361,7 @@ const ViralLoadEntry = ({
         req(form.siteSubjectNumber, "Numéro Recency");
         req(form.gender, "Sexe");
         req(form.birthDateForDisplay, "Date de Naissance");
+        reqPregnancySuckleIfFemale();
         break;
       case "HPV_Id":
         req(form.projectData.ARVcenterCode, "Code du Centre");
@@ -1097,6 +1587,71 @@ const ViralLoadEntry = ({
       </Select>
     </Row>
   );
+  // Champs Grossesse/Allaitement affichés (et obligatoires) dès que le sexe
+  // du patient est féminin. Partagés entre les études qui gèrent un patient
+  // adulte (pas pertinent pour EID, dont le sexe est celui de l'enfant, ni
+  // pour HPV, qui n'a pas de champ sexe).
+  const fldPregnancyAndSuckle = (idPrefix) =>
+    isFemale && (
+      <>
+        <Row
+          required
+          label={intl.formatMessage({
+            id: "sample.project.vlPregnancy",
+            defaultMessage: "Grossesse en cours",
+          })}
+        >
+          <Select
+            id={`${idPrefix}_pregnancy`}
+            hideLabel
+            labelText=""
+            value={form.observations.vlPregnancy}
+            onChange={(e) => setObs("vlPregnancy", e.target.value)}
+            style={{ maxWidth: "200px" }}
+          >
+            <SelectItem value="" text={placeholder} />
+            {(dictionaryLists.YES_NO || []).map((d) => (
+              <SelectItem
+                key={d.id}
+                value={d.id}
+                text={intl.formatMessage({
+                  id: d.displayKey,
+                  defaultMessage: d.value,
+                })}
+              />
+            ))}
+          </Select>
+        </Row>
+        <Row
+          required
+          label={intl.formatMessage({
+            id: "sample.project.vlSuckle",
+            defaultMessage: "Allaitement en cours",
+          })}
+        >
+          <Select
+            id={`${idPrefix}_suckle`}
+            hideLabel
+            labelText=""
+            value={form.observations.vlSuckle}
+            onChange={(e) => setObs("vlSuckle", e.target.value)}
+            style={{ maxWidth: "200px" }}
+          >
+            <SelectItem value="" text={placeholder} />
+            {(dictionaryLists.YES_NO || []).map((d) => (
+              <SelectItem
+                key={d.id}
+                value={d.id}
+                text={intl.formatMessage({
+                  id: d.displayKey,
+                  defaultMessage: d.value,
+                })}
+              />
+            ))}
+          </Select>
+        </Row>
+      </>
+    );
   const fldBirthDate = () => (
     <Row
       required
@@ -1352,7 +1907,6 @@ const ViralLoadEntry = ({
               style={{ maxWidth: "100px" }}
               value={displayDigits}
               invalid={!!labNoError}
-              invalidText={labNoError}
               onChange={(e) => {
                 const digits = e.target.value.replace(/\D/g, "").slice(0, 5);
                 setLabNoError("");
@@ -1397,6 +1951,22 @@ const ViralLoadEntry = ({
                   pointerEvents: "none",
                 }}
               />
+            )}
+            {labNoError && (
+              <span
+                style={{
+                  position: "absolute",
+                  left: "calc(100% + 6px)",
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  fontSize: "12px",
+                  color: "#da1e28",
+                  fontWeight: "600",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {labNoError}
+              </span>
             )}
           </div>
         </div>
@@ -1845,6 +2415,7 @@ const ViralLoadEntry = ({
       {fldSiteSubjectNumber(false, true)}
       {fldLabNo(LAB_PREFIXES.InitialARV_Id)}
       {fldGender()}
+      {fldPregnancyAndSuckle("iarv")}
       {fldBirthDate()}
       {fldAge(false, false)}
       {fldDryTubeSpecimens()}
@@ -1874,6 +2445,7 @@ const ViralLoadEntry = ({
       {fldSiteSubjectNumber(false, true)}
       {fldLabNo(LAB_PREFIXES.FollowUpARV_Id)}
       {fldGender()}
+      {fldPregnancyAndSuckle("farv")}
       {fldBirthDate()}
       {fldAge(false, false)}
       {fldHivStatus("HIV_STATUSES")}
@@ -1901,6 +2473,7 @@ const ViralLoadEntry = ({
       {fldBirthDate()}
       {fldAge(true, false)}
       {fldGender()}
+      {fldPregnancyAndSuckle("rtn")}
       {fldLabNo(LAB_PREFIXES.RTN_Id)}
       <div style={S.subHeader}>
         <FormattedMessage
@@ -2504,6 +3077,7 @@ const ViralLoadEntry = ({
       {fldSiteSubjectNumber(false, true)}
       {fldLabNo(LAB_PREFIXES.Indeterminate_Id)}
       {fldGender()}
+      {fldPregnancyAndSuckle("ind")}
       {fldBirthDate()}
       {fldAge()}
       <div style={S.subHeader}>
@@ -2692,6 +3266,7 @@ const ViralLoadEntry = ({
       {fldBirthDate()}
       {fldAge()}
       {fldGender()}
+      {fldPregnancyAndSuckle("sr")}
       {fldLabNo(LAB_PREFIXES.Special_Request_Id)}
       <Row
         label={intl.formatMessage({
@@ -3015,69 +3590,12 @@ const ViralLoadEntry = ({
           {fldReceivedDate()}
           {fldReceivedTime()}
           {fldSubjectNumber(7)}
-          {fldSiteSubjectNumber(false, false)}
+          {fldSiteSubjectNumber(false, true)}
           {fldLabNo(LAB_PREFIXES.VL_Id)}
           {fldBirthDate()}
           {fldAge(true, false)}
           {fldGender()}
-          {isFemale && (
-            <>
-              <Row
-                label={intl.formatMessage({
-                  id: "sample.project.vlPregnancy",
-                  defaultMessage: "Grossesse en cours",
-                })}
-              >
-                <Select
-                  id="vl_pregnancy"
-                  hideLabel
-                  labelText=""
-                  value={form.observations.vlPregnancy}
-                  onChange={(e) => setObs("vlPregnancy", e.target.value)}
-                  style={{ maxWidth: "200px" }}
-                >
-                  <SelectItem value="" text={placeholder} />
-                  {(dictionaryLists.YES_NO || []).map((d) => (
-                    <SelectItem
-                      key={d.id}
-                      value={d.id}
-                      text={intl.formatMessage({
-                        id: d.displayKey,
-                        defaultMessage: d.value,
-                      })}
-                    />
-                  ))}
-                </Select>
-              </Row>
-              <Row
-                label={intl.formatMessage({
-                  id: "sample.project.vlSuckle",
-                  defaultMessage: "Allaitement en cours",
-                })}
-              >
-                <Select
-                  id="vl_suckle"
-                  hideLabel
-                  labelText=""
-                  value={form.observations.vlSuckle}
-                  onChange={(e) => setObs("vlSuckle", e.target.value)}
-                  style={{ maxWidth: "200px" }}
-                >
-                  <SelectItem value="" text={placeholder} />
-                  {(dictionaryLists.YES_NO || []).map((d) => (
-                    <SelectItem
-                      key={d.id}
-                      value={d.id}
-                      text={intl.formatMessage({
-                        id: d.displayKey,
-                        defaultMessage: d.value,
-                      })}
-                    />
-                  ))}
-                </Select>
-              </Row>
-            </>
-          )}
+          {fldPregnancyAndSuckle("vl")}
           {serologyControlEnabled ? (
             <Row
               required
@@ -3734,50 +4252,7 @@ const ViralLoadEntry = ({
       {fldBirthDate()}
       {fldAge()}
       {fldGender()}
-      {isFemale && (
-        <>
-          <Row
-            label={intl.formatMessage({
-              id: "sample.project.vlPregnancy",
-              defaultMessage: "Grossesse en cours",
-            })}
-          >
-            <Select
-              id="rt_pregnancy"
-              hideLabel
-              labelText=""
-              value={form.observations.vlPregnancy}
-              onChange={(e) => setObs("vlPregnancy", e.target.value)}
-              style={{ maxWidth: "200px" }}
-            >
-              <SelectItem value="" text={placeholder} />
-              {(dictionaryLists.YES_NO || []).map((d) => (
-                <SelectItem key={d.id} value={d.id} text={d.dictEntry} />
-              ))}
-            </Select>
-          </Row>
-          <Row
-            label={intl.formatMessage({
-              id: "sample.project.vlSuckle",
-              defaultMessage: "Allaitement en cours",
-            })}
-          >
-            <Select
-              id="rt_suckle"
-              hideLabel
-              labelText=""
-              value={form.observations.vlSuckle}
-              onChange={(e) => setObs("vlSuckle", e.target.value)}
-              style={{ maxWidth: "200px" }}
-            >
-              <SelectItem value="" text={placeholder} />
-              {(dictionaryLists.YES_NO || []).map((d) => (
-                <SelectItem key={d.id} value={d.id} text={d.dictEntry} />
-              ))}
-            </Select>
-          </Row>
-        </>
-      )}
+      {fldPregnancyAndSuckle("rt")}
       <div style={S.subHeader}>
         <FormattedMessage
           id="sample.entry.project.title.sample"

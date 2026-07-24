@@ -46,11 +46,16 @@
                 <param name="useNamed">true</param>
             </type>
         </property>
-        <property name="rejectReasonId" type="java.lang.String">
-            <column name="reject_reason_id" length="10" not-null="false" />
+        <!-- reject_reason_id est numeric en base (comme status_id/organization_id
+            ci-dessus), pas varchar : sans LIMSStringNumberUserType, Hibernate envoie
+            une chaîne brute -> "column is of type numeric but expression is of type
+            character varying" au premier rejet d'une demande électronique. -->
+        <property name="rejectReasonId"
+            type="org.openelisglobal.hibernate.resources.usertype.LIMSStringNumberUserType">
+            <column name="reject_reason_id" precision="10" not-null="false" />
         </property>
         <property name="qaAuthorizer" type="java.lang.String">
-            <column name="reject_reason" length="200" not-null="false" />
+            <column name="rejection_author" length="200" not-null="false" />
         </property>
         <property name="rejectComment" type="java.lang.String">
             <column name="reject_comment" length="60" not-null="false" />
@@ -68,6 +73,12 @@
         </property>
         <property name="testName" type="java.lang.String">
             <column name="test_name" length="255" not-null="false" />
+        </property>
+        <!-- Colonne renseignée hors-Liquibase par l'ancien uploader (cf. DESIGN_INTEROP_MODULE_CIV.md
+            §6.1) : souvent la SEULE source fiable du site demandeur en pratique. -->
+        <property name="organizationId"
+            type="org.openelisglobal.hibernate.resources.usertype.LIMSStringNumberUserType">
+            <column name="organization_id" precision="10" not-null="false" />
         </property>
     </class>
 </hibernate-mapping>

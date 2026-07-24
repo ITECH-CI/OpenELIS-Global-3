@@ -28,6 +28,13 @@ public class ElectronicOrderDisplayItem {
 
     private String collectionDateDisplay;
 
+    // Date de création de la ressource FHIR elle-même (Task.meta.lastUpdated).
+    private String creationDateDisplay;
+
+    // Date à laquelle la ligne electronic_order a été créée dans OpenELIS
+    // (order_timestamp) - distincte de la date de création FHIR ci-dessus.
+    private String receptionDateDisplay;
+
     private String patientLastName;
 
     private String patientFirstName;
@@ -88,6 +95,22 @@ public class ElectronicOrderDisplayItem {
 
     public void setRequestDateDisplay(String requestDateDisplay) {
         this.requestDateDisplay = requestDateDisplay;
+    }
+
+    public String getCreationDateDisplay() {
+        return creationDateDisplay;
+    }
+
+    public void setCreationDateDisplay(String creationDateDisplay) {
+        this.creationDateDisplay = creationDateDisplay;
+    }
+
+    public String getReceptionDateDisplay() {
+        return receptionDateDisplay;
+    }
+
+    public void setReceptionDateDisplay(String receptionDateDisplay) {
+        this.receptionDateDisplay = receptionDateDisplay;
     }
 
     public String getPatientLastName() {

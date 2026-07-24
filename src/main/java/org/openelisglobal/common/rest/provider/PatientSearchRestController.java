@@ -38,6 +38,9 @@ import org.openelisglobal.observationhistory.service.ObservationHistoryService;
 import org.openelisglobal.observationhistory.service.ObservationHistoryServiceImpl.ObservationType;
 import org.openelisglobal.patient.service.PatientService;
 import org.openelisglobal.patient.valueholder.Patient;
+import org.openelisglobal.patientidentity.service.PatientIdentityService;
+import org.openelisglobal.patientidentity.valueholder.PatientIdentity;
+import org.openelisglobal.patientidentitytype.util.PatientIdentityTypeMap;
 import org.openelisglobal.person.service.PersonService;
 import org.openelisglobal.result.service.ResultService;
 import org.openelisglobal.result.valueholder.Result;
@@ -66,6 +69,8 @@ public class PatientSearchRestController extends BaseRestController {
     SampleService sampleService;
     @Autowired
     PatientService patientService;
+    @Autowired
+    PatientIdentityService patientIdentityService;
     @Autowired
     PersonService personService;
     @Autowired
@@ -198,6 +203,13 @@ public class PatientSearchRestController extends BaseRestController {
                     }
                 }
             }
+            // Fallback for patients whose code only lives in patient_identity (SUBJECT
+            // type), which is now the canonical place the code is saved.
+            for (Patient p : getPatientsBySubjectIdentity(subjectNumber.trim())) {
+                if (seenIds.add(p.getId())) {
+                    allPatients.add(p);
+                }
+            }
         }
 
         if (!GenericValidator.isBlankOrNull(siteSubjectNumber)) {
@@ -216,7 +228,7 @@ public class PatientSearchRestController extends BaseRestController {
         }
 
         // Cross-search: for each patient found, also look for other patients
-        // sharing the same nationalId or externalId
+        // sharing the same nationalId, externalId, or SUBJECT patient_identity
         List<Patient> additionalPatients = new ArrayList<>();
         for (Patient p : allPatients) {
             if (!GenericValidator.isBlankOrNull(p.getNationalId())) {
@@ -235,10 +247,40 @@ public class PatientSearchRestController extends BaseRestController {
                     additionalPatients.add(byExt);
                 }
             }
+            String subjectIdentity = patientService.getSubjectNumber(p);
+            if (!GenericValidator.isBlankOrNull(subjectIdentity)) {
+                for (Patient r : getPatientsBySubjectIdentity(subjectIdentity)) {
+                    if (seenIds.add(r.getId())) {
+                        additionalPatients.add(r);
+                    }
+                }
+            }
         }
         allPatients.addAll(additionalPatients);
 
         return allPatients;
+    }
+
+    /**
+     * The patient code is now saved only in patient_identity (SUBJECT type,
+     * see Accessioner#populatePatientData), so lookups by code must also check
+     * there for patients that don't have patient.national_id populated.
+     */
+    private List<Patient> getPatientsBySubjectIdentity(String value) {
+        List<Patient> patients = new ArrayList<>();
+        if (GenericValidator.isBlankOrNull(value)) {
+            return patients;
+        }
+        String subjectTypeId = PatientIdentityTypeMap.getInstance().getIDForType("SUBJECT");
+        List<PatientIdentity> identities = patientIdentityService.getPatientIdentitiesByValueAndType(value,
+                subjectTypeId);
+        for (PatientIdentity identity : identities) {
+            Patient patient = patientService.get(identity.getPatientId());
+            if (patient != null) {
+                patients.add(patient);
+            }
+        }
+        return patients;
     }
 
     /**

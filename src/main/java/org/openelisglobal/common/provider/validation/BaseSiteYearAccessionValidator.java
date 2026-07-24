@@ -47,10 +47,7 @@ public abstract class BaseSiteYearAccessionValidator {
     }
 
     public String getInvalidMessage(ValidationResults results) {
-        String suggestedAccessionNumber = getNextAvailableAccessionNumber(null, true);
-
-        return MessageUtil.getMessage("sample.entry.invalid.accession.number.suggestion") + " "
-                + suggestedAccessionNumber;
+        return MessageUtil.getMessage("sample.entry.invalid.accession.number.suggestion");
     }
 
     // input parameter is not used in this case
