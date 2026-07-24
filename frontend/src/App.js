@@ -15,6 +15,7 @@ import SampleBatchEntrySetup from "./components/batchOrderEntry/SampleBatchEntry
 import CytologyCaseView from "./components/cytology/CytologyCaseView";
 import CytologyDashboard from "./components/cytology/CytologyDashBoard";
 import EOrderPage from "./components/eOrder/Index";
+import VleOrder from "./components/eOrder/VleOrder";
 import LandingPage from "./components/home/LandingPage";
 import ImmunohistochemistryCaseView from "./components/immunohistochemistry/ImmunohistochemistryCaseView";
 import ImmunohistochemistryDashboard from "./components/immunohistochemistry/ImmunohistochemistryDashboard";
@@ -406,6 +407,12 @@ export default function App() {
                   path="/ElectronicOrders"
                   exact
                   component={() => <EOrderPage />}
+                  role={Roles.RECEPTION}
+                />
+                <SecureRoute
+                  path="/StudyElectronicOrders"
+                  exact
+                  component={() => <VleOrder />}
                   role={Roles.RECEPTION}
                 />
                 <SecureRoute

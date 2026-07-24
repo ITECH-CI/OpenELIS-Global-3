@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+     http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+    <changeSet author="CIV devs" id="fix-electronic-order-rejection-author-column-2026">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="electronic_order" schemaName="clinlims" columnName="rejection_author" />
+            </not>
+        </preConditions>
+        <comment>
+            Réconcilie le nom de colonne portant l'auteur du rejet d'une demande
+            électronique (ElectronicOrder.qaAuthorizer). Le changeset historique
+            liquibase/2.7.x.x/add_electronic_rejection.xml (id 2403011) a été
+            modifié après coup sur disque (son contenu actuel crée une colonne
+            "reject_reason"), mais les déploiements où il a déjà été exécuté
+            portent en réalité "rejection_author" (nom que le mapping Hibernate
+            attend). Idempotent : sans effet si "rejection_author" existe déjà ;
+            renomme "reject_reason" si présente (déploiement neuf ayant exécuté
+            le fichier dans son état actuel), sinon crée directement
+            "rejection_author".
+        </comment>
+        <sql>
+            DO $$
+            BEGIN
+                IF EXISTS (
+                    SELECT 1 FROM information_schema.columns
+                    WHERE table_schema = 'clinlims' AND table_name = 'electronic_order'
+                        AND column_name = 'reject_reason'
+                ) THEN
+                    ALTER TABLE clinlims.electronic_order RENAME COLUMN reject_reason TO rejection_author;
+                ELSE
+                    ALTER TABLE clinlims.electronic_order ADD COLUMN rejection_author varchar(255);
+                END IF;
+            END $$;
+        </sql>
+    </changeSet>
+
+</databaseChangeLog>

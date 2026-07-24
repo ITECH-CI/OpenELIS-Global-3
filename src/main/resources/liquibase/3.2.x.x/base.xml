@@ -96,6 +96,10 @@
     <include relativeToChangelogFile="true"
 file="add_study_modifier_menu.xml" />
     <include relativeToChangelogFile="true"
+        file="add_study_electronic_orders_menu.xml" />
+    <include relativeToChangelogFile="true"
+        file="fix_electronic_order_rejection_author_column.xml" />
+    <include relativeToChangelogFile="true"
         file="fix_hiv_status_dictionary_labels.xml" />
     <include relativeToChangelogFile="true"
         file="add_leucorrhees_to_ecb_panels.xml" />

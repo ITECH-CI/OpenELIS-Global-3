@@ -73,6 +73,11 @@ public class ElectronicOrder extends BaseObject<String> {
     private String requestingFacilityName;
     private Timestamp collectionDate;
     private String testName;
+    // Colonne renseignée hors-Liquibase par l'ancien uploader (cf.
+    // DESIGN_INTEROP_MODULE_CIV.md §6.1) : souvent la SEULE source fiable du
+    // site demandeur en pratique (task.location/restriction sont vides pour la
+    // plupart des demandes réelles observées). Lien vers organization.id.
+    private String organizationId;
 
     public ElectronicOrder() {
         patient = new ValueHolder();
@@ -198,5 +203,13 @@ public class ElectronicOrder extends BaseObject<String> {
 
     public void setTestName(String testName) {
         this.testName = testName;
+    }
+
+    public String getOrganizationId() {
+        return organizationId;
+    }
+
+    public void setOrganizationId(String organizationId) {
+        this.organizationId = organizationId;
     }
 }
