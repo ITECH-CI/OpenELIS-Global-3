@@ -52,7 +52,8 @@
             character varying" au premier rejet d'une demande électronique. -->
         <property name="rejectReasonId"
             type="org.openelisglobal.hibernate.resources.usertype.LIMSStringNumberUserType">
-            <column name="reject_reason_id" precision="10" not-null="false" />
+            <column name="reject_reason_id" precision="10"
+                not-null="false" />
         </property>
         <property name="qaAuthorizer" type="java.lang.String">
             <column name="rejection_author" length="200" not-null="false" />

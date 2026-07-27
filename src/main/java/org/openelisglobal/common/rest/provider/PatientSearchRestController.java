@@ -262,9 +262,9 @@ public class PatientSearchRestController extends BaseRestController {
     }
 
     /**
-     * The patient code is now saved only in patient_identity (SUBJECT type,
-     * see Accessioner#populatePatientData), so lookups by code must also check
-     * there for patients that don't have patient.national_id populated.
+     * The patient code is now saved only in patient_identity (SUBJECT type, see
+     * Accessioner#populatePatientData), so lookups by code must also check there
+     * for patients that don't have patient.national_id populated.
      */
     private List<Patient> getPatientsBySubjectIdentity(String value) {
         List<Patient> patients = new ArrayList<>();

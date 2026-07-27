@@ -1129,8 +1129,8 @@ public abstract class Accessioner implements IAccessioner {
         for (PatientIdentity identity : patientIdentities) {
             identity.setPatientId(patientInDB.getId());
             identity.setSysUserId(sysUserId);
-            PatientIdentity existingIdentity = identityService.getPatitentIdentityForPatientAndType(
-                    patientInDB.getId(), identity.getIdentityTypeId());
+            PatientIdentity existingIdentity = identityService.getPatitentIdentityForPatientAndType(patientInDB.getId(),
+                    identity.getIdentityTypeId());
             if (existingIdentity != null) {
                 existingIdentity.setIdentityData(identity.getIdentityData());
                 existingIdentity.setSysUserId(sysUserId);
