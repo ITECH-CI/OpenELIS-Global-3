@@ -175,7 +175,8 @@ public class RestStudyElectronicOrdersController extends BaseController {
 
             // Best-effort : le store FHIR local ne contient pas systématiquement le Task
             // (electronic_order.data est la source de vérité côté OE, cf.
-            // DESIGN_INTEROP_MODULE_CIV.md §6.1). Un échec ici (ex. ResourceNotFoundException)
+            // DESIGN_INTEROP_MODULE_CIV.md §6.1). Un échec ici (ex.
+            // ResourceNotFoundException)
             // ne doit PAS faire échouer le rejet, déjà persisté avec succès ci-dessus.
             try {
                 Optional<Task> task = fhirPersistanceService.getTaskBasedOnServiceRequest(rejectForm.externalOrderId);
@@ -219,7 +220,8 @@ public class RestStudyElectronicOrdersController extends BaseController {
             eOrder.setStatusId(SpringContext.getBean(IStatusService.class).getStatusID(ExternalOrderStatus.Cancelled));
             electronicOrderService.update(eOrder);
 
-            // Best-effort : cf. commentaire équivalent dans rejectElectronicOrder ci-dessus.
+            // Best-effort : cf. commentaire équivalent dans rejectElectronicOrder
+            // ci-dessus.
             try {
                 Optional<Task> task = fhirPersistanceService.getTaskBasedOnServiceRequest(cancelForm.externalOrderId);
                 if (task.isPresent()) {
@@ -315,7 +317,8 @@ public class RestStudyElectronicOrdersController extends BaseController {
             // dans SamplePatientEntryRestController.setupForm pour le formulaire d'édition.
             if (displayItem.getRequestingFacility() == null
                     && StringUtils.isNotBlank(electronicOrder.getOrganizationId())) {
-                Organization organization = organizationService.getOrganizationById(electronicOrder.getOrganizationId());
+                Organization organization = organizationService
+                        .getOrganizationById(electronicOrder.getOrganizationId());
                 if (organization != null) {
                     displayItem.setRequestingFacility(organization.getOrganizationName());
                 }
