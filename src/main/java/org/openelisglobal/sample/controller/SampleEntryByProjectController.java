@@ -123,7 +123,7 @@ public class SampleEntryByProjectController extends BaseSampleEntryController {
             "ProjectData.glycemiaTest", "ProjectData.creatinineTest", "ProjectData.transaminaseTest",
             "ProjectData.nfsTest", "ProjectData.cd4cd8Test", "ProjectData.viralLoadTest", "ProjectData.genotypingTest",
             "observations.underInvestigation", "ProjectData.underInvestigationNote", "observations.hivStatus",
-            "ProjectData.EIDSiteName", "projectData.EIDsiteCode", "observations.whichPCR",
+            "observations.hivTestedType", "ProjectData.EIDSiteName", "projectData.EIDsiteCode", "observations.whichPCR",
             "observations.reasonForSecondPCRTest", "observations.nameOfRequestor", "observations.nameOfSampler",
             "observations.eidInfantPTME", "observations.eidTypeOfClinic", "observations.eidHowChildFed",
             "observations.eidStoppedBreastfeeding", "observations.eidInfantSymptomatic", "observations.eidInfantsARV",

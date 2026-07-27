@@ -169,6 +169,7 @@ const EMPTY_FORM = {
     nameOfRequestor: "",
     underInvestigation: "",
     hivStatus: "",
+    hivTestedType: "",
     currentARVTreatment: "",
     arvTreatmentInitDate: "",
     arvTreatmentRegime: "",
@@ -1092,6 +1093,32 @@ const ViralLoadEntry = ({
     }
     return false;
   };
+
+  // --- Type de VIH TESTÉ (VIH-1 / VIH-2) -----------------------------------
+  // Résout l'id de dictionnaire d'un type via son displayKey stable.
+  const hivTypeIdForKey = (displayKey) =>
+    (dictionaryLists.HIV_TYPES || []).find((d) => d.displayKey === displayKey)
+      ?.id || "";
+  // displayKey du statut VIH actuellement sélectionné (HIV_1 / HIV_2 / HIVDual).
+  const currentHivStatusKey = (dictionaryLists.HIV_TYPES || []).find(
+    (d) => d.id === form.observations.hivStatus,
+  )?.displayKey;
+  // Si le patient est mono-type (HIV-1 ou HIV-2), le type testé est FIGÉ dessus.
+  // S'il est HIV-1+2 (HIVDual) — ou statut inconnu — l'utilisateur choisit.
+  const hivTestedTypeLocked =
+    currentHivStatusKey === "HIVStatus.HIV_1" ||
+    currentHivStatusKey === "HIVStatus.HIV_2";
+
+  // Quand le statut VIH change : si mono-type, forcer hivTestedType = ce type.
+  useEffect(() => {
+    if (currentHivStatusKey === "HIVStatus.HIV_1") {
+      setObs("hivTestedType", hivTypeIdForKey("HIVStatus.HIV_1"));
+    } else if (currentHivStatusKey === "HIVStatus.HIV_2") {
+      setObs("hivTestedType", hivTypeIdForKey("HIVStatus.HIV_2"));
+    }
+    // HIVDual / inconnu : laisser le choix utilisateur (ne pas écraser).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [form.observations.hivStatus, dictionaryLists.HIV_TYPES]);
 
   const searchVLSerology = (subjectNo, siteSubjectNo) => {
     if (!serologyControlEnabled) return;
@@ -4201,6 +4228,40 @@ const ViralLoadEntry = ({
                 labelText=""
                 checked={form.projectData.viralLoadTest}
               />
+            </div>
+          </div>
+          <div style={S.row}>
+            <div style={S.label}>
+              <FormattedMessage
+                id="sample.entry.project.hivTestedType"
+                defaultMessage="Type de VIH testé"
+              />
+            </div>
+            <div style={S.inputWrap}>
+              <RadioButtonGroup
+                name="vl_hivTestedType"
+                legendText=""
+                valueSelected={form.observations.hivTestedType}
+                onChange={(value) => setObs("hivTestedType", value)}
+                disabled={hivTestedTypeLocked}
+              >
+                <RadioButton
+                  id="vl_hivTestedType_1"
+                  labelText={intl.formatMessage({
+                    id: "HIVStatus.HIV_1",
+                    defaultMessage: "VIH-1",
+                  })}
+                  value={hivTypeIdForKey("HIVStatus.HIV_1")}
+                />
+                <RadioButton
+                  id="vl_hivTestedType_2"
+                  labelText={intl.formatMessage({
+                    id: "HIVStatus.HIV_2",
+                    defaultMessage: "VIH-2",
+                  })}
+                  value={hivTypeIdForKey("HIVStatus.HIV_2")}
+                />
+              </RadioButtonGroup>
             </div>
           </div>
         </>

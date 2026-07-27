@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+     http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+    <!--
+      Index de performance pour la recherche des demandes électroniques (écran
+      « Demande électronique » / charge virale). La recherche par intervalle de
+      dates + statut (getAllElectronicOrdersByTimestampAndStatus) faisait un
+      seq scan de electronic_order (aucun index sur order_timestamp ni status_id).
+      Et la liste résout le n° de labo par sample.referring_id (une requête par
+      ligne, sans index).
+    -->
+    <changeSet author="pkomena" id="add_eorder_search_indexes-1">
+        <comment>Index recherche e-orders (status/timestamp) + sample.referring_id</comment>
+        <sql>
+        CREATE INDEX IF NOT EXISTS index_eorder_status_timestamp on clinlims.electronic_order (
+            status_id, order_timestamp
+        );
+        CREATE INDEX IF NOT EXISTS index_sample_referring_id on clinlims.sample (
+            referring_id
+        );
+        </sql>
+    </changeSet>
+
+</databaseChangeLog>

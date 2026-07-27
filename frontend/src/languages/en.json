@@ -1106,6 +1106,7 @@
   "study.eorder.action.cancelled": "Order cancelled",
   "study.eorder.action.cancel.confirm": "Are you sure you want to cancel this electronic order?",
   "label.refusal.reason": "Refusal Reason",
+  "study.eorder.reject.reason.required": "Please select a refusal reason.",
   "label.biologist": "Biologist",
   "nonconformity.note": "Note",
   "error.add.edited.msg": "Error while Editing/Adding",
@@ -2434,5 +2435,9 @@
   "label.button.validate": "Validate",
   "testsection.bacteriology": "Bacteriology",
   "testsection.routine.bacteriology": "Routine Bacteriology",
-  "siteInfo.instruction.showSampleQtyUom": "If enabled, the Sample Quantity and Unit of Measure fields are displayed in the sample addition section of the patient entry form."
+  "siteInfo.instruction.showSampleQtyUom": "If enabled, the Sample Quantity and Unit of Measure fields are displayed in the sample addition section of the patient entry form.",
+  "sample.entry.project.hivTestedType": "Tested HIV type",
+  "HIVStatus.HIV_1": "HIV-1",
+  "HIVStatus.HIV_2": "HIV-2",
+  "HIVStatus.HIVDual": "HIV-1+2"
 }

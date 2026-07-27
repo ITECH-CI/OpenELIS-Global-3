@@ -222,13 +222,13 @@ public class SamplePatientEntryRestController extends BaseSampleEntryController 
             "ProjectData.preservCytTaken", "ProjectData.plasmaTaken", "ProjectData.asanteTest", "ProjectData.hpvTest",
             "ProjectData.abbottOrRocheAnalysis", "ProjectData.geneXpertAnalysis",
             // ARV observations (InitialARV / FollowUp / VL)
-            "observations.hivStatus", "observations.currentARVTreatment", "observations.arvTreatmentInitDate",
-            "observations.arvTreatmentRegime", "observations.currentARVTreatmentINNsList*",
-            "observations.vlReasonForRequest", "observations.vlOtherReasonForRequest", "observations.initcd4Count",
-            "observations.initcd4Percent", "observations.initcd4Date", "observations.demandcd4Count",
-            "observations.demandcd4Percent", "observations.demandcd4Date", "observations.vlBenefit",
-            "observations.priorVLValue", "observations.priorVLDate", "observations.vlPregnancy",
-            "observations.vlSuckle",
+            "observations.hivStatus", "observations.hivTestedType", "observations.currentARVTreatment",
+            "observations.arvTreatmentInitDate", "observations.arvTreatmentRegime",
+            "observations.currentARVTreatmentINNsList*", "observations.vlReasonForRequest",
+            "observations.vlOtherReasonForRequest", "observations.initcd4Count", "observations.initcd4Percent",
+            "observations.initcd4Date", "observations.demandcd4Count", "observations.demandcd4Percent",
+            "observations.demandcd4Date", "observations.vlBenefit", "observations.priorVLValue",
+            "observations.priorVLDate", "observations.vlPregnancy", "observations.vlSuckle",
             // EID observations
             "observations.whichPCR", "observations.reasonForSecondPCRTest", "observations.eidInfantPTME",
             "observations.eidTypeOfClinic", "observations.eidTypeOfClinicOther", "observations.eidHowChildFed",
@@ -812,7 +812,11 @@ public class SamplePatientEntryRestController extends BaseSampleEntryController 
         }
         form.getSampleOrderItems().setExternalOrderNumber(externalOrderNumber);
         if (StringUtils.isNotBlank(externalOrderNumber)) {
-            ElectronicOrder eOrder = electronicOrderService.getElectronicOrdersByExternalId(externalOrderNumber).get(0);
+            // Sélection UNIFORME (cf. reject/cancel) : la demande actionnable la plus
+            // récente. Évite le crash .get(0) sur liste vide (externalId introuvable) et
+            // le pré-remplissage d'un ordre déjà terminal (annulé/rejeté/terminé).
+            ElectronicOrder eOrder = electronicOrderService.getActiveElectronicOrderByExternalId(externalOrderNumber)
+                    .orElse(null);
             if (eOrder != null) {
                 form.getSampleOrderItems().setPriority(eOrder.getPriority());
                 Task task = fhirUtil.getFhirParser().parseResource(Task.class, eOrder.getData());
