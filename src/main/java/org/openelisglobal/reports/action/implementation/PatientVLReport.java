@@ -42,6 +42,8 @@ public abstract class PatientVLReport extends RetroCIPatientReport {
     private SampleOrganizationService orgService = SpringContext.getBean(SampleOrganizationService.class);
     private OrganizationService oService = SpringContext.getBean(OrganizationService.class);
     private ObservationHistoryService ohService = SpringContext.getBean(ObservationHistoryService.class);
+    private org.openelisglobal.dictionary.service.DictionaryService dictionaryService = SpringContext
+            .getBean(org.openelisglobal.dictionary.service.DictionaryService.class);
 
     protected List<VLReportData> reportItems;
     private String invalidValue = MessageUtil.getMessage("report.test.status.inProgress");
@@ -165,6 +167,26 @@ public abstract class PatientVLReport extends RetroCIPatientReport {
         data.setVlPregnancy(
                 ohService.getMostRecentValueForPatient(ObservationType.VL_PREGNANCY, reportPatient.getId()));
         data.setvih(ohService.getMostRecentValueForPatient(ObservationType.HIV_STATUS, reportPatient.getId()));
+        // Type VIH TESTÉ : distinct du statut patient (vih). On le résout depuis l'ID
+        // de dictionnaire brut pour porter DEUX formes dans le bean :
+        // - hivTestedType = libellé (affichage) ;
+        // - hivTestedTypeKey = display_key STABLE (ex. « HIVStatus.HIV_1 »),
+        // discriminant
+        // robuste du conditionnel JRXML (indépendant des traductions).
+        // Repli : si aucune observation hivTestedType (demandes antérieures), on
+        // retombe
+        // sur hivStatus (le statut patient), préservant le comportement d'avant.
+        String hivTypeDictId = getRawObservationId(ObservationType.HIV_TESTED_TYPE, reportPatient.getId());
+        if (GenericValidator.isBlankOrNull(hivTypeDictId)) {
+            hivTypeDictId = getRawObservationId(ObservationType.HIV_STATUS, reportPatient.getId());
+        }
+        if (!GenericValidator.isBlankOrNull(hivTypeDictId)) {
+            org.openelisglobal.dictionary.valueholder.Dictionary dict = dictionaryService.getDataForId(hivTypeDictId);
+            if (dict != null) {
+                data.setHivTestedType(dict.getLocalizedName());
+                data.setHivTestedTypeKey(dict.getNameKey());
+            }
+        }
         data.setSubjectno(reportPatient.getNationalId());
         data.setSitesubjectno(reportPatient.getExternalId());
         data.setBirth_date(reportPatient.getBirthDateForDisplay());
@@ -197,6 +219,17 @@ public abstract class PatientVLReport extends RetroCIPatientReport {
             }
         }
         data.getSampleQaEventItems(reportSample);
+    }
+
+    /**
+     * Renvoie la valeur BRUTE (id de dictionnaire) de la dernière observation d'un
+     * type pour un patient, sans décodage en libellé (contrairement à
+     * getMostRecentValueForPatient). null si absente.
+     */
+    private String getRawObservationId(ObservationType type, String patientId) {
+        org.openelisglobal.observationhistory.valueholder.ObservationHistory obs = ohService
+                .getLastObservationForPatient(type, patientId);
+        return obs == null ? null : obs.getValue();
     }
 
     @Override

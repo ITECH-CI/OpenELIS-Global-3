@@ -1944,6 +1944,7 @@
   "EID.stoppedBreastfedless6weeks": "1 = Arr\u00EAt allaitement < ou = 6 semaines",
   "EID.stoppedBreastfedmore6weeks": "2 = Arr\u00EAt allaitement > 6 semaines",
   "sample.entry.project.title.tests": "Tests",
+  "sample.entry.project.hivTestedType": "Type de VIH testé",
   "sample.entry.project.dnaPCR": " DNA PCR",
   "sample.entry.project.form": "Etude",
   "banner.menu.eidtrends": "EID",

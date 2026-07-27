@@ -47,6 +47,8 @@
 	<field name="receptionQaEvent" class="java.lang.String"/>
 	<field name="compleationdate" class="java.lang.String"/>
 	<field name="vih" class="java.lang.String"/>
+	<field name="hivTestedTypeKey" class="java.lang.String"/>
+	<field name="hivTestedType" class="java.lang.String"/>
 	<field name="vlPregnancy" class="java.lang.String"/>
 	<field name="sampleTypeName" class="java.lang.String"/>
 	<field name="vlSuckle" class="java.lang.String"/>
@@ -186,7 +188,9 @@
 				<text><![CDATA[Type de prélèvement :]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="15" y="315" width="282" height="106" uuid="1a06e366-3dab-42ce-9502-c7875bbac539"/>
+				<reportElement x="15" y="315" width="282" height="106" uuid="1a06e366-3dab-42ce-9502-c7875bbac539">
+					<printWhenExpression><![CDATA[$F{hivTestedTypeKey} == null || $F{hivTestedTypeKey}.equals("HIVStatus.HIV_1") || $F{hivTestedTypeKey}.equals("HIVStatus.HIVDual")]]></printWhenExpression>
+				</reportElement>
 				<text><![CDATA[1-Si le titre HIV-1<=1000 copies/mL, suppression virale selon les directives nationales de suivi biologique des patients sous traitement antiretroviral
 
 2-Si le titre HIV-1>1000 copies/mL, le virus est détectable au niveau du sang périphérique et le patient est dit en échec virologique. Refaire un autre prélèvement trois mois après le conseil à l’observance, pour un autre examen de charge virale pour confirmer et infirmer l’échec virologique
@@ -214,26 +218,30 @@
 				<text><![CDATA[Trousse commerciale:]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="129" y="148" width="423" height="15" isPrintWhenDetailOverflows="true" uuid="fa89e5e3-9cae-4db8-878d-26a28dbe6227"/>
+				<reportElement x="129" y="148" width="423" height="15" isPrintWhenDetailOverflows="true" uuid="fa89e5e3-9cae-4db8-878d-26a28dbe6227">
+					<printWhenExpression><![CDATA[$F{hivTestedTypeKey} == null || $F{hivTestedTypeKey}.equals("HIVStatus.HIV_1") || $F{hivTestedTypeKey}.equals("HIVStatus.HIVDual")]]></printWhenExpression>
+				</reportElement>
 				<textElement>
 					<font size="9" isItalic="false" isStrikeThrough="false"/>
 				</textElement>
 				<text><![CDATA[COBAS Taqman/Ampliprep  HIV-1 tests,V2.0 Quantitative  (HI2CAP) / C4800 HIV-1 AMP/DET]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="129" y="129" width="421" height="15" isPrintWhenDetailOverflows="true" uuid="61815090-2efd-486d-9466-162c3cc85012"/>
+				<reportElement x="129" y="129" width="421" height="15" isPrintWhenDetailOverflows="true" uuid="61815090-2efd-486d-9466-162c3cc85012">
+					<printWhenExpression><![CDATA[$F{hivTestedTypeKey} == null || $F{hivTestedTypeKey}.equals("HIVStatus.HIV_1") || $F{hivTestedTypeKey}.equals("HIVStatus.HIVDual")]]></printWhenExpression>
+				</reportElement>
 				<textElement>
 					<font size="9"/>
 				</textElement>
 				<text><![CDATA[COBAS Ampliprep / Cobas Taqman Series / Cobas 6800 Roche Diagnostic / Cobas 4800]]></text>
 			</staticText>
-			<staticText>
+			<textField>
 				<reportElement x="129" y="81" width="423" height="15" uuid="ad016800-a5f2-41c8-b2ba-fc245757db3f"/>
-				<textElement>
+				<textElement markup="none">
 					<font size="9"/>
 				</textElement>
-				<text><![CDATA[Recherche de l’ARN du virus HIV-1 par amplification génétique (PCR) et par quantification ]]></text>
-			</staticText>
+				<textFieldExpression><![CDATA["Recherche de l’ARN du virus "+($F{hivTestedType}==null ? "HIV-1" : $F{hivTestedType})+" par amplification génétique (PCR) et par quantification "]]></textFieldExpression>
+			</textField>
 			<rectangle>
 				<reportElement x="5" y="223" width="157" height="20" uuid="fe618937-837c-4ff8-84d0-8e47f56b971a"/>
 			</rectangle>
@@ -294,11 +302,15 @@
 				<imageExpression><![CDATA[$P{imagesPath}+ "RESULTATS.jpg"]]></imageExpression>
 			</image>
 			<image>
-				<reportElement x="5" y="293" width="189" height="20" uuid="379b1764-0572-4467-9cf4-8aed32cc3446"/>
+				<reportElement x="5" y="293" width="189" height="20" uuid="379b1764-0572-4467-9cf4-8aed32cc3446">
+					<printWhenExpression><![CDATA[$F{hivTestedTypeKey} == null || $F{hivTestedTypeKey}.equals("HIVStatus.HIV_1") || $F{hivTestedTypeKey}.equals("HIVStatus.HIVDual")]]></printWhenExpression>
+				</reportElement>
 				<imageExpression><![CDATA[$P{imagesPath}+ "INTERPRETATIONS.jpg"]]></imageExpression>
 			</image>
 			<staticText>
-				<reportElement x="129" y="163" width="423" height="13" isPrintWhenDetailOverflows="true" uuid="7c54781d-65ef-442e-bbdb-75a092189adf"/>
+				<reportElement x="129" y="163" width="423" height="13" isPrintWhenDetailOverflows="true" uuid="7c54781d-65ef-442e-bbdb-75a092189adf">
+					<printWhenExpression><![CDATA[$F{hivTestedTypeKey} == null || $F{hivTestedTypeKey}.equals("HIVStatus.HIV_1") || $F{hivTestedTypeKey}.equals("HIVStatus.HIVDual")]]></printWhenExpression>
+				</reportElement>
 				<textElement>
 					<font size="9" isItalic="false" isStrikeThrough="false"/>
 				</textElement>
@@ -315,6 +327,24 @@
 				<reportElement x="130" y="96" width="354" height="15" uuid="b14c2c29-949b-4f15-84be-c7c6b1b78b00"/>
 				<textFieldExpression><![CDATA[$F{sampleTypeName}]]></textFieldExpression>
 			</textField>
+			<staticText>
+				<reportElement x="129" y="129" width="421" height="15" isPrintWhenDetailOverflows="true" uuid="1a2b3c4d-0001-4a01-9c40-000000000001">
+					<printWhenExpression><![CDATA[$F{hivTestedTypeKey} != null && $F{hivTestedTypeKey}.equals("HIVStatus.HIV_2")]]></printWhenExpression>
+				</reportElement>
+				<textElement>
+					<font size="9"/>
+				</textElement>
+				<text><![CDATA[GenoXtract 12 / FluoroCycler XT]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="129" y="148" width="423" height="15" isPrintWhenDetailOverflows="true" uuid="1a2b3c4d-0002-4a01-9c40-000000000002">
+					<printWhenExpression><![CDATA[$F{hivTestedTypeKey} != null && $F{hivTestedTypeKey}.equals("HIVStatus.HIV_2")]]></printWhenExpression>
+				</reportElement>
+				<textElement>
+					<font size="9" isItalic="false" isStrikeThrough="false"/>
+				</textElement>
+				<text><![CDATA[GENERIC HIV-2 VL2.0 RUO]]></text>
+			</staticText>
 		</band>
 		<band height="472">
 			<printWhenExpression><![CDATA[$F{virologyVlQaEvent}!=null]]></printWhenExpression>
@@ -899,28 +929,36 @@
 				<imageExpression><![CDATA[$P{imagesPath}+ "RefVal.jpg"]]></imageExpression>
 			</image>
 			<staticText>
-				<reportElement x="10" y="88" width="534" height="19" uuid="3e429c79-24d0-47f7-a944-c10389504948"/>
+				<reportElement x="10" y="88" width="534" height="19" uuid="3e429c79-24d0-47f7-a944-c10389504948">
+					<printWhenExpression><![CDATA[$F{hivTestedTypeKey} == null || $F{hivTestedTypeKey}.equals("HIVStatus.HIV_1") || $F{hivTestedTypeKey}.equals("HIVStatus.HIVDual")]]></printWhenExpression>
+				</reportElement>
 				<textElement>
 					<font size="10"/>
 				</textElement>
 				<text><![CDATA[Valeur charge virale : < LL=virus HIV-1 indétectable dans le sang périphérique]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="12" y="65" width="408" height="19" uuid="6ef822fb-4b30-4b3d-bd19-a7e5aededda0"/>
+				<reportElement x="12" y="65" width="408" height="19" uuid="6ef822fb-4b30-4b3d-bd19-a7e5aededda0">
+					<printWhenExpression><![CDATA[$F{hivTestedTypeKey} == null || $F{hivTestedTypeKey}.equals("HIVStatus.HIV_1") || $F{hivTestedTypeKey}.equals("HIVStatus.HIVDual")]]></printWhenExpression>
+				</reportElement>
 				<textElement>
 					<font size="10"/>
 				</textElement>
 				<text><![CDATA[Seuil de détection de la technique CV/PSC : 599 copies/mL]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="10" y="21" width="408" height="19" uuid="0e4e96a8-5fa8-45b1-ab65-384fcc9d9c5e"/>
+				<reportElement x="10" y="21" width="408" height="19" uuid="0e4e96a8-5fa8-45b1-ab65-384fcc9d9c5e">
+					<printWhenExpression><![CDATA[$F{hivTestedTypeKey} == null || $F{hivTestedTypeKey}.equals("HIVStatus.HIV_1") || $F{hivTestedTypeKey}.equals("HIVStatus.HIVDual")]]></printWhenExpression>
+				</reportElement>
 				<textElement>
 					<font size="10"/>
 				</textElement>
 				<text><![CDATA[Seuil de détection de la technique CV/PL : 20 copies /mL]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="10" y="43" width="408" height="19" uuid="9ec062e1-8409-4d70-a08d-a742a8728efe"/>
+				<reportElement x="10" y="43" width="408" height="19" uuid="9ec062e1-8409-4d70-a08d-a742a8728efe">
+					<printWhenExpression><![CDATA[$F{hivTestedTypeKey} == null || $F{hivTestedTypeKey}.equals("HIVStatus.HIV_1") || $F{hivTestedTypeKey}.equals("HIVStatus.HIVDual")]]></printWhenExpression>
+				</reportElement>
 				<textElement>
 					<font size="10"/>
 				</textElement>
@@ -931,6 +969,24 @@
 				<textElement textAlignment="Right"/>
 				<textFieldExpression><![CDATA["Page 1 sur 1"]]></textFieldExpression>
 			</textField>
+			<staticText>
+				<reportElement x="10" y="21" width="408" height="19" uuid="1a2b3c4d-0003-4a01-9c40-000000000003">
+					<printWhenExpression><![CDATA[$F{hivTestedTypeKey} != null && $F{hivTestedTypeKey}.equals("HIVStatus.HIV_2")]]></printWhenExpression>
+				</reportElement>
+				<textElement>
+					<font size="10"/>
+				</textElement>
+				<text><![CDATA[Seuil de détection de la technique HIV-2 : 14 copies/mL]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="8" y="37" width="534" height="19" uuid="1a2b3c4d-0004-4a01-9c40-000000000004">
+					<printWhenExpression><![CDATA[$F{hivTestedTypeKey} != null && $F{hivTestedTypeKey}.equals("HIVStatus.HIV_2")]]></printWhenExpression>
+				</reportElement>
+				<textElement>
+					<font size="10"/>
+				</textElement>
+				<text><![CDATA[Valeur charge virale : < LL=virus HIV-2 indétectable dans le sang périphérique]]></text>
+			</staticText>
 		</band>
 	</pageFooter>
 	<summary>

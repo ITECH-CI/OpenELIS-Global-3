@@ -96,6 +96,13 @@ public class ObservationData implements Serializable {
     @Pattern(regexp = ValidationHelper.ID_REGEX)
     private String hivStatus;
 
+    // Type VIH effectivement TESTÉ (VIH-1 / VIH-2), distinct du statut VIH du
+    // patient
+    // (hivStatus). Id de dictionnaire (catégorie « HIV Status »). Utilisé comme
+    // discriminant du rapport de charge virale (trousse, automate, seuils).
+    @Pattern(regexp = ValidationHelper.ID_REGEX)
+    private String hivTestedType;
+
     @Pattern(regexp = ValidationHelper.ID_REGEX)
     private String anyPriorDiseases;
 
@@ -607,6 +614,14 @@ public class ObservationData implements Serializable {
 
     public void setHivStatus(String hivStatus) {
         this.hivStatus = hivStatus;
+    }
+
+    public String getHivTestedType() {
+        return hivTestedType;
+    }
+
+    public void setHivTestedType(String hivTestedType) {
+        this.hivTestedType = hivTestedType;
     }
 
     public String getCd4Count() {

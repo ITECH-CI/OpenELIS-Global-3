@@ -142,6 +142,8 @@ public abstract class BaseProjectFormMapper implements IProjectFormMapper {
         // information. Further note, the business rules need
         // clarification. For now what is entered will be saved.
         addHistory(histories, "hivStatus", od.getHivStatus(), ValueType.DICTIONARY);
+        // Type VIH testé (VIH-1/VIH-2), distinct du statut patient. Cf. rapport CV.
+        addHistory(histories, "hivTestedType", od.getHivTestedType(), ValueType.DICTIONARY);
         addHistory(histories, "cd4Count", od.getCd4Count(), ValueType.LITERAL);
         addHistory(histories, "cd4Percent", od.getCd4Percent(), ValueType.LITERAL);
         addHistory(histories, "priorCd4Date", od.getPriorCd4Date(), ValueType.LITERAL);

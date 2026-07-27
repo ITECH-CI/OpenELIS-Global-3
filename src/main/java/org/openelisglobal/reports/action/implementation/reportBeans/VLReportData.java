@@ -54,6 +54,14 @@ public class VLReportData {
     private String clinic;
     private String status;
     private String vih;
+    // Type VIH effectivement TESTÉ (distinct du statut patient `vih`). Deux formes
+    // :
+    // - hivTestedType : libellé (affichage) ;
+    // - hivTestedTypeKey : clé stable (display_key du dictionnaire, ex.
+    // « HIVStatus.HIV_1 ») utilisée comme discriminant conditionnel dans le JRXML,
+    // robuste face aux traductions/renommages de libellés.
+    private String hivTestedType;
+    private String hivTestedTypeKey;
     private String sampleTypeName;
     private Boolean duplicateReport = Boolean.FALSE;
 
@@ -240,6 +248,22 @@ public class VLReportData {
 
     public void setvih(String vih) {
         this.vih = vih;
+    }
+
+    public String getHivTestedType() {
+        return hivTestedType;
+    }
+
+    public void setHivTestedType(String hivTestedType) {
+        this.hivTestedType = hivTestedType;
+    }
+
+    public String getHivTestedTypeKey() {
+        return hivTestedTypeKey;
+    }
+
+    public void setHivTestedTypeKey(String hivTestedTypeKey) {
+        this.hivTestedTypeKey = hivTestedTypeKey;
     }
 
     public String getSampleTypeName() {

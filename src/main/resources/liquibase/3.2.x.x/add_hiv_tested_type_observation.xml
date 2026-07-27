@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+    <!--
+      Type d'observation « hivTestedType » : le type de VIH effectivement TESTÉ
+      (VIH-1 / VIH-2), distinct du statut VIH du patient (hivStatus). Persisté en
+      observation_history (valeur = id de dictionnaire, catégorie HIV Status).
+      Utilisé comme discriminant du rapport de charge virale (trousse, automate,
+      seuils). Sans cette entrée, ObservationHistoryTypeMap.getIDForType renvoie
+      null et l'observation n'est jamais persistée.
+    -->
+    <changeSet author="pkomena" id="add_hiv_tested_type_observation-1">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0"><![CDATA[
+SELECT count(*) FROM clinlims.observation_history_type WHERE type_name = 'hivTestedType'
+]]></sqlCheck>
+        </preConditions>
+        <sql><![CDATA[
+INSERT INTO clinlims.observation_history_type(id, type_name, description, lastupdated) VALUES
+            (nextval('observation_history_type_seq'), 'hivTestedType', 'Tested HIV type (VIH-1 / VIH-2)', now());
+]]></sql>
+    </changeSet>
+
+</databaseChangeLog>
