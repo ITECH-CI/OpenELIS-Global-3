@@ -812,7 +812,11 @@ public class SamplePatientEntryRestController extends BaseSampleEntryController 
         }
         form.getSampleOrderItems().setExternalOrderNumber(externalOrderNumber);
         if (StringUtils.isNotBlank(externalOrderNumber)) {
-            ElectronicOrder eOrder = electronicOrderService.getElectronicOrdersByExternalId(externalOrderNumber).get(0);
+            // Sélection UNIFORME (cf. reject/cancel) : la demande actionnable la plus
+            // récente. Évite le crash .get(0) sur liste vide (externalId introuvable) et
+            // le pré-remplissage d'un ordre déjà terminal (annulé/rejeté/terminé).
+            ElectronicOrder eOrder = electronicOrderService.getActiveElectronicOrderByExternalId(externalOrderNumber)
+                    .orElse(null);
             if (eOrder != null) {
                 form.getSampleOrderItems().setPriority(eOrder.getPriority());
                 Task task = fhirUtil.getFhirParser().parseResource(Task.class, eOrder.getData());

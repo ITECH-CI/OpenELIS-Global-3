@@ -15,6 +15,19 @@ public interface ElectronicOrderService extends BaseObjectService<ElectronicOrde
 
     List<ElectronicOrder> getElectronicOrdersByExternalId(String id);
 
+    /**
+     * Sélectionne LA demande électronique actionnable pour un externalId donné : la
+     * plus récente qui n'est PAS dans un statut terminal (Cancelled / Completed /
+     * NonConforming). Plusieurs lignes peuvent partager le même externalId (une par
+     * réception, cf. TaskWorker#insertNewOrder) : cette méthode uniformise la
+     * sélection entre la SAISIE et le REJET/ANNULATION (qui divergeaient : plus
+     * ancien vs plus récent), et évite d'agir sur un ordre déjà terminal.
+     *
+     * @return la demande actionnable, ou empty si aucune (liste vide, ou toutes
+     *         terminales).
+     */
+    java.util.Optional<ElectronicOrder> getActiveElectronicOrderByExternalId(String externalId);
+
     List<ElectronicOrder> getAllElectronicOrdersContainingValueOrderedBy(String searchValue, SortOrder sortOrder);
 
     List<ElectronicOrder> getAllElectronicOrdersContainingValuesOrderedBy(String accessionNumber,

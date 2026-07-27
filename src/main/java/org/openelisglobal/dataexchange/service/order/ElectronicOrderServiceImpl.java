@@ -64,6 +64,33 @@ public class ElectronicOrderServiceImpl extends AuditableBaseObjectServiceImpl<E
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public java.util.Optional<ElectronicOrder> getActiveElectronicOrderByExternalId(String externalId) {
+        List<ElectronicOrder> eOrders = getBaseObjectDAO().getElectronicOrdersByExternalId(externalId);
+        if (eOrders == null || eOrders.isEmpty()) {
+            return java.util.Optional.empty();
+        }
+        // Statuts terminaux : un ordre dans l'un d'eux n'est plus actionnable.
+        java.util.Set<String> terminalStatusIds = new java.util.HashSet<>();
+        for (ExternalOrderStatus terminal : java.util.Arrays.asList(ExternalOrderStatus.Cancelled,
+                ExternalOrderStatus.Completed, ExternalOrderStatus.NonConforming)) {
+            String statusId = statusService.getStatusID(terminal);
+            if (!GenericValidator.isBlankOrNull(statusId)) {
+                terminalStatusIds.add(statusId);
+            }
+        }
+        // La liste est triée par id ASC (cf. DAO) : on parcourt à l'envers pour
+        // retourner la PLUS RÉCENTE demande non terminale.
+        for (int i = eOrders.size() - 1; i >= 0; i--) {
+            ElectronicOrder eOrder = eOrders.get(i);
+            if (!terminalStatusIds.contains(eOrder.getStatusId())) {
+                return java.util.Optional.of(eOrder);
+            }
+        }
+        return java.util.Optional.empty();
+    }
+
+    @Override
     public List<ElectronicOrder> getAllElectronicOrdersContainingValueOrderedBy(String searchValue, SortOrder order) {
 
         List<ElectronicOrder> searchResult = getBaseObjectDAO()

@@ -1103,6 +1103,7 @@
   "study.eorder.action.cancelled": "Order cancelled",
   "study.eorder.action.cancel.confirm": "Are you sure you want to cancel this electronic order?",
   "label.refusal.reason": "Refusal Reason",
+  "study.eorder.reject.reason.required": "Please select a refusal reason.",
   "label.biologist": "Biologist",
   "nonconformity.note": "Note",
   "error.add.edited.msg": "Error while Editing/Adding",

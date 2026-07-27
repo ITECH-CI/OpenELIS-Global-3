@@ -85,6 +85,14 @@ const VleOrder = () => {
     setLoading(false);
     setSearchCompleted(true);
     if (!response) {
+      // Échec réseau/serveur : prévenir l'utilisateur au lieu de rester muet
+      // (l'écran semblait afficher « 0 résultat » alors que la requête a échoué).
+      addNotification({
+        kind: NotificationKinds.error,
+        title: intl.formatMessage({ id: "notification.title" }),
+        message: intl.formatMessage({ id: "server.error.msg" }),
+      });
+      setNotificationVisible(true);
       return;
     }
     if (response.paging) {
@@ -156,13 +164,18 @@ const VleOrder = () => {
     );
   };
 
-  const editOrder = (externalOrderId) => {
-    window.open(
+  const editOrder = (row) => {
+    const externalOrderId = row?.externalOrderId ?? row;
+    let url =
       "/SampleEntryByProject?type=initial&ID=" +
-        encodeURIComponent(externalOrderId),
-      "_blank",
-      "noopener,noreferrer",
-    );
+      encodeURIComponent(externalOrderId);
+    // Transmettre le N° de labo déjà présent sur la demande (le formulaire de
+    // saisie le lit via ?labNumber= pour le pré-remplir). Sans ça, le N° saisi
+    // était perdu à l'ouverture de l'édition.
+    if (row?.labNumber) {
+      url += "&labNumber=" + encodeURIComponent(row.labNumber);
+    }
+    window.open(url, "_blank", "noopener,noreferrer");
   };
 
   const isRowLocked = (row) =>
@@ -185,7 +198,9 @@ const VleOrder = () => {
       addNotification({
         kind: NotificationKinds.error,
         title: intl.formatMessage({ id: "notification.title" }),
-        message: intl.formatMessage({ id: "label.refusal.reason" }),
+        message: intl.formatMessage({
+          id: "study.eorder.reject.reason.required",
+        }),
       });
       setNotificationVisible(true);
       return;
@@ -395,7 +410,7 @@ const VleOrder = () => {
                           size="sm"
                           disabled={locked}
                           style={{ padding: "0 0.75rem", minWidth: "auto" }}
-                          onClick={() => editOrder(originalRow.externalOrderId)}
+                          onClick={() => editOrder(originalRow)}
                         >
                           <FormattedMessage id="study.eorder.action.edit" />
                         </Button>
@@ -500,7 +515,7 @@ const VleOrder = () => {
           </Column>
           <Column lg={3} md={2} sm={2}>
             <div className="bottomAlign">
-              <Button onClick={searchByDateAndStatus}>
+              <Button onClick={searchByDateAndStatus} disabled={loading}>
                 <FormattedMessage id="label.button.search" />
               </Button>
             </div>
@@ -517,7 +532,10 @@ const VleOrder = () => {
           )}
           <Column lg={16} md={8} sm={4}>
             {loading && (
-              <Loading description="Loading Orders..." small={true} />
+              <Loading
+                description={intl.formatMessage({ id: "loading.description" })}
+                small={true}
+              />
             )}
           </Column>
         </Grid>
@@ -547,7 +565,9 @@ const VleOrder = () => {
                   onClick={() => loadPage(previousPage)}
                   disabled={previousPage == null}
                   renderIcon={ArrowLeft}
-                  iconDescription="previous"
+                  iconDescription={intl.formatMessage({
+                    id: "organization.previous",
+                  })}
                 />
                 <Button
                   hasIconOnly
@@ -555,7 +575,9 @@ const VleOrder = () => {
                   onClick={() => loadPage(nextPage)}
                   disabled={nextPage == null}
                   renderIcon={ArrowRight}
-                  iconDescription="next"
+                  iconDescription={intl.formatMessage({
+                    id: "organization.next",
+                  })}
                 />
               </div>
             </Column>

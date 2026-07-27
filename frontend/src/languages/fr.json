@@ -999,6 +999,7 @@
   "study.eorder.action.cancelled": "Demande annulée",
   "study.eorder.action.cancel.confirm": "Voulez-vous vraiment annuler cette demande électronique ?",
   "label.refusal.reason": "Motif du refus",
+  "study.eorder.reject.reason.required": "Veuillez sélectionner un motif de refus.",
   "label.biologist": "Biologiste",
   "nonconformity.note": "Note",
   "field.name": "Nom",

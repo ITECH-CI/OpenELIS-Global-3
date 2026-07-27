@@ -161,6 +161,8 @@ file="add_study_modifier_menu.xml" />
         file="add_fhir_push_target_checkpoint.xml" />
     <include relativeToChangelogFile="true"
         file="drop_data_export_tables.xml" />
+    <include relativeToChangelogFile="true"
+        file="add_eorder_search_indexes.xml" />
 
 
 </databaseChangeLog>

@@ -156,26 +156,41 @@ public class RestStudyElectronicOrdersController extends BaseController {
             out.put("message", "externalOrderId and qaEventId are required");
             return ResponseEntity.badRequest().body(out);
         }
+        // Le qaEventId (écrit dans reject_reason_id) DOIT référencer un vrai QA event :
+        // sinon on stocke un FK invalide (déjà source de 500 SQLState sur ce workflow,
+        // cf. dérive de schéma reject_reason_id). On valide contre la liste QA_EVENTS.
+        boolean validQaEvent = DisplayListService.getInstance().getList(ListType.QA_EVENTS).stream()
+                .anyMatch(e -> rejectForm.qaEventId.equals(e.getId()));
+        if (!validQaEvent) {
+            out.put("success", false);
+            out.put("message", "invalid qaEventId");
+            return ResponseEntity.badRequest().body(out);
+        }
         try {
-            List<ElectronicOrder> eOrders = electronicOrderService
-                    .getElectronicOrdersByExternalId(rejectForm.externalOrderId);
-            ElectronicOrder eOrder = eOrders.isEmpty() ? null : eOrders.get(eOrders.size() - 1);
+            // Sélection UNIFORME (cf. saisie) : la demande actionnable la plus récente.
+            // Si aucune (liste vide OU toutes terminales), on refuse : ne pas re-rejeter
+            // un ordre déjà annulé/rejeté/terminé.
+            ElectronicOrder eOrder = electronicOrderService
+                    .getActiveElectronicOrderByExternalId(rejectForm.externalOrderId).orElse(null);
             if (eOrder == null) {
                 out.put("success", false);
-                out.put("message", "electronic order not found");
+                out.put("message", "no actionable electronic order found");
                 return ResponseEntity.badRequest().body(out);
             }
 
             eOrder.setStatusId(
                     SpringContext.getBean(IStatusService.class).getStatusID(ExternalOrderStatus.NonConforming));
             eOrder.setRejectReasonId(rejectForm.qaEventId);
-            eOrder.setRejectComment(rejectForm.qaNote);
-            eOrder.setQaAuthorizer(rejectForm.qaAuthorizer);
+            // Bornage à la taille des colonnes (varchar 255) pour éviter une erreur SQL
+            // sur une saisie trop longue.
+            eOrder.setRejectComment(StringUtils.abbreviate(rejectForm.qaNote, 255));
+            eOrder.setQaAuthorizer(StringUtils.abbreviate(rejectForm.qaAuthorizer, 255));
             electronicOrderService.update(eOrder);
 
             // Best-effort : le store FHIR local ne contient pas systématiquement le Task
             // (electronic_order.data est la source de vérité côté OE, cf.
-            // DESIGN_INTEROP_MODULE_CIV.md §6.1). Un échec ici (ex. ResourceNotFoundException)
+            // DESIGN_INTEROP_MODULE_CIV.md §6.1). Un échec ici (ex.
+            // ResourceNotFoundException)
             // ne doit PAS faire échouer le rejet, déjà persisté avec succès ci-dessus.
             try {
                 Optional<Task> task = fhirPersistanceService.getTaskBasedOnServiceRequest(rejectForm.externalOrderId);
@@ -207,19 +222,22 @@ public class RestStudyElectronicOrdersController extends BaseController {
             return ResponseEntity.badRequest().body(out);
         }
         try {
-            List<ElectronicOrder> eOrders = electronicOrderService
-                    .getElectronicOrdersByExternalId(cancelForm.externalOrderId);
-            ElectronicOrder eOrder = eOrders.isEmpty() ? null : eOrders.get(eOrders.size() - 1);
+            // Sélection UNIFORME (cf. saisie) : la demande actionnable la plus récente.
+            // Si aucune (liste vide OU toutes terminales), on refuse : ne pas re-annuler
+            // un ordre déjà annulé/rejeté/terminé.
+            ElectronicOrder eOrder = electronicOrderService
+                    .getActiveElectronicOrderByExternalId(cancelForm.externalOrderId).orElse(null);
             if (eOrder == null) {
                 out.put("success", false);
-                out.put("message", "electronic order not found");
+                out.put("message", "no actionable electronic order found");
                 return ResponseEntity.badRequest().body(out);
             }
 
             eOrder.setStatusId(SpringContext.getBean(IStatusService.class).getStatusID(ExternalOrderStatus.Cancelled));
             electronicOrderService.update(eOrder);
 
-            // Best-effort : cf. commentaire équivalent dans rejectElectronicOrder ci-dessus.
+            // Best-effort : cf. commentaire équivalent dans rejectElectronicOrder
+            // ci-dessus.
             try {
                 Optional<Task> task = fhirPersistanceService.getTaskBasedOnServiceRequest(cancelForm.externalOrderId);
                 if (task.isPresent()) {
@@ -315,7 +333,8 @@ public class RestStudyElectronicOrdersController extends BaseController {
             // dans SamplePatientEntryRestController.setupForm pour le formulaire d'édition.
             if (displayItem.getRequestingFacility() == null
                     && StringUtils.isNotBlank(electronicOrder.getOrganizationId())) {
-                Organization organization = organizationService.getOrganizationById(electronicOrder.getOrganizationId());
+                Organization organization = organizationService
+                        .getOrganizationById(electronicOrder.getOrganizationId());
                 if (organization != null) {
                     displayItem.setRequestingFacility(organization.getOrganizationName());
                 }
