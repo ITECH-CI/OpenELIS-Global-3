@@ -1365,7 +1365,13 @@ export function SearchResults(props) {
                   </div>
                 )}
                 {logValue !== null && (
-                  <div style={{ fontSize: "0.90rem", color: "#295785", fontWeight: "bold" }}>
+                  <div
+                    style={{
+                      fontSize: "0.90rem",
+                      color: "#295785",
+                      fontWeight: "bold",
+                    }}
+                  >
                     Log : {logValue}
                   </div>
                 )}
