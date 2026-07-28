@@ -1109,7 +1109,6 @@ export function SearchResults(props) {
                 "-" +
                 row.sequenceNumber}
               <br></br>
-              {row.patientName} <br></br>
               {row.patientInfo}
               <br></br>
               <br></br>
@@ -1321,17 +1320,58 @@ export function SearchResults(props) {
               />
             );
 
-          case "A":
+          case "A": {
+            const uom = (row.unitsOfMeasure || "").toLowerCase();
+            const isViralLoadResult =
+              row.displayResultAsLog ||
+              uom.includes("copies") ||
+              uom.includes("copie") ||
+              uom.includes("cp/ml");
+            const logValue =
+              isViralLoadResult &&
+              row.resultValue !== "" &&
+              !isNaN(parseFloat(row.resultValue)) &&
+              parseFloat(row.resultValue) > 0
+                ? Math.log10(parseFloat(row.resultValue)).toFixed(2)
+                : null;
             return (
-              <TextArea
-                id={"ResultValue" + row.id}
-                name={"testResult[" + row.id + "].resultValue"}
-                rows={1}
-                labelText=""
-                onChange={(e) => handleChange(e, row.id)}
-                value={row.resultValue}
-              />
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  width: "100%",
+                  maxWidth: "100%",
+                  boxSizing: "border-box",
+                }}
+              >
+                <TextArea
+                  id={"ResultValue" + row.id}
+                  name={"testResult[" + row.id + "].resultValue"}
+                  rows={1}
+                  labelText=""
+                  onChange={(e) => handleChange(e, row.id)}
+                  value={row.resultValue}
+                  style={{ width: "100%" }}
+                />
+                {row.unitsOfMeasure && (
+                  <div
+                    style={{
+                      fontSize: "0.75rem",
+                      color: "#525252",
+                      textAlign: "right",
+                    }}
+                  >
+                    {row.unitsOfMeasure}
+                  </div>
+                )}
+                {logValue !== null && (
+                  <div style={{ fontSize: "0.90rem", color: "#295785", fontWeight: "bold" }}>
+                    Log : {logValue}
+                  </div>
+                )}
+              </div>
             );
+          }
 
           default:
             return row.resultValue;
