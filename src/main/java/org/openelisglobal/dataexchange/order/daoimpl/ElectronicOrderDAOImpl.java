@@ -411,6 +411,73 @@ public class ElectronicOrderDAOImpl extends BaseDAOImpl<ElectronicOrder, String>
     }
 
     @Override
+    public List<ElectronicOrder> getAllElectronicOrdersByTimestampStatusAndPatientValue(
+            java.sql.Timestamp startTimestamp, java.sql.Timestamp endTimestamp, String statusId, String patientValue,
+            SortOrder sortOrder) {
+        boolean hasPatientValue = !GenericValidator.isBlankOrNull(patientValue);
+
+        // SELECT eo explicite : sans lui, Hibernate renvoie un tuple implicite
+        // (eo, patient, person) dès qu'il y a plusieurs alias joints, ce qui casse
+        // la TypedQuery<ElectronicOrder> ("Cannot create TypedQuery for query with
+        // more than one return").
+        String hql = "SELECT eo From ElectronicOrder eo ";
+        if (hasPatientValue) {
+            hql += "LEFT JOIN eo.patient patient LEFT JOIN patient.person person ";
+        }
+        hql += "WHERE 1 = 1 ";
+        if (startTimestamp != null) {
+            hql += "AND eo.orderTimestamp BETWEEN :startDate AND :endDate ";
+        }
+        if (!GenericValidator.isBlankOrNull(statusId)) {
+            hql += "AND eo.statusId = :statusId ";
+        }
+        if (hasPatientValue) {
+            hql += "AND (lower(eo.externalId) = lower(:patientValue) OR lower(person.firstName) ="
+                    + " lower(:patientValue) OR lower(person.lastName) = lower(:patientValue) OR patient.id"
+                    + " in (SELECT identity.patientId FROM PatientIdentity identity WHERE"
+                    + " lower(identity.identityData) = lower(:patientValue)) or lower(patient.nationalId) ="
+                    + " lower(:patientValue) or lower(concat(person.firstName, ' ', person.lastName)) ="
+                    + " lower(:patientValue)) ";
+        }
+
+        switch (sortOrder) {
+        case STATUS_ID:
+            hql += "ORDER BY eo.statusId asc ";
+            break;
+        case LAST_UPDATED_ASC:
+            hql += "ORDER BY eo.lastupdated asc ";
+            break;
+        case LAST_UPDATED_DESC:
+            hql += "ORDER BY eo.lastupdated desc ";
+            break;
+        case EXTERNAL_ID:
+            hql += "ORDER BY eo.externalId asc ";
+            break;
+        default:
+            //
+            break;
+        }
+
+        try {
+            Query<ElectronicOrder> query = entityManager.unwrap(Session.class).createQuery(hql, ElectronicOrder.class);
+            if (startTimestamp != null) {
+                query.setParameter("startDate", startTimestamp);
+                query.setParameter("endDate", endTimestamp);
+            }
+            if (!GenericValidator.isBlankOrNull(statusId)) {
+                query.setParameter("statusId", Integer.parseInt(statusId));
+            }
+            if (hasPatientValue) {
+                query.setParameter("patientValue", patientValue);
+            }
+            return query.list();
+        } catch (HibernateException e) {
+            handleException(e, "getAllElectronicOrdersByTimestampStatusAndPatientValue");
+        }
+        return null;
+    }
+
+    @Override
     public int getCountOfElectronicOrdersByTimestampAndStatus(java.sql.Timestamp startTimestamp,
             java.sql.Timestamp endTimestamp, String statusId) {
         String hql = "SELECT COUNT(*) From ElectronicOrder eo WHERE 1 = 1 ";

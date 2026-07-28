@@ -238,6 +238,26 @@ public class ElectronicOrderServiceImpl extends AuditableBaseObjectServiceImpl<E
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public List<ElectronicOrder> searchStudyElectronicOrdersCombined(ElectronicOrderViewForm form) {
+        String startDate = form.getStartDate();
+        String endDate = form.getEndDate();
+        if (GenericValidator.isBlankOrNull(startDate) && !GenericValidator.isBlankOrNull(endDate)) {
+            startDate = endDate;
+        }
+        if (GenericValidator.isBlankOrNull(endDate) && !GenericValidator.isBlankOrNull(startDate)) {
+            endDate = startDate;
+        }
+        java.sql.Timestamp startTimestamp = GenericValidator.isBlankOrNull(startDate) ? null
+                : DateUtil.convertStringDateStringTimeToTimestamp(startDate, "00:00:00.0");
+        java.sql.Timestamp endTimestamp = GenericValidator.isBlankOrNull(endDate) ? null
+                : DateUtil.convertStringDateStringTimeToTimestamp(endDate, "23:59:59");
+
+        return baseObjectDAO.getAllElectronicOrdersByTimestampStatusAndPatientValue(startTimestamp, endTimestamp,
+                form.getStatusId(), form.getSearchValue(), SortOrder.STATUS_ID);
+    }
+
+    @Override
     public int getCountOfAllElectronicOrdersByDateAndStatus(Date startDate, Date endDate, String statusId) {
         return getBaseObjectDAO().getCountOfAllElectronicOrdersByDateAndStatus(startDate, endDate, statusId);
     }

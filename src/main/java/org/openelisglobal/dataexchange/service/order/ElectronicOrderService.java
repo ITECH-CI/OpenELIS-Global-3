@@ -54,4 +54,14 @@ public interface ElectronicOrderService extends BaseObjectService<ElectronicOrde
     List<ElectronicOrder> searchForElectronicOrders(ElectronicOrderViewForm form);
 
     List<ElectronicOrder> searchForStudyElectronicOrders(ElectronicOrderViewForm form);
+
+    /**
+     * Recherche combinée : code patient, dates et statut sont chacun des filtres
+     * optionnels appliqués ensemble (ET logique), sur le même principe que
+     * getAllElectronicOrdersByTimestampAndStatus. Contrairement à
+     * searchForElectronicOrders/searchForStudyElectronicOrders (IDENTIFIER vs
+     * DATE_STATUS mutuellement exclusifs, et dépendant du store FHIR local pour le
+     * code patient), tout se résout ici directement en base, sans appel FHIR.
+     */
+    List<ElectronicOrder> searchStudyElectronicOrdersCombined(ElectronicOrderViewForm form);
 }

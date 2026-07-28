@@ -21,7 +21,12 @@ import {
   TableBody,
   TableCell,
 } from "@carbon/react";
-import { ArrowLeft, ArrowRight } from "@carbon/icons-react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  Search,
+  FilterRemove,
+} from "@carbon/icons-react";
 import { FormattedMessage, useIntl } from "react-intl";
 import PageBreadCrumb from "../common/PageBreadCrumb";
 import CustomDatePicker from "../common/CustomDatePicker";
@@ -59,6 +64,7 @@ const VleOrder = () => {
   const [pagination, setPagination] = useState(false);
   const [currentApiPage, setCurrentApiPage] = useState(null);
   const [totalApiPages, setTotalApiPages] = useState(null);
+  const [totalOrdersCount, setTotalOrdersCount] = useState(0);
 
   const [rejectModalRow, setRejectModalRow] = useState(null);
   const [rejectDraft, setRejectDraft] = useState({
@@ -120,6 +126,10 @@ const VleOrder = () => {
       id: item.electronicOrderId,
     }));
     setEOrders(orders);
+    const searchTermToPage = response.paging?.searchTermToPage;
+    setTotalOrdersCount(
+      searchTermToPage ? searchTermToPage.length : orders.length,
+    );
     if (orders.length === 0) {
       addNotification({
         kind: NotificationKinds.warning,
@@ -130,22 +140,15 @@ const VleOrder = () => {
     }
   };
 
-  const searchByIdentifier = () => {
+  const handleSearch = () => {
     setLoading(true);
-    const params = new URLSearchParams({
-      searchType: "IDENTIFIER",
-      searchValue: searchValue,
-    });
-    getFromOpenElisServer(
-      "/rest/StudyElectronicOrders?" + params.toString(),
-      parseResponse,
-    );
-  };
-
-  const searchByDateAndStatus = () => {
-    setLoading(true);
+    // Recherche combinée : code patient, dates et statut sont chacun des
+    // filtres optionnels envoyés ensemble, appliqués en ET par le backend
+    // (searchStudyElectronicOrdersCombined), sur le même principe que la
+    // recherche par date et statut.
     const params = new URLSearchParams({
       searchType: "DATE_STATUS",
+      searchValue: searchValue,
       startDate: startDate,
       endDate: endDate,
       statusId: statusId,
@@ -154,6 +157,21 @@ const VleOrder = () => {
       "/rest/StudyElectronicOrders?" + params.toString(),
       parseResponse,
     );
+  };
+
+  const clearFilters = () => {
+    setSearchValue("");
+    setStartDate("");
+    setEndDate("");
+    setStatusId("");
+    setEOrders([]);
+    setSearchCompleted(false);
+    setPagination(false);
+    setNextPage(null);
+    setPreviousPage(null);
+    setCurrentApiPage(null);
+    setTotalApiPages(null);
+    setTotalOrdersCount(0);
   };
 
   const loadPage = (page) => {
@@ -298,12 +316,11 @@ const VleOrder = () => {
   );
 
   const COLUMN_WIDTHS = {
-    rowNumber: "3%",
-    requestingFacility: "18%",
-    patientNationalId: "15%",
-    gender: "2%",
+    requestingFacility: "19%",
+    patientNationalId: "14%",
+    gender: "3%",
     birthDate: "8%",
-    creationDateDisplay: "8%",
+    collectionDateDisplay: "8%",
     receptionDateDisplay: "8%",
     requestDateDisplay: "8%",
     status: "6%",
@@ -333,8 +350,8 @@ const VleOrder = () => {
           header: intl.formatMessage({ id: "study.eorder.patient.birth_date" }),
         },
         {
-          key: "creationDateDisplay",
-          header: intl.formatMessage({ id: "study.eorder.creation.date" }),
+          key: "collectionDateDisplay",
+          header: intl.formatMessage({ id: "study.eorder.collection.date" }),
         },
         {
           key: "receptionDateDisplay",
@@ -371,9 +388,6 @@ const VleOrder = () => {
           >
             <TableHead>
               <TableRow>
-                <TableHeader style={{ width: COLUMN_WIDTHS.rowNumber }}>
-                  <FormattedMessage id="study.eorder.row_number" />
-                </TableHeader>
                 {headers.map((header) => (
                   <TableHeader
                     key={header.key}
@@ -389,12 +403,11 @@ const VleOrder = () => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {rows.map((row, rowIndex) => {
+              {rows.map((row) => {
                 const originalRow = eOrders.find((o) => o.id === row.id);
                 const locked = originalRow ? isRowLocked(originalRow) : false;
                 return (
                   <TableRow key={row.id} {...getRowProps({ row })}>
-                    <TableCell>{rowIndex + 1}</TableCell>
                     {row.cells.map((cell) => renderCell(cell))}
                     <TableCell>
                       <div
@@ -461,15 +474,35 @@ const VleOrder = () => {
           </Section>
         </Column>
       </Grid>
-      <div className="orderLegendBody">
+      <div
+        style={{
+          backgroundColor: "#ffffff",
+          border: "1px solid #e0e0e0",
+          borderRadius: "8px",
+          padding: "1.5rem",
+          margin: "1rem 0",
+        }}
+      >
         <Grid fullWidth={true}>
-          <Column lg={16} md={8} sm={4}>
-            <FormattedMessage id="study.eorder.search.date_range.title" />
+          <Column lg={4} md={4} sm={4}>
+            <TextInput
+              id="vleOrderSearchValue"
+              labelText={intl.formatMessage({
+                id: "study.eorder.patient.code",
+              })}
+              placeholder={intl.formatMessage({
+                id: "study.eorder.patient.code.placeholder",
+              })}
+              value={searchValue}
+              onChange={(e) => setSearchValue(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  handleSearch();
+                }
+              }}
+            />
           </Column>
-          <Column lg={16} md={8} sm={4}>
-            <br />
-          </Column>
-          <Column lg={3} md={2} sm={2}>
+          <Column lg={3} md={4} sm={4}>
             <CustomDatePicker
               id="vleOrderStartDate"
               labelText={intl.formatMessage({
@@ -478,9 +511,10 @@ const VleOrder = () => {
               value={startDate}
               className="inputDate"
               onChange={(date) => setStartDate(date)}
+              updateStateValue
             />
           </Column>
-          <Column lg={3} md={2} sm={2}>
+          <Column lg={3} md={4} sm={4}>
             <CustomDatePicker
               id="vleOrderEndDate"
               labelText={intl.formatMessage({
@@ -489,9 +523,10 @@ const VleOrder = () => {
               value={endDate}
               className="inputDate"
               onChange={(date) => setEndDate(date)}
+              updateStateValue
             />
           </Column>
-          <Column lg={3} md={2} sm={2}>
+          <Column lg={3} md={4} sm={4}>
             <Select
               id="vleOrderStatusId"
               labelText={intl.formatMessage({
@@ -513,18 +548,29 @@ const VleOrder = () => {
               ))}
             </Select>
           </Column>
-          <Column lg={3} md={2} sm={2}>
-            <div className="bottomAlign">
-              <Button onClick={searchByDateAndStatus} disabled={loading}>
+          <Column lg={3} md={4} sm={4}>
+            <div
+              className="bottomAlign"
+              style={{ display: "flex", gap: "0.5rem" }}
+            >
+              <Button onClick={handleSearch} renderIcon={Search}>
                 <FormattedMessage id="label.button.search" />
               </Button>
+              <Button
+                kind="tertiary"
+                onClick={clearFilters}
+                hasIconOnly
+                renderIcon={FilterRemove}
+                iconDescription={intl.formatMessage({
+                  id: "label.button.clear",
+                })}
+              />
             </div>
           </Column>
-
-          <Column lg={16} md={8} sm={4}>
-            <hr />
-          </Column>
-
+        </Grid>
+      </div>
+      <div className="orderLegendBody">
+        <Grid fullWidth={true}>
           {searchCompleted && eOrders.length === 0 && (
             <Column lg={16} md={8} sm={4}>
               <FormattedMessage id="eorder.search.noresults" />
@@ -539,6 +585,25 @@ const VleOrder = () => {
             )}
           </Column>
         </Grid>
+
+        {eOrders.length > 0 && (
+          <div
+            style={{
+              backgroundColor: "#d1e7dd",
+              color: "#0f5132",
+              border: "1px solid #a3cfbb",
+              borderRadius: "4px",
+              padding: "0.5rem 1rem",
+              margin: "0.5rem 0",
+              display: "inline-block",
+            }}
+          >
+            <FormattedMessage
+              id="study.eorder.count.summary"
+              values={{ loaded: eOrders.length, total: totalOrdersCount }}
+            />
+          </div>
+        )}
 
         {eOrders.length > 0 && createDataTable()}
 

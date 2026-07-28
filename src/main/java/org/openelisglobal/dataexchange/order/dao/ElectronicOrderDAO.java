@@ -48,6 +48,9 @@ public interface ElectronicOrderDAO extends BaseDAO<ElectronicOrder, String> {
     List<ElectronicOrder> getAllElectronicOrdersByTimestampAndStatus(Timestamp startTimestamp, Timestamp endTimestamp,
             String statusId, SortOrder sortOrder);
 
+    List<ElectronicOrder> getAllElectronicOrdersByTimestampStatusAndPatientValue(Timestamp startTimestamp,
+            Timestamp endTimestamp, String statusId, String patientValue, SortOrder sortOrder);
+
     int getCountOfElectronicOrdersByTimestampAndStatus(Timestamp startTimestamp, Timestamp endTimestamp,
             String statusId);
 
