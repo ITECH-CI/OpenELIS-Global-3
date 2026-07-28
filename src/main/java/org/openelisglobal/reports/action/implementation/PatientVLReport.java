@@ -44,9 +44,98 @@ public abstract class PatientVLReport extends RetroCIPatientReport {
     private ObservationHistoryService ohService = SpringContext.getBean(ObservationHistoryService.class);
     private org.openelisglobal.dictionary.service.DictionaryService dictionaryService = SpringContext
             .getBean(org.openelisglobal.dictionary.service.DictionaryService.class);
+    private org.openelisglobal.siteinformation.service.SiteInformationService siteInformationService = SpringContext
+            .getBean(org.openelisglobal.siteinformation.service.SiteInformationService.class);
+
+    /**
+     * Préfixe des clés de config (domain site_information « viralLoadReportConfig
+     * ») selon le type VIH testé. HIV-2 pur → « vl.hiv2 » ; tout le reste (HIV-1,
+     * HIV-1+2, repli) → « vl.hiv1 ».
+     */
+    private String vlConfigPrefixForKey(String hivTestedTypeKey) {
+        if ("HIVStatus.HIV_2".equals(hivTestedTypeKey)) {
+            return "vl.hiv2";
+        }
+        return "vl.hiv1";
+    }
+
+    /**
+     * Valeur d'une clé de config du rapport de charge virale, ou null si absente ou
+     * vide (le JRXML applique alors sa valeur par défaut).
+     */
+    private String getVlConfigValue(String name) {
+        org.openelisglobal.siteinformation.valueholder.SiteInformation info = siteInformationService
+                .getSiteInformationByName(name);
+        if (info == null || GenericValidator.isBlankOrNull(info.getValue())) {
+            return null;
+        }
+        return info.getValue();
+    }
+
+    /**
+     * Résout les contenus paramétrables (trousse, automate, PCR, seuils,
+     * interprétation, texte « indétectable ») selon le type VIH testé et les pose
+     * dans le bean. Les seuils sont stockés « support:valeur;support:valeur » et
+     * éclatés en une ligne « support : valeur » par élément (dépendants de la
+     * trousse : COBAS VIH-1 en porte 3).
+     */
+    private void setReportConfig(VLReportData data, String hivTestedTypeKey) {
+        String prefix = vlConfigPrefixForKey(hivTestedTypeKey);
+        data.setKitLabel(getVlConfigValue(prefix + ".kitLabel"));
+        data.setAutomateLabel(getVlConfigValue(prefix + ".automateLabel"));
+        data.setPcrLabel(getVlConfigValue(prefix + ".pcrLabel"));
+        data.setInterpretation(getVlConfigValue(prefix + ".interpretation"));
+        data.setUndetectableText(getVlConfigValue(prefix + ".undetectable"));
+
+        List<String> thresholds = new ArrayList<>();
+        String raw = getVlConfigValue(prefix + ".thresholds");
+        if (!GenericValidator.isBlankOrNull(raw)) {
+            for (String entry : raw.split(";")) {
+                String trimmed = entry.trim();
+                if (trimmed.isEmpty()) {
+                    continue;
+                }
+                int sep = trimmed.indexOf(':');
+                if (sep > 0) {
+                    thresholds.add("Seuil de détection de la technique " + trimmed.substring(0, sep).trim() + " : "
+                            + trimmed.substring(sep + 1).trim());
+                } else {
+                    thresholds.add(trimmed);
+                }
+            }
+        }
+        data.setThresholdsList(thresholds);
+        data.setThresholdsText(thresholds.isEmpty() ? null : String.join("\n", thresholds));
+
+        // Accréditation (indépendante du type VIH testé) : toggle + note. Le logo
+        // est injecté en paramètre Jasper dans createReportParameters().
+        data.setAccreditationEnabled(Boolean.parseBoolean(getVlConfigValue("vl.accreditation.enabled")));
+        data.setAccreditationNote(getVlConfigValue("vl.accreditation.note"));
+    }
+
+    private org.openelisglobal.image.service.ImageService imageService = SpringContext
+            .getBean(org.openelisglobal.image.service.ImageService.class);
 
     protected List<VLReportData> reportItems;
     private String invalidValue = MessageUtil.getMessage("report.test.status.inProgress");
+
+    /**
+     * Injecte le logo d'accréditation en paramètre Jasper (InputStream), seulement
+     * si le labo est accrédité et qu'un logo a été uploadé. Même mécanisme que les
+     * logos d'en-tête (Report.createReportParameters). Le JRXML l'affiche via
+     * $P{accreditationLogo} en onErrorType="Blank" : paramètre absent = rien.
+     */
+    @Override
+    protected void createReportParameters() {
+        super.createReportParameters();
+        if (Boolean.parseBoolean(getVlConfigValue("vl.accreditation.enabled"))) {
+            java.util.Optional<org.openelisglobal.image.valueholder.Image> logo = imageService
+                    .getImageBySiteInfoName("vl.accreditation.logo");
+            if (logo.isPresent() && logo.get().getImage() != null) {
+                reportParameters.put("accreditationLogo", new java.io.ByteArrayInputStream(logo.get().getImage()));
+            }
+        }
+    }
 
     @Override
     protected void initializeReportItems() {
@@ -187,6 +276,9 @@ public abstract class PatientVLReport extends RetroCIPatientReport {
                 data.setHivTestedTypeKey(dict.getNameKey());
             }
         }
+        // Contenus paramétrables (trousse/automate/seuils/interprétation) selon le
+        // type VIH testé. Résolus depuis site_information ; repli JRXML si absents.
+        setReportConfig(data, data.getHivTestedTypeKey());
         data.setSubjectno(reportPatient.getNationalId());
         data.setSitesubjectno(reportPatient.getExternalId());
         data.setBirth_date(reportPatient.getBirthDateForDisplay());

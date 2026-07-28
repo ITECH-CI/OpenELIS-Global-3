@@ -165,6 +165,8 @@ file="add_study_modifier_menu.xml" />
         file="add_eorder_search_indexes.xml" />
     <include relativeToChangelogFile="true"
         file="add_hiv_tested_type_observation.xml" />
+    <include relativeToChangelogFile="true"
+        file="add_viral_load_report_config.xml" />
 
 
 </databaseChangeLog>

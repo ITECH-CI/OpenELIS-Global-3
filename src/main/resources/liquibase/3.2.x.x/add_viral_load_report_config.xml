@@ -1,0 +1,181 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+    <!--
+      Configuration paramétrable du rapport de charge virale : trousse
+      commerciale, automate, seuils (dépendant de la trousse) et interprétations,
+      qui diffèrent d'une plateforme à l'autre et selon le type de VIH testé
+      (hivTestedType : VIH-1 / VIH-2).
+
+      Les valeurs sont stockées dans site_information sous le domain
+      « viralLoadReportConfig », une clé courte par contenu. Le rapport
+      (PatientVLReport) les résout selon le type VIH testé et les injecte dans le
+      bean ; le JRXML conserve des valeurs par défaut (repli) si une clé est
+      vide. Les valeurs par défaut ci-dessous reprennent la plateforme EPHN
+      Bouaké (COBAS pour HIV-1, GENERIC HIV-2 pour HIV-2).
+    -->
+
+    <!--
+      1) site_information.value passe de varchar(200) à varchar(2000) : les
+      textes d'interprétation dépassent 200 caractères (sauts de ligne inclus).
+      Additif, sans perte.
+    -->
+    <changeSet author="pkomena" id="viral_load_report_config-widen-value">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="200"><![CDATA[
+SELECT character_maximum_length FROM information_schema.columns
+ WHERE table_schema = 'clinlims' AND table_name = 'site_information' AND column_name = 'value'
+]]></sqlCheck>
+        </preConditions>
+        <sql><![CDATA[
+ALTER TABLE clinlims.site_information ALTER COLUMN value TYPE character varying(2000);
+]]></sql>
+    </changeSet>
+
+    <!-- 2) Domain « viralLoadReportConfig ». -->
+    <changeSet author="pkomena" id="viral_load_report_config-domain">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0"><![CDATA[
+SELECT count(*) FROM clinlims.site_information_domain WHERE name = 'vlReportConfig'
+]]></sqlCheck>
+        </preConditions>
+        <sql><![CDATA[
+INSERT INTO clinlims.site_information_domain(id, name, description) VALUES
+  (nextval('site_information_domain_seq'), 'vlReportConfig',
+   'Configuration du rapport de charge virale (trousses, automates, seuils, interprétations)');
+]]></sql>
+    </changeSet>
+
+    <!--
+      3) Clés de configuration. value_type = freeText ; les libellés affichés
+      dans l'admin viennent de name_key (i18n). Valeurs par défaut = EPHN Bouaké.
+      Idempotent : n'insère que les clés absentes.
+    -->
+    <changeSet author="pkomena" id="viral_load_report_config-keys">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0"><![CDATA[
+SELECT count(*) FROM clinlims.site_information
+ WHERE domain_id = (SELECT id FROM clinlims.site_information_domain WHERE name = 'vlReportConfig')
+]]></sqlCheck>
+        </preConditions>
+        <sql><![CDATA[
+INSERT INTO clinlims.site_information
+  (id, name, description, value, encrypted, domain_id, value_type, "group", name_key, lastupdated)
+VALUES
+  -- ============ HIV-1 ============
+  (nextval('site_information_seq'), 'vl.hiv1.kitLabel',
+   'Trousse commerciale (VIH-1)',
+   'COBAS Taqman/Ampliprep  HIV-1 tests,V2.0 Quantitative  (HI2CAP) / C4800 HIV-1 AMP/DET',
+   false, (SELECT id FROM clinlims.site_information_domain WHERE name = 'vlReportConfig'),
+   'freeText', 0, 'viralLoadReportConfig.hiv1.kitLabel', now()),
+
+  (nextval('site_information_seq'), 'vl.hiv1.automateLabel',
+   'Automate (VIH-1)',
+   'COBAS Ampliprep / Cobas Taqman Series / Cobas 6800 Roche Diagnostic / Cobas 4800',
+   false, (SELECT id FROM clinlims.site_information_domain WHERE name = 'vlReportConfig'),
+   'freeText', 0, 'viralLoadReportConfig.hiv1.automateLabel', now()),
+
+  (nextval('site_information_seq'), 'vl.hiv1.pcrLabel',
+   'Technique PCR (VIH-1)',
+   'COBAS 6800/8800 HIV-1 P/N',
+   false, (SELECT id FROM clinlims.site_information_domain WHERE name = 'vlReportConfig'),
+   'freeText', 0, 'viralLoadReportConfig.hiv1.pcrLabel', now()),
+
+  (nextval('site_information_seq'), 'vl.hiv1.thresholds',
+   'Seuils de détection (VIH-1) — format support:valeur;support:valeur',
+   'W/PSC:599 copies/mL;CV/PL:20 copies/mL;CV/DBS:400 copies/mL',
+   false, (SELECT id FROM clinlims.site_information_domain WHERE name = 'vlReportConfig'),
+   'freeText', 0, 'viralLoadReportConfig.hiv1.thresholds', now()),
+
+  (nextval('site_information_seq'), 'vl.hiv1.interpretation',
+   'Interprétation (VIH-1)',
+   E'1-Si le titre HIV-1<=1000 copies/mL, suppression virale selon les directives nationales de suivi biologique des patients sous traitement antiretroviral\n\n2-Si le titre HIV-1>1000 copies/mL, le virus est détectable au niveau du sang périphérique et le patient est dit en échec virologique. Refaire un autre prélèvement trois mois après le conseil à l''observance, pour un autre examen de charge virale pour confirmer et infirmer l''échec virologique',
+   false, (SELECT id FROM clinlims.site_information_domain WHERE name = 'vlReportConfig'),
+   'freeText', 0, 'viralLoadReportConfig.hiv1.interpretation', now()),
+
+  (nextval('site_information_seq'), 'vl.hiv1.undetectable',
+   'Texte « indétectable » (VIH-1)',
+   'Valeur charge virale : < LL=virus HIV-1 indétectable dans le sang périphérique',
+   false, (SELECT id FROM clinlims.site_information_domain WHERE name = 'vlReportConfig'),
+   'freeText', 0, 'viralLoadReportConfig.hiv1.undetectable', now()),
+
+  -- ============ HIV-2 ============
+  (nextval('site_information_seq'), 'vl.hiv2.kitLabel',
+   'Trousse commerciale (VIH-2)',
+   'GENERIC HIV-2 VL2.0 RUO',
+   false, (SELECT id FROM clinlims.site_information_domain WHERE name = 'vlReportConfig'),
+   'freeText', 0, 'viralLoadReportConfig.hiv2.kitLabel', now()),
+
+  (nextval('site_information_seq'), 'vl.hiv2.automateLabel',
+   'Automate (VIH-2)',
+   'GenoXtract / FluoroCycler XT',
+   false, (SELECT id FROM clinlims.site_information_domain WHERE name = 'vlReportConfig'),
+   'freeText', 0, 'viralLoadReportConfig.hiv2.automateLabel', now()),
+
+  (nextval('site_information_seq'), 'vl.hiv2.pcrLabel',
+   'Technique PCR (VIH-2)',
+   'GENERIC HIV-2 VL2.0 RUO',
+   false, (SELECT id FROM clinlims.site_information_domain WHERE name = 'vlReportConfig'),
+   'freeText', 0, 'viralLoadReportConfig.hiv2.pcrLabel', now()),
+
+  (nextval('site_information_seq'), 'vl.hiv2.thresholds',
+   'Seuils de détection (VIH-2) — format support:valeur;support:valeur',
+   'HIV-2:14 copies/mL',
+   false, (SELECT id FROM clinlims.site_information_domain WHERE name = 'vlReportConfig'),
+   'freeText', 0, 'viralLoadReportConfig.hiv2.thresholds', now()),
+
+  (nextval('site_information_seq'), 'vl.hiv2.interpretation',
+   'Interprétation (VIH-2)',
+   E'1-Si le titre HIV-2<=1000 copies/mL, suppression virale selon les directives nationales de suivi biologique des patients sous traitement antiretroviral\n\n2-Si le titre HIV-2>1000 copies/mL, le virus est détectable au niveau du sang périphérique et le patient est dit en échec virologique. Refaire un autre prélèvement trois mois après le conseil à l''observance, pour un autre examen de charge virale pour confirmer et infirmer l''échec virologique',
+   false, (SELECT id FROM clinlims.site_information_domain WHERE name = 'vlReportConfig'),
+   'freeText', 0, 'viralLoadReportConfig.hiv2.interpretation', now()),
+
+  (nextval('site_information_seq'), 'vl.hiv2.undetectable',
+   'Texte « indétectable » (VIH-2)',
+   'Valeur charge virale : < LL=virus HIV-2 indétectable dans le sang périphérique',
+   false, (SELECT id FROM clinlims.site_information_domain WHERE name = 'vlReportConfig'),
+   'freeText', 0, 'viralLoadReportConfig.hiv2.undetectable', now());
+]]></sql>
+    </changeSet>
+
+    <!--
+      4) Accréditation : certains laboratoires sont accrédités et doivent porter
+      un logo + une note d'accréditation sur le rapport. Trois clés :
+        - vl.accreditation.enabled (boolean) : masque logo ET note d'un coup
+          quand le labo n'est pas accrédité (défaut : false) ;
+        - vl.accreditation.note (freeText) : texte d'accréditation (défaut vide,
+          le labo le renseigne) ;
+        - vl.accreditation.logo (logoUpload) : image uploadée via l'admin logo,
+          servie au rapport via ImageService.getImageBySiteInfoName.
+    -->
+    <changeSet author="pkomena" id="viral_load_report_config-accreditation">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0"><![CDATA[
+SELECT count(*) FROM clinlims.site_information WHERE name = 'vl.accreditation.enabled'
+]]></sqlCheck>
+        </preConditions>
+        <sql><![CDATA[
+INSERT INTO clinlims.site_information
+  (id, name, description, value, encrypted, domain_id, value_type, "group", name_key, lastupdated)
+VALUES
+  (nextval('site_information_seq'), 'vl.accreditation.enabled',
+   'Laboratoire accrédité (affiche logo + note d''accréditation)',
+   'false', false, (SELECT id FROM clinlims.site_information_domain WHERE name = 'vlReportConfig'),
+   'boolean', 0, 'viralLoadReportConfig.accreditation.enabled', now()),
+
+  (nextval('site_information_seq'), 'vl.accreditation.note',
+   'Note d''accréditation (ex. norme, n° d''accréditation, organisme)',
+   '', false, (SELECT id FROM clinlims.site_information_domain WHERE name = 'vlReportConfig'),
+   'freeText', 0, 'viralLoadReportConfig.accreditation.note', now()),
+
+  (nextval('site_information_seq'), 'vl.accreditation.logo',
+   'Logo d''accréditation (image)',
+   '', false, (SELECT id FROM clinlims.site_information_domain WHERE name = 'vlReportConfig'),
+   'logoUpload', 0, 'viralLoadReportConfig.accreditation.logo', now());
+]]></sql>
+    </changeSet>
+
+</databaseChangeLog>
