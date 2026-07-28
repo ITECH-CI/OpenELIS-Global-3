@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Jaspersoft Studio version 6.21.3.final using JasperReports Library version 6.20.6  -->
 <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="Patient_ARV_Followup_patient_info" pageWidth="552" pageHeight="802" columnWidth="552" leftMargin="0" rightMargin="0" topMargin="0" bottomMargin="0" uuid="dab72e0b-fab1-4108-ab9f-21f81a0fa6ac">
 	<property name="ireport.scriptlethandling" value="0"/>
 	<property name="ireport.encoding" value="UTF-8"/>
@@ -71,7 +72,7 @@
 				<textFieldExpression><![CDATA[$P{age}]]></textFieldExpression>
 			</textField>
 			<textField pattern="" isBlankWhenNull="true">
-				<reportElement key="textField" x="411" y="1" width="26" height="18" forecolor="#000000" backcolor="#FFFFFF" uuid="f242d755-eff9-4167-bbaa-5adf236727f4"/>
+				<reportElement key="textField" x="411" y="2" width="26" height="16" forecolor="#000000" backcolor="#FFFFFF" uuid="f242d755-eff9-4167-bbaa-5adf236727f4"/>
 				<box>
 					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
@@ -263,7 +264,7 @@
 				<text><![CDATA[Grossesse: ]]></text>
 			</staticText>
 			<textField pattern="" isBlankWhenNull="true">
-				<reportElement key="textField" x="522" y="1" width="25" height="18" isPrintWhenDetailOverflows="true" forecolor="#000000" backcolor="#FFFFFF" uuid="8ca67d8e-ae8e-4ff3-9ce6-8301798a3efb">
+				<reportElement key="textField" x="522" y="3" width="25" height="13" isPrintWhenDetailOverflows="true" forecolor="#000000" backcolor="#FFFFFF" uuid="8ca67d8e-ae8e-4ff3-9ce6-8301798a3efb">
 					<printWhenExpression><![CDATA[$P{gender}.equalsIgnoreCase("F")]]></printWhenExpression>
 				</reportElement>
 				<box>
@@ -272,7 +273,7 @@
 					<bottomPen lineWidth="0.0" lineColor="#000000"/>
 					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 				</box>
-				<textElement>
+				<textElement verticalAlignment="Top">
 					<font size="9"/>
 				</textElement>
 				<textFieldExpression><![CDATA[($P{vlPregnancy} == null || $P{vlPregnancy}.isEmpty()) ? " " : ($P{vlPregnancy}.contains("=") ? $P{vlPregnancy}.split("=")[1] : $P{vlPregnancy})]]></textFieldExpression>
@@ -296,7 +297,7 @@
 					<bottomPen lineWidth="0.0" lineColor="#000000"/>
 					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 				</box>
-				<textElement>
+				<textElement verticalAlignment="Middle">
 					<font size="9"/>
 				</textElement>
 				<textFieldExpression><![CDATA[($P{vlSuckle} == null || $P{vlSuckle}.isEmpty()) ? " " : ($P{vlSuckle}.contains("=") ? $P{vlSuckle}.split("=")[1] : $P{vlSuckle})]]></textFieldExpression>

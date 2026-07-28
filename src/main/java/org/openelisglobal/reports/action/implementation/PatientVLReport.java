@@ -73,6 +73,34 @@ public abstract class PatientVLReport extends RetroCIPatientReport {
     }
 
     /**
+     * Décode un id de dictionnaire de réponse démographique en OUI / NON / N/A pour
+     * l'affichage, via le nameKey (display_key) STABLE du dictionnaire (answer.yes
+     * / answer.no / answer.notApplicable / answer.unknown), robuste face à la
+     * langue du libellé. Retourne " " si absent ou non reconnu (évite d'afficher un
+     * libellé technique brut ou un id sur le rapport).
+     */
+    private String normalizeYesNo(String dictId) {
+        if (GenericValidator.isBlankOrNull(dictId)) {
+            return " ";
+        }
+        org.openelisglobal.dictionary.valueholder.Dictionary dict = dictionaryService.getDataForId(dictId);
+        if (dict == null) {
+            return " ";
+        }
+        String key = dict.getNameKey();
+        if ("answer.yes".equals(key)) {
+            return "OUI";
+        }
+        if ("answer.no".equals(key)) {
+            return "NON";
+        }
+        if ("answer.notApplicable".equals(key) || "answer.unknown".equals(key)) {
+            return "N/A";
+        }
+        return " ";
+    }
+
+    /**
      * Résout les contenus paramétrables (trousse, automate, PCR, seuils,
      * interprétation, texte « indétectable ») selon le type VIH testé et les pose
      * dans le bean. Les seuils sont stockés « support:valeur;support:valeur » et
@@ -252,9 +280,12 @@ public abstract class PatientVLReport extends RetroCIPatientReport {
 
     protected void setPatientInfo(VLReportData data) {
 
-        data.setVlSuckle(ohService.getMostRecentValueForPatient(ObservationType.VL_SUCKLE, reportPatient.getId()));
-        data.setVlPregnancy(
-                ohService.getMostRecentValueForPatient(ObservationType.VL_PREGNANCY, reportPatient.getId()));
+        // Grossesse / allaitement : réponses démographiques Oui/Non stockées comme id
+        // de dictionnaire. Le libellé brut (« Demographic Response Yes/No... ») est
+        // inadapté à l'affichage : on décode l'id en OUI / NON / N/A via le nameKey
+        // stable du dictionnaire (Yes/No/NA, indépendant de la langue du libellé).
+        data.setVlSuckle(normalizeYesNo(getRawObservationId(ObservationType.VL_SUCKLE, reportPatient.getId())));
+        data.setVlPregnancy(normalizeYesNo(getRawObservationId(ObservationType.VL_PREGNANCY, reportPatient.getId())));
         data.setvih(ohService.getMostRecentValueForPatient(ObservationType.HIV_STATUS, reportPatient.getId()));
         // Type VIH TESTÉ : distinct du statut patient (vih). On le résout depuis l'ID
         // de dictionnaire brut pour porter DEUX formes dans le bean :
