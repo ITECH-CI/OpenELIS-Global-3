@@ -275,7 +275,7 @@
 				<textElement>
 					<font size="9"/>
 				</textElement>
-				<textFieldExpression><![CDATA[($P{vlPregnancy}.isEmpty() || $P{vlPregnancy}.isEmpty())?" ":$P{vlPregnancy}.split("=")[1]]]></textFieldExpression>
+				<textFieldExpression><![CDATA[($P{vlPregnancy} == null || $P{vlPregnancy}.isEmpty()) ? " " : ($P{vlPregnancy}.contains("=") ? $P{vlPregnancy}.split("=")[1] : $P{vlPregnancy})]]></textFieldExpression>
 			</textField>
 			<staticText>
 				<reportElement key="staticText-5" x="242" y="19" width="73" height="13" isPrintWhenDetailOverflows="true" uuid="d89a5346-ebbd-4477-8046-f279e1dc5b3b">
@@ -299,7 +299,7 @@
 				<textElement>
 					<font size="9"/>
 				</textElement>
-				<textFieldExpression><![CDATA[($P{vlSuckle}.isEmpty() || $P{vlSuckle}.isEmpty())?" ":$P{vlSuckle}.split("=")[1]]]></textFieldExpression>
+				<textFieldExpression><![CDATA[($P{vlSuckle} == null || $P{vlSuckle}.isEmpty()) ? " " : ($P{vlSuckle}.contains("=") ? $P{vlSuckle}.split("=")[1] : $P{vlSuckle})]]></textFieldExpression>
 			</textField>
 			<textField pattern="" isBlankWhenNull="true">
 				<reportElement key="textField" x="73" y="38" width="96" height="18" isPrintWhenDetailOverflows="true" forecolor="#000000" backcolor="#FFFFFF" uuid="9871ebf7-f1ba-4132-8712-04a11e8331f0">
