@@ -6,6 +6,15 @@
      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
 
     <changeSet author="CIV devs" id="fix-electronic-order-rejection-author-column-2026">
+        <!--
+            validCheckSum ANY : le corps <sql> a dû être corrigé (ajout de
+            splitStatements=false, sans quoi Liquibase découpait le bloc DO $$ sur
+            les « ; » internes → « Unterminated dollar quote » sur une base neuve).
+            Les déploiements où ce changeset est déjà « ran » (dev, démo) ont un
+            checksum calculé sur l'ancien corps : on l'accepte pour éviter une
+            erreur de validation, la précondition empêchant toute réexécution.
+        -->
+        <validCheckSum>ANY</validCheckSum>
         <preConditions onFail="MARK_RAN">
             <not>
                 <columnExists tableName="electronic_order" schemaName="clinlims" columnName="rejection_author" />
@@ -23,20 +32,20 @@
             le fichier dans son état actuel), sinon crée directement
             "rejection_author".
         </comment>
-        <sql>
-            DO $$
-            BEGIN
-                IF EXISTS (
-                    SELECT 1 FROM information_schema.columns
-                    WHERE table_schema = 'clinlims' AND table_name = 'electronic_order'
-                        AND column_name = 'reject_reason'
-                ) THEN
-                    ALTER TABLE clinlims.electronic_order RENAME COLUMN reject_reason TO rejection_author;
-                ELSE
-                    ALTER TABLE clinlims.electronic_order ADD COLUMN rejection_author varchar(255);
-                END IF;
-            END $$;
-        </sql>
+        <sql dbms="postgresql" splitStatements="false"><![CDATA[
+DO $$
+BEGIN
+    IF EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_schema = 'clinlims' AND table_name = 'electronic_order'
+            AND column_name = 'reject_reason'
+    ) THEN
+        ALTER TABLE clinlims.electronic_order RENAME COLUMN reject_reason TO rejection_author;
+    ELSE
+        ALTER TABLE clinlims.electronic_order ADD COLUMN rejection_author varchar(255);
+    END IF;
+END $$;
+]]></sql>
     </changeSet>
 
 </databaseChangeLog>
