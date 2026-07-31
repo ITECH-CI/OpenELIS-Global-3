@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+    <changeSet author="CIV developer" id="fix-validation-submenu-urls">
+        <comment>
+            The Validation submenus (routine, immunology, biochemistry, serology, DNA PCR,
+            viral load, genotyping, accession search, accession range search) still had
+            legacy .do action URLs, so they fell through the React router's catch-all
+            route and forced a full navigation to the old JSP interface. Point them at
+            the existing React routes instead, following the pattern already used for
+            menu_resultvalidation_date (/ResultValidationByTestDate) and the
+            Reports/Pathology/Cytology/Immunochemistry menu migrations.
+        </comment>
+        <update tableName="menu" schemaName="clinlims">
+            <column name="action_url" value="/ResultValidation" />
+            <where>element_id='menu_resultvalidation_routine'</where>
+        </update>
+        <update tableName="menu" schemaName="clinlims">
+            <column name="action_url" value="/ResultValidation" />
+            <where>element_id='menu_resultvalidation_immunology'</where>
+        </update>
+        <update tableName="menu" schemaName="clinlims">
+            <column name="action_url" value="/ResultValidation" />
+            <where>element_id='menu_resultvalidation_biochemistry'</where>
+        </update>
+        <update tableName="menu" schemaName="clinlims">
+            <column name="action_url" value="/ResultValidation" />
+            <where>element_id='menu_resultvalidation_serology'</where>
+        </update>
+        <update tableName="menu" schemaName="clinlims">
+            <column name="action_url" value="/ResultValidation" />
+            <where>element_id='menu_resultvalidation_dnapcr'</where>
+        </update>
+        <update tableName="menu" schemaName="clinlims">
+            <column name="action_url" value="/ResultValidation" />
+            <where>element_id='menu_resultvalidation_viralload'</where>
+        </update>
+        <update tableName="menu" schemaName="clinlims">
+            <column name="action_url" value="/ResultValidation" />
+            <where>element_id='menu_resultvalidation_genotyping'</where>
+        </update>
+        <update tableName="menu" schemaName="clinlims">
+            <column name="action_url" value="/AccessionValidation" />
+            <where>element_id='menu_accession_validation'</where>
+        </update>
+        <update tableName="menu" schemaName="clinlims">
+            <column name="action_url" value="/AccessionValidationRange" />
+            <where>element_id='menu_accession_validation_range'</where>
+        </update>
+    </changeSet>
+
+    <changeSet author="CIV developer" id="fix-validation-submenu-urls-testsection-filter">
+        <comment>
+            The routine Validation search page (/ResultValidation) supports pre-selecting
+            a test section via a ?testSectionId=&lt;id&gt; query parameter (see
+            frontend/src/components/validation/SearchForm.js). Point each section-specific
+            Validation submenu at its matching clinlims.test_section row so the link
+            actually filters to that section again, instead of landing on the generic
+            unfiltered form. DNA PCR / Viral Load / Genotyping are individual tests inside
+            the "Virologie" test section (not separate sections), so all three resolve to
+            that same section id - the new UI does not yet support filtering by individual
+            test name within a section.
+        </comment>
+        <sql>
+            UPDATE clinlims.menu
+            SET action_url = '/ResultValidation' || COALESCE('?testSectionId=' || (
+                SELECT id FROM clinlims.test_section WHERE name = 'Immunology' AND is_active = 'Y'
+            ), '')
+            WHERE element_id = 'menu_resultvalidation_immunology';
+
+            UPDATE clinlims.menu
+            SET action_url = '/ResultValidation' || COALESCE('?testSectionId=' || (
+                SELECT id FROM clinlims.test_section WHERE name = 'Biochemistry' AND is_active = 'Y'
+            ), '')
+            WHERE element_id = 'menu_resultvalidation_biochemistry';
+
+            UPDATE clinlims.menu
+            SET action_url = '/ResultValidation' || COALESCE('?testSectionId=' || (
+                SELECT id FROM clinlims.test_section WHERE name = 'Serology' AND is_active = 'Y'
+            ), '')
+            WHERE element_id = 'menu_resultvalidation_serology';
+
+            UPDATE clinlims.menu
+            SET action_url = '/ResultValidation' || COALESCE('?testSectionId=' || (
+                SELECT id FROM clinlims.test_section WHERE name = 'Virologie' AND is_active = 'Y'
+            ), '')
+            WHERE element_id = 'menu_resultvalidation_dnapcr';
+
+            UPDATE clinlims.menu
+            SET action_url = '/ResultValidation' || COALESCE('?testSectionId=' || (
+                SELECT id FROM clinlims.test_section WHERE name = 'Virologie' AND is_active = 'Y'
+            ), '')
+            WHERE element_id = 'menu_resultvalidation_viralload';
+
+            UPDATE clinlims.menu
+            SET action_url = '/ResultValidation' || COALESCE('?testSectionId=' || (
+                SELECT id FROM clinlims.test_section WHERE name = 'Virologie' AND is_active = 'Y'
+            ), '')
+            WHERE element_id = 'menu_resultvalidation_genotyping';
+        </sql>
+    </changeSet>
+
+    <changeSet author="CIV developer" id="fix-validation-submenu-urls-test-name-filter">
+        <comment>
+            DNA PCR / Viral Load / Genotyping all resolve to the same "Virologie" test
+            section id (see fix-validation-submenu-urls-testsection-filter above), so the
+            three submenus looked identical. Append a &amp;test=&lt;name&gt; parameter that
+            SearchForm.js now reads to further filter the section's results down to the
+            specific test (matched against the "testName" field of each result row).
+        </comment>
+        <sql>
+            UPDATE clinlims.menu
+            SET action_url = action_url || '&amp;test=DNA%20PCR'
+            WHERE element_id = 'menu_resultvalidation_dnapcr';
+
+            UPDATE clinlims.menu
+            SET action_url = action_url || '&amp;test=Viral%20Load'
+            WHERE element_id = 'menu_resultvalidation_viralload';
+
+            UPDATE clinlims.menu
+            SET action_url = action_url || '&amp;test=G%C3%A9notypage'
+            WHERE element_id = 'menu_resultvalidation_genotyping';
+        </sql>
+    </changeSet>
+</databaseChangeLog>

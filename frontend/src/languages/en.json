@@ -2417,6 +2417,8 @@
   "label.no": "No",
   "validation.sampleInterpretation.label": "General interpretation for sample",
   "validation.sampleInterpretation.placeholder": "Enter general interpretation note for this sample/request...",
+  "validation.sampleInterpretation.add": "Add sample interpretation",
+  "validation.sampleInterpretation.hide": "Hide interpretation",
   "label.button.reset": "Reset",
   "sample.entry.project.testSection": "Test Section",
   "sidenav.title.bacterio.statusreport": "Status Reports",

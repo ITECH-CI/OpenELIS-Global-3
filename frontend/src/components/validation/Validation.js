@@ -26,6 +26,12 @@ import {
 import BacteriologyValidation from "../bacteriology/BacteriologyValidation";
 import "../Style.css";
 
+// Each test's accessionNumber carries a per-test suffix (e.g. "LY24001731-1",
+// "LY24001731-2", ...), so grouping "same sample" rows must compare the LabNo
+// (the part before the dash), not the raw accessionNumber.
+const getLabNo = (accessionNumber) =>
+  accessionNumber ? accessionNumber.split("-")[0] : null;
+
 const Validation = (props) => {
   const componentMounted = useRef(false);
 
@@ -42,6 +48,12 @@ const Validation = (props) => {
   const [validationState, setValidationState] = useState({});
   const [bacteriologyPage, setBacteriologyPage] = useState(1);
   const [bacteriologyPageSize, setBacteriologyPageSize] = useState(5);
+  // Only one sample's interpretation panel can be open at a time. A single
+  // scalar (rather than a per-LabNo map) avoids any risk of the
+  // expand/collapse state for one sample leaking onto another. Grouped by
+  // LabNo (accessionNumber without its per-test suffix) since that's the
+  // reliable "same sample" key - sampleId turned out not to be trustworthy.
+  const [expandedLabNo, setExpandedLabNo] = useState(null);
 
   useEffect(() => {
     componentMounted.current = true;
@@ -224,16 +236,18 @@ const Validation = (props) => {
     jp.value(form, name, checked);
   };
 
-  const handleInterpretationChange = (e, sampleId) => {
+  const handleInterpretationChange = (e, labNo) => {
     const { value } = e.target;
     const limitedValue = value.slice(0, 199);
     let form = props.results;
     var jp = require("jsonpath");
 
-    // Update interpretation for all results with the same sampleId
+    // Update interpretation for all results sharing the same LabNo, since a
+    // sample's tests can span several rows (each with its own accessionNumber
+    // suffix).
     if (form.resultList) {
       form.resultList.forEach((result, index) => {
-        if (result.sampleId === sampleId) {
+        if (getLabNo(result.accessionNumber) === labNo) {
           jp.value(
             form,
             `resultList[${index}].sampleInterpretation`,
@@ -244,24 +258,6 @@ const Validation = (props) => {
       // Force re-render to update the UI
       forceUpdate({});
     }
-  };
-
-  const getUniqueSamples = () => {
-    if (!props.results?.resultList) {
-      return [];
-    }
-
-    const samplesMap = new Map();
-    props.results.resultList.forEach((result) => {
-      if (result.sampleId && !samplesMap.has(result.sampleId)) {
-        samplesMap.set(result.sampleId, {
-          sampleId: result.sampleId,
-          accessionNumber: result.accessionNumber,
-          sampleInterpretation: result.sampleInterpretation || "",
-        });
-      }
-    });
-    return Array.from(samplesMap.values());
   };
 
   // Helper function to detect if a result is bacteriology
@@ -312,7 +308,11 @@ const Validation = (props) => {
     const bacteriologySamples = new Map(); // accessionNumber -> { analysisId, results }
     const standardResults = [];
 
-    props.results.resultList.forEach((result) => {
+    props.results.resultList.forEach((result, index) => {
+      // A stable, guaranteed-unique row key: the backend doesn't always
+      // populate a per-row id, and sampleId repeats across a sample's
+      // multiple tests, so neither is safe to use as the DataTable keyField.
+      result.__rowKey = `row-${index}`;
       if (isBacteriologyResult(result)) {
         const key = result.accessionNumber;
         if (!bacteriologySamples.has(key)) {
@@ -343,6 +343,20 @@ const Validation = (props) => {
     return grouped;
   };
 
+  const groupedResults = groupResultsBySample();
+
+  // Only the last row of each sample (by LabNo) in the standard results
+  // table carries the sample-interpretation field, so it isn't repeated once
+  // per test when a sample has several results. Keyed by object reference
+  // (not a row "id") since the backend doesn't populate a per-row id.
+  const lastRowByLabNo = {};
+  groupedResults.standard.forEach((result) => {
+    const labNo = getLabNo(result.accessionNumber);
+    if (labNo != null) {
+      lastRowByLabNo[labNo] = result;
+    }
+  });
+
   const validateResults = (e, rowId) => {
     handleChange(e, rowId);
   };
@@ -350,6 +364,33 @@ const Validation = (props) => {
   const findPriorityByValue = (searchValue) => {
     return priorities.find((item) => item.value === searchValue);
   };
+
+  // Expandable panel shown below the last row of each sample (native
+  // DataTable row-expansion, same pattern as SearchResultForm's referral row).
+  const renderSampleInterpretation = ({ data: row }) => (
+    <div style={{ padding: "12px 16px" }}>
+      <label
+        htmlFor={`interpretation-${getLabNo(row.accessionNumber)}`}
+        style={{ display: "block", marginBottom: "5px", fontWeight: "500" }}
+      >
+        {intl.formatMessage({ id: "validation.sampleInterpretation.label" })}
+      </label>
+      <TextArea
+        id={`interpretation-${getLabNo(row.accessionNumber)}`}
+        labelText=""
+        maxCount={200}
+        placeholder={intl.formatMessage({
+          id: "validation.sampleInterpretation.placeholder",
+        })}
+        value={row.sampleInterpretation || ""}
+        onChange={(e) =>
+          handleInterpretationChange(e, getLabNo(row.accessionNumber))
+        }
+        rows={3}
+        style={{ width: "75%" }}
+      />
+    </div>
+  );
 
   const renderCell = (row, index, column, id) => {
     let formatLabNum = configurationProperties.AccessionFormat === "ALPHANUM";
@@ -373,7 +414,10 @@ const Validation = (props) => {
           </div>
         );
       }
-      case "sampleInfo":
+      case "sampleInfo": {
+        const labNo = getLabNo(row.accessionNumber);
+        const isLastOfSample = labNo != null && lastRowByLabNo[labNo] === row;
+        const isExpanded = labNo != null && labNo === expandedLabNo;
         return (
           <>
             <Button
@@ -403,6 +447,28 @@ const Validation = (props) => {
                 ? convertAlphaNumLabNumForDisplay(row.accessionNumber)
                 : row.accessionNumber}
               <br></br>
+              {isLastOfSample && (
+                <button
+                  type="button"
+                  onClick={() => setExpandedLabNo(isExpanded ? null : labNo)}
+                  style={{
+                    background: "none",
+                    border: "none",
+                    padding: 0,
+                    cursor: "pointer",
+                    font: "inherit",
+                    fontSize: "0.75rem",
+                    color: "#0f62fe",
+                    textDecoration: "underline",
+                  }}
+                >
+                  {intl.formatMessage({
+                    id: isExpanded
+                      ? "validation.sampleInterpretation.hide"
+                      : "validation.sampleInterpretation.add",
+                  })}
+                </button>
+              )}
               <br></br>
             </div>
             {row.nonconforming && (
@@ -417,6 +483,7 @@ const Validation = (props) => {
             )}
           </>
         );
+      }
       case "testName":
         return (
           <div className="sampleInfo" data-testid="sampleInfo">
@@ -646,7 +713,6 @@ const Validation = (props) => {
         onChange
       >
         {({ values, errors, touched, handleChange }) => {
-          const groupedResults = groupResultsBySample();
           return (
             <Form onChange={handleChange}>
               {/* Bacteriology Results Section */}
@@ -744,76 +810,6 @@ const Validation = (props) => {
                 </div>
               )}
 
-              {/* Sample Interpretation Section - One per unique sample (non-bacteriology) */}
-              {groupedResults.standard.length > 0 &&
-                getUniqueSamples().length > 0 && (
-                  <Grid
-                    className="gridBoundary"
-                    style={{ marginTop: "20px", marginBottom: "20px" }}
-                  >
-                    <Column lg={16} md={8} sm={4}>
-                      <h6 style={{ marginBottom: "10px", fontWeight: "bold" }}>
-                        <FormattedMessage id="validation.sampleInterpretation.label" />
-                      </h6>
-                      {getUniqueSamples().map((sample) => {
-                        const isSearched =
-                          props.searchedAccessionNumber &&
-                          sample.accessionNumber &&
-                          sample.accessionNumber.split("-")[0] ===
-                            props.searchedAccessionNumber.split("-")[0];
-                        return (
-                          <div
-                            key={sample.sampleId}
-                            style={{
-                              marginBottom: "15px",
-                              padding: "10px",
-                              borderRadius: "4px",
-                              ...(isSearched && {
-                                backgroundColor: "#fff3cd",
-                                borderLeft: "4px solid #f0ad4e",
-                                animation: "labno-pulse 1.6s ease-in-out 3",
-                              }),
-                            }}
-                          >
-                            <label
-                              style={{
-                                display: "block",
-                                marginBottom: "5px",
-                                fontWeight: "500",
-                              }}
-                            >
-                              {intl.formatMessage({
-                                id: "column.name.sampleInfo",
-                              })}
-                              :{" "}
-                              {configurationProperties.AccessionFormat ===
-                              "ALPHANUM"
-                                ? convertAlphaNumLabNumForDisplay(
-                                    sample.accessionNumber,
-                                  )
-                                : sample.accessionNumber}
-                            </label>
-                            <TextArea
-                              id={`interpretation-${sample.sampleId}`}
-                              labelText=""
-                              maxCount={200}
-                              placeholder={intl.formatMessage({
-                                id: "validation.sampleInterpretation.placeholder",
-                              })}
-                              value={sample.sampleInterpretation || ""}
-                              onChange={(e) =>
-                                handleInterpretationChange(e, sample.sampleId)
-                              }
-                              rows={3}
-                              style={{ width: "100%" }}
-                            />
-                          </div>
-                        );
-                      })}
-                    </Column>
-                  </Grid>
-                )}
-
               {/* Standard Results DataTable (non-bacteriology only) */}
               {groupedResults.standard.length > 0 && (
                 <>
@@ -824,6 +820,28 @@ const Validation = (props) => {
                     )}
                     columns={columns}
                     isSortable
+                    keyField="__rowKey"
+                    expandableRows
+                    expandableRowsHideExpander
+                    expandableRowsComponent={renderSampleInterpretation}
+                    expandableRowDisabled={(row) => {
+                      const labNo = getLabNo(row.accessionNumber);
+                      return !(labNo != null && lastRowByLabNo[labNo] === row);
+                    }}
+                    expandableRowExpanded={(row) => {
+                      const labNo = getLabNo(row.accessionNumber);
+                      if (labNo == null || lastRowByLabNo[labNo] !== row) {
+                        // Never auto-expand (or allow expanding) anything but
+                        // the one row that actually owns the panel for this
+                        // LabNo - otherwise every row matching a search would
+                        // each render their own copy of the panel.
+                        return false;
+                      }
+                      const isSearched =
+                        props.searchedAccessionNumber &&
+                        labNo === props.searchedAccessionNumber.split("-")[0];
+                      return labNo === expandedLabNo || isSearched;
+                    }}
                     conditionalRowStyles={
                       props.searchedAccessionNumber
                         ? [

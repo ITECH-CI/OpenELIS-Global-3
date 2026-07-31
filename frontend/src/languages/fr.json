@@ -1848,6 +1848,8 @@
   "label.no": "Non",
   "validation.sampleInterpretation.label": "Interprétation générale pour l'échantillon",
   "validation.sampleInterpretation.placeholder": "Saisir la note d'interprétation générale pour cet échantillon/demande...",
+  "validation.sampleInterpretation.add": "Ajouter une interprétation",
+  "validation.sampleInterpretation.hide": "Masquer l'interprétation",
   "label.button.reset": "Réinitialiser",
   "sample.entry.project.testSection": "Unité d'analyse",
 

@@ -14,6 +14,7 @@ const Index = () => {
   const [results, setResults] = useState({ resultList: [] });
   const [params, setParams] = useState("");
   const [searchedAccessionNumber, setSearchedAccessionNumber] = useState("");
+  const [pageSubtitle, setPageSubtitle] = useState("");
   return (
     <>
       <PageBreadCrumb breadcrumbs={breadcrumbs} />
@@ -23,6 +24,7 @@ const Index = () => {
             <Section>
               <Heading>
                 <FormattedMessage id="sidenav.label.validation" />
+                {pageSubtitle && " " + pageSubtitle.toUpperCase()}
               </Heading>
             </Section>
           </Section>
@@ -34,6 +36,7 @@ const Index = () => {
           setParams={setParams}
           setResults={setResults}
           setSearchedAccessionNumber={setSearchedAccessionNumber}
+          setPageSubtitle={setPageSubtitle}
         />
         <Validation
           params={params}
