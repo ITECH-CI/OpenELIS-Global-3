@@ -95,11 +95,12 @@ public class SiteInformationRestController extends BaseController {
 
     @GetMapping(value = { "/NonConformityConfiguration", "/WorkplanConfiguration", "/PrintedReportsConfiguration",
             "/SampleEntryConfig", "/ResultConfiguration", "/MenuStatementConfig", "/PatientConfiguration",
-            "/ValidationConfiguration", "/SiteInformation", "/NextPreviousNonConformityConfiguration",
-            "/NextPreviousWorkplanConfiguration", "/NextPreviousPrintedReportsConfiguration",
-            "/NextPreviousSampleEntryConfig", "/NextPreviousResultConfiguration", "/NextPreviousMenuStatementConfig",
-            "/NextPreviousPatientConfiguration", "/NextPreviousSiteInformation",
-            "/NextPreviousValidationConfiguration" }, produces = MediaType.APPLICATION_JSON_VALUE)
+            "/ValidationConfiguration", "/ViralLoadReportConfig", "/SiteInformation",
+            "/NextPreviousNonConformityConfiguration", "/NextPreviousWorkplanConfiguration",
+            "/NextPreviousPrintedReportsConfiguration", "/NextPreviousSampleEntryConfig",
+            "/NextPreviousResultConfiguration", "/NextPreviousMenuStatementConfig", "/NextPreviousPatientConfiguration",
+            "/NextPreviousSiteInformation", "/NextPreviousValidationConfiguration",
+            "/NextPreviousViralLoadReportConfig" }, produces = MediaType.APPLICATION_JSON_VALUE)
     // TODO decide if still needing NextPrevious (functionality is not implemented)
     public SiteInformationForm showSiteInformation(HttpServletRequest request, SiteInformationForm oldForm)
             throws IllegalAccessException, InvocationTargetException, NoSuchMethodException, InstantiationException {
@@ -204,6 +205,11 @@ public class SiteInformationRestController extends BaseController {
             form.setFormName("ValidationConfigurationForm");
             form.setFormAction("ValidationConfiguration");
 
+        } else if (path.contains("ViralLoadReportConfig")) {
+            form.setSiteInfoDomainName("vlReportConfig");
+            form.setFormName("ViralLoadReportConfigForm");
+            form.setFormAction("ViralLoadReportConfig");
+
         } else {
             form.setSiteInfoDomainName("SiteInformation");
             form.setFormName("SiteInformationForm");
@@ -237,7 +243,8 @@ public class SiteInformationRestController extends BaseController {
 
     @PostMapping(value = { "/NonConformityConfiguration", "/WorkplanConfiguration", "/PrintedReportsConfiguration",
             "/SampleEntryConfig", "/ResultConfiguration", "/MenuStatementConfig", "/PatientConfiguration",
-            "/ValidationConfiguration", "/SiteInformation" }, consumes = MediaType.APPLICATION_JSON_VALUE)
+            "/ValidationConfiguration", "/ViralLoadReportConfig",
+            "/SiteInformation" }, consumes = MediaType.APPLICATION_JSON_VALUE)
     public SiteInformationForm showUpdateSiteInformation(HttpServletRequest request, HttpServletResponse response,
             @RequestBody @Valid SiteInformationForm form, BindingResult result, SessionStatus status,
             RedirectAttributes redirectAttributes) {
@@ -378,7 +385,7 @@ public class SiteInformationRestController extends BaseController {
     @GetMapping(value = { "/CancelNonConformityConfiguration", "/CancelWorkplanConfiguration",
             "/CancelPrintedReportsConfiguration", "/CancelSampleEntryConfig", "/CancelResultConfiguration",
             "/CancelMenuStatementConfig", "/CancelPatientConfiguration", "/CancelValidationConfiguration",
-            "/CancelSiteInformation" }, produces = MediaType.APPLICATION_JSON_VALUE)
+            "/CancelViralLoadReportConfig", "/CancelSiteInformation" }, produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> cancelSiteInformation(HttpServletRequest request, SessionStatus status) {
         status.setComplete();
         return ResponseEntity.status(HttpStatus.OK).body("Cancellation successful");

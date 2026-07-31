@@ -13,6 +13,7 @@
  */
 package org.openelisglobal.patient.valueholder;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Pattern;
 import java.io.Serializable;
@@ -38,6 +39,16 @@ import org.openelisglobal.validation.constraintvalidator.NameValidator.NameType;
  * @author pahill
  * @since 2010-04-16
  */
+/*
+ * ignoreUnknown : un échantillon peut porter des types d'observation qui ne
+ * sont PAS des champs du formulaire d'étude (ex. « sampleInterpretation »,
+ * produit à la validation). Le front (ViralLoadModify) recharge la totalité des
+ * observations depuis le back puis les renvoie telles quelles à la sauvegarde ;
+ * sans cette annotation, Jackson rejette tout le payload (400 Unrecognized
+ * field) dès qu'une observation non modélisée est présente, bloquant toute
+ * modification de la demande.
+ */
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class ObservationData implements Serializable {
     private static final long serialVersionUID = 2L;
 

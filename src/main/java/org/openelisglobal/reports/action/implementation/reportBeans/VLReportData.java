@@ -62,6 +62,26 @@ public class VLReportData {
     // robuste face aux traductions/renommages de libellés.
     private String hivTestedType;
     private String hivTestedTypeKey;
+    // Contenus paramétrables du rapport (domain site_information
+    // « viralLoadReportConfig »), résolus selon le type VIH testé. Restent null
+    // si la config est absente : le JRXML applique alors sa valeur par défaut.
+    private String kitLabel;
+    private String automateLabel;
+    private String pcrLabel;
+    private String interpretation;
+    private String undetectableText;
+    // Seuils de détection, dépendants de la trousse (un support par ligne, ex.
+    // « W/PSC : 599 copies/mL »). Rendus en liste car une trousse peut en porter
+    // plusieurs (COBAS VIH-1 : W/PSC, CV/PL, CV/DBS).
+    private List<String> thresholdsList = new ArrayList<>();
+    // Même contenu que thresholdsList, joint par sauts de ligne : consommé
+    // directement par un textField JRXML unique (isStretchWithOverflow).
+    private String thresholdsText;
+    // Accréditation : affichée seulement si le labo est accrédité
+    // (accreditationEnabled). La note est le texte ; le logo est passé en
+    // PARAMÈTRE Jasper (InputStream), pas dans le bean.
+    private Boolean accreditationEnabled = Boolean.FALSE;
+    private String accreditationNote;
     private String sampleTypeName;
     private Boolean duplicateReport = Boolean.FALSE;
 
@@ -264,6 +284,78 @@ public class VLReportData {
 
     public void setHivTestedTypeKey(String hivTestedTypeKey) {
         this.hivTestedTypeKey = hivTestedTypeKey;
+    }
+
+    public String getKitLabel() {
+        return kitLabel;
+    }
+
+    public void setKitLabel(String kitLabel) {
+        this.kitLabel = kitLabel;
+    }
+
+    public String getAutomateLabel() {
+        return automateLabel;
+    }
+
+    public void setAutomateLabel(String automateLabel) {
+        this.automateLabel = automateLabel;
+    }
+
+    public String getPcrLabel() {
+        return pcrLabel;
+    }
+
+    public void setPcrLabel(String pcrLabel) {
+        this.pcrLabel = pcrLabel;
+    }
+
+    public String getInterpretation() {
+        return interpretation;
+    }
+
+    public void setInterpretation(String interpretation) {
+        this.interpretation = interpretation;
+    }
+
+    public String getUndetectableText() {
+        return undetectableText;
+    }
+
+    public void setUndetectableText(String undetectableText) {
+        this.undetectableText = undetectableText;
+    }
+
+    public List<String> getThresholdsList() {
+        return thresholdsList;
+    }
+
+    public void setThresholdsList(List<String> thresholdsList) {
+        this.thresholdsList = thresholdsList;
+    }
+
+    public String getThresholdsText() {
+        return thresholdsText;
+    }
+
+    public void setThresholdsText(String thresholdsText) {
+        this.thresholdsText = thresholdsText;
+    }
+
+    public Boolean getAccreditationEnabled() {
+        return accreditationEnabled;
+    }
+
+    public void setAccreditationEnabled(Boolean accreditationEnabled) {
+        this.accreditationEnabled = accreditationEnabled;
+    }
+
+    public String getAccreditationNote() {
+        return accreditationNote;
+    }
+
+    public void setAccreditationNote(String accreditationNote) {
+        this.accreditationNote = accreditationNote;
     }
 
     public String getSampleTypeName() {

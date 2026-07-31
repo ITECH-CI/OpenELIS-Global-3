@@ -343,6 +343,12 @@ function Admin() {
             >
               <FormattedMessage id="sidenav.label.admin.formEntry.validationconfig" />
             </SideNavMenuItem>
+            <SideNavMenuItem
+              data-cy="viralLoadReportConfigMenu"
+              href="#ViralLoadReportConfigMenu"
+            >
+              <FormattedMessage id="sidenav.label.admin.formEntry.viralLoadReportConfig" />
+            </SideNavMenuItem>
           </SideNavMenu>
 
           <SideNavLink href="#commonproperties" renderIcon={Settings}>
@@ -625,6 +631,13 @@ function Admin() {
           menuType="PrintedReportsConfigurationMenu"
           label="PrintedReports Configuration Menu"
           id="sidenav.label.admin.formEntry.PrintedReportsconfig"
+        />
+      </PathRoute>
+      <PathRoute path="#ViralLoadReportConfigMenu">
+        <ConfigMenuDisplay
+          menuType="ViralLoadReportConfigMenu"
+          label="Viral Load Report Configuration Menu"
+          id="sidenav.label.admin.formEntry.viralLoadReportConfig"
         />
       </PathRoute>
       <PathRoute path="#testNotificationConfigMenu">

@@ -29,7 +29,8 @@ public class SiteInformationFormValidator implements Validator {
         ValidationHelper.validateOptionField(form.getSiteInfoDomainName(), "siteInfoDomainName", errors,
                 new String[] { "externalConnections", "non_conformityConfiguration", "WorkplanConfiguration",
                         "PrintedReportsConfiguration", "sampleEntryConfig", "ResultConfiguration",
-                        "MenuStatementConfig", "PaitientConfiguration", "validationConfig", "SiteInformation" });
+                        "MenuStatementConfig", "PaitientConfiguration", "validationConfig", "vlReportConfig",
+                        "SiteInformation" });
 
         ValidationHelper.validateOptionField(form.getTag(), "tag", errors,
                 new String[] { "enable", "url", "numericOnly", "programConfiguration", "localization", "", null });

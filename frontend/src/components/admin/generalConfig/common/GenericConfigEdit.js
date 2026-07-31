@@ -7,6 +7,7 @@ import {
   RadioButtonGroup,
   RadioButton,
   TextInput,
+  TextArea,
   Button,
   Loading,
   Dropdown,
@@ -398,7 +399,24 @@ const GenericConfigEdit = ({ menuType, ID }) => {
                         </Column>
                       )}
                     {FormEntryConfig.tag !== "localization" &&
-                      FormEntryConfig.paramName !== "siteId" && (
+                      FormEntryConfig.paramName !== "siteId" &&
+                      FormEntryConfig.valueType === "freeText" && (
+                        <Column lg={8} sm={3}>
+                          {/* freeText : les valeurs peuvent contenir des sauts
+                              de ligne (ex. interprétations du rapport de charge
+                              virale) → zone multi-lignes plutôt qu'un input. */}
+                          <TextArea
+                            id="textInput"
+                            labelText=""
+                            rows={6}
+                            value={textInputValue}
+                            onChange={handleInputChange}
+                          />
+                        </Column>
+                      )}
+                    {FormEntryConfig.tag !== "localization" &&
+                      FormEntryConfig.paramName !== "siteId" &&
+                      FormEntryConfig.valueType !== "freeText" && (
                         <Column lg={8} sm={3}>
                           <TextInput
                             id="textInput"

@@ -54,7 +54,7 @@ public class SiteInformationMenuRestController extends BaseMenuController<SiteIn
     @GetMapping(value = { "/NonConformityConfigurationMenu", "/WorkplanConfigurationMenu",
             "/PrintedReportsConfigurationMenu", "/SampleEntryConfigMenu", "/ResultConfigurationMenu",
             "/MenuStatementConfigMenu", "/PatientConfigurationMenu", "/ValidationConfigurationMenu",
-            "/SiteInformationMenu" }, produces = MediaType.APPLICATION_JSON_VALUE)
+            "/ViralLoadReportConfigMenu", "/SiteInformationMenu" }, produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> showSiteInformationMenu(HttpServletRequest request, RedirectAttributes redirectAttributes)
             throws IllegalAccessException, InvocationTargetException, NoSuchMethodException {
         SiteInformationMenuForm form = new SiteInformationMenuForm();
@@ -99,6 +99,9 @@ public class SiteInformationMenuRestController extends BaseMenuController<SiteIn
         } else if (path.contains("ValidationConfiguration")) {
             form.setSiteInfoDomainName("validationConfig");
             form.setFormName("ValidationConfigurationMenuForm");
+        } else if (path.contains("ViralLoadReportConfig")) {
+            form.setSiteInfoDomainName("viralLoadReportConfig");
+            form.setFormName("ViralLoadReportConfigMenuForm");
         } else {
             form.setSiteInfoDomainName("SiteInformation");
             form.setFormName("siteInformationMenuForm");
@@ -147,6 +150,9 @@ public class SiteInformationMenuRestController extends BaseMenuController<SiteIn
         } else if ("validationConfig".equals(domainName)) {
             dbDomainName = "validationConfig";
             request.setAttribute(TITLE_KEY, "validationConfig.browse.title");
+        } else if ("viralLoadReportConfig".equals(domainName)) {
+            dbDomainName = "vlReportConfig";
+            request.setAttribute(TITLE_KEY, "viralLoadReportConfig.browse.title");
         }
 
         request.setAttribute("menuDefinition", "SiteInformationMenuDefinition");
