@@ -55,6 +55,23 @@ const SearchForm = (props) => {
   const [totalApiPages, setTotalApiPages] = useState(null);
   const [url, setUrl] = useState("");
 
+  // Some Validation submenus (DNA PCR / Viral Load / Genotyping) share a single
+  // test section (Virologie) but should only show results for one specific test.
+  // The section-level ?testSectionId= filter can't distinguish them, so we also
+  // read an optional ?test= name and narrow the results client-side.
+  const filterByTestName = (resultList) => {
+    const testNameFilter = new URLSearchParams(window.location.search).get(
+      "test",
+    );
+    if (!testNameFilter) {
+      return resultList;
+    }
+    const needle = testNameFilter.toLowerCase();
+    return resultList.filter(
+      (row) => row.testName && row.testName.toLowerCase().includes(needle),
+    );
+  };
+
   const validationResults = (data) => {
     if (data) {
       setSearchResults(data);
@@ -78,12 +95,13 @@ const SearchForm = (props) => {
         }
       }
       if (data?.resultList?.length > 0) {
-        setMainNoResults(false);
-        const newResultsList = data.resultList.map((data, id) => {
+        const filteredList = filterByTestName(data.resultList);
+        const newResultsList = filteredList.map((data, id) => {
           let tempData = { ...data };
           tempData.id = id;
           return tempData;
         });
+        setMainNoResults(newResultsList.length === 0);
         setSearchResults((prevState) => ({
           ...prevState,
           resultList: newResultsList,
@@ -130,12 +148,13 @@ const SearchForm = (props) => {
           doRange;
       getFromOpenElisServer(filterUrl, (data) => {
         if (data?.resultList?.length > 0) {
-          const newResultsList = data.resultList.map((item, id) => ({
+          const filteredList = filterByTestName(data.resultList);
+          const newResultsList = filteredList.map((item, id) => ({
             ...item,
             id,
           }));
           props.setResults({ ...data, resultList: newResultsList });
-          setNoFilterResult(false);
+          setNoFilterResult(newResultsList.length === 0);
         } else {
           props.setResults({ resultList: [] });
           setNoFilterResult(true);
@@ -296,6 +315,47 @@ const SearchForm = (props) => {
     setPreviousPage(null);
     setPagination(false);
   }, [searchBy, doRange]);
+
+  // Page heading suffix (e.g. "VALIDATION VIROLOGIE") so the user can tell
+  // which Validation submenu they're on.
+  useEffect(() => {
+    if (!props.setPageSubtitle) {
+      return;
+    }
+    const testParam = new URLSearchParams(window.location.search).get("test");
+    let subtitle = "";
+    switch (searchBy) {
+      case "routine": {
+        const testSectionId = new URLSearchParams(window.location.search).get(
+          "testSectionId",
+        );
+        if (testParam) {
+          subtitle = testParam;
+        } else if (testSectionId) {
+          subtitle = defaultTestSectionLabel;
+        } else {
+          subtitle = intl.formatMessage({
+            id: "banner.menu.resultvalidation_routine",
+          });
+        }
+        break;
+      }
+      case "order":
+        subtitle = intl.formatMessage({ id: "menu.accession.validation" });
+        break;
+      case "range":
+        subtitle = intl.formatMessage({
+          id: "menu.accession.validation.range",
+        });
+        break;
+      case "testDate":
+        subtitle = intl.formatMessage({ id: "menu.validation.date" });
+        break;
+      default:
+        subtitle = "";
+    }
+    props.setPageSubtitle(subtitle);
+  }, [searchBy, defaultTestSectionLabel]);
   return (
     <>
       {isLoading && <Loading></Loading>}
