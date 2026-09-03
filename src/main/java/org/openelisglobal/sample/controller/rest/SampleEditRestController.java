@@ -1,6 +1,7 @@
 package org.openelisglobal.sample.controller.rest;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -204,12 +205,15 @@ public class SampleEditRestController extends BaseSampleEntryController {
 
     @PostMapping(value = "SampleEdit", produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
-    public void saveSampleEdit(HttpServletRequest request,
+    public void saveSampleEdit(HttpServletRequest request, HttpServletResponse response,
             @Validated(SampleEdit.class) @RequestBody SampleEditForm form, BindingResult result)
             throws InvocationTargetException, NoSuchMethodException, IllegalAccessException {
         formValidator.validate(form, result);
         if (result.hasErrors()) {
             saveErrors(result);
+            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            writeErrorsToResponse(result, response);
+            return;
         }
         boolean sampleChanged = accessionNumberChanged(form);
         Sample updatedSample = null;
@@ -218,6 +222,9 @@ public class SampleEditRestController extends BaseSampleEntryController {
             validateNewAccessionNumber(form.getNewAccessionNumber(), result);
             if (result.hasErrors()) {
                 saveErrors(result);
+                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                writeErrorsToResponse(result, response);
+                return;
             } else {
                 // updatedSample = updateAccessionNumberInSample(form);
             }
@@ -230,11 +237,14 @@ public class SampleEditRestController extends BaseSampleEntryController {
         } catch (LIMSRuntimeException e) {
             if (e.getCause() instanceof StaleObjectStateException) {
                 result.reject("errors.OptimisticLockException", "errors.OptimisticLockException");
+                response.setStatus(HttpServletResponse.SC_CONFLICT);
             } else {
-                LogEvent.logDebug(e);
+                LogEvent.logError(e);
                 result.reject("errors.UpdateException", "errors.UpdateException");
+                response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             }
             saveErrors(result);
+            writeErrorsToResponse(result, response);
         }
     }
 

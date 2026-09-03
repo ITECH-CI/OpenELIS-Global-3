@@ -177,9 +177,18 @@ const Validation = (props) => {
       return;
     }
     setIsSubmitting(true);
+    // __rowKey is a frontend-only DataTable key stitched onto each result in
+    // groupResultsBySample(); strip it so it never leaks into the payload.
+    const payload = {
+      ...props.results,
+      resultList: props.results?.resultList?.map(
+        // eslint-disable-next-line no-unused-vars
+        ({ __rowKey, ...rest }) => rest,
+      ),
+    };
     postToOpenElisServer(
       "/rest/AccessionValidation",
-      JSON.stringify(props.results),
+      JSON.stringify(payload),
       handleResponse,
     );
   };

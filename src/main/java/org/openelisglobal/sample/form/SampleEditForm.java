@@ -19,8 +19,6 @@ import org.openelisglobal.sample.bean.SampleOrderItem;
 import org.openelisglobal.sample.util.AccessionNumberUtil;
 import org.openelisglobal.validation.annotations.ValidAccessionNumber;
 import org.openelisglobal.validation.annotations.ValidDate;
-import org.openelisglobal.validation.annotations.ValidName;
-import org.openelisglobal.validation.constraintvalidator.NameValidator.NameType;
 
 public class SampleEditForm extends BaseForm {
 
@@ -36,7 +34,12 @@ public class SampleEditForm extends BaseForm {
     @NotNull(groups = { SampleEdit.class })
     private Boolean isEditable = Boolean.TRUE;
 
-    @ValidName(nameType = NameType.FULL_NAME, groups = { SampleEdit.class })
+    // Read-only display field populated server-side from
+    // PatientService#getLastFirstName ("LAST, First"), never edited by the user
+    // and never read back on save (see SampleEditRestController#saveSampleEdit).
+    // It must not be validated as an editable name: getLastFirstName's own comma
+    // separator isn't in the configured name charset, so this rejected every
+    // submission with its own server-generated value.
     private String patientName = "";
 
     @ValidDate(relative = DateRelation.PAST)

@@ -82,12 +82,16 @@ public class NameValidator implements ConstraintValidator<ValidName, String>, Co
         LAST_NAME_REGEX = "(?iu)^[" + escapeRegexChars(
                 siteInformationService.getMatch("name", "lastNameCharset").orElse(DEFAULT_SITE_INFORATION).getValue())
                 + "]*$";
+        // Note the trailing "*" inside the optional group below: without it this
+        // class only matched a single trailing character, so any full name with a
+        // last name longer than one character (i.e. almost every real name) was
+        // rejected as "invalid name format".
         FULL_NAME_REGEX = "(?iu)^["
                 + escapeRegexChars(siteInformationService.getMatch("name", "firstNameCharset")
                         .orElse(new SiteInformation()).getValue())
                 + "]*([ ]*[" + escapeRegexChars(siteInformationService.getMatch("name", "lastNameCharset")
                         .orElse(DEFAULT_SITE_INFORATION).getValue())
-                + "])?$";
+                + "]*)?$";
         USER_NAME_REGEX = "(?iu)^[" + escapeRegexChars(
                 siteInformationService.getMatch("name", "userNameCharset").orElse(DEFAULT_SITE_INFORATION).getValue())
                 + "]*$";

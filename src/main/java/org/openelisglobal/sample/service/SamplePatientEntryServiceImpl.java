@@ -223,14 +223,14 @@ public class SamplePatientEntryServiceImpl implements SamplePatientEntryService 
             }
             typesToClear.add(t);
         }
-        deleteObservationsForSampleByTypes(sampleId, typesToClear.toArray(new String[0]));
+        deleteObservationsForSampleByTypes(sampleId, typesToClear.toArray(new String[0]), sysUserId);
         persistBacterioObservations(bacterioInfo, patientInfo, sampleOrderItems, sampleId, patientId, sysUserId);
     }
 
     @Transactional
     @Override
     public void replaceTbObservations(PatientTbInfo tbInfo, String sampleId, String patientId, String sysUserId) {
-        deleteObservationsForSampleByTypes(sampleId, TB_OBSERVATION_TYPE_NAMES);
+        deleteObservationsForSampleByTypes(sampleId, TB_OBSERVATION_TYPE_NAMES, sysUserId);
         persistTbObservations(tbInfo, sampleId, patientId, sysUserId);
     }
 
@@ -240,7 +240,7 @@ public class SamplePatientEntryServiceImpl implements SamplePatientEntryService 
      * sample-id sans observation. Volontairement défensive — appelée en édition
      * avant la réinsertion intégrale du bloc.
      */
-    private void deleteObservationsForSampleByTypes(String sampleId, String[] typeNames) {
+    private void deleteObservationsForSampleByTypes(String sampleId, String[] typeNames, String sysUserId) {
         if (sampleId == null || sampleId.isEmpty() || typeNames == null || typeNames.length == 0) {
             return;
         }
@@ -256,6 +256,13 @@ public class SamplePatientEntryServiceImpl implements SamplePatientEntryService 
             }
             List<ObservationHistory> existing = observationHistoryService.getAll(null, sampleRef, typeId);
             if (existing != null && !existing.isEmpty()) {
+                // sysUserId is a transient, audit-only field - it is never persisted, so a
+                // freshly-fetched row always comes back with it null. deleteAll(List<T>)
+                // deletes each object using whatever sysUserId is already on it, so without
+                // this it always fails with "SYS_USER_ID IS NULL" in AuditTrailServiceImpl.
+                for (ObservationHistory observation : existing) {
+                    observation.setSysUserId(sysUserId);
+                }
                 observationHistoryService.deleteAll(existing);
             }
         }

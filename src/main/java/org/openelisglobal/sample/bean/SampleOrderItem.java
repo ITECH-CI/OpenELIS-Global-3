@@ -215,7 +215,11 @@ public class SampleOrderItem implements Serializable {
     // for display
     private Collection testLocationCodeList;
 
-    @Pattern(regexp = ValidationHelper.ID_REGEX, groups = { SamplePatientEntryForm.SamplePatientEntry.class,
+    // Holds the program's name (used as a dictionary value when persisting the
+    // PROGRAM observation, see SampleOrderService#save), NOT its numeric id -
+    // programId below carries the id. It must not be validated as an ID_REGEX
+    // pattern (that always rejects real program names, e.g. "Routine Testing").
+    @SafeHtml(level = SafeHtml.SafeListLevel.NONE, groups = { SamplePatientEntryForm.SamplePatientEntry.class,
             SamplePatientEntryBatch.class, SampleEditForm.SampleEdit.class })
     private String program;
 

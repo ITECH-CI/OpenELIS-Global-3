@@ -152,16 +152,26 @@ const ModifyOrder = () => {
     });
   };
 
-  const handlePost = (status) => {
+  const handlePost = (status, body) => {
     setIsSubmitting(false);
     if (status === 200) {
+      // Only move to the success screen once the backend has actually
+      // confirmed the save - advancing beforehand showed a "success" page
+      // even when the save failed (validation error, exception, ...).
+      setPage(successMsgPageNumber);
       showAlertMessage(
         <FormattedMessage id="save.order.success.msg" />,
         NotificationKinds.success,
       );
     } else {
+      // Stay on the order form so the user can see the error and correct it.
+      setPage(orderPageNumber);
       showAlertMessage(
-        <FormattedMessage id="server.error.msg" />,
+        typeof body === "string" && body.trim().length > 0 ? (
+          body
+        ) : (
+          <FormattedMessage id="server.error.msg" />
+        ),
         NotificationKinds.error,
       );
     }
@@ -172,7 +182,6 @@ const ModifyOrder = () => {
       return;
     }
     setIsSubmitting(true);
-    setPage(page + 1);
     orderFormValues.sampleOrderItems.modified = true;
     //remove display Lists rom the form
     orderFormValues.sampleOrderItems.priorityList = [];

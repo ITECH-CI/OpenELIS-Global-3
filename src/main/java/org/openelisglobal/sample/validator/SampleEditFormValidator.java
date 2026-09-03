@@ -59,6 +59,13 @@ public class SampleEditFormValidator implements Validator {
 
     @SuppressWarnings("unchecked")
     private void validateSampleXML(String sampleXML, Errors errors) {
+        // sampleXML is only populated when the modify-order form is adding a new
+        // sample/test (see ModifyOrder.js#attacheSamplesToFormValues). Plain
+        // modifications (cancel test, edit provider, bacterio/TB fields, etc.) send
+        // an empty string here, which is valid and must not be rejected.
+        if (GenericValidator.isBlankOrNull(sampleXML)) {
+            return;
+        }
         try {
             Document sampleDom = DocumentHelper.parseText(sampleXML);
             for (Iterator<Element> iter = sampleDom.getRootElement().elementIterator("sample"); iter.hasNext();) {
