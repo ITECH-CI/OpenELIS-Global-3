@@ -482,6 +482,7 @@ const SearchForm = (props) => {
               </Select>
             </Column>
             <Column lg={4} />
+            {/* Champ de recherche labno masqué sur /ResultValidation
             <Column lg={6} md={8} sm={4}>
               <div>
                 <div style={{ position: "relative" }}>
@@ -540,6 +541,7 @@ const SearchForm = (props) => {
                 )}
               </div>
             </Column>
+            */}
           </Grid>
         </>
       )}

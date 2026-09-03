@@ -1890,6 +1890,7 @@ export function SearchResults(props) {
           />
         ) : (
           <>
+            {/* Champ de recherche labno masqué sur /LogbookResults et /AccessionResults
             <div
               style={{
                 display: "flex",
@@ -1951,6 +1952,7 @@ export function SearchResults(props) {
                   )}
               </div>
             </div>
+            */}
             <Formik
               initialValues={SearchResultFormValues}
               //validationSchema={}
