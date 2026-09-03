@@ -66,6 +66,7 @@ function UserAddModify() {
     secondName: false,
   });
   const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
   const [isLocked, setIsLocked] = useState("radio-2");
   const [isDisabled, setIsDisabled] = useState("radio-4");
   const [isActive, setIsActive] = useState("radio-6");
@@ -337,7 +338,12 @@ function UserAddModify() {
   }, [selectedTestSectionLabUnits]);
 
   function userSavePostCall() {
-    setIsLoading(true);
+    // Guard against a double submit while the request is in flight, which
+    // would otherwise create the same user twice.
+    if (isSaving) {
+      return;
+    }
+    setIsSaving(true);
     postToOpenElisServerJsonResponse(
       `/rest/UnifiedSystemUser`,
       JSON.stringify(userDataPost),
@@ -348,8 +354,14 @@ function UserAddModify() {
   }
 
   function userSavePostCallback(res) {
-    if (res) {
-      setIsLoading(false);
+    // The endpoint always answers HTTP 200 with a { forward, ID } map:
+    //  - success -> forward "redirect:/UnifiedSystemUser" plus the new combined ID
+    //  - validation failure (duplicated login name, bad password, ...) ->
+    //    forward "unifiedSystemUserDefinition" and no ID
+    const saved =
+      res && (res.ID || res.forward === "redirect:/UnifiedSystemUser");
+
+    if (saved) {
       addNotification({
         title: intl.formatMessage({
           id: "notification.title",
@@ -360,19 +372,20 @@ function UserAddModify() {
         kind: NotificationKinds.success,
       });
       setNotificationVisible(true);
+      // Keep the confirmation on screen long enough to be read, then send the
+      // user to the list so the freshly created account is visible right away.
       setTimeout(() => {
+        window.location.href = "/MasterListsPage#userManagement";
         window.location.reload();
-      }, 200);
+      }, 2000);
     } else {
+      setIsSaving(false);
       addNotification({
         kind: NotificationKinds.error,
         title: intl.formatMessage({ id: "notification.title" }),
         message: intl.formatMessage({ id: "server.error.msg" }),
       });
       setNotificationVisible(true);
-      setTimeout(() => {
-        window.location.reload();
-      }, 200);
     }
   }
 
@@ -1213,7 +1226,7 @@ function UserAddModify() {
                   <br />
                   <Button
                     data-cy="apply-button"
-                    disabled={copyUserPermission === "0"}
+                    disabled={isSaving || copyUserPermission === "0"}
                     type="button"
                     onClick={() => {
                       handleCopyUserPermissionsChangeClick();
@@ -1423,9 +1436,10 @@ function UserAddModify() {
                 <Grid fullWidth={true}>
                   <Column lg={16} md={8} sm={4}>
                     <Button
-                      disabled={Object.values(validation).some(
-                        (value) => !value,
-                      )}
+                      disabled={
+                        isSaving ||
+                        Object.values(validation).some((value) => !value)
+                      }
                       data-cy="saveButton"
                       onClick={userSavePostCall}
                       type="button"
