@@ -1101,11 +1101,12 @@
 						<bottomPen lineWidth="0.0" lineColor="#CCCCCC"/>
 						<rightPen lineWidth="0.0"/>
 					</box>
-					<textElement textAlignment="Left" verticalAlignment="Middle">
+					<textElement textAlignment="Left" verticalAlignment="Middle" markup="styled">
 						<font fontName="SansSerif" size="8" isItalic="false"/>
 						<paragraph lineSpacing="Single"/>
 					</textElement>
-					<textFieldExpression><![CDATA[$F{result} + " " + $F{uom}]]></textFieldExpression>
+					<textFieldExpression><![CDATA[($F{result}.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;") + " " + ($F{uom} == null ? "" : $F{uom}.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")))
++ ($F{siResult} == null || $F{siResult}.isEmpty() ? "" : "\n<style size=\"6\" isItalic=\"true\">(" + $F{siResult}.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;") + " " + ($F{siUom} == null ? "" : $F{siUom}.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")) + ")</style>")]]></textFieldExpression>
 				</textField>
 				<textField textAdjust="StretchHeight">
 					<reportElement stretchType="ElementGroupHeight" x="0" y="0" width="163" height="11" isPrintWhenDetailOverflows="true" uuid="c5042aad-e034-4f23-81e4-0b03b199fc0b">
@@ -1152,12 +1153,12 @@
 						<bottomPen lineWidth="0.0" lineColor="#CCCCCC"/>
 						<rightPen lineWidth="0.5"/>
 					</box>
-					<textElement textAlignment="Center" verticalAlignment="Middle" markup="html">
+					<textElement textAlignment="Center" verticalAlignment="Middle" markup="styled">
 						<font size="7"/>
 						<paragraph lineSpacing="Single"/>
 					</textElement>
 					<textFieldExpression><![CDATA[($F{testRefRange} == null ? "" : $F{testRefRange}.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;"))
-+ ($F{siRefRange} == null || $F{siRefRange}.isEmpty() ? "" : "<br/><i>(" + $F{siRefRange}.replace("<", "&lt;").replace(">", "&gt;") + ")</i>")]]></textFieldExpression>
++ ($F{siRefRange} == null || $F{siRefRange}.isEmpty() ? "" : "\n<style size=\"6\" isItalic=\"true\">(" + $F{siRefRange}.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;") + ")</style>")]]></textFieldExpression>
 				</textField>
 				<textField textAdjust="StretchHeight" isBlankWhenNull="true">
 					<reportElement stretchType="ElementGroupHeight" x="401" y="0" width="152" height="18" isPrintWhenDetailOverflows="true" uuid="4bcb5d23-6a19-45b0-ade0-89171ecbfc69">
@@ -1205,23 +1206,6 @@
 						<paragraph lineSpacing="Single"/>
 					</textElement>
 					<textFieldExpression><![CDATA[$F{sampleSortOrder}]]></textFieldExpression>
-				</textField>
-				<textField textAdjust="StretchHeight" isBlankWhenNull="true">
-					<reportElement stretchType="ElementGroupHeight" x="210" y="0" width="98" height="18" uuid="de78ee42-34d7-4055-a171-55d57adfce5c">
-						<property name="com.jaspersoft.studio.unit.width" value="px"/>
-						<printWhenExpression><![CDATA[!$F{siResult}.isEmpty()]]></printWhenExpression>
-					</reportElement>
-					<box topPadding="0" leftPadding="1" bottomPadding="0" rightPadding="1">
-						<topPen lineWidth="0.0" lineColor="#CCCCCC"/>
-						<leftPen lineWidth="0.0"/>
-						<bottomPen lineWidth="0.0" lineColor="#CCCCCC"/>
-						<rightPen lineWidth="0.5"/>
-					</box>
-					<textElement textAlignment="Right" verticalAlignment="Middle">
-						<font fontName="SansSerif" size="7" isItalic="true"/>
-						<paragraph lineSpacing="Single"/>
-					</textElement>
-					<textFieldExpression><![CDATA["( " + $F{siResult} + " " + $F{siUom} + " )"]]></textFieldExpression>
 				</textField>
 				<textField isBlankWhenNull="true">
 					<reportElement x="326" y="0" width="17" height="18" isPrintWhenDetailOverflows="true" uuid="9d59aaf8-9f87-4b8c-aa90-67308dbcf7d3">
