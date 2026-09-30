@@ -269,8 +269,12 @@ public class LogbookResultsRestController extends LogbookResultsBaseController {
 
             // Determine if this is a patient/accession search (show all results)
             // or other search type (show only pending results)
-            boolean isPatientOrAccessionSearch = !GenericValidator.isBlankOrNull(labNumber)
-                    || !GenericValidator.isBlankOrNull(patientPK);
+            // Une recherche par unité reste une liste de résultats À SAISIR, même
+            // quand un n° labo l'affine (sinon toute l'unité passait en « tous
+            // statuts », résultats terminés compris)
+            boolean isPatientOrAccessionSearch = (!GenericValidator.isBlankOrNull(labNumber)
+                    || !GenericValidator.isBlankOrNull(patientPK))
+                    && GenericValidator.isBlankOrNull(form.getTestSectionId());
 
             // Set flag in form to pass to frontend
             form.setShowAllResults(isPatientOrAccessionSearch);
@@ -285,6 +289,13 @@ public class LogbookResultsRestController extends LogbookResultsBaseController {
 
             if (!GenericValidator.isBlankOrNull(form.getTestSectionId())) {
                 tests = resultsLoadUtility.getUnfinishedTestResultItemsInTestSection(form.getTestSectionId());
+                if (!GenericValidator.isBlankOrNull(labNumber)) {
+                    // n° labo dans l'unité : filtré ici, AVANT la pagination serveur
+                    // (le filtre de l'écran ne voit que la page chargée)
+                    String needle = labNumber.trim().toLowerCase();
+                    tests.removeIf(item -> item.getAccessionNumber() == null
+                            || !item.getAccessionNumber().toLowerCase().contains(needle));
+                }
                 filteredTests = userService.filterResultsByLabUnitRoles(getSysUserId(request), tests,
                         Constants.ROLE_RESULTS);
                 int count = resultsLoadUtility.getTotalCountAnalysisByTestSectionAndStatus(form.getTestSectionId());
