@@ -3,11 +3,14 @@ package org.openelisglobal.sample.service;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import org.apache.commons.validator.GenericValidator;
+import org.hl7.fhir.r4.model.QuestionnaireResponse;
 import org.openelisglobal.analysis.service.AnalysisService;
 import org.openelisglobal.analysis.valueholder.Analysis;
 import org.openelisglobal.common.formfields.FormFields;
 import org.openelisglobal.common.formfields.FormFields.Field;
+import org.openelisglobal.common.log.LogEvent;
 import org.openelisglobal.common.services.DisplayListService;
 import org.openelisglobal.common.services.DisplayListService.ListType;
 import org.openelisglobal.common.services.IStatusService;
@@ -22,17 +25,22 @@ import org.openelisglobal.common.services.registration.ResultUpdateRegister;
 import org.openelisglobal.common.services.registration.interfaces.IResultUpdate;
 import org.openelisglobal.common.util.DateUtil;
 import org.openelisglobal.common.util.IdValuePair;
+import org.openelisglobal.dataexchange.fhir.exception.FhirLocalPersistingException;
+import org.openelisglobal.dataexchange.fhir.service.FhirPersistanceService;
 import org.openelisglobal.dataexchange.orderresult.OrderResponseWorker.Event;
 import org.openelisglobal.note.service.NoteService;
 import org.openelisglobal.note.service.NoteServiceImpl.NoteType;
 import org.openelisglobal.note.valueholder.Note;
 import org.openelisglobal.observationhistory.service.ObservationHistoryService;
+import org.openelisglobal.observationhistory.service.ObservationHistoryServiceImpl.ObservationType;
 import org.openelisglobal.observationhistory.valueholder.ObservationHistory;
 import org.openelisglobal.organization.service.OrganizationService;
 import org.openelisglobal.organization.valueholder.Organization;
 import org.openelisglobal.panel.valueholder.Panel;
 import org.openelisglobal.patient.valueholder.Patient;
 import org.openelisglobal.person.service.PersonService;
+import org.openelisglobal.program.service.ProgramSampleService;
+import org.openelisglobal.program.valueholder.ProgramSample;
 import org.openelisglobal.provider.service.ProviderService;
 import org.openelisglobal.requester.service.SampleRequesterService;
 import org.openelisglobal.requester.valueholder.SampleRequester;
@@ -41,6 +49,7 @@ import org.openelisglobal.result.action.util.ResultsUpdateDataSet;
 import org.openelisglobal.result.service.ResultService;
 import org.openelisglobal.result.valueholder.Result;
 import org.openelisglobal.sample.bean.SampleEditItem;
+import org.openelisglobal.sample.bean.SampleOrderItem;
 import org.openelisglobal.sample.form.SampleEditForm;
 import org.openelisglobal.sample.valueholder.Sample;
 import org.openelisglobal.samplehuman.service.SampleHumanService;
@@ -105,6 +114,10 @@ public class SampleEditServiceImpl implements SampleEditService {
     NoteService noteService;
     @Autowired
     SamplePatientEntryService samplePatientEntryService;
+    @Autowired
+    ProgramSampleService programSampleService;
+    @Autowired
+    FhirPersistanceService fhirPersistanceService;
 
     @Transactional
     @Override
@@ -308,8 +321,44 @@ public class SampleEditServiceImpl implements SampleEditService {
                     patient.getId(), sysUserId);
         }
 
+        updateProgramQuestionnaireResponse(form.getSampleOrderItems(), updatedSample, sysUserId);
+
         request.getSession().setAttribute("lastAccessionNumber", updatedSample.getAccessionNumber());
         request.getSession().setAttribute("lastPatientId", patient.getId());
+    }
+
+    /**
+     * Réponses aux questions additionnelles du programme : elles n'étaient écrites
+     * (QuestionnaireResponse FHIR) qu'à la création de la demande ; les modifier
+     * n'avait aucun effet. On met à jour la ressource existante (même id), ou on la
+     * crée si la demande n'en avait pas. Le changement de programme lui-même n'est
+     * pas pris en charge en modification (sous-tables propres à certains
+     * programmes). Un échec FHIR ne doit pas faire échouer la modification.
+     */
+    private void updateProgramQuestionnaireResponse(SampleOrderItem sampleOrder, Sample sample, String sysUserId) {
+        QuestionnaireResponse answers = sampleOrder.getAdditionalQuestions();
+        if (answers == null || answers.getItem().isEmpty()) {
+            return;
+        }
+        String programName = observationService.getRawValueForSample(ObservationType.PROGRAM, sample.getId());
+        ProgramSample programSample = programSampleService.getProgrammeSampleBySample(Integer.valueOf(sample.getId()),
+                programName);
+        if (programSample == null) {
+            return;
+        }
+        if (programSample.getQuestionnaireResponseUuid() == null) {
+            programSample.setQuestionnaireResponseUuid(UUID.randomUUID());
+            programSample.setSysUserId(sysUserId);
+            programSampleService.update(programSample);
+        }
+        answers.setId(programSample.getQuestionnaireResponseUuid().toString());
+        try {
+            fhirPersistanceService.updateFhirResourceInFhirStore(answers);
+        } catch (FhirLocalPersistingException | RuntimeException e) {
+            LogEvent.logError(this.getClass().getSimpleName(), "updateProgramQuestionnaireResponse",
+                    "questionnaire du programme non mis à jour pour " + sample.getAccessionNumber() + " : "
+                            + e.getMessage());
+        }
     }
 
     private void addExternalResultsToDeleteList(Analysis analysis, Patient patient, Sample updatedSample,

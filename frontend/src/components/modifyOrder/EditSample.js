@@ -222,6 +222,27 @@ const EditSample = (props) => {
       return test;
     });
   };
+  // Date/heure de prélèvement d'un échantillon existant : saisie sur la 1re ligne
+  // de l'échantillon (celle qui porte les valeurs) ; sampleItemChanged (lu par le
+  // serveur) n'est levé que si la saisie est complète et valide (jj/mm/aaaa,
+  // hh:mm) ou vidée.
+  const handleCollectionChange = (field, value, testId) => {
+    const updatedTests = orderFormValues.existingTests.map((test) => {
+      if (test.testId !== testId) {
+        return test;
+      }
+      const next = { ...test, [field]: value };
+      const dateOk =
+        !next.collectionDate ||
+        /^\d{2}\/\d{2}\/\d{4}$/.test(next.collectionDate);
+      const timeOk =
+        !next.collectionTime || /^\d{2}:\d{2}$/.test(next.collectionTime);
+      next.sampleItemChanged = dateOk && timeOk;
+      return next;
+    });
+    setOrderFormValues({ ...orderFormValues, existingTests: updatedTests });
+  };
+
   const handleChecked = (e, testId) => {
     var tests = [];
     var updatedTests = [];
@@ -379,22 +400,36 @@ const EditSample = (props) => {
     } else if (cell.info.header === "sampleType") {
       return <TableCell key={cell.id}>{cell.value}</TableCell>;
     } else if (cell.info.header === "collectionDate") {
+      if (accession === "") {
+        return <TableCell key={cell.id}></TableCell>;
+      }
       return (
         <TableCell key={cell.id}>
           <TextInput
             id={cell.id + cell.info.header}
             labelText=""
             value={cell.value}
+            placeholder={"jj/mm/aaaa"}
+            onChange={(e) =>
+              handleCollectionChange("collectionDate", e.target.value, row.id)
+            }
           ></TextInput>
         </TableCell>
       );
     } else if (cell.info.header === "collectionTime") {
+      if (accession === "") {
+        return <TableCell key={cell.id}></TableCell>;
+      }
       return (
         <TableCell key={cell.id}>
           <TextInput
             id={cell.id + cell.info.header}
             labelText=""
             value={cell.value}
+            placeholder={"hh:mm"}
+            onChange={(e) =>
+              handleCollectionChange("collectionTime", e.target.value, row.id)
+            }
           ></TextInput>
         </TableCell>
       );

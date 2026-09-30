@@ -291,6 +291,11 @@ public class SampleOrderService {
                         SpringContext.getBean(PersonService.class).get(sampleOrder.getProviderPersonId()));
                 providerPerson = provider.getPerson();
                 providerPerson.setSysUserId(currentUserId);
+                // même prescripteur : les coordonnées modifiées doivent être enregistrées
+                // (elles ne l'étaient qu'à la création d'un nouveau prescripteur)
+                providerPerson.setWorkPhone(sampleOrder.getProviderWorkPhone());
+                providerPerson.setFax(sampleOrder.getProviderFax());
+                providerPerson.setEmail(sampleOrder.getProviderEmail());
             }
         }
 
