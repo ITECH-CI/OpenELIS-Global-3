@@ -55,8 +55,48 @@
 
     <changeSet author="pkomena"
         id="extend-obervation-history-value-size-1">
-        <modifyDataType tableName="observation_history"
-            columnName="value" newDataType="varchar(200)" />
+        <!--
+            validCheckSum ANY : le corps a été réécrit (ex-modifyDataType) ; les bases
+            où l'élargissement est déjà appliqué ne doivent pas échouer à la validation.
+            PostgreSQL refuse de changer le type d'une colonne citée dans le WHEN d'un
+            trigger : sur une base RESTAURÉE d'un site qui utilisait oedatauploader,
+            observation_history_update_trigger existe déjà et bloquait le démarrage.
+            On sauvegarde la définition des triggers dépendant de la colonne, on les
+            supprime, on élargit, puis on les recrée (même transaction).
+        -->
+        <validCheckSum>ANY</validCheckSum>
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="1">SELECT count(*) FROM information_schema.columns
+                WHERE table_schema = 'clinlims' AND table_name = 'observation_history'
+                AND column_name = 'value' AND character_maximum_length &lt; 200</sqlCheck>
+        </preConditions>
+        <sql dbms="postgresql" splitStatements="false"><![CDATA[
+DO $$
+DECLARE
+    r record;
+    defs text[] := '{}';
+    d text;
+BEGIN
+    FOR r IN
+        SELECT DISTINCT t.tgname, pg_get_triggerdef(t.oid) AS def
+        FROM pg_trigger t
+        JOIN pg_depend dp ON dp.classid = 'pg_trigger'::regclass AND dp.objid = t.oid
+        JOIN pg_attribute a ON a.attrelid = dp.refobjid AND a.attnum = dp.refobjsubid
+        WHERE dp.refobjid = 'clinlims.observation_history'::regclass
+          AND a.attname = 'value'
+          AND NOT t.tgisinternal
+    LOOP
+        defs := defs || r.def;
+        EXECUTE format('DROP TRIGGER %I ON clinlims.observation_history', r.tgname);
+    END LOOP;
+
+    ALTER TABLE clinlims.observation_history ALTER COLUMN value TYPE varchar(200);
+
+    FOREACH d IN ARRAY defs LOOP
+        EXECUTE d;
+    END LOOP;
+END $$;
+]]></sql>
     </changeSet>
 
 </databaseChangeLog>
