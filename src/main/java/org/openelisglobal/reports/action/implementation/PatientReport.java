@@ -708,6 +708,38 @@ public abstract class PatientReport extends Report {
         data.setConclusion(currentConclusion);
     }
 
+    /**
+     * Plage de référence en unité SI, au même format que le résultat SI (2
+     * décimales max). Les bornes infinies (plages « < x » / « > x ») sont lues sur
+     * la plage conventionnelle : pour elles, les bornes SI stockées ne sont pas
+     * fiables (la conversion d'une borne infinie échoue et conserve la valeur
+     * conventionnelle). Null si pas de plage affichable.
+     */
+    protected String buildSiReferenceRange(Result result) {
+        Double min = result.getMinNormal();
+        Double max = result.getMaxNormal();
+        Double minSi = result.getMinNormalSi();
+        Double maxSi = result.getMaxNormalSi();
+        if (min == null || max == null || min.equals(max)) {
+            return null; // même règle que la plage conventionnelle (getDisplayReferenceRange)
+        }
+        boolean noLow = min.isInfinite();
+        boolean noHigh = max.isInfinite();
+        if (noLow && noHigh) {
+            return null;
+        }
+        if (noLow) {
+            return maxSi == null || maxSi.isInfinite() ? null : "< " + formatTwoDecimals(maxSi);
+        }
+        if (noHigh) {
+            return minSi == null || minSi.isInfinite() ? null : "> " + formatTwoDecimals(minSi);
+        }
+        if (minSi == null || maxSi == null) {
+            return null;
+        }
+        return formatTwoDecimals(minSi) + "-" + formatTwoDecimals(maxSi);
+    }
+
     protected void setSiUnitInformation(ClinicalPatientData data, Test test, List<Result> resultList) {
         if (resultList.isEmpty()) {
             return;
@@ -735,6 +767,10 @@ public abstract class PatientReport extends Report {
 
         if (result.getMaxNormalSi() != null) {
             data.setSiMaxNormal(String.valueOf(result.getMaxNormalSi()));
+        }
+
+        if (result.getValueSi() != null) {
+            data.setSiRefRange(buildSiReferenceRange(result));
         }
 
         // Get SI UOM using ResultService which handles transactions properly

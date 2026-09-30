@@ -87,6 +87,7 @@ public final class ClinicalPatientData {
     private String siResult;
     private String siMinNormal;
     private String siMaxNormal;
+    private String siRefRange;
     private String siUom;
     private String analysisMethod;
     private String analyzerName;
@@ -212,6 +213,7 @@ public final class ClinicalPatientData {
         siResult = data.getSiResult();
         siMinNormal = data.getSiMinNormal();
         siMaxNormal = data.getSiMaxNormal();
+        siRefRange = data.getSiRefRange();
         siUom = data.getSiUom();
         analysisMethod = data.getAnalysisMethod();
         analyzerName = data.getAnalyzerName();
@@ -792,6 +794,18 @@ public final class ClinicalPatientData {
 
     public void setSiMaxNormal(String siMaxNormal) {
         this.siMaxNormal = siMaxNormal;
+    }
+
+    /**
+     * Plage de référence convertie en unité SI, prête à afficher (ex. «
+     * 53.04-114.92 »).
+     */
+    public String getSiRefRange() {
+        return siRefRange;
+    }
+
+    public void setSiRefRange(String siRefRange) {
+        this.siRefRange = siRefRange;
     }
 
     public String getSiUom() {

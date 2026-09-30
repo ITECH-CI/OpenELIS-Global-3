@@ -112,6 +112,7 @@
 	<field name="siUom" class="java.lang.String"/>
 	<field name="siMaxNormal" class="java.lang.String"/>
 	<field name="siMinNormal" class="java.lang.String"/>
+	<field name="siRefRange" class="java.lang.String"/>
 	<field name="siResult" class="java.lang.String"/>
 	<field name="priorResult" class="java.lang.String"/>
 	<field name="clinicalInformation" class="java.lang.String"/>
@@ -1141,7 +1142,7 @@
 					</textElement>
 					<textFieldExpression><![CDATA["(" + $F{analysisMethod} + ")"]]></textFieldExpression>
 				</textField>
-				<textField isBlankWhenNull="true">
+				<textField textAdjust="StretchHeight" isBlankWhenNull="true">
 					<reportElement stretchType="ElementGroupHeight" x="343" y="0" width="58" height="18" uuid="ccf699f4-7d50-4897-94ac-2ec3f39c6d55">
 						<property name="com.jaspersoft.studio.unit.width" value="px"/>
 					</reportElement>
@@ -1151,11 +1152,12 @@
 						<bottomPen lineWidth="0.0" lineColor="#CCCCCC"/>
 						<rightPen lineWidth="0.5"/>
 					</box>
-					<textElement textAlignment="Center" verticalAlignment="Middle">
+					<textElement textAlignment="Center" verticalAlignment="Middle" markup="html">
 						<font size="7"/>
 						<paragraph lineSpacing="Single"/>
 					</textElement>
-					<textFieldExpression><![CDATA[$F{testRefRange}]]></textFieldExpression>
+					<textFieldExpression><![CDATA[($F{testRefRange} == null ? "" : $F{testRefRange}.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;"))
++ ($F{siRefRange} == null || $F{siRefRange}.isEmpty() ? "" : "<br/><i>(" + $F{siRefRange}.replace("<", "&lt;").replace(">", "&gt;") + ")</i>")]]></textFieldExpression>
 				</textField>
 				<textField textAdjust="StretchHeight" isBlankWhenNull="true">
 					<reportElement stretchType="ElementGroupHeight" x="401" y="0" width="152" height="18" isPrintWhenDetailOverflows="true" uuid="4bcb5d23-6a19-45b0-ade0-89171ecbfc69">
