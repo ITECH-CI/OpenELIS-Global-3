@@ -86,8 +86,12 @@ public class SampleOrderItem implements Serializable {
             SampleEditForm.SampleEdit.class })
     private String receivedTime;
 
+    // FUTURE à la saisie seulement : à la modification, la date saisie à l'époque
+    // est
+    // passée et, les erreurs de validation étant bloquantes, plus aucune demande
+    // ayant une prochaine visite échue ne pouvait être modifiée (400).
     @ValidDate(relative = DateRelation.FUTURE, groups = { SamplePatientEntryForm.SamplePatientEntry.class,
-            SamplePatientEntryBatch.class, SampleEditForm.SampleEdit.class })
+            SamplePatientEntryBatch.class })
     private String nextVisitDate;
 
     @SafeHtml(level = SafeHtml.SafeListLevel.NONE, groups = { SamplePatientEntryForm.SamplePatientEntry.class,
