@@ -224,7 +224,22 @@ public class TestModifyEntryRestController extends BaseController {
         });
 
         for (ResultLimit limit : resultLimitList) {
+            if (limit.getLowNormal() == Double.POSITIVE_INFINITY || limit.getHighNormal() == Double.NEGATIVE_INFINITY) {
+                // ligne incohérente (bornes normales à +∞/−∞, ex. restes d'une ancienne
+                // modification) : ignorée, sinon elle écrasait la vraie plage à l'écran
+                continue;
+            }
             ResultLimitBean bean = new ResultLimitBean();
+            bean.setMinAge(String.valueOf(limit.getMinAge()));
+            bean.setMaxAge(String.valueOf(limit.getMaxAge()));
+            bean.setLowNormal(String.valueOf(limit.getLowNormal()));
+            bean.setHighNormal(String.valueOf(limit.getHighNormal()));
+            bean.setLowValid(String.valueOf(limit.getLowValid()));
+            bean.setHighValid(String.valueOf(limit.getHighValid()));
+            bean.setLowCritical(String.valueOf(limit.getLowCritical()));
+            bean.setHighCritical(String.valueOf(limit.getHighCritical()));
+            bean.setLowReportingRange(String.valueOf(limit.getLowReportingRange()));
+            bean.setHighReportingRange(String.valueOf(limit.getHighReportingRange()));
             bean.setNormalRange(SpringContext.getBean(ResultLimitService.class).getDisplayReferenceRange(limit,
                     significantDigits, "-"));
             bean.setValidRange(SpringContext.getBean(ResultLimitService.class).getDisplayValidRange(limit,

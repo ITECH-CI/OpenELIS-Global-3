@@ -67,6 +67,20 @@ export const extractAgeRangeParts = (rangeStr) => {
   return { low, high };
 };
 
+// valeur brute du serveur si présente (ex. "0.7", "-Infinity"), sinon repli
+const rawOr = (raw, fallback) =>
+  raw !== undefined && raw !== null && raw !== "" ? String(raw) : fallback;
+
+// âge en jours → { raw, unit } dans l'unité la plus lisible (Y, M ou D)
+export const daysToAgeParts = (days) => {
+  const d = Number(days);
+  if (!isFinite(d)) return { raw: "Infinity", unit: "Y" };
+  if (d === 0) return { raw: 0, unit: "Y" };
+  if (d % 365 === 0) return { raw: d / 365, unit: "Y" };
+  if (d % 30 === 0) return { raw: d / 30, unit: "M" };
+  return { raw: d, unit: "D" };
+};
+
 const isNumericRange = (str) => {
   if (typeof str !== "string") {
     return false;
@@ -113,12 +127,30 @@ export const mapTestCatBeanToFormData = (test) => {
       test.referenceValue !== "n/a" ? test.referenceValue : "",
     defaultTestResult: "",
     sampleTypes: test.sampleType ? [test.sampleType] : [],
-    lowValid: extractRange(test.resultLimits?.[0]?.validRange)[0],
-    highValid: extractRange(test.resultLimits?.[0]?.validRange)[1],
-    lowReportingRange: extractRange(test.resultLimits?.[0]?.reportingRange)[0],
-    highReportingRange: extractRange(test.resultLimits?.[0]?.reportingRange)[1],
-    lowCritical: extractRange(test.resultLimits?.[0]?.criticalRange)[0],
-    highCritical: extractRange(test.resultLimits?.[0]?.criticalRange)[1],
+    lowValid: rawOr(
+      test.resultLimits?.[0]?.lowValid,
+      extractRange(test.resultLimits?.[0]?.validRange)[0],
+    ),
+    highValid: rawOr(
+      test.resultLimits?.[0]?.highValid,
+      extractRange(test.resultLimits?.[0]?.validRange)[1],
+    ),
+    lowReportingRange: rawOr(
+      test.resultLimits?.[0]?.lowReportingRange,
+      extractRange(test.resultLimits?.[0]?.reportingRange)[0],
+    ),
+    highReportingRange: rawOr(
+      test.resultLimits?.[0]?.highReportingRange,
+      extractRange(test.resultLimits?.[0]?.reportingRange)[1],
+    ),
+    lowCritical: rawOr(
+      test.resultLimits?.[0]?.lowCritical,
+      extractRange(test.resultLimits?.[0]?.criticalRange)[0],
+    ),
+    highCritical: rawOr(
+      test.resultLimits?.[0]?.highCritical,
+      extractRange(test.resultLimits?.[0]?.criticalRange)[1],
+    ),
     significantDigits: test.significantDigits
       ? test.significantDigits !== "n/a"
         ? test.significantDigits
@@ -137,14 +169,20 @@ export const mapTestCatBeanToFormData = (test) => {
           ]
         : Object.entries(
             (test.resultLimits || []).reduce((acc, limit) => {
-              const key = limit.ageRange;
+              // clé = âges bruts (jours) quand le serveur les fournit
+              const key =
+                limit.minAge !== undefined && limit.minAge !== null
+                  ? `${limit.minAge}|${limit.maxAge}`
+                  : limit.ageRange;
               if (!acc[key]) acc[key] = [];
               acc[key].push(limit);
               return acc;
             }, {}),
           ).map(([ageRange, limits]) => {
             const result = {
-              ageRange,
+              ageRange: limits[0]?.ageRange ?? ageRange,
+              minAge: limits[0]?.minAge,
+              maxAge: limits[0]?.maxAge,
               highAgeRange: "Infinity",
               gender: false,
               lowNormal: "-Infinity",
@@ -157,7 +195,11 @@ export const mapTestCatBeanToFormData = (test) => {
               let low = "-Infinity",
                 high = "Infinity";
 
-              if (isNumericRange(limit.normalRange)) {
+              if (limit.lowNormal !== undefined && limit.lowNormal !== null) {
+                // valeurs brutes (le libellé normalRange est arrondi : 0.7-1.1 → « 1-1 »)
+                low = limit.lowNormal;
+                high = limit.highNormal;
+              } else if (isNumericRange(limit.normalRange)) {
                 const parts = limit.normalRange.split("-");
                 low = parts[0]?.trim() || "-Infinity";
                 high = parts[1]?.trim() || "Infinity";
@@ -171,7 +213,8 @@ export const mapTestCatBeanToFormData = (test) => {
                 result.gender = true;
                 result.lowNormalFemale = low || "-Infinity";
                 result.highNormalFemale = high || "Infinity";
-              } else if (limit.gender === "n/a") {
+              } else {
+                // « n/a », vide ou espace selon les données : plage non sexuée
                 result.lowNormal = low || "-Infinity";
                 result.highNormal = high || "Infinity";
               }

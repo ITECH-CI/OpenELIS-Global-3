@@ -27,7 +27,10 @@ import * as Yup from "yup";
 import { CustomCommonSortableOrderList } from "./../sortableListComponent/SortableList.js";
 import { getFromOpenElisServer } from "../../../utils/Utils.js";
 import { NotificationContext } from "../../../layout/Layout.js";
-import { extractAgeRangeParts } from "./TestFormData.js";
+import { extractAgeRangeParts, daysToAgeParts } from "./TestFormData.js";
+
+// option d'affichage « Tout âge » (plage 0 → ∞) du sélecteur de tranche d'âge
+const ANY_AGE_OPTION = { id: "all", value: "" };
 
 export const TestStepForm = ({ initialData, mode = "add", postCall }) => {
   const { notificationVisible, setNotificationVisible, addNotification } =
@@ -217,7 +220,15 @@ export const TestStepForm = ({ initialData, mode = "add", postCall }) => {
       const key = `${limit.ageRange}`;
 
       if (!keyMap[key]) {
-        const { low, high } = extractAgeRangeParts(limit.ageRange);
+        // âges bruts en jours s'ils sont fournis (le libellé « Tout âge » /
+        // « 0A0M1J… » ne se relit pas de façon fiable)
+        const { low, high } =
+          limit.maxAge !== undefined && limit.maxAge !== null
+            ? {
+                low: daysToAgeParts(limit.minAge),
+                high: daysToAgeParts(limit.maxAge),
+              }
+            : extractAgeRangeParts(limit.ageRange);
 
         extractedAgeRanges.push(high);
 
@@ -2223,22 +2234,41 @@ export const StepSixSelectRangeAgeRangeAndSignificantDigits = ({
   setAgeRanges,
   mode,
 }) => {
+  const intl = useIntl();
   const handleSubmit = (values) => {
     handleNextStep(values, true);
   };
 
   useEffect(() => {
     if (mode === "edit" && ageRangeList.length && ageRangeFields.length) {
+      // tranche d'âge enregistrée (et non la n-ième de la liste, qui affichait
+      // toujours « Nouveau-né ») : borne haute du formulaire comparée aux
+      // tranches prédéfinies (exprimées en mois) ; 0 → ∞ = « Tout âge »
       setGotSelectedAgeRangeList(
         ageRangeFields.map((_, index) => {
-          const current = ageRangeList?.[index];
-          return current
-            ? { id: current.id, value: current.value }
+          const limit = formData?.resultLimits?.[index];
+          const age = ageRanges?.[index];
+          const highDays =
+            age?.raw === "Infinity" || age?.raw === undefined
+              ? Infinity
+              : Number(age.raw) *
+                (age.unit === "Y" ? 365 : age.unit === "M" ? 30 : 1);
+          const lowIsZero = !limit || Number(limit.ageRange || 0) === 0;
+          if (highDays === Infinity && lowIsZero && index === 0) {
+            return ANY_AGE_OPTION;
+          }
+          const match = ageRangeList.find((a) =>
+            a.id === "Infinity"
+              ? highDays === Infinity
+              : Math.abs(Number(a.id) * 30 - highDays) <= 15,
+          );
+          return match
+            ? { id: match.id, value: match.value }
             : { id: "0", value: "Select Age Range" };
         }),
       );
     }
-  }, [mode, ageRangeList, ageRangeFields.length]);
+  }, [mode, ageRangeList, ageRangeFields.length, ageRanges, formData]);
 
   return (
     <>
@@ -2940,6 +2970,15 @@ export const StepSixSelectRangeAgeRangeAndSignificantDigits = ({
                                     text={`${age.value}`}
                                   />
                                 ))}
+                              {index === 0 && (
+                                <SelectItem
+                                  key={ANY_AGE_OPTION.id}
+                                  value={ANY_AGE_OPTION.id}
+                                  text={intl.formatMessage({
+                                    id: "testconfig.ageRange.any",
+                                  })}
+                                />
+                              )}
                             </Select>
                           </Column>
                           <Column
