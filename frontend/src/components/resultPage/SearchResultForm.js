@@ -921,7 +921,9 @@ export function SearchResults(props) {
     const matched = source.filter((item) =>
       (item.accessionNumber || "").toLowerCase().includes(needle),
     );
-    matched.forEach((item, i) => (item.id = "" + i));
+    // Ne PAS renuméroter item.id : les champs de saisie écrivent dans
+    // props.results via le chemin "testResult[<row.id>]", l'id doit donc rester
+    // l'index dans la liste COMPLÈTE (sinon la saisie part sur une autre analyse).
     setFilteredResults({ ...props.results, testResult: matched });
     setIsFilterLoading(false);
   }, [labNoFilter, props.results]);
