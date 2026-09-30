@@ -548,8 +548,13 @@ public class UnifiedSystemUserRestController extends BaseController {
         } catch (LIMSRuntimeException e) {
             if (e.getCause() instanceof org.hibernate.StaleObjectStateException) {
                 errors.reject("errors.OptimisticLockException", "errors.OptimisticLockException");
-            } else if (e.getCause() instanceof LIMSDuplicateRecordException) {
-                errors.reject("errors.DuplicateRecordException", "errors.DuplicateRecordException");
+            } else if (e instanceof LIMSDuplicateRecordException
+                    || e.getCause() instanceof LIMSDuplicateRecordException) {
+                // SystemUserService lève l'exception DIRECTEMENT (pas en cause) quand un
+                // utilisateur de même prénom + nom existe : elle tombait dans le cas
+                // générique « Une erreur s'est produite lors de l'enregistrement »
+                errors.reject("systemuser.error.duplicateName",
+                        new Object[] { form.getUserFirstName() + " " + form.getUserLastName() }, null);
             } else {
                 errors.reject("errors.UpdateException", "errors.UpdateException");
             }
@@ -589,6 +594,13 @@ public class UnifiedSystemUserRestController extends BaseController {
             errors.reject("errors.loginName.required", "errors.loginName.required");
         } else if (checkForDuplicateName) {
             LoginUser login = loginService.getMatch("loginName", form.getUserLoginName()).orElse(null);
+            if (login == null) {
+                // « Tester » et « tester » : même identifiant pour l'utilisateur
+                login = loginService.getAll().stream()
+                        .filter(existing -> form.getUserLoginName().equalsIgnoreCase(existing.getLoginName())
+                                && !existing.getId().equals(loginUserId))
+                        .findFirst().orElse(null);
+            }
             if (login != null) {
                 errors.reject("errors.loginName.duplicated", new Object[] { form.getUserLoginName() }, null);
             }
