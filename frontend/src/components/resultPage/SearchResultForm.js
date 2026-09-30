@@ -1257,7 +1257,8 @@ export function SearchResults(props) {
                 name={"testResult[" + row.id + "].resultValue"}
                 labelText=""
                 helperText={row.unitsOfMeasure || ""}
-                type="number"
+                type="text"
+                inputMode="decimal"
                 value={row.resultValue}
                 style={validationState[row.id]?.style}
                 onBlur={(e) => {
@@ -1281,25 +1282,23 @@ export function SearchResults(props) {
                   }
                 }}
                 onChange={(e) => {
-                  handleChange(e, row.id);
-                  if (
-                    validationState[row.id]?.isInvalid &&
-                    configurationProperties.ALERT_FOR_INVALID_RESULTS
-                  ) {
-                    addNotification({
-                      title: intl.formatMessage({ id: "notification.title" }),
-                      message:
-                        intl.formatMessage({
-                          id: "result.outOfValidRange.msg",
-                        }) +
-                        " " +
-                        row.testName +
-                        " : " +
-                        row.resultValue,
-                      kind: NotificationKinds.error,
-                    });
-                    setNotificationVisible(true);
-                  }
+                  // « , » et « . » acceptés, enregistrés avec le séparateur du
+                  // système (« . ») ; caractères non numériques ignorés (sauf < >
+                  // des analyseurs). type="number" vidait silencieusement une
+                  // valeur saisie avec une virgule sur certains navigateurs.
+                  const normalized = normalizeNumericInput(e.target.value);
+                  handleChange(
+                    {
+                      target: {
+                        name: e.target.name,
+                        id: e.target.id,
+                        value: normalized,
+                      },
+                    },
+                    row.id,
+                  );
+                  // pas d'alerte « hors plage » pendant la frappe (« 1 » en
+                  // tapant « 13 ») : elle est affichée en quittant le champ
                 }}
               />
             );
@@ -1536,6 +1535,21 @@ export function SearchResults(props) {
       </Grid>
     </>
   );
+  // Saisie numérique : virgule → point, un seul séparateur décimal, seuls
+  // chiffres, « - » et les préfixes « < » / « > » sont conservés.
+  const normalizeNumericInput = (raw) => {
+    let value = ("" + (raw ?? ""))
+      .replace(/,/g, ".")
+      .replace(/[^0-9.<>-]/g, "");
+    const firstDot = value.indexOf(".");
+    if (firstDot !== -1) {
+      value =
+        value.slice(0, firstDot + 1) +
+        value.slice(firstDot + 1).replace(/\./g, "");
+    }
+    return value;
+  };
+
   const validateResults = (e, rowId) => {
     console.debug("validateResults:" + e.target.value);
     // e.target.value;

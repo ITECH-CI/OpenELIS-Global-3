@@ -177,8 +177,17 @@ export default function WorkplanSearchForm(props) {
         </Column>
         <Column sm={4} md={8} lg={10}>
           <Form className="container-form" onSubmit={applyFilters}>
-            <Grid fullWidth={true}>
-              <Column sm={4} md={2} lg={4}>
+            {/* une seule ligne : n° labo, période du/au, boutons (retour à la
+                ligne seulement si l'écran est trop étroit) */}
+            <div
+              style={{
+                display: "flex",
+                flexWrap: "wrap",
+                alignItems: "flex-end",
+                gap: "1rem",
+              }}
+            >
+              <div style={{ flex: "1 1 12rem", minWidth: "10rem" }}>
                 <TextInput
                   id="workplanLabNumberFilter"
                   labelText={intl.formatMessage({
@@ -187,8 +196,8 @@ export default function WorkplanSearchForm(props) {
                   value={labNumber}
                   onChange={(e) => setLabNumber(e.target.value)}
                 />
-              </Column>
-              <Column sm={2} md={2} lg={4}>
+              </div>
+              <div>
                 <CustomDatePicker
                   id="workplanStartDateFilter"
                   labelText={intl.formatMessage({
@@ -198,8 +207,8 @@ export default function WorkplanSearchForm(props) {
                   updateStateValue={true}
                   onChange={(date) => setStartDate(date)}
                 />
-              </Column>
-              <Column sm={2} md={2} lg={4}>
+              </div>
+              <div>
                 <CustomDatePicker
                   id="workplanEndDateFilter"
                   labelText={intl.formatMessage({
@@ -209,16 +218,16 @@ export default function WorkplanSearchForm(props) {
                   updateStateValue={true}
                   onChange={(date) => setEndDate(date)}
                 />
-              </Column>
-              <Column sm={4} md={2} lg={4} style={{ alignSelf: "end" }}>
+              </div>
+              <div style={{ whiteSpace: "nowrap" }}>
                 <Button type="submit" size="md">
                   <FormattedMessage id="workplan.filter.apply" />
                 </Button>{" "}
                 <Button kind="ghost" size="md" onClick={clearFilters}>
                   <FormattedMessage id="workplan.filter.clear" />
                 </Button>
-              </Column>
-            </Grid>
+              </div>
+            </div>
           </Form>
         </Column>
         <Column sm={1} md={2} lg={4}>
