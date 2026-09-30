@@ -164,7 +164,14 @@ public abstract class CSVRoutineColumnBuilder {
                 });
                 allTests = filtered;
             } else {
-                allTests = testService.getAllOrderBy("description");
+                // actifs uniquement : les inactifs n'ont pas de catégorie dans le crosstab
+                List<Test> active = new ArrayList<>();
+                for (Test t : testService.getAllOrderBy("description")) {
+                    if ("Y".equals(t.getIsActive())) {
+                        active.add(t);
+                    }
+                }
+                allTests = active;
             }
         }
         if (testResultsByTestName == null) {
@@ -302,7 +309,7 @@ public abstract class CSVRoutineColumnBuilder {
         // look in the data source for a value
         try {
             value = resultSet.getString(trimToPostgresMaxColumnName(column.dbName));
-        } catch (RuntimeException e) {
+        } catch (RuntimeException | SQLException e) {
             // if you end up where it is because the result set doesn't return a
             // column of the right name
             // Check MAX_POSTGRES_COL_NAME if this fails on a long name
@@ -562,23 +569,23 @@ public abstract class CSVRoutineColumnBuilder {
         query.append(", \n\n ( SELECT si.samp_id, si.id AS sampleItem_id, si.sort_order AS sampleItemNo, " + listName
                 + ".* " + " FROM sample_item AS si JOIN \n ");
         String labUnitFilter = "";
-        String categoryUnitFilter = "";
         if (selectedLabUnit != null && !selectedLabUnit.isEmpty()) {
             labUnitFilter = " AND ts.id = " + selectedLabUnit;
-            // Drive the inner crosstab category SQL from allTests so the row
-            // count cannot drift from the AS-clause column count.
-            StringBuilder ids = new StringBuilder();
-            for (Test t : allTests) {
-                if (ids.length() > 0) {
-                    ids.append(",");
-                }
-                ids.append(t.getId());
-            }
-            categoryUnitFilter = " AND t.id IN (" + ids + ")";
+        }
+        // Catégories du crosstab = ids de test, dans l'ORDRE EXACT de allTests :
+        // - crosstab range les valeurs selon l'ordre de cette requête et les colonnes
+        // (ci-dessous) suivent allTests ; un ORDER BY SQL pouvait trier autrement que
+        // Java (accents, casse) et décaler silencieusement les résultats de colonne ;
+        // - la description ne convient pas comme clé : crosstab tronque les noms de
+        // catégorie à 63 octets (« duplicate category name » sur libellés longs).
+        StringBuilder categories = new StringBuilder();
+        for (Test t : allTests) {
+            categories.append(categories.length() == 0 ? "" : ",").append("(''").append(Integer.parseInt(t.getId()))
+                    .append("'')");
         }
 
         // Begin cross tab / pivot table
-        query.append(" crosstab( \n" + " 'SELECT si.id, t.description, replace(replace(replace(replace(r.value ,E''\\n"
+        query.append(" crosstab( \n" + " 'SELECT si.id, t.id::text, replace(replace(replace(replace(r.value ,E''\\n"
                 + "'', '' ''), E''\\t'', '' ''), E''\\r" + "'', '' ''),'','',''.'') \n"
                 + " FROM clinlims.result AS r join clinlims.analysis AS a on a.id = r.analysis_id \n"
                 + "  join clinlims.sample_item AS si on si.id = a.sampitem_id \n"
@@ -594,9 +601,7 @@ public abstract class CSVRoutineColumnBuilder {
                 // + (( excludeAnalytes == null)?"":
                 // " AND r.analyte_id NOT IN ( " + excludeAnalytes) + ")"
                 // + " AND a.test_id = t.id "
-                + labUnitFilter + "\n ORDER BY 1, 2 "
-                + "\n ', 'SELECT t.description FROM test t where t.is_active = ''Y''" + categoryUnitFilter
-                + " ORDER BY 1' ) ");
+                + labUnitFilter + "\n ORDER BY 1, 2 " + "\n ', 'VALUES " + categories + "' ) ");
         // end of cross tab
 
         // Name the test pivot table columns . We'll name them all after the
@@ -607,8 +612,7 @@ public abstract class CSVRoutineColumnBuilder {
         query.append("\n as " + listName + " ( " // inner use of the list name
                 + "\"si_id\" numeric(10) ");
         for (Test col : allTests) {
-            String testName = TestServiceImpl.getLocalizedTestNameWithType(col);
-            query.append("\n, " + prepareColumnName(testName) + " varchar(200) ");
+            query.append("\n, " + resultColumnName(col) + " varchar(200) ");
         }
         query.append(" ) \n");
         // left join all sample Items from the right sample range to the results table.
@@ -672,7 +676,9 @@ public abstract class CSVRoutineColumnBuilder {
         for (ObservationHistoryType oht : allObHistoryTypes) {
             // this is sql injection safe as users currently have no way of modifying fields
             // in ObservationHistoryTypes
-            query.append("\n," + oht.getTypeName() + " varchar(100) ");
+            // identifiant entre guillemets : certains types contiennent des espaces
+            // (ex. "Bacterial Count", "Germ Identification") et cassaient la requête
+            query.append("\n,\"" + oht.getTypeName().replace("\"", "\"\"") + "\" varchar(100) ");
         }
         query.append(" ) \n");
         appendCrosstabPostfix(lowDate, highDate, SQLConstant.DEMO);
@@ -705,9 +711,17 @@ public abstract class CSVRoutineColumnBuilder {
     /** Generate a column to the list of all columns. One for each possible test. */
     protected void addAllResultsColumns() {
         for (Test test : allTests) {
-            String testTag = TestServiceImpl.getLocalizedTestNameWithType(test);
-            add(testTag, TestServiceImpl.getLocalizedTestNameWithType(test), TEST_RESULT);
+            add(resultColumnName(test), TestServiceImpl.getLocalizedTestNameWithType(test), TEST_RESULT);
         }
+    }
+
+    /**
+     * Nom SQL de la colonne de résultat d'un test : basé sur l'id, donc unique et
+     * court (les libellés de test, tronqués à la limite Postgres, pouvaient se
+     * dupliquer). Le libellé reste l'en-tête du CSV.
+     */
+    protected String resultColumnName(Test test) {
+        return "test_" + test.getId();
     }
 
     /**

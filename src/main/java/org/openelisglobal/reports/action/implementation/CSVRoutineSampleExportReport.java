@@ -17,6 +17,7 @@ import jakarta.xml.ws.Response;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
 import java.text.ParseException;
 import java.util.List;
@@ -24,6 +25,8 @@ import net.sf.jasperreports.engine.JRException;
 import org.openelisglobal.reports.action.implementation.reportBeans.RoutineColumnBuilder;
 
 public abstract class CSVRoutineSampleExportReport extends CSVRoutineExportReport {
+
+    protected static final byte[] UTF8_BOM = { (byte) 0xEF, (byte) 0xBB, (byte) 0xBF };
 
     protected String lowDateStr;
     protected String highDateStr;
@@ -65,7 +68,10 @@ public abstract class CSVRoutineSampleExportReport extends CSVRoutineExportRepor
         }
 
         ByteArrayOutputStream buffer = new ByteArrayOutputStream(100000);
-        buffer.write(csvRoutineColumnBuilder.getColumnNamesLine().getBytes("windows-1252"));
+        // UTF-8 avec BOM : en-têtes et lignes dans le même encodage, accents lisibles
+        // sous Excel
+        buffer.write(UTF8_BOM);
+        buffer.write(csvRoutineColumnBuilder.getColumnNamesLine().getBytes(StandardCharsets.UTF_8));
 
         writeResultsToBuffer(buffer);
         csvRoutineColumnBuilder.closeResultSet();
@@ -76,7 +82,7 @@ public abstract class CSVRoutineSampleExportReport extends CSVRoutineExportRepor
     protected void writeResultsToBuffer(ByteArrayOutputStream buffer)
             throws IOException, UnsupportedEncodingException, SQLException, ParseException {
         while (csvRoutineColumnBuilder.next()) {
-            buffer.write(csvRoutineColumnBuilder.nextLine().getBytes("windows-1252"));
+            buffer.write(csvRoutineColumnBuilder.nextLine().getBytes(StandardCharsets.UTF_8));
         }
     }
 }

@@ -17,6 +17,7 @@ import static org.apache.commons.validator.GenericValidator.isBlankOrNull;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -200,7 +201,7 @@ public class ForCIDashboard extends CSVSampleExportReport implements IReportPara
             }
 
             consolidatedLine.deleteCharAt(consolidatedLine.lastIndexOf(","));
-            buffer.write(consolidatedLine.toString().getBytes("windows-1252"));
+            buffer.write(consolidatedLine.toString().getBytes(StandardCharsets.UTF_8));
         }
     }
 

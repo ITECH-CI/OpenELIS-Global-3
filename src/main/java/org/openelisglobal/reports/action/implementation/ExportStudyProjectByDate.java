@@ -21,6 +21,7 @@ import static org.apache.commons.validator.GenericValidator.isBlankOrNull;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
 import java.text.ParseException;
 import java.util.ArrayList;
@@ -178,7 +179,7 @@ public class ExportStudyProjectByDate extends CSVSampleExportReport implements I
             }
 
             consolidatedLine.deleteCharAt(consolidatedLine.lastIndexOf(","));
-            buffer.write(consolidatedLine.toString().getBytes("utf-8"));
+            buffer.write(consolidatedLine.toString().getBytes(StandardCharsets.UTF_8));
         }
     }
 

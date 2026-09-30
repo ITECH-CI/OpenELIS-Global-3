@@ -51,7 +51,13 @@ public abstract class CIRoutineColumnBuilder extends CSVRoutineColumnBuilder {
 
     /** */
     public CIRoutineColumnBuilder(DateRange dateRange) {
+        this(dateRange, null);
+    }
+
+    public CIRoutineColumnBuilder(DateRange dateRange, String selectedLabUnit) {
         super(StatusService.AnalysisStatus.Finalized);
+        // l'unité est concaténée dans le SQL (crosstab) : n'accepter qu'un id numérique
+        this.selectedLabUnit = selectedLabUnit != null && selectedLabUnit.matches("\\d+") ? selectedLabUnit : null;
         this.dateRange = dateRange;
         // this.projectStr = projectStr;
         defineAllObservationHistoryTypes();
