@@ -1964,5 +1964,7 @@
   "workplan.filter.startDate": "Réception du",
   "workplan.filter.endDate": "au",
   "workplan.filter.apply": "Filtrer",
-  "workplan.filter.clear": "Effacer"
+  "workplan.filter.clear": "Effacer",
+  "label.no.options": "Aucune option disponible",
+  "userManagement.allPermissions": "Toutes les permissions"
 }

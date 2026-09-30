@@ -337,6 +337,10 @@ function UserAddModify() {
     }
   }, [selectedTestSectionLabUnits]);
 
+  const allLabUnitRoleIds = (userDataShow?.labUnitRoles || []).map(
+    (role) => role.roleId,
+  );
+
   function userSavePostCall() {
     // Guard against a double submit while the request is in flight, which
     // would otherwise create the same user twice.
@@ -383,7 +387,9 @@ function UserAddModify() {
       addNotification({
         kind: NotificationKinds.error,
         title: intl.formatMessage({ id: "notification.title" }),
-        message: intl.formatMessage({ id: "server.error.msg" }),
+        // motif renvoyé par le serveur (identifiant invalide, doublon…)
+        message:
+          (res && res.error) || intl.formatMessage({ id: "server.error.msg" }),
       });
       setNotificationVisible(true);
     }
@@ -1078,7 +1084,7 @@ function UserAddModify() {
                     <span style={{ display: "flex", alignItems: "center" }}>
                       <RadioButton
                         checked={isLocked === "radio-1"}
-                        labelText="Y"
+                        labelText={intl.formatMessage({ id: "label.yes" })}
                         value="Y"
                         id="radio-1"
                         onClick={(e) => {
@@ -1088,7 +1094,7 @@ function UserAddModify() {
                       />
                       <RadioButton
                         checked={isLocked === "radio-2"}
-                        labelText="N"
+                        labelText={intl.formatMessage({ id: "label.no" })}
                         value="N"
                         id="radio-2"
                         onClick={(e) => {
@@ -1110,7 +1116,7 @@ function UserAddModify() {
                     <span style={{ display: "flex", alignItems: "center" }}>
                       <RadioButton
                         checked={isDisabled === "radio-3"}
-                        labelText="Y"
+                        labelText={intl.formatMessage({ id: "label.yes" })}
                         value="Y"
                         id="radio-3"
                         onClick={(e) => {
@@ -1120,7 +1126,7 @@ function UserAddModify() {
                       />
                       <RadioButton
                         checked={isDisabled === "radio-4"}
-                        labelText="N"
+                        labelText={intl.formatMessage({ id: "label.no" })}
                         value="N"
                         id="radio-4"
                         onClick={(e) => {
@@ -1142,7 +1148,7 @@ function UserAddModify() {
                     <span style={{ display: "flex", alignItems: "center" }}>
                       <RadioButton
                         checked={isActive === "radio-5"}
-                        labelText="Y"
+                        labelText={intl.formatMessage({ id: "label.yes" })}
                         value="Y"
                         id="radio-5"
                         onClick={(e) => {
@@ -1152,7 +1158,7 @@ function UserAddModify() {
                       />
                       <RadioButton
                         checked={isActive === "radio-6"}
-                        labelText="N"
+                        labelText={intl.formatMessage({ id: "label.no" })}
                         value="N"
                         id="radio-6"
                         onClick={(e) => {
@@ -1263,7 +1269,9 @@ function UserAddModify() {
                         <Checkbox
                           id="no-options-global-roles"
                           value=""
-                          labelText="No options available"
+                          labelText={intl.formatMessage({
+                            id: "label.no.options",
+                          })}
                         />
                       )}
                     </FormGroup>
@@ -1321,39 +1329,49 @@ function UserAddModify() {
                             <SelectItem
                               key="no-option-test-section"
                               value=""
-                              text="No options available"
+                              text={intl.formatMessage({
+                                id: "label.no.options",
+                              })}
                             />
                           )}
                         </Select>
                         <br />
                         <Checkbox
                           id={`all-permissions-${key}`}
-                          labelText={"All Permissions"}
-                          checked={["4", "5", "7", "10"].every(
-                            (num) =>
-                              selectedTestSectionLabUnits[key] &&
-                              selectedTestSectionLabUnits[key].includes(num),
-                          )}
+                          labelText={intl.formatMessage({
+                            id: "userManagement.allPermissions",
+                          })}
+                          checked={
+                            allLabUnitRoleIds.length > 0 &&
+                            allLabUnitRoleIds.every(
+                              (roleId) =>
+                                selectedTestSectionLabUnits[key] &&
+                                selectedTestSectionLabUnits[key].includes(
+                                  roleId,
+                                ),
+                            )
+                          }
                           onChange={() => {
-                            const numbersToAdd = ["4", "5", "7", "10"];
-                            const updatedRoles = selectedTestSectionLabUnits[
-                              key
-                            ]
+                            // rôles réellement affichés (et non des ids en dur :
+                            // « Modificateur Résultat » était oublié, et les ids
+                            // diffèrent d'une base à l'autre)
+                            const current = selectedTestSectionLabUnits[key]
                               ? [...selectedTestSectionLabUnits[key]]
                               : [];
-                            const numbersToRemove = numbersToAdd.filter((num) =>
-                              updatedRoles.includes(num),
+                            const allChecked = allLabUnitRoleIds.every(
+                              (roleId) => current.includes(roleId),
                             );
-                            if (numbersToRemove.length > 0) {
-                              numbersToRemove.forEach((num) => {
-                                const index = updatedRoles.indexOf(num);
-                                if (index !== -1) {
-                                  updatedRoles.splice(index, 1);
-                                }
-                              });
-                            } else {
-                              updatedRoles.push(...numbersToAdd);
-                            }
+                            const updatedRoles = allChecked
+                              ? current.filter(
+                                  (roleId) =>
+                                    !allLabUnitRoleIds.includes(roleId),
+                                )
+                              : [
+                                  ...current,
+                                  ...allLabUnitRoleIds.filter(
+                                    (roleId) => !current.includes(roleId),
+                                  ),
+                                ];
                             setSelectedTestSectionLabUnits((prev) => ({
                               ...prev,
                               [key]: updatedRoles,
@@ -1402,7 +1420,9 @@ function UserAddModify() {
                             <Checkbox
                               id="no-options-lab-units"
                               value=""
-                              labelText="No options available"
+                              labelText={intl.formatMessage({
+                                id: "label.no.options",
+                              })}
                             />
                           )}
                         </FormGroup>

@@ -104,10 +104,23 @@ public class UnifiedSystemUserMenuRestController extends BaseMenuController<Unif
         List<SystemUser> systemUsers = new ArrayList<>();
 
         int startingRecNo = this.getCurrentStartingRecNo(request);
+        // all=true : liste COMPLÈTE filtrée (l'écran React pagine lui-même). En mode
+        // paginé, les filtres s'appliquaient après la pagination (pages trouées) et
+        // le total affiché ignorait recherche et filtres.
+        boolean all = "true".equals(request.getParameter("all"));
 
-        systemUsers = systemUserService.getPage(startingRecNo);
-
-        if (YES.equals(request.getParameter("search"))) {
+        if (all) {
+            systemUsers = systemUserService.getAllOrdered("loginName", false);
+            String searchString = request.getParameter("searchString");
+            if (YES.equals(request.getParameter("search")) && StringUtils.isNotBlank(searchString)) {
+                String needle = searchString.trim().toLowerCase();
+                systemUsers = systemUsers.stream()
+                        .filter(user -> containsIgnoreCase(user.getLoginName(), needle)
+                                || containsIgnoreCase(user.getFirstName(), needle)
+                                || containsIgnoreCase(user.getLastName(), needle))
+                        .collect(Collectors.toList());
+            }
+        } else if (YES.equals(request.getParameter("search"))) {
             systemUsers = systemUserService.getPagesOfSearchedUsers(startingRecNo,
                     request.getParameter("searchString"));
             request.setAttribute(MENU_TOTAL_RECORDS,
@@ -154,11 +167,32 @@ public class UnifiedSystemUserMenuRestController extends BaseMenuController<Unif
             request.setAttribute(IN_MENU_SELECT_LIST_HEADER_SEARCH, "true");
         }
 
+        if (all) {
+            int total = unifiedUsers == null ? 0 : unifiedUsers.size();
+            form.setFromRecordCount(String.valueOf(total == 0 ? 0 : 1));
+            form.setToRecordCount(String.valueOf(total));
+            form.setTotalRecordCount(String.valueOf(total));
+            return unifiedUsers;
+        }
+
         form.setToRecordCount(String.valueOf(endingRecNo));
         form.setFromRecordCount(String.valueOf(startingRecNo));
         form.setTotalRecordCount(String.valueOf(String.valueOf(systemUserService.getCount())));
 
         return unifiedUsers;
+    }
+
+    @Override
+    protected List<UnifiedSystemUser> doNone(AdminOptionMenuForm<UnifiedSystemUser> form, HttpServletRequest request) {
+        if ("true".equals(request.getParameter("all"))) {
+            // liste complète : pas de découpage à la taille de page
+            return createMenuList(form, request);
+        }
+        return super.doNone(form, request);
+    }
+
+    private static boolean containsIgnoreCase(String value, String lowerCaseNeedle) {
+        return value != null && value.toLowerCase().contains(lowerCaseNeedle);
     }
 
     private List<UnifiedSystemUser> filterUnifiedUsersByAdmin(List<UnifiedSystemUser> users) {

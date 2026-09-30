@@ -24,6 +24,7 @@ import org.openelisglobal.common.constants.Constants;
 import org.openelisglobal.common.controller.BaseController;
 import org.openelisglobal.common.exception.LIMSDuplicateRecordException;
 import org.openelisglobal.common.exception.LIMSRuntimeException;
+import org.openelisglobal.common.log.LogEvent;
 import org.openelisglobal.common.provider.validation.PasswordValidationFactory;
 import org.openelisglobal.common.services.DisplayListService;
 import org.openelisglobal.common.services.DisplayListService.ListType;
@@ -31,6 +32,7 @@ import org.openelisglobal.common.util.DateUtil;
 import org.openelisglobal.common.util.IdValuePair;
 import org.openelisglobal.common.util.StringUtil;
 import org.openelisglobal.common.validator.BaseErrors;
+import org.openelisglobal.internationalization.MessageUtil;
 import org.openelisglobal.login.dao.UserModuleService;
 import org.openelisglobal.login.service.LoginUserService;
 import org.openelisglobal.login.valueholder.LoginUser;
@@ -51,6 +53,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.Errors;
+import org.springframework.validation.FieldError;
 import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.InitBinder;
@@ -430,12 +433,13 @@ public class UnifiedSystemUserRestController extends BaseController {
         Map<String, String> response = new HashMap<>();
 
         if (result.hasErrors()) {
+            // formulaire invalide : on s'arrête là (auparavant l'enregistrement
+            // continuait malgré l'erreur) et on renvoie le motif à l'écran
             saveErrors(result);
             setupRoles(form, request, doFiltering);
-            // return findForward(FWD_FAIL_INSERT, form);
             response.put("forward", findForward(FWD_FAIL_INSERT));
-            // return response;
-            // return findForward(FWD_FAIL_INSERT);
+            response.put("error", errorMessages(result));
+            return response;
         }
 
         request.setAttribute(ALLOW_EDITS_KEY, "true");
@@ -463,9 +467,34 @@ public class UnifiedSystemUserRestController extends BaseController {
             setupRoles(form, request, doFiltering);
             // return findForward(forward);
             response.put("forward", findForward(forward));
+            response.put("error", errorMessages((Errors) request.getAttribute(Constants.REQUEST_ERRORS)));
         }
 
         return response;
+    }
+
+    /**
+     * Motifs d'échec lisibles, renvoyés à l'écran (qui n'affichait qu'une erreur
+     * générique).
+     */
+    private String errorMessages(Errors errors) {
+        if (errors == null || !errors.hasErrors()) {
+            return MessageUtil.getMessage("errors.UpdateException");
+        }
+        return errors.getAllErrors().stream().map(error -> {
+            if (error instanceof FieldError && "userLoginName".equals(((FieldError) error).getField())
+                    && "ValidName".equals(error.getCode())) {
+                return MessageUtil.getMessage("systemuser.error.loginName.charset");
+            }
+            // certaines erreurs n'ont que leur code (ex. errors.loginName.duplicated)
+            String message = error.getDefaultMessage() != null ? error.getDefaultMessage() : error.getCode();
+            // clé de message (ex. errors.DuplicateRecordException) → texte localisé
+            if (message != null && message.matches("[\\w.]+") && message.contains(".")) {
+                message = error.getArguments() != null ? MessageUtil.getMessage(message, error.getArguments())
+                        : MessageUtil.getMessage(message);
+            }
+            return error instanceof FieldError ? ((FieldError) error).getField() + " : " + message : message;
+        }).distinct().collect(Collectors.joining(" ; "));
     }
 
     private String validateAndUpdateSystemUser(HttpServletRequest request, UnifiedSystemUserForm form) {
@@ -528,6 +557,14 @@ public class UnifiedSystemUserRestController extends BaseController {
             saveErrors(errors);
             disableNavigationButtons(request);
             return FWD_FAIL_INSERT;
+        } catch (RuntimeException e) {
+            // toute autre erreur : réponse d'échec exploitable par l'écran (qui
+            // affiche alors un message) au lieu d'une exception non gérée
+            LogEvent.logError(e);
+            errors.reject("errors.UpdateException", "errors.UpdateException");
+            saveErrors(errors);
+            disableNavigationButtons(request);
+            return FWD_FAIL_INSERT;
         }
 
         return FWD_SUCCESS_INSERT;
@@ -553,7 +590,7 @@ public class UnifiedSystemUserRestController extends BaseController {
         } else if (checkForDuplicateName) {
             LoginUser login = loginService.getMatch("loginName", form.getUserLoginName()).orElse(null);
             if (login != null) {
-                errors.reject("errors.loginName.duplicated");
+                errors.reject("errors.loginName.duplicated", new Object[] { form.getUserLoginName() }, null);
             }
         }
 

@@ -169,6 +169,8 @@ file="add_study_modifier_menu.xml" />
         file="add_hiv_tested_type_observation.xml" />
     <include relativeToChangelogFile="true"
         file="add_viral_load_report_config.xml" />
+    <include relativeToChangelogFile="true"
+        file="allow_digits_in_username.xml" />
 
 
 </databaseChangeLog>

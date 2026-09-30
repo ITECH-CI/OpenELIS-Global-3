@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+    <!--
+        Le jeu de caractères par défaut des identifiants (userNameCharset) ne
+        contenait pas les chiffres : tout identifiant du type « jdupont2 » était
+        refusé et la création de l'utilisateur échouait. Ajout de 0-9 s'il est
+        absent ; une valeur déjà personnalisée avec des chiffres n'est pas touchée.
+    -->
+    <changeSet author="pkomena" id="allow-digits-in-username-charset-1">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="1">SELECT count(*) FROM clinlims.site_information
+                WHERE name = 'userNameCharset' AND position('0-9' in value) = 0</sqlCheck>
+        </preConditions>
+        <update schemaName="clinlims" tableName="site_information">
+            <column name="value" valueComputed="'0-9' || value" />
+            <column name="lastupdated" valueComputed="now()" />
+            <where>name = 'userNameCharset'</where>
+        </update>
+    </changeSet>
+</databaseChangeLog>

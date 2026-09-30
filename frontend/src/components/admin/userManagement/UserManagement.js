@@ -168,37 +168,29 @@ function UserManagement() {
     }
   };
 
+  // Une seule requête : le serveur renvoie la liste COMPLÈTE déjà filtrée
+  // (all=true), paginée ici par le tableau. Auparavant deux requêtes
+  // concurrentes (search=N / search=Y) se remplaçaient, et la pagination
+  // serveur (20) s'ajoutait à celle du tableau (10) avec des compteurs faux.
   useEffect(() => {
     componentMounted.current = true;
-    setLoading(true);
+    const search = panelSearchTerm.trim();
     getFromOpenElisServer(
-      `/rest/SearchUnifiedSystemUserMenu?search=N&startingRecNo=${startingRecNo}&filter=${filters.join(
-        ",",
-      )}&roleFilter=${roleFilter}`,
-      handleMenuItems,
+      `/rest/SearchUnifiedSystemUserMenu?all=true&search=${
+        search ? "Y" : "N"
+      }&startingRecNo=1&searchString=${encodeURIComponent(
+        search,
+      )}&filter=${filters.join(",")}&roleFilter=${roleFilter}`,
+      (res) => {
+        if (componentMounted.current) {
+          handleMenuItems(res);
+        }
+      },
     );
     return () => {
       componentMounted.current = false;
-      setLoading(false);
     };
-  }, [roleFilter, filters, startingRecNo]);
-
-  const handleSearchedProviderMenuList = (res) => {
-    if (!res) {
-      setLoading(true);
-    } else {
-      setUserManagementList(res);
-    }
-  };
-
-  useEffect(() => {
-    getFromOpenElisServer(
-      `/rest/SearchUnifiedSystemUserMenu?search=Y&startingRecNo=${startingRecNo}&searchString=${panelSearchTerm}&filter=${filters.join(
-        ",",
-      )}&roleFilter=${roleFilter}`,
-      handleSearchedProviderMenuList,
-    );
-  }, [panelSearchTerm, roleFilter, filters, startingRecNo]);
+  }, [panelSearchTerm, roleFilter, filters]);
 
   useEffect(() => {
     if (userManagementListShow) {
@@ -243,6 +235,7 @@ function UserManagement() {
       });
       const newUserManagementListArray = Object.values(newUserManagementList);
       setUserManagementListShow(newUserManagementListArray);
+      setPage(1);
 
       const testSections = userManagementList.testSections.map((item) => {
         return {
@@ -290,6 +283,15 @@ function UserManagement() {
           }}
         />
       );
+    } else if (["locked", "disabled", "active"].includes(cell.info.header)) {
+      // valeurs brutes Y/N du serveur → Oui/Non
+      const text =
+        cell.value === "Y"
+          ? intl.formatMessage({ id: "label.yes" })
+          : cell.value === "N"
+            ? intl.formatMessage({ id: "label.no" })
+            : cell.value;
+      return <TableCell key={cell.id}>{text}</TableCell>;
     } else {
       return <TableCell key={cell.id}>{cell.value}</TableCell>;
     }
@@ -407,14 +409,14 @@ function UserManagement() {
               <Select
                 id="filters"
                 labelText={<FormattedMessage id="menu.label.filter.role" />}
-                defaultValue={
-                  testSectionsShow && testSectionsShow.length > 0
-                    ? testSectionsShow[0].id
-                    : ""
-                }
+                value={roleFilter}
                 onChange={handleTestSectionsSelectChange}
               >
-                <SelectItem key="" value="" text="" />
+                <SelectItem
+                  key=""
+                  value=""
+                  text={intl.formatMessage({ id: "all.label" })}
+                />
                 {testSectionsShow && testSectionsShow.length > 0 ? (
                   testSectionsShow.map((section) => (
                     <SelectItem
@@ -427,7 +429,7 @@ function UserManagement() {
                   <SelectItem
                     key="no-option-available"
                     value=""
-                    text="No options available"
+                    text={intl.formatMessage({ id: "label.no.options" })}
                   />
                 )}
               </Select>

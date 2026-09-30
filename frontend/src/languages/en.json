@@ -2449,5 +2449,7 @@
   "workplan.filter.startDate": "Received from",
   "workplan.filter.endDate": "to",
   "workplan.filter.apply": "Filter",
-  "workplan.filter.clear": "Clear"
+  "workplan.filter.clear": "Clear",
+  "label.no.options": "No options available",
+  "userManagement.allPermissions": "All permissions"
 }

@@ -138,8 +138,12 @@ public class UserServiceImpl implements UserService {
         return userRoleService.getAllUserLabUnitRoles();
     }
 
-    private void updateUserRoles(List<String> selectedRoles, SystemUser systemUser, String loggedOnUserId,
+    private void updateUserRoles(List<String> requestedRoles, SystemUser systemUser, String loggedOnUserId,
             Boolean isLabRole) {
+        // aucun rôle global coché : le formulaire envoie selectedRoles = null
+        // (NullPointerException → création de l'utilisateur annulée) ; copie
+        // modifiable car complétée ci-dessous
+        List<String> selectedRoles = requestedRoles == null ? new ArrayList<>() : new ArrayList<>(requestedRoles);
         List<String> currentUserRoles = userRoleService.getRoleIdsForUser(systemUser.getId());
         List<UserRole> deletedUserRoles = new ArrayList<>();
         if (isLabRole) {
