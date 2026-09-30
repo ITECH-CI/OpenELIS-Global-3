@@ -203,6 +203,7 @@ public abstract class ConfigurationProperties {
         SPECIMEN_BARCODE_WIDTH("widthSpecimenLabels", "text"), // Width of the specimen barcode
         SPECIMEN_FIELD_DATE("collectionDateCheck", "text"), //
         SPECIMEN_FIELD_SEX("patientSexCheck", "text"), //
+        LABEL_FIELD_PATIENT_NAME("patientNameCheck", "text"), // nom du patient sur les étiquettes
         SPECIMEN_FIELD_COLLECTED_BY("collectedByCheck", "text"), SPECIMEN_FIELD_TESTS("testsCheck", "text"), //
         BLOCK_BARCODE_HEIGHT("heightBlockLabels", "text"), //
         BLOCK_BARCODE_WIDTH("widthBlockLabels", "text"), //

@@ -27,8 +27,8 @@ public class BarcodeConfigurationController extends BaseController {
     private static final String[] ALLOWED_FIELDS = new String[] { "heightOrderLabels", "heightSpecimenLabels",
             "heightBlockLabels", "heightSlideLabels", "widthOrderLabels", "widthSpecimenLabels", "widthBlockLabels",
             "widthSlideLabels", "collectionDateCheck", "collectedByCheck", "testsCheck", "patientSexCheck",
-            "numMaxOrderLabels", "numMaxSpecimenLabels", "numDefaultOrderLabels", "numDefaultSpecimenLabels",
-            "prePrintDontUseAltAccession", "prePrintAltAccessionPrefix" };
+            "patientNameCheck", "numMaxOrderLabels", "numMaxSpecimenLabels", "numDefaultOrderLabels",
+            "numDefaultSpecimenLabels", "prePrintDontUseAltAccession", "prePrintAltAccessionPrefix" };
 
     @Autowired
     private BarcodeInformationService barcodeInformationService;
@@ -123,6 +123,8 @@ public class BarcodeConfigurationController extends BaseController {
         form.setCollectedByCheck(Boolean.valueOf(collectedByCheck));
         form.setTestsCheck(Boolean.valueOf(testsCheck));
         form.setPatientSexCheck(Boolean.valueOf(patientSexCheck));
+        form.setPatientNameCheck(!"false"
+                .equals(ConfigurationProperties.getInstance().getPropertyValue(Property.LABEL_FIELD_PATIENT_NAME)));
 
         Boolean prePrintUseAltAccession = Boolean
                 .valueOf(ConfigurationProperties.getInstance().getPropertyValue(Property.USE_ALT_ACCESSION_PREFIX));

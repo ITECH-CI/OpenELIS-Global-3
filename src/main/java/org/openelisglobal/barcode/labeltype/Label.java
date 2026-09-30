@@ -8,6 +8,8 @@ import org.openelisglobal.barcode.service.BarcodeLabelInfoService;
 import org.openelisglobal.barcode.valueholder.BarcodeLabelInfo;
 import org.openelisglobal.common.exception.LIMSRuntimeException;
 import org.openelisglobal.common.log.LogEvent;
+import org.openelisglobal.common.util.ConfigurationProperties;
+import org.openelisglobal.common.util.ConfigurationProperties.Property;
 import org.openelisglobal.spring.util.SpringContext;
 
 /**
@@ -18,6 +20,15 @@ import org.openelisglobal.spring.util.SpringContext;
  * @author Caleb
  */
 public abstract class Label {
+
+    /**
+     * Le nom du patient est-il imprimé sur les étiquettes (demande et échantillon)
+     * ? Option de Admin > Configuration code-barres, activée par défaut.
+     */
+    protected static boolean showPatientName() {
+        return !"false"
+                .equals(ConfigurationProperties.getInstance().getPropertyValue(Property.LABEL_FIELD_PATIENT_NAME));
+    }
 
     // for sizing the bar code area
     static int SMALL_BARCODE = 6; // just over half of the width

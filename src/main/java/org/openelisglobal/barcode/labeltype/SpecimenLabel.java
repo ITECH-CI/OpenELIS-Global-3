@@ -39,10 +39,12 @@ public class SpecimenLabel extends Label {
         aboveFields = new ArrayList<>();
 
         LabelField field;
-        field = new LabelField(MessageUtil.getMessage("barcode.label.info.patientname"), "", 12);
-        field.setDisplayFieldName(true);
-        field.setUnderline(true);
-        aboveFields.add(field);
+        if (showPatientName()) {
+            field = new LabelField(MessageUtil.getMessage("barcode.label.info.patientname"), "", 12);
+            field.setDisplayFieldName(true);
+            field.setUnderline(true);
+            aboveFields.add(field);
+        }
 
         field = new LabelField(MessageUtil.getMessage("barcode.label.info.patientdob"), "", 8);
         field.setDisplayFieldName(true);
@@ -135,7 +137,9 @@ public class SpecimenLabel extends Label {
 
         // adding fields above bar code
         aboveFields = new ArrayList<>();
-        aboveFields.add(new LabelField(MessageUtil.getMessage("barcode.label.info.patientname"), patientName, 12));
+        if (showPatientName()) {
+            aboveFields.add(new LabelField(MessageUtil.getMessage("barcode.label.info.patientname"), patientName, 12));
+        }
         aboveFields.add(new LabelField(MessageUtil.getMessage("barcode.label.info.patientdob"), dob, 8));
         aboveFields.add(getAvailableIdField(patient));
         LabelField siteField = new LabelField(MessageUtil.getMessage("barcode.label.info.site"),

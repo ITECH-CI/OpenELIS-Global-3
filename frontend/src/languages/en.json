@@ -632,6 +632,7 @@
   "barcode.label.info.patientid": "Patient ID",
   "barcode.label.info.patientname": "Patient Name",
   "barcode.label.info.patientsexfull": "Patient Sex",
+  "barcode.label.info.patientname.option": "Patient name (order and specimen labels)",
   "barcode.label.info.tests": "Tests",
   "barcode.notification.save": "BarCode Configurations has been saved.",
   "barcode.print.individual.button": "Print Label",

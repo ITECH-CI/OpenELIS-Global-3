@@ -37,10 +37,13 @@ public class OrderLabel extends Label {
         }
         // adding fields above bar code
         aboveFields = new ArrayList<>();
-        LabelField labelField = new LabelField(MessageUtil.getMessage("barcode.label.info.patientname"), "", 12);
-        labelField.setDisplayFieldName(true);
-        labelField.setUnderline(true);
-        aboveFields.add(labelField);
+        LabelField labelField;
+        if (showPatientName()) {
+            labelField = new LabelField(MessageUtil.getMessage("barcode.label.info.patientname"), "", 12);
+            labelField.setDisplayFieldName(true);
+            labelField.setUnderline(true);
+            aboveFields.add(labelField);
+        }
 
         labelField = new LabelField(MessageUtil.getMessage("barcode.label.info.patientdob"), "", 8);
         labelField.setDisplayFieldName(true);
@@ -86,7 +89,9 @@ public class OrderLabel extends Label {
 
         // adding fields above bar code
         aboveFields = new ArrayList<>();
-        aboveFields.add(new LabelField(MessageUtil.getMessage("barcode.label.info.patientname"), patientName, 12));
+        if (showPatientName()) {
+            aboveFields.add(new LabelField(MessageUtil.getMessage("barcode.label.info.patientname"), patientName, 12));
+        }
         aboveFields.add(new LabelField(MessageUtil.getMessage("barcode.label.info.patientdob"), dob, 8));
         aboveFields.add(getAvailableIdField(patient));
         LabelField siteField = new LabelField(MessageUtil.getMessage("barcode.label.info.site"),

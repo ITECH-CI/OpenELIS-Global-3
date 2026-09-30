@@ -58,6 +58,8 @@ public class BarcodeConfigurationForm extends BaseForm {
 
     private boolean patientSexCheck;
 
+    private boolean patientNameCheck = true;
+
     private boolean prePrintDontUseAltAccession;
 
     @Pattern(regexp = ValidationHelper.ALPHA_NUM_REGEX)
@@ -181,6 +183,14 @@ public class BarcodeConfigurationForm extends BaseForm {
 
     public void setPatientSexCheck(boolean patientSexCheck) {
         this.patientSexCheck = patientSexCheck;
+    }
+
+    public boolean getPatientNameCheck() {
+        return patientNameCheck;
+    }
+
+    public void setPatientNameCheck(boolean patientNameCheck) {
+        this.patientNameCheck = patientNameCheck;
     }
 
     public boolean getPrePrintDontUseAltAccession() {

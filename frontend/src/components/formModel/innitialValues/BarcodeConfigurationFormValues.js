@@ -22,6 +22,7 @@ const BarcodeConfigurationFormValues = {
   collectedByCheck: true,
   testsCheck: true,
   patientSexCheck: true,
+  patientNameCheck: true,
   prePrintDontUseAltAccession: true,
   prePrintAltAccessionPrefix: "",
 };

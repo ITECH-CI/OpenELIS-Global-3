@@ -367,9 +367,6 @@ function BarcodeConfiguration() {
                                     <FormattedMessage id="barcode.label.info.patientid" />
                                   </ListItem>
                                   <ListItem>
-                                    <FormattedMessage id="barcode.label.info.patientname" />
-                                  </ListItem>
-                                  <ListItem>
                                     <FormattedMessage id="datasubmission.siteid" />
                                   </ListItem>
                                 </UnorderedList>
@@ -389,9 +386,6 @@ function BarcodeConfiguration() {
                                   </ListItem>
                                   <ListItem>
                                     <FormattedMessage id="barcode.label.info.patientid" />
-                                  </ListItem>
-                                  <ListItem>
-                                    <FormattedMessage id="barcode.label.info.patientname" />
                                   </ListItem>
                                 </UnorderedList>
                               </div>
@@ -477,6 +471,21 @@ function BarcodeConfiguration() {
                                   }}
                                   labelText={
                                     <FormattedMessage id="barcode.label.info.patientsexfull" />
+                                  }
+                                />
+                                <Checkbox
+                                  id="patientnamecheck"
+                                  checked={values.patientNameCheck}
+                                  onChange={(e) => {
+                                    const isChecked = e.target.checked;
+                                    setBarcodeFormValues({
+                                      ...barcodeFromValues,
+                                      patientNameCheck: isChecked,
+                                    });
+                                    setSaveButton(false);
+                                  }}
+                                  labelText={
+                                    <FormattedMessage id="barcode.label.info.patientname.option" />
                                   }
                                 />
                               </div>
