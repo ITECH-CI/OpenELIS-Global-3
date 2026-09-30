@@ -31,8 +31,10 @@ function SearchOrder() {
 
   const handleSearch = (e) => {
     e.preventDefault();
-    var labNumber = accessionNumber ? accessionNumber.split("-")[0] : "";
-    window.location.href = "/ModifyOrder?accessionNumber=" + labNumber;
+    // Pas de split("-") : le n° labo peut contenir un tiret (ex. 1252-26)
+    var labNumber = accessionNumber ? accessionNumber.trim() : "";
+    window.location.href =
+      "/ModifyOrder?accessionNumber=" + encodeURIComponent(labNumber);
   };
 
   return (

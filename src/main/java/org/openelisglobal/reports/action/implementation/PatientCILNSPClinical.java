@@ -337,8 +337,8 @@ public class PatientCILNSPClinical extends PatientReport implements IReportCreat
 
             int dividerIndex = reportItem.getAccessionNumber().lastIndexOf("-");
             reportItem.setAccessionNumber(reportItem.getAccessionNumber().substring(0, dividerIndex));
-            reportItem.setCompleteFlag(MessageUtil
-                    .getMessage(sampleCompleteMap.get(reportItem.getAccessionNumber()) ? "report.status.complete"
+            reportItem.setCompleteFlag(
+                    MessageUtil.getMessage(isSampleComplete(reportItem.getAccessionNumber()) ? "report.status.complete"
                             : "report.status.partial"));
             if (reportItem.isCorrectedResult()) {
                 if (reportItem.getNote() != null && reportItem.getNote().length() > 0) {

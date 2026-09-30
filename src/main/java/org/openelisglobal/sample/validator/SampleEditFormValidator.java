@@ -30,10 +30,16 @@ public class SampleEditFormValidator implements Validator {
         SampleEditForm form = (SampleEditForm) target;
 
         // maxAccessionNumber
-        String[] maxAccessionNumberArray = form.getMaxAccessionNumber().split("-");
-        if (!ValidationResults.SUCCESS.equals(AccessionNumberUtil.correctFormat(maxAccessionNumberArray[0], false))) {
+        // "<n° labo>-<n° échantillon>" : couper au DERNIER tiret (le n° labo peut en
+        // contenir)
+        String maxAccessionNumber = form.getMaxAccessionNumber();
+        int lastDash = maxAccessionNumber.lastIndexOf('-');
+        if (lastDash <= 0) {
             errors.rejectValue("maxAccessionNumber", "error.field.accession.format");
-        } else if (!GenericValidator.isInt(maxAccessionNumberArray[1])) {
+        } else if (!ValidationResults.SUCCESS
+                .equals(AccessionNumberUtil.correctFormat(maxAccessionNumber.substring(0, lastDash), false))) {
+            errors.rejectValue("maxAccessionNumber", "error.field.accession.format");
+        } else if (!GenericValidator.isInt(maxAccessionNumber.substring(lastDash + 1))) {
             errors.rejectValue("maxAccessionNumber", "error.field.accession.format");
         }
 

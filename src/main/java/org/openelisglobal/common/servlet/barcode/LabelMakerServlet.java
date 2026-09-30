@@ -152,9 +152,16 @@ public class LabelMakerServlet extends HttpServlet implements IActionConstants {
         if (StringUtils.isEmpty(override)) {
             override = "false";
         }
-        // correct incorrect formatting of specimen number
-        if (labNo.contains("-") && !labNo.contains(".")) {
-            labNo = labNo.replace('-', '.');
+        // correct incorrect formatting of specimen number ("<labNo>-<n°>" ->
+        // "<labNo>.<n°>").
+        // Le n° labo peut lui-même contenir un tiret (ex. 1252-26) : on ne touche à
+        // rien
+        // s'il désigne une demande existante, sinon seul le DERNIER tiret est le
+        // séparateur.
+        if (labNo.contains("-") && !labNo.contains(".")
+                && SpringContext.getBean(SampleService.class).getSampleByAccessionNumber(labNo) == null) {
+            int lastDash = labNo.lastIndexOf('-');
+            labNo = labNo.substring(0, lastDash) + "." + labNo.substring(lastDash + 1);
         }
 
         // validate the given parameters

@@ -371,7 +371,10 @@ public class BacterioPatientReport extends PatientReport implements IReportCreat
         // Get accession number from analysis
         String accessionNumber = "";
         if (analysis.getSampleItem() != null && analysis.getSampleItem().getSample() != null) {
-            accessionNumber = analysis.getSampleItem().getSample().getAccessionNumber();
+            // même forme « <n° labo>-<n° échantillon> » que les autres lignes du rapport :
+            // le suffixe est ensuite retiré au DERNIER tiret, le n° labo peut en contenir
+            accessionNumber = analysis.getSampleItem().getSample().getAccessionNumber() + "-"
+                    + analysis.getSampleItem().getSortOrder();
         }
         BacteriologyOrganismService organismService = SpringContext.getBean(BacteriologyOrganismService.class);
         BacteriologyAntibiogramService antibiogramService = SpringContext.getBean(BacteriologyAntibiogramService.class);
@@ -862,7 +865,7 @@ public class BacterioPatientReport extends PatientReport implements IReportCreat
             reportItem.setLabNo(accessionNumber);
 
             // Set status based on completion
-            boolean isComplete = sampleCompleteMap.get(accessionNumber);
+            boolean isComplete = isSampleComplete(accessionNumber);
             reportItem
                     .setStatus(MessageUtil.getMessage(isComplete ? "report.status.complete" : "report.status.partial"));
             reportItem.setCompleteFlag(reportItem.getStatus());

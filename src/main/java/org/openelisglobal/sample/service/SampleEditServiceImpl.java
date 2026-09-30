@@ -396,7 +396,11 @@ public class SampleEditServiceImpl implements SampleEditService {
 
         String maxAccessionNumber = form.getMaxAccessionNumber();
         if (!GenericValidator.isBlankOrNull(maxAccessionNumber)) {
-            sampleAddService.setInitialSampleItemOrderValue(Integer.parseInt(maxAccessionNumber.split("-")[1]));
+            // "<n° labo>-<dernier n° échantillon>" : le n° labo peut contenir un tiret (ex.
+            // 1252-26),
+            // le n° d'échantillon est après le DERNIER tiret
+            sampleAddService.setInitialSampleItemOrderValue(
+                    Integer.parseInt(maxAccessionNumber.substring(maxAccessionNumber.lastIndexOf('-') + 1)));
         }
 
         return sampleAddService.createSampleTestCollection();

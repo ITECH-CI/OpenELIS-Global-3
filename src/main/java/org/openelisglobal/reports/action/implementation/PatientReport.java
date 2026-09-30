@@ -184,14 +184,23 @@ public abstract class PatientReport extends Report {
         return true;
     }
 
+    /**
+     * Statut complet/partiel d'un échantillon pour l'affichage. Une clé absente
+     * (format de n° labo inattendu) ne doit pas faire planter le rapport : on la
+     * considère complète, seule une clé explicitement FALSE est partielle.
+     */
+    protected boolean isSampleComplete(String accessionNumber) {
+        return sampleCompleteMap == null || !Boolean.FALSE.equals(sampleCompleteMap.get(accessionNumber));
+    }
+
     protected String convertToAlphaNumericDisplay(Sample currentSample) {
         String displayAccesionNumber = "";
         if (AccessionFormat.ALPHANUM.toString()
                 .equals(ConfigurationProperties.getInstance().getPropertyValue(Property.AccessionFormat))) {
             displayAccesionNumber = AlphanumAccessionValidator
-                    .convertAlphaNumLabNumForDisplay(sampleService.getAccessionNumber(currentSample).split("-")[0]);
+                    .convertAlphaNumLabNumForDisplay(sampleService.getAccessionNumber(currentSample));
         } else {
-            displayAccesionNumber = sampleService.getAccessionNumber(currentSample).split("-")[0];
+            displayAccesionNumber = sampleService.getAccessionNumber(currentSample);
         }
         return displayAccesionNumber;
     }

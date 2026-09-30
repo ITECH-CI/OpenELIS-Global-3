@@ -298,13 +298,15 @@ public class PatientClinicalReport extends PatientReport implements IReportCreat
 
             if (AccessionFormat.ALPHANUM.toString()
                     .equals(ConfigurationProperties.getInstance().getPropertyValue(Property.AccessionFormat))) {
-                reportItem.setAccessionNumber(AlphanumAccessionValidator
-                        .convertAlphaNumLabNumForDisplay(reportItem.getAccessionNumber().split("-")[0]));
+                reportItem.setAccessionNumber(
+                        AlphanumAccessionValidator.convertAlphaNumLabNumForDisplay(AccessionNumberUtil
+                                .getAccessionNumberFromSampleItemAccessionNumber(reportItem.getAccessionNumber())));
             } else {
-                reportItem.setAccessionNumber(reportItem.getAccessionNumber().split("-")[0]);
+                reportItem.setAccessionNumber(AccessionNumberUtil
+                        .getAccessionNumberFromSampleItemAccessionNumber(reportItem.getAccessionNumber()));
             }
-            reportItem.setCompleteFlag(MessageUtil
-                    .getMessage(sampleCompleteMap.get(reportItem.getAccessionNumber()) ? "report.status.complete"
+            reportItem.setCompleteFlag(
+                    MessageUtil.getMessage(isSampleComplete(reportItem.getAccessionNumber()) ? "report.status.complete"
                             : "report.status.partial"));
             if (reportItem.isCorrectedResult()) {
                 // The report is French only
