@@ -285,7 +285,11 @@ export default function Workplan(props) {
                     <TableBody>
                       {testsList
                         .slice((page - 1) * pageSize, page * pageSize)
-                        .map((row, index) => {
+                        .map((row, pageIndex) => {
+                          // index dans la liste COMPLÈTE : l'exclusion d'une ligne
+                          // (impression) doit viser testsList[index] quelle que soit
+                          // la page affichée
+                          const index = (page - 1) * pageSize + pageIndex;
                           if (
                             !(row.accessionNumber === currentAccessionNumber)
                           ) {
@@ -299,6 +303,11 @@ export default function Workplan(props) {
                             <TableRow
                               key={index}
                               id={"row_" + index}
+                              style={
+                                row.notIncludedInWorkplan
+                                  ? { backgroundColor: "#cccccc" }
+                                  : undefined
+                              }
                               className={
                                 rowColorIndex % 2 === 0 ? "evenRow" : "oddRow"
                               }
@@ -308,6 +317,7 @@ export default function Workplan(props) {
                                   <input
                                     type="checkbox"
                                     value={row.notIncludedInWorkplan}
+                                    defaultChecked={!!row.notIncludedInWorkplan}
                                     id={"includedCheck_" + index}
                                     className="includedCheck"
                                     onClick={(e) =>

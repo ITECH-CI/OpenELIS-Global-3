@@ -1,6 +1,8 @@
 package org.openelisglobal.workplan.controller.rest;
 
 import jakarta.annotation.PostConstruct;
+import jakarta.servlet.http.HttpServletRequest;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -12,6 +14,7 @@ import org.openelisglobal.common.services.IStatusService;
 import org.openelisglobal.common.services.StatusService.AnalysisStatus;
 import org.openelisglobal.common.util.ConfigurationProperties;
 import org.openelisglobal.common.util.ConfigurationProperties.Property;
+import org.openelisglobal.common.util.DateUtil;
 import org.openelisglobal.common.util.IdValuePair;
 import org.openelisglobal.common.util.StringUtil;
 import org.openelisglobal.observationhistory.service.ObservationHistoryService;
@@ -121,6 +124,76 @@ public class WorkplanRestController extends BaseRestController {
 
         } else {
             return "";
+        }
+    }
+
+    /**
+     * Filtres optionnels communs aux plans de travail : n° labo (contient, sans
+     * casse) et période de RÉCEPTION (bornes incluses, format de date de la
+     * locale). Appliqués sur les analyses avant construction des lignes, donc avant
+     * la pagination serveur ; l'impression reprend la liste affichée.
+     */
+    protected static class WorkplanFilter {
+        private final String labNumber;
+        private final LocalDate from;
+        private final LocalDate to;
+
+        private WorkplanFilter(String labNumber, LocalDate from, LocalDate to) {
+            this.labNumber = labNumber;
+            this.from = from;
+            this.to = to;
+        }
+
+        static WorkplanFilter fromRequest(HttpServletRequest request) {
+            String labNumber = request.getParameter("labNumber");
+            labNumber = labNumber == null || labNumber.isBlank() ? null : labNumber.trim().toLowerCase();
+            return new WorkplanFilter(labNumber, parseDate(request.getParameter("startDate")),
+                    parseDate(request.getParameter("endDate")));
+        }
+
+        private static LocalDate parseDate(String date) {
+            if (date == null || date.isBlank()) {
+                return null;
+            }
+            try {
+                return DateUtil.convertStringDateToLocalDate(date.trim());
+            } catch (RuntimeException e) {
+                return null; // date illisible : filtre ignoré plutôt qu'une erreur
+            }
+        }
+
+        boolean isEmpty() {
+            return labNumber == null && from == null && to == null;
+        }
+
+        List<Analysis> apply(List<Analysis> analyses) {
+            if (isEmpty() || analyses == null) {
+                return analyses;
+            }
+            List<Analysis> kept = new ArrayList<>();
+            for (Analysis analysis : analyses) {
+                if (accept(analysis.getSampleItem().getSample())) {
+                    kept.add(analysis);
+                }
+            }
+            return kept;
+        }
+
+        private boolean accept(Sample sample) {
+            if (labNumber != null && (sample.getAccessionNumber() == null
+                    || !sample.getAccessionNumber().toLowerCase().contains(labNumber))) {
+                return false;
+            }
+            if (from != null || to != null) {
+                if (sample.getReceivedTimestamp() == null) {
+                    return false;
+                }
+                LocalDate received = sample.getReceivedTimestamp().toLocalDateTime().toLocalDate();
+                if ((from != null && received.isBefore(from)) || (to != null && received.isAfter(to))) {
+                    return false;
+                }
+            }
+            return true;
         }
     }
 

@@ -53,7 +53,7 @@ public class WorkplanByPriorityRestController extends WorkplanRestController {
 
         String requestedPage = request.getParameter("page");
         if (GenericValidator.isBlankOrNull(requestedPage)) {
-            workplanTests = getWorkplanByPriority(priority);
+            workplanTests = getWorkplanByPriority(priority, WorkplanFilter.fromRequest(request));
             filteredTests = userService.filterResultsByLabUnitRoles(getSysUserId(request), workplanTests,
                     Constants.ROLE_RESULTS);
 
@@ -69,7 +69,7 @@ public class WorkplanByPriorityRestController extends WorkplanRestController {
         return form;
     }
 
-    private List<TestResultItem> getWorkplanByPriority(OrderPriority priority) {
+    private List<TestResultItem> getWorkplanByPriority(OrderPriority priority, WorkplanFilter filter) {
 
         List<TestResultItem> workplanTestList = new ArrayList<>();
         String currentAccessionNumber = null;
@@ -79,7 +79,8 @@ public class WorkplanByPriorityRestController extends WorkplanRestController {
         int sampleGroupingNumber = 0;
 
         if (priority != null) {
-            List<Analysis> analysisList = analysisService.getAnalysesByPriorityAndStatusId(priority, statusList);
+            List<Analysis> analysisList = filter
+                    .apply(analysisService.getAnalysesByPriorityAndStatusId(priority, statusList));
             for (Analysis analysis : analysisList) {
                 TestResultItem testResultItem = new TestResultItem();
                 testResultItem.setTestId(analysis.getTest().getId());

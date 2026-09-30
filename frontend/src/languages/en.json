@@ -2444,5 +2444,10 @@
   "sample.entry.project.hivTestedType": "Tested HIV type",
   "HIVStatus.HIV_1": "HIV-1",
   "HIVStatus.HIV_2": "HIV-2",
-  "HIVStatus.HIVDual": "HIV-1+2"
+  "HIVStatus.HIVDual": "HIV-1+2",
+  "workplan.filter.labNumber": "Lab No",
+  "workplan.filter.startDate": "Received from",
+  "workplan.filter.endDate": "to",
+  "workplan.filter.apply": "Filter",
+  "workplan.filter.clear": "Clear"
 }

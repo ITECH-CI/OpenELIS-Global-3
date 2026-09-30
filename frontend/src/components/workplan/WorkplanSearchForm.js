@@ -1,7 +1,16 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Column, Form, Grid, Section, Button, Link } from "@carbon/react";
+import {
+  Column,
+  Form,
+  Grid,
+  Section,
+  Button,
+  Link,
+  TextInput,
+} from "@carbon/react";
 import { ArrowLeft, ArrowRight } from "@carbon/react/icons";
-import { FormattedMessage } from "react-intl";
+import { FormattedMessage, useIntl } from "react-intl";
+import CustomDatePicker from "../common/CustomDatePicker";
 import "../Style.css";
 import TestSectionSelectForm from "./TestSectionSelectForm";
 import TestSelectForm from "./TestSelectForm";
@@ -20,6 +29,29 @@ export default function WorkplanSearchForm(props) {
   const [currentApiPage, setCurrentApiPage] = useState(null);
   const [totalApiPages, setTotalApiPages] = useState(null);
   const [url, setUrl] = useState("");
+  // filtres optionnels (n° labo, période de réception), appliqués côté serveur
+  const [labNumber, setLabNumber] = useState("");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+  const [appliedFilters, setAppliedFilters] = useState("");
+  const intl = useIntl();
+
+  const buildFilterQuery = (lab, start, end) =>
+    (lab.trim() ? "&labNumber=" + encodeURIComponent(lab.trim()) : "") +
+    (start ? "&startDate=" + encodeURIComponent(start) : "") +
+    (end ? "&endDate=" + encodeURIComponent(end) : "");
+
+  const applyFilters = (e) => {
+    e?.preventDefault();
+    setAppliedFilters(buildFilterQuery(labNumber, startDate, endDate));
+  };
+
+  const clearFilters = () => {
+    setLabNumber("");
+    setStartDate("");
+    setEndDate("");
+    setAppliedFilters("");
+  };
 
   let title = "";
   let urlToPost = "";
@@ -95,12 +127,15 @@ export default function WorkplanSearchForm(props) {
     setNextPage(null);
     setPreviousPage(null);
     setPagination(false);
-    setUrl(urlToPost + selectedValue);
-    getFromOpenElisServer(urlToPost + selectedValue, getTestsList);
+    setUrl(urlToPost + selectedValue + appliedFilters);
+    getFromOpenElisServer(
+      urlToPost + selectedValue + appliedFilters,
+      getTestsList,
+    );
     return () => {
       mounted.current = false;
     };
-  }, [selectedValue]);
+  }, [selectedValue, appliedFilters]);
 
   useEffect(() => {
     setNextPage(null);
@@ -138,6 +173,52 @@ export default function WorkplanSearchForm(props) {
             {type === "priority" && (
               <PrioritySelectForm title={title} value={handleSelectedValue} />
             )}
+          </Form>
+        </Column>
+        <Column sm={4} md={8} lg={10}>
+          <Form className="container-form" onSubmit={applyFilters}>
+            <Grid fullWidth={true}>
+              <Column sm={4} md={2} lg={4}>
+                <TextInput
+                  id="workplanLabNumberFilter"
+                  labelText={intl.formatMessage({
+                    id: "workplan.filter.labNumber",
+                  })}
+                  value={labNumber}
+                  onChange={(e) => setLabNumber(e.target.value)}
+                />
+              </Column>
+              <Column sm={2} md={2} lg={4}>
+                <CustomDatePicker
+                  id="workplanStartDateFilter"
+                  labelText={intl.formatMessage({
+                    id: "workplan.filter.startDate",
+                  })}
+                  value={startDate}
+                  updateStateValue={true}
+                  onChange={(date) => setStartDate(date)}
+                />
+              </Column>
+              <Column sm={2} md={2} lg={4}>
+                <CustomDatePicker
+                  id="workplanEndDateFilter"
+                  labelText={intl.formatMessage({
+                    id: "workplan.filter.endDate",
+                  })}
+                  value={endDate}
+                  updateStateValue={true}
+                  onChange={(date) => setEndDate(date)}
+                />
+              </Column>
+              <Column sm={4} md={2} lg={4} style={{ alignSelf: "end" }}>
+                <Button type="submit" size="md">
+                  <FormattedMessage id="workplan.filter.apply" />
+                </Button>{" "}
+                <Button kind="ghost" size="md" onClick={clearFilters}>
+                  <FormattedMessage id="workplan.filter.clear" />
+                </Button>
+              </Column>
+            </Grid>
           </Form>
         </Column>
         <Column sm={1} md={2} lg={4}>

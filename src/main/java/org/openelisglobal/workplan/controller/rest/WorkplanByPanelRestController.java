@@ -89,7 +89,7 @@ public class WorkplanByPanelRestController extends WorkplanRestController {
 
         String requestedPage = request.getParameter("page");
         if (GenericValidator.isBlankOrNull(requestedPage)) {
-            workplanTests = getWorkplanByPanel(panelID);
+            workplanTests = getWorkplanByPanel(panelID, WorkplanFilter.fromRequest(request));
             filteredTests = userService.filterResultsByLabUnitRoles(getSysUserId(request), workplanTests,
                     Constants.ROLE_RESULTS);
             paging.setDatabaseResults(request, form, filteredTests);
@@ -101,7 +101,7 @@ public class WorkplanByPanelRestController extends WorkplanRestController {
         return form;
     }
 
-    private List<TestResultItem> getWorkplanByPanel(String panelId) {
+    private List<TestResultItem> getWorkplanByPanel(String panelId, WorkplanFilter filter) {
 
         List<TestResultItem> workplanTestList = new ArrayList<>();
         // check for patient name addition
@@ -112,8 +112,8 @@ public class WorkplanByPanelRestController extends WorkplanRestController {
             List<PanelItem> panelItems = panelItemService.getPanelItemsForPanel(panelId);
 
             for (PanelItem panelItem : panelItems) {
-                List<Analysis> analysisList = analysisService.getAllAnalysisByTestAndStatus(panelItem.getTest().getId(),
-                        statusList);
+                List<Analysis> analysisList = filter
+                        .apply(analysisService.getAllAnalysisByTestAndStatus(panelItem.getTest().getId(), statusList));
 
                 for (Analysis analysis : analysisList) {
                     TestResultItem testResultItem = new TestResultItem();

@@ -55,11 +55,11 @@ public class WorkplanByTestRestController extends WorkplanRestController {
         if (GenericValidator.isBlankOrNull(requestedPage)) {
             if (!GenericValidator.isBlankOrNull(testType)) {
                 if (testType.equals("NFS")) {
-                    workplanTests = getWorkplanForNFSTest(testType);
+                    workplanTests = getWorkplanForNFSTest(testType, WorkplanFilter.fromRequest(request));
                     filteredTests = userService.filterResultsByLabUnitRoles(getSysUserId(request), workplanTests,
                             Constants.ROLE_RESULTS);
                 } else {
-                    workplanTests = getWorkplanByTest(testType);
+                    workplanTests = getWorkplanByTest(testType, WorkplanFilter.fromRequest(request));
                     filteredTests = userService.filterResultsByLabUnitRoles(getSysUserId(request), workplanTests,
                             Constants.ROLE_RESULTS);
                 }
@@ -75,7 +75,7 @@ public class WorkplanByTestRestController extends WorkplanRestController {
         return form;
     }
 
-    private List<TestResultItem> getWorkplanByTest(String testType) {
+    private List<TestResultItem> getWorkplanByTest(String testType, WorkplanFilter filter) {
 
         List<Analysis> testList;
         List<TestResultItem> workplanTestList = new ArrayList<>();
@@ -87,7 +87,7 @@ public class WorkplanByTestRestController extends WorkplanRestController {
 
         if (!(GenericValidator.isBlankOrNull(testType) || testType.equals("0"))) {
 
-            testList = analysisService.getAllAnalysisByTestAndStatus(testType, statusList);
+            testList = filter.apply(analysisService.getAllAnalysisByTestAndStatus(testType, statusList));
 
             if (testList.isEmpty()) {
                 return new ArrayList<>();
@@ -126,7 +126,7 @@ public class WorkplanByTestRestController extends WorkplanRestController {
         return workplanTestList;
     }
 
-    private List<TestResultItem> getWorkplanForNFSTest(String testType) {
+    private List<TestResultItem> getWorkplanForNFSTest(String testType, WorkplanFilter filter) {
 
         List<Analysis> testList;
         List<TestResultItem> workplanTestList = new ArrayList<>();
@@ -139,7 +139,7 @@ public class WorkplanByTestRestController extends WorkplanRestController {
 
         if (!(GenericValidator.isBlankOrNull(testType) || testType.equals("0"))) {
 
-            testList = analysisService.getAllAnalysisByTestsAndStatus(nfsTestIdList, statusList);
+            testList = filter.apply(analysisService.getAllAnalysisByTestsAndStatus(nfsTestIdList, statusList));
 
             if (testList.isEmpty()) {
                 return new ArrayList<>();

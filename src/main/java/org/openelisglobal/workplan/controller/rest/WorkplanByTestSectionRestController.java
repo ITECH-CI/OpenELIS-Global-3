@@ -79,7 +79,7 @@ public class WorkplanByTestSectionRestController extends WorkplanRestController 
         if (GenericValidator.isBlankOrNull(requestedPage)) {
             if (!GenericValidator.isBlankOrNull(testSectionId)) {
                 // get tests based on test section
-                workplanTests = getWorkplanByTestSection(testSectionId);
+                workplanTests = getWorkplanByTestSection(testSectionId, WorkplanFilter.fromRequest(request));
                 filteredTests = userService.filterResultsByLabUnitRoles(getSysUserId(request), workplanTests,
                         Constants.ROLE_RESULTS);
             }
@@ -98,7 +98,7 @@ public class WorkplanByTestSectionRestController extends WorkplanRestController 
         return form;
     }
 
-    private List<TestResultItem> getWorkplanByTestSection(String testSectionId) {
+    private List<TestResultItem> getWorkplanByTestSection(String testSectionId, WorkplanFilter filter) {
 
         List<Analysis> testList = new ArrayList<>();
         List<TestResultItem> workplanTestList = new ArrayList<>();
@@ -115,7 +115,7 @@ public class WorkplanByTestSectionRestController extends WorkplanRestController 
         if (!(GenericValidator.isBlankOrNull(testSectionId))) {
 
             String sectionId = testSectionId;
-            testList = analysisService.getAllAnalysisByTestSectionAndStatus(sectionId, statusList, true);
+            testList = filter.apply(analysisService.getAllAnalysisByTestSectionAndStatus(sectionId, statusList, true));
 
             if (testList.isEmpty()) {
                 return new ArrayList<>();

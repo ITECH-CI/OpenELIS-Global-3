@@ -1959,5 +1959,10 @@
   "dictionary.hpv.hw.sampling": "Fait par un prestataire de sant\u00E9",
   "HIVStatus.HIVDual": "HIV-1+2",
   "HIVStatus.HIV_1": "HIV-1",
-  "HIVStatus.HIV_2": "HIV-2"
+  "HIVStatus.HIV_2": "HIV-2",
+  "workplan.filter.labNumber": "N° labo",
+  "workplan.filter.startDate": "Réception du",
+  "workplan.filter.endDate": "au",
+  "workplan.filter.apply": "Filtrer",
+  "workplan.filter.clear": "Effacer"
 }
