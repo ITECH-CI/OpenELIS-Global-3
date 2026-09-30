@@ -260,10 +260,16 @@ public abstract class NonConformityByLabno extends Report implements IReportCrea
             return false;
         }
 
-        double lowBounds = Double.parseDouble(lowerNumber.substring(lowIndex));
-        double highBounds = Double.parseDouble(upperNumber.substring(highIndex));
-
-        if (highBounds < lowBounds) {
+        // n° labo non purement numérique après le préfixe (ex. 1252-26) : l'ordre
+        // des bornes est alors vérifié sur le texte au lieu d'une erreur 500
+        boolean swap;
+        try {
+            swap = Double.parseDouble(upperNumber.substring(highIndex)) < Double
+                    .parseDouble(lowerNumber.substring(lowIndex));
+        } catch (NumberFormatException e) {
+            swap = upperNumber.compareTo(lowerNumber) < 0;
+        }
+        if (swap) {
             String temp = upperNumber;
             upperNumber = lowerNumber;
             lowerNumber = temp;

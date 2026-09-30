@@ -168,7 +168,7 @@
 				<textElement textAlignment="Left" verticalAlignment="Middle">
 					<font size="10"/>
 				</textElement>
-				<textFieldExpression><![CDATA[$F{accessionNumber}.substring($P{prefixLength})]]></textFieldExpression>
+				<textFieldExpression><![CDATA[org.openelisglobal.sample.util.AccessionNumberUtil.stripInvariantPartForDisplay($F{accessionNumber}, $P{prefixLength})]]></textFieldExpression>
 			</textField>
 			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
 				<reportElement mode="Transparent" x="222" y="0" width="189" height="13" isPrintWhenDetailOverflows="true" backcolor="#FFFFFF" uuid="729c301a-99f4-4531-8bf6-b63c01f2377f"/>

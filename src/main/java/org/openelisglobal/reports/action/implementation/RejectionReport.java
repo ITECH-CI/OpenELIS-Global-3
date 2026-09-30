@@ -133,10 +133,11 @@ public abstract class RejectionReport extends Report implements IReportCreator {
         }
         if (AccessionFormat.ALPHANUM.toString()
                 .equals(ConfigurationProperties.getInstance().getPropertyValue(Property.AccessionFormat))) {
-            item.setAccessionNumber(AlphanumAccessionValidator.convertAlphaNumLabNumForDisplay(
-                    sampleService.getAccessionNumber(sample).substring(PREFIX_LENGTH)));
+            item.setAccessionNumber(AlphanumAccessionValidator.convertAlphaNumLabNumForDisplay(AccessionNumberUtil
+                    .stripInvariantPartForDisplay(sampleService.getAccessionNumber(sample), PREFIX_LENGTH)));
         } else {
-            item.setAccessionNumber(sampleService.getAccessionNumber(sample).substring(PREFIX_LENGTH));
+            item.setAccessionNumber(AccessionNumberUtil
+                    .stripInvariantPartForDisplay(sampleService.getAccessionNumber(sample), PREFIX_LENGTH));
         }
         item.setReceivedDate(sampleService.getTwoYearReceivedDateForDisplay(sample));
         item.setCollectionDate(

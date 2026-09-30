@@ -26,11 +26,12 @@ import {
 import BacteriologyValidation from "../bacteriology/BacteriologyValidation";
 import "../Style.css";
 
-// Each test's accessionNumber carries a per-test suffix (e.g. "LY24001731-1",
-// "LY24001731-2", ...), so grouping "same sample" rows must compare the LabNo
-// (the part before the dash), not the raw accessionNumber.
+// Le serveur (AccessionValidation / ResultValidation) renvoie le n° labo brut
+// de la demande, sans suffixe par test : on regroupe sur la valeur complète.
+// Ne pas couper au tiret : il peut faire partie du n° labo (ex. 1252-26), et
+// 1252-25 / 1252-26 étaient alors fusionnés (interprétation écrite sur les deux).
 const getLabNo = (accessionNumber) =>
-  accessionNumber ? accessionNumber.split("-")[0] : null;
+  accessionNumber ? accessionNumber.trim() : null;
 
 const Validation = (props) => {
   const componentMounted = useRef(false);
@@ -875,8 +876,8 @@ const Validation = (props) => {
                             {
                               when: (row) =>
                                 row.accessionNumber &&
-                                row.accessionNumber.split("-")[0] ===
-                                  props.searchedAccessionNumber.split("-")[0],
+                                getLabNo(row.accessionNumber) ===
+                                  getLabNo(props.searchedAccessionNumber),
                               style: {
                                 backgroundColor: "#fff3cd",
                                 borderLeft: "4px solid #f0ad4e",

@@ -212,6 +212,27 @@ public class AccessionNumberUtil {
         return getGeneralAccessionNumberValidator().accessionNumberIsUsed(accessionNumber, null);
     }
 
+    /**
+     * Affichage court d'un n° labo sans sa partie invariante (code site + année,
+     * ex. « CHRSP26000001 » → « 000001 »), comme le font certains rapports. On ne
+     * coupe que si le n° a bien cette forme : partie invariante sans tiret et reste
+     * purement numérique. Sinon (n° saisi manuellement, ex. « 1252-26 », ou plus
+     * court que la partie invariante) le n° est rendu entier — couper à l'aveugle
+     * affichait « -26 », une chaîne vide, ou levait une exception.
+     */
+    public static String stripInvariantPartForDisplay(String accessionNumber, Integer invariantLength) {
+        if (accessionNumber == null || invariantLength == null || invariantLength <= 0
+                || accessionNumber.length() <= invariantLength) {
+            return accessionNumber;
+        }
+        String head = accessionNumber.substring(0, invariantLength);
+        String tail = accessionNumber.substring(invariantLength);
+        if (head.contains("-") || !tail.matches("\\d+")) {
+            return accessionNumber;
+        }
+        return tail;
+    }
+
     public static String getAccessionNumberFromSampleItemAccessionNumber(String accessionNumber) {
         int lastDash = accessionNumber.lastIndexOf('-');
         if (lastDash > 0) {
