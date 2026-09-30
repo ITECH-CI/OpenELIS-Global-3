@@ -270,12 +270,70 @@ cd /var/lib/openelis-global/backups && sudo ./DatabaseBackup.pl
 ### Backup manuel (avant intervention)
 
 ```bash
-# Dump manuel COMPLET (inclut FHIR) — schéma clinlims entier
-docker exec openelisglobal-database \
-  pg_dump -U clinlims -n clinlims clinlims | gzip > ~/backup_clinlims_$(date +%F).sql.gz
+# Dump manuel — même contenu que le backup automatique (données FHIR exclues :
+# elles sont reconstruites depuis le métier). Ne PAS inclure les données FHIR
+# avec « pg_dump -n » : les large objects de HAPI ne sont pas exportés et la
+# restauration empêcherait external-fhir-api de démarrer.
+docker exec openelisglobal-database pg_dump -U clinlims -n clinlims \
+  --exclude-table-data='clinlims.hfj_*' --exclude-table-data='clinlims.trm_*' \
+  --exclude-table-data='clinlims.mpi_*' --exclude-table-data='clinlims.npm_*' \
+  --exclude-table-data='clinlims.bt2_*' clinlims | gzip > ~/backup_clinlims_$(date +%F).sql.gz
 ```
 
-### Restauration (procédure testée)
+### Restauration — script `restore_OpenELIS.sh` (recommandé)
+
+Installé par l'installeur dans `/var/lib/openelis-global/` (source :
+`install/installerTemplate/linux/scripts/`). Il fonctionne pour une sauvegarde
+du site comme pour la base d'un **autre** site.
+
+```bash
+sudo /var/lib/openelis-global/restore_OpenELIS.sh /chemin/vers/lastSnapshot_XXXX.backup.gz
+```
+
+Il enchaîne, en demandant confirmation (taper `RESTAURER`) :
+
+1. **dump de sécurité** de la base actuelle dans
+   `backups/pre-restore_<date>.sql.gz` (retour arrière : relancer le script avec
+   ce fichier) ;
+2. arrêt de `openelisglobal-webapp` et `external-fhir-api` ;
+3. schéma `clinlims` vierge puis restauration (texte, `.gz` ou format custom) ;
+   les erreurs SQL sont comptées et journalisées ;
+4. **remise à zéro des tables FHIR** (`hfj_`, `trm_`, `mpi_`, `npm_`, `bt2_`) :
+   HAPI les recrée au démarrage. Indispensable pour les anciens dumps qui
+   contiennent des données FHIR sans leurs large objects (`--keep-fhir` pour les
+   conserver) ;
+5. **recréation** des conteneurs webapp et FHIR
+   (`docker compose up --force-recreate`) et attente du démarrage ;
+6. **reconstruction FHIR** depuis les données métier (proposée ; sinon ouvrir en
+   administrateur
+   `https://<serveur>/api/OpenELIS-Global/OEToFhir?checkAll=true`).
+
+Journal : `backups/restore_<date>.log`.
+
+> ⚠️ **Après une restauration**, vérifier :
+>
+> - Admin > Informations du site : nom du site, préfixe labo, logos, en-tête
+>   d'un compte rendu. Depuis la 3.3.1.3, la base fait foi sur le fichier de
+>   configuration du conteneur ; sur une version antérieure, **recréer** le
+>   conteneur webapp (pas `docker start`), sinon l'ancien nom de site et
+>   l'ancien préfixe écrasent les valeurs restaurées ;
+> - Interopérabilité > Cibles FHIR : la reconstruction **re-pousse toutes les
+>   ressources** vers les cibles actives — les désactiver avant si le
+>   destinataire a déjà les données ;
+> - mots de passe chiffrés (connexions externes, serveur consolidé) : illisibles
+>   si la base vient d'un serveur dont `encryption.general.password` diffère →
+>   les ressaisir ;
+> - `SITE_ID` de `backup.conf` cohérent avec le site restauré.
+
+> ℹ️ **Base issue d'un site qui utilisait `oedatauploader`** : l'ancien trigger
+> `observation_history_update_trigger` bloquait une migration au démarrage («
+> cannot alter type of a column used in a trigger definition »). Corrigé en
+> 3.3.1.3 (la migration sauvegarde, supprime puis recrée le trigger). Sur une
+> version antérieure :
+> `DROP TRIGGER IF EXISTS observation_history_update_trigger ON clinlims.observation_history;`
+> avant le démarrage (il est recréé ensuite).
+
+### Restauration manuelle (sans le script)
 
 > ⚠️ Ne **jamais** restaurer par-dessus une base vivante : le dump ne contient
 > pas de `DROP`, on obtiendrait des erreurs `duplicate key` /
@@ -284,7 +342,7 @@ docker exec openelisglobal-database \
 
 ```bash
 # 1) Arrêter les applications qui écrivent dans la base (garder la DB up)
-cd /var/lib/openelis-global   # dossier du docker-compose... ou le dossier installer
+cd /var/lib/openelis-global
 sudo docker stop openelisglobal-webapp external-fhir-api
 
 # 2) Repartir d'un schéma clinlims vierge
@@ -295,8 +353,14 @@ docker exec -i openelisglobal-database \
 gunzip -c ~/backup_clinlims_YYYY-MM-DD.sql.gz | \
   docker exec -i openelisglobal-database psql -U clinlims -d clinlims
 
-# 4) Redémarrer les applications (HAPI recrée les tables FHIR vides au boot)
-sudo docker start openelisglobal-webapp external-fhir-api
+# 4) Supprimer les tables FHIR restaurées (HAPI les recrée vides au démarrage)
+docker exec -i openelisglobal-database psql -U clinlims -d clinlims -c "DO \$\$ DECLARE r record; BEGIN
+  FOR r IN SELECT tablename FROM pg_tables WHERE schemaname='clinlims' AND tablename ~ '^(hfj|trm|mpi|npm|bt2)_'
+  LOOP EXECUTE format('DROP TABLE IF EXISTS clinlims.%I CASCADE', r.tablename); END LOOP; END \$\$;"
+
+# 5) RECRÉER les conteneurs (pas docker start), puis reconstruire le FHIR
+sudo docker compose up -d --force-recreate oe.openelis.org fhir.openelis.org
+# puis, connecté en administrateur : https://<serveur>/api/OpenELIS-Global/OEToFhir?checkAll=true
 ```
 
 > 💡 **Tester le restore régulièrement** (ex. mensuellement) sur une instance

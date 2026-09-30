@@ -139,6 +139,7 @@ CLIENT_FACING_CERT = "nginx.cert.pem"
 KEYSTORE = "keystore"
 TRUSTSTORE = "truststore"
 CLEANUP_SCRIPT_NAME = "logCleanup.sh"
+RESTORE_SCRIPT_NAME = "restore_OpenELIS.sh"
 
 #install directories
 OE_VAR_DIR = "/var/lib/openelis-global/"
@@ -734,6 +735,7 @@ def configure_host_dns_resolution():
 def install_cron_tasks():
     install_backup_script()
     install_log_cleanup_script()
+    install_restore_script()
     install_cron_file()
         
 def install_backup_script():
@@ -815,6 +817,20 @@ def install_backup_script():
 def install_log_cleanup_script():
     ensure_dir_exists(LIBRARY_DIR)
     shutil.copy(INSTALLER_SCRIPTS_DIR + CLEANUP_SCRIPT_NAME, LIBRARY_DIR)
+
+
+def install_restore_script():
+    # Script de restauration d'une sauvegarde (dump de sécurité, schéma vierge,
+    # remise à zéro FHIR, recréation des conteneurs, reconstruction FHIR).
+    # Installé à côté du docker-compose.yml : il reste disponible une fois le
+    # dossier de l'installeur supprimé. 0o750 : réservé à root/admins.
+    source = INSTALLER_SCRIPTS_DIR + RESTORE_SCRIPT_NAME
+    if not os.path.exists(source):
+        log("Restore script missing, not installed", PRINT_TO_CONSOLE)
+        return
+    ensure_dir_exists(OE_VAR_DIR)
+    shutil.copy(source, OE_VAR_DIR + RESTORE_SCRIPT_NAME)
+    os.chmod(OE_VAR_DIR + RESTORE_SCRIPT_NAME, 0o750)
 
 
 def install_cron_file():
