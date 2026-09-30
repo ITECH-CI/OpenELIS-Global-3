@@ -163,7 +163,10 @@ public class DisplayListController extends BaseRestController {
 
         // Convert Project objects to IdValuePair and add to the list
         for (Project project : projectList) {
-            projects.add(new IdValuePair(project.getId(), project.getProjectName()));
+            // listes d'export : études actives uniquement
+            if (isActive(project)) {
+                projects.add(new IdValuePair(project.getId(), project.getProjectName()));
+            }
         }
 
         return projects;
@@ -174,9 +177,8 @@ public class DisplayListController extends BaseRestController {
     public List<IdValuePair> getTempProjects() {
         List<Project> projects = exportTrendsByDate.getProjectList();
         List<IdValuePair> projectList = new ArrayList<>();
-        projects.forEach(project -> {
-            projectList.add(new IdValuePair(project.getId(), project.getProjectName()));
-        });
+        projects.stream().filter(DisplayListController::isActive)
+                .forEach(project -> projectList.add(new IdValuePair(project.getId(), project.getProjectName())));
         return projectList;
     }
 
@@ -185,10 +187,13 @@ public class DisplayListController extends BaseRestController {
     public List<IdValuePair> getEIDProjects() {
         List<Project> projects = exportEIDTrendsByDate.getProjectList();
         List<IdValuePair> projectList = new ArrayList<>();
-        projects.forEach(project -> {
-            projectList.add(new IdValuePair(project.getId(), project.getProjectName()));
-        });
+        projects.stream().filter(DisplayListController::isActive)
+                .forEach(project -> projectList.add(new IdValuePair(project.getId(), project.getProjectName())));
         return projectList;
+    }
+
+    private static boolean isActive(Project project) {
+        return project.getIsActive() == null || "Y".equalsIgnoreCase(project.getIsActive().trim());
     }
 
     @PostConstruct

@@ -108,12 +108,18 @@ public class TBColumnBuilder extends RoutineColumnBuilder {
         // A list of analytes which should not show up in the regular results,
         // String excludeAnalytes = getExcludedAnalytesSet();
         SQLConstant listName = SQLConstant.RESULT;
+        if (allTests == null || allTests.isEmpty()) {
+            // aucun test TB actif : pas de crosstab (VALUES vide = erreur SQL)
+            query.append(", \n\n ( SELECT si.samp_id, si.id AS sampleItem_id, si.sort_order AS sampleItemNo "
+                    + "\n FROM sample_item AS si " + "\n ORDER BY si.samp_id, si.id " + "\n) AS " + listName + "\n ");
+            return;
+        }
         query.append(", \n\n ( SELECT si.samp_id, si.id AS sampleItem_id, si.sort_order AS sampleItemNo, " + listName
                 + ".* " + " FROM sample_item AS si JOIN \n ");
 
         // Begin cross tab / pivot table
         query.append(" crosstab( "
-                + "\n 'SELECT si.id, t.description, replace(replace(replace(replace(r.value ,E''\\n'', '' ''), E''\\t'', '' ''), E''\\r'', '' ''),'','',''.'') "
+                + "\n 'SELECT si.id, t.id::text, replace(replace(replace(replace(r.value ,E''\\n'', '' ''), E''\\t'', '' ''), E''\\r'', '' ''),'','',''.'') "
                 + "\n FROM clinlims.analysis AS a join clinlims.test AS t on a.test_id = t.id  \n "
                 + " JOIN test_section ts ON t.test_section_id = ts.id \n "
                 + " join clinlims.test_result AS tr on t.id = tr.test_id  \n"
@@ -129,17 +135,13 @@ public class TBColumnBuilder extends RoutineColumnBuilder {
                 // + (( excludeAnalytes == null)?"":
                 // " AND r.analyte_id NOT IN ( " + excludeAnalytes) + ")"
                 // + " AND a.test_id = t.id "
-                + "\n ORDER BY 1, 2 "
-                + "\n ', 'SELECT t.description FROM test t JOIN test_section ts ON t.test_section_id = ts.id where t.is_active = ''Y'' AND ts.name = ''TB'' ORDER BY 1' ) ");
+                + "\n ORDER BY 1, 2 " + "\n ', 'VALUES " + testIdCategories() + "' ) ");
         query.append("\n as " + listName + " ( " // inner use of the list name
                 + "\"si_id\" numeric(10) ");
         for (Test col : allTests) {
-            // Use TestServiceImpl.getLocalizedTestNameWithType as in parent class
-            // CSVRoutineColumnBuilder
-            String testName = TestServiceImpl.getLocalizedTestNameWithType(col);
-            // Escape double quotes by doubling them for PostgreSQL
-            String escapedTestName = testName.replace("\"", "\"\"");
-            query.append("\n, \"" + escapedTestName + "\" varchar(200) ");
+            // même nommage que addAllResultsColumns (test_<id>) ; catégories = ids
+            // dans l'ordre de allTests (tri SQL par description ≠ tri Java par nom)
+            query.append("\n, " + resultColumnName(col) + " varchar(200) ");
         }
         query.append(" ) \n");
         // left join all sample Items from the right sample range to the results table.

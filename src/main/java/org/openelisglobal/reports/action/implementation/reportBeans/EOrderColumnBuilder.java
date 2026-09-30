@@ -68,7 +68,9 @@ public class EOrderColumnBuilder extends CIStudyColumnBuilder {
     public void makeSQL() {
         query = new StringBuilder();
         Date lowDate = dateRange.getLowDate();
-        Date highDate = dateRange.getHighDate();
+        // borne haute = lendemain 00:00 : order_timestamp est un horodatage, la date
+        // de fin seule excluait les demandes reçues ce jour-là après minuit
+        Date highDate = dateRange.getHighDateAtEndOfDay();
 
         query.append("SELECT\n" + "  coalesce(vl_sample.site_code,org.short_name) as site_code,\n"
                 + "  coalesce(vl_sample.site_datim_code,org.datim_org_code) as site_datim_code,\n"
@@ -86,7 +88,8 @@ public class EOrderColumnBuilder extends CIStudyColumnBuilder {
                 + " (select * from electronic_order where order_timestamp between '" + lowDate + "'" + " and '"
                 + highDate + "' ) eo\n" + "LEFT JOIN patient pat ON pat.id = eo.patient_id\n"
                 + "LEFT JOIN organization org on org.id = eo.organization_id \n"
-                + "LEFT JOIN qa_event qe on qe.id = eo.reject_reason_id \n" + "LEFT JOIN LATERAL (\n" + "  SELECT\n"
+                + "LEFT JOIN qa_event qe on qe.id::text = eo.reject_reason_id::text \n" + "LEFT JOIN LATERAL (\n"
+                + "  SELECT\n"
                 + "    MAX(CASE WHEN input->'type'->'coding' @> '[{\"code\": \"CI0030001AAAAAAAAAAAAAAAAAAAAAAAAAAA\"}]' \n"
                 + "             THEN input->>'valueString' END) AS hiv_status,\n"
                 + "    MAX(CASE WHEN input->'type'->'coding' @> '[{\"code\": \"162240AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\"}]'\n"

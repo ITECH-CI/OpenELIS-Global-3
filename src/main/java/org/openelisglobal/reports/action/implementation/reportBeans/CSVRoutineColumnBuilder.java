@@ -578,11 +578,7 @@ public abstract class CSVRoutineColumnBuilder {
         // Java (accents, casse) et décaler silencieusement les résultats de colonne ;
         // - la description ne convient pas comme clé : crosstab tronque les noms de
         // catégorie à 63 octets (« duplicate category name » sur libellés longs).
-        StringBuilder categories = new StringBuilder();
-        for (Test t : allTests) {
-            categories.append(categories.length() == 0 ? "" : ",").append("(''").append(Integer.parseInt(t.getId()))
-                    .append("'')");
-        }
+        String categories = testIdCategories();
 
         // Begin cross tab / pivot table
         query.append(" crosstab( \n" + " 'SELECT si.id, t.id::text, replace(replace(replace(replace(r.value ,E''\\n"
@@ -720,6 +716,19 @@ public abstract class CSVRoutineColumnBuilder {
      * court (les libellés de test, tronqués à la limite Postgres, pouvaient se
      * dupliquer). Le libellé reste l'en-tête du CSV.
      */
+    /**
+     * Catégories d'un crosstab sur t.id::text : « ('12'),('15')… » dans l'ordre de
+     * allTests (double apostrophe : littéral imbriqué dans celui du crosstab).
+     */
+    protected String testIdCategories() {
+        StringBuilder categories = new StringBuilder();
+        for (Test t : allTests) {
+            categories.append(categories.length() == 0 ? "" : ",").append("(''").append(Integer.parseInt(t.getId()))
+                    .append("'')");
+        }
+        return categories.toString();
+    }
+
     protected String resultColumnName(Test test) {
         return "test_" + test.getId();
     }

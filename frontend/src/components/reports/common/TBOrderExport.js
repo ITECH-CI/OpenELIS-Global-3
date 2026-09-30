@@ -16,10 +16,14 @@ import config from "../../../config.json";
 import { encodeDate } from "../../utils/Utils";
 
 /**
- * TB Order Export Form
- * Exports TB orders by date range as CSV
+ * Export CSV par période (commandes TB par défaut ; réutilisé pour les
+ * demandes électroniques via les props report / titleKey / descriptionKey).
  */
-const TBOrderExport = () => {
+const TBOrderExport = ({
+  report = "TBOrderExport",
+  titleKey = "report.tb.export.title",
+  descriptionKey = "report.tb.export.description",
+}) => {
   const intl = useIntl();
   const [loading, setLoading] = useState(false);
   const [notificationVisible, setNotificationVisible] = useState(false);
@@ -73,7 +77,7 @@ const TBOrderExport = () => {
 
     // Build URL for TB Order Export (CSV)
     const baseUrl = `${config.serverBaseUrl}/ReportPrint`;
-    const params = `report=TBOrderExport&type=patient&upperDateRange=${reportFormValues.endDate}&lowerDateRange=${reportFormValues.startDate}`;
+    const params = `report=${report}&type=patient&upperDateRange=${reportFormValues.endDate}&lowerDateRange=${reportFormValues.startDate}`;
     const url = `${baseUrl}?${params}`;
 
     window.open(url, "_blank");
@@ -99,10 +103,10 @@ const TBOrderExport = () => {
           <Section>
             <Section>
               <h2>
-                <FormattedMessage id="report.tb.export.title" />
+                <FormattedMessage id={titleKey} />
               </h2>
               <p>
-                <FormattedMessage id="report.tb.export.description" />
+                <FormattedMessage id={descriptionKey} />
               </p>
             </Section>
             <Form>

@@ -2451,5 +2451,15 @@
   "workplan.filter.apply": "Filter",
   "workplan.filter.clear": "Clear",
   "label.no.options": "No options available",
-  "userManagement.allPermissions": "All permissions"
+  "userManagement.allPermissions": "All permissions",
+  "report.eorder.export.title": "Electronic orders export",
+  "report.eorder.export.description": "Export as CSV the electronic orders received during the period (status, sample, result).",
+  "report.tb.export.title": "TB orders export",
+  "report.tb.export.description": "Export as CSV the tuberculosis orders received during the period.",
+  "label.button.startDate": "Start date",
+  "label.button.endDate": "End date",
+  "label.button.exportCSV": "Export CSV",
+  "notification.report.generated": "The report has been generated in a new tab.",
+  "error.dateRange.start": "Please select a start and an end date.",
+  "testconfig.ageRange.any": "All ages"
 }

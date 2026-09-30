@@ -1966,5 +1966,15 @@
   "workplan.filter.apply": "Filtrer",
   "workplan.filter.clear": "Effacer",
   "label.no.options": "Aucune option disponible",
-  "userManagement.allPermissions": "Toutes les permissions"
+  "userManagement.allPermissions": "Toutes les permissions",
+  "report.eorder.export.title": "Export des demandes électroniques",
+  "report.eorder.export.description": "Exporter au format CSV les demandes électroniques reçues sur la période (statut, échantillon, résultat).",
+  "report.tb.export.title": "Export des demandes TB",
+  "report.tb.export.description": "Exporter au format CSV les demandes de tuberculose reçues sur la période.",
+  "label.button.startDate": "Date de début",
+  "label.button.endDate": "Date de fin",
+  "label.button.exportCSV": "Exporter en CSV",
+  "notification.report.generated": "Le rapport a été généré dans un nouvel onglet.",
+  "error.dateRange.start": "Veuillez saisir la date de début et la date de fin.",
+  "testconfig.ageRange.any": "Tout âge"
 }

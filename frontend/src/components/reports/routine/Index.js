@@ -97,6 +97,13 @@ export const RoutineReports = (props) => {
       {type === "patient" && report === "TBOrderReport" && <TBActivityReport />}
 
       {type === "patient" && report === "TBOrderExport" && <TBOrderExport />}
+      {type === "patient" && report === "EOrderExport" && (
+        <TBOrderExport
+          report="EOrderExport"
+          titleKey="report.eorder.export.title"
+          descriptionKey="report.eorder.export.description"
+        />
+      )}
     </>
   );
 };

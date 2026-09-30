@@ -80,7 +80,10 @@ public class ExportEOrdersByDate extends CSVSampleExportReport implements IRepor
      * check everything
      */
     private boolean validateSubmitParameters() {
-        return dateRange.validateHighLowDate("report.error.message.date.received.missing") && validateProject();
+        // l'étude ne filtre pas l'export (elle ne sert qu'au titre) : facultative,
+        // l'écran d'export ne demande qu'une période
+        return dateRange.validateHighLowDate("report.error.message.date.received.missing")
+                && (isBlankOrNull(projectStr) || validateProject());
     }
 
     /**
