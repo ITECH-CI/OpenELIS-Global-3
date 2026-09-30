@@ -93,7 +93,13 @@ public class DefaultConfigurationProperties extends ConfigurationProperties {
         finalProperties = loadFromPropertyFile(finalPropertyFile);
         changeProperty = loadFromPropertyFile(changeValuePropertyFile);
 
-        copyPropertiesPreferDestination(dbOnLoadProperties, finalProperties);
+        // La BASE fait foi sur le fichier TotalSystemConfiguration.properties : ce
+        // fichier vit dans le conteneur et n'est qu'une copie. Après restauration d'une
+        // base (autre site), il réécrivait l'ancien nom de site, préfixe labo…
+        // par-dessus
+        // les valeurs restaurées. Seules les connexions externes (non réécrites en base
+        // par saveFinalConfigFileAndOverwriteDbValues) gardent la priorité du fichier.
+        copyDatabasePropertiesPreferDatabase(dbOnLoadProperties, finalProperties);
         copyPropertiesPreferDestination(defaultProperties, finalProperties);
         copyPropertiesPreferDestination(hardcodedDefaultProperties, finalProperties);
         copyPropertiesPreferSource(changeProperty, finalProperties);
@@ -121,6 +127,23 @@ public class DefaultConfigurationProperties extends ConfigurationProperties {
                         sourceProperties.getPropertyHolder(Property.valueOf(propertyName)));
             } else {
                 destinationProperties.setPropertyValue(propertyName, sourceProperties.getProperty(propertyName));
+            }
+        }
+    }
+
+    private void copyDatabasePropertiesPreferDatabase(OEProperties dbProperties, OEProperties destinationProperties) {
+        for (String propertyName : dbProperties.stringPropertyNames()) {
+            boolean isEnum = EnumUtils.isValidEnum(Property.class, propertyName);
+            boolean isConnection = isEnum && "connection".equals(Property.valueOf(propertyName).getPropertyType());
+            PropertyHolder dbHolder = isEnum ? dbProperties.getPropertyHolder(Property.valueOf(propertyName))
+                    : dbProperties.getPropertyHolder(propertyName);
+            if (dbHolder == null || (isConnection && destinationProperties.containsKey(propertyName))) {
+                continue;
+            }
+            if (isEnum) {
+                destinationProperties.setPropertyHolder(Property.valueOf(propertyName), dbHolder);
+            } else {
+                destinationProperties.setPropertyValue(propertyName, dbProperties.getProperty(propertyName));
             }
         }
     }
