@@ -249,7 +249,10 @@ public abstract class CSVRoutineColumnBuilder {
         // ResultSet.TYPE_SCROLL_SENSITIVE,
         // ResultSet.CONCUR_READ_ONLY);
         // resultSet = stmt.executeQuery();
-        Session session = SpringContext.getBean(SessionFactory.class).openSession();
+        // session fermée avec le ResultSet (closeResultSet) : elle ne l'était jamais
+        // et chaque export retenait une connexion du pool
+        closeSession();
+        session = SpringContext.getBean(SessionFactory.class).openSession();
         resultSet = session.doReturningWork(new ReturningWork<ResultSet>() {
 
             @Override
@@ -783,8 +786,23 @@ public abstract class CSVRoutineColumnBuilder {
      * @throws SQLException
      */
     public void closeResultSet() throws SQLException {
-        resultSet.close();
-        resultSet = null;
+        try {
+            if (resultSet != null) {
+                resultSet.close();
+            }
+        } finally {
+            resultSet = null;
+            closeSession();
+        }
+    }
+
+    private Session session;
+
+    private void closeSession() {
+        if (session != null && session.isOpen()) {
+            session.close();
+        }
+        session = null;
     }
 
     protected String getGendCD4CountAnalyteId() {

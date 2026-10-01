@@ -18,7 +18,7 @@ package org.openelisglobal.reports.action.implementation;
 
 import static org.apache.commons.validator.GenericValidator.isBlankOrNull;
 
-import org.jfree.util.Log;
+import org.openelisglobal.common.log.LogEvent;
 import org.openelisglobal.internationalization.MessageUtil;
 import org.openelisglobal.project.service.ProjectService;
 import org.openelisglobal.project.valueholder.Project;
@@ -92,14 +92,16 @@ public class ExportEOrdersByDate extends CSVSampleExportReport implements IRepor
      */
     private boolean validateProject() {
         if (isBlankOrNull(projectStr) || "0".equals(Integer.getInteger(projectStr))) {
-            Log.error("Error in " + this.getClass().getSimpleName() + " validateProject: Project String not valid ");
+            LogEvent.logError(this.getClass().getSimpleName(), "report",
+                    "Error in " + this.getClass().getSimpleName() + " validateProject: Project String not valid ");
             add1LineErrorMessage("report.error.message.project.missing");
             return false;
         }
         project = SpringContext.getBean(ProjectService.class).getProjectById(projectStr);
         if (project == null) {
             add1LineErrorMessage("report.error.message.project.missing");
-            Log.error("Error in " + this.getClass().getSimpleName() + " validateProject: Project is null");
+            LogEvent.logError(this.getClass().getSimpleName(), "report",
+                    "Error in " + this.getClass().getSimpleName() + " validateProject: Project is null");
             return false;
         }
         return true;
@@ -113,7 +115,7 @@ public class ExportEOrdersByDate extends CSVSampleExportReport implements IRepor
             csvColumnBuilder = getColumnBuilder(projectStr);
             csvColumnBuilder.buildDataSource();
         } catch (Exception e) {
-            Log.error("Error in " + this.getClass().getSimpleName() + ".createReportItems: ", e);
+            LogEvent.logError("Error in " + this.getClass().getSimpleName() + ".createReportItems: ", e);
             add1LineErrorMessage("report.error.message.general.error");
         }
     }

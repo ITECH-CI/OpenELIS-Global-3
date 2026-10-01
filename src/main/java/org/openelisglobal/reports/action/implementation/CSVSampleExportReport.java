@@ -63,6 +63,10 @@ public abstract class CSVSampleExportReport extends CSVExportReport {
     public byte[] runReport() throws UnsupportedEncodingException, IOException, SQLException, IllegalStateException,
             JRException, ParseException {
         if (errorFound) {
+            // la requête a pu échouer après ouverture de la session : la libérer
+            if (csvColumnBuilder != null) {
+                csvColumnBuilder.closeResultSet();
+            }
             return super.runReport();
         }
 
@@ -72,8 +76,11 @@ public abstract class CSVSampleExportReport extends CSVExportReport {
         buffer.write(UTF8_BOM);
         buffer.write(csvColumnBuilder.getColumnNamesLine().getBytes(StandardCharsets.UTF_8));
 
-        writeResultsToBuffer(buffer);
-        csvColumnBuilder.closeResultSet();
+        try {
+            writeResultsToBuffer(buffer);
+        } finally {
+            csvColumnBuilder.closeResultSet();
+        }
 
         return buffer.toByteArray();
     }

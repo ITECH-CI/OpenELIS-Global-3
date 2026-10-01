@@ -28,7 +28,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import org.apache.commons.validator.GenericValidator;
-import org.jfree.util.Log;
+import org.openelisglobal.common.log.LogEvent;
 import org.openelisglobal.internationalization.MessageUtil;
 import org.openelisglobal.project.service.ProjectService;
 import org.openelisglobal.project.valueholder.Project;
@@ -129,7 +129,7 @@ public class ExportStudyProjectByDate extends CSVSampleExportReport implements I
             csvColumnBuilder = getColumnBuilder(projectStr);
             csvColumnBuilder.buildDataSource();
         } catch (Exception e) {
-            Log.error("Error in " + this.getClass().getSimpleName() + ".createReportItems: ", e);
+            LogEvent.logError("Error in " + this.getClass().getSimpleName() + ".createReportItems: ", e);
             add1LineErrorMessage("report.error.message.general.error");
         }
     }
@@ -156,7 +156,7 @@ public class ExportStudyProjectByDate extends CSVSampleExportReport implements I
 
             writeConsolidatedBaseToBuffer(buffer, splitBase);
         } catch (IOException | SQLException | ParseException e) {
-            Log.error("Error in " + this.getClass().getSimpleName() + " writeResultsToBuffer: ", e);
+            LogEvent.logError("Error in " + this.getClass().getSimpleName() + " writeResultsToBuffer: ", e);
         }
     }
 

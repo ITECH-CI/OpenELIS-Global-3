@@ -249,8 +249,12 @@ abstract public class CSVColumnBuilder {
 //		PreparedStatement stmt = session.connection().prepareStatement(sql, ResultSet.TYPE_SCROLL_SENSITIVE,
 //				ResultSet.CONCUR_READ_ONLY);
 //		resultSet = stmt.executeQuery();
-        Session session = SpringContext.getBean(SessionFactory.class).getCurrentSession();
-        session.beginTransaction();
+        // session DÉDIÉE, fermée avec le ResultSet (closeResultSet) : la transaction
+        // ouverte sur la session courante n'était jamais terminée et restait liée
+        // au thread Tomcat → « Transaction already active » sur l'export suivant
+        // traité par ce thread (échec intermittent des exports d'étude)
+        closeSession();
+        session = SpringContext.getBean(SessionFactory.class).openSession();
         resultSet = session.doReturningWork(new ReturningWork<ResultSet>() {
 
             @Override
@@ -774,8 +778,23 @@ abstract public class CSVColumnBuilder {
      *
      */
     public void closeResultSet() throws SQLException {
-        resultSet.close();
-        resultSet = null;
+        try {
+            if (resultSet != null) {
+                resultSet.close();
+            }
+        } finally {
+            resultSet = null;
+            closeSession();
+        }
+    }
+
+    private Session session;
+
+    private void closeSession() {
+        if (session != null && session.isOpen()) {
+            session.close();
+        }
+        session = null;
     }
 
     protected String getGendCD4CountAnalyteId() {

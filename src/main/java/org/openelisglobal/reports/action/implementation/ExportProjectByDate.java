@@ -26,7 +26,7 @@ import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
 import org.apache.commons.validator.GenericValidator;
-import org.jfree.util.Log;
+import org.openelisglobal.common.log.LogEvent;
 import org.openelisglobal.common.util.StringUtil;
 import org.openelisglobal.internationalization.MessageUtil;
 import org.openelisglobal.project.service.ProjectService;
@@ -63,7 +63,7 @@ public class ExportProjectByDate extends CSVSampleExportReport implements IRepor
             form.setUseProjectCode(Boolean.TRUE);
             form.setProjectCodeList(getProjectList());
         } catch (RuntimeException e) {
-            Log.error("Error in ExportProjectByDate.setRequestParemeters: ", e);
+            LogEvent.logError("Error in ExportProjectByDate.setRequestParemeters: ", e);
         }
     }
 
@@ -130,7 +130,7 @@ public class ExportProjectByDate extends CSVSampleExportReport implements IRepor
             csvColumnBuilder = getColumnBuilder(projectStr);
             csvColumnBuilder.buildDataSource();
         } catch (SQLException e) {
-            Log.error("Error in " + this.getClass().getSimpleName() + ".createReportItems: ", e);
+            LogEvent.logError("Error in " + this.getClass().getSimpleName() + ".createReportItems: ", e);
             add1LineErrorMessage("report.error.message.general.error");
         }
     }
@@ -158,7 +158,7 @@ public class ExportProjectByDate extends CSVSampleExportReport implements IRepor
 
             writeConsolidatedBaseToBuffer(buffer, splitBase);
         } catch (IOException | SQLException | ParseException e) {
-            Log.error("Error in " + this.getClass().getSimpleName() + " writeResultsToBuffer: ", e);
+            LogEvent.logError("Error in " + this.getClass().getSimpleName() + " writeResultsToBuffer: ", e);
         }
     }
 

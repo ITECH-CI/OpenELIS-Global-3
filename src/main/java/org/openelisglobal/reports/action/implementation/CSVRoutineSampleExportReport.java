@@ -64,6 +64,10 @@ public abstract class CSVRoutineSampleExportReport extends CSVRoutineExportRepor
     public byte[] runReport() throws UnsupportedEncodingException, IOException, IllegalStateException, SQLException,
             JRException, ParseException {
         if (errorFound) {
+            // la requête a pu échouer après ouverture de la session : la libérer
+            if (csvRoutineColumnBuilder != null) {
+                csvRoutineColumnBuilder.closeResultSet();
+            }
             return super.runReport();
         }
 
@@ -73,8 +77,11 @@ public abstract class CSVRoutineSampleExportReport extends CSVRoutineExportRepor
         buffer.write(UTF8_BOM);
         buffer.write(csvRoutineColumnBuilder.getColumnNamesLine().getBytes(StandardCharsets.UTF_8));
 
-        writeResultsToBuffer(buffer);
-        csvRoutineColumnBuilder.closeResultSet();
+        try {
+            writeResultsToBuffer(buffer);
+        } finally {
+            csvRoutineColumnBuilder.closeResultSet();
+        }
 
         return buffer.toByteArray();
     }
