@@ -142,6 +142,17 @@ cp Postgres_DockerImage.tar.gz        "${DEST}/dockerImage/Postgres_DockerImage.
 cp AutoHeal_DockerImage.tar.gz        "${DEST}/dockerImage/AutoHeal_DockerImage.tar.gz"
 cp Dnsmasq_DockerImage.tar.gz         "${DEST}/dockerImage/Dnsmasq_DockerImage.tar.gz"
 
+# Documentation d'exploitation livrée avec l'installeur (sites hors ligne) :
+# guide d'installation / mise à jour / sauvegarde / restauration, et notes de
+# la version si elles existent (docs/dev-notes/RELEASE_NOTES_CIV_<VERSION>.md).
+mkdir -p "${DEST}/docs"
+cp "${PROJECT_DIR}/docs/dev-notes/INSTALL_CIV.md" "${DEST}/docs/"
+if [ -f "${PROJECT_DIR}/docs/dev-notes/RELEASE_NOTES_CIV_${VERSION}.md" ]; then
+  cp "${PROJECT_DIR}/docs/dev-notes/RELEASE_NOTES_CIV_${VERSION}.md" "${DEST}/docs/"
+else
+  log "Pas de notes de version pour ${VERSION} (docs/dev-notes/RELEASE_NOTES_CIV_${VERSION}.md)"
+fi
+
 chmod +x "${DEST}/scripts/"*.sh 2>/dev/null || true
 chmod +x "${DEST}/install.sh" 2>/dev/null || true
 
