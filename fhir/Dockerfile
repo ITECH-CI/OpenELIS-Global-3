@@ -1,7 +1,16 @@
 FROM hapiproject/hapi:v6.6.0-tomcat
 
 USER root
-RUN apt-get update && apt-get install -y curl
+# curl (healthcheck). Debian 11 « bullseye » est en fin de vie : le dépôt
+# security.debian.org liste encore ses paquets mais les renvoie en 404 (et
+# archive.debian.org n'a pas bullseye-security). Installation normale d'abord,
+# sinon repli sur le dépôt principal seul (curl 7.74 de bullseye main).
+RUN (apt-get update && apt-get install -y --no-install-recommends curl) \
+    || (sed -i -e '/security.debian.org/d' -e '/bullseye-updates/d' /etc/apt/sources.list \
+        && rm -rf /var/lib/apt/lists/* \
+        && apt-get update \
+        && apt-get install -y --no-install-recommends curl) \
+    && rm -rf /var/lib/apt/lists/*
 
 RUN groupadd tomcat; \
     groupadd tomcat-ssl-cert -g 8443; \ 
