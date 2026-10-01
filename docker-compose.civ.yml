@@ -16,21 +16,25 @@ version: "3.3"
 services:
   certs:
     container_name: oe-certs
-    image: itechuw/certgen:main
-    platform: linux/amd64
-    # conteneur « one-shot » : l'image contient les certificats, recopiés dans les
-    # volumes au 1er démarrage, puis bash se termine (code 0). « always » le
-    # relançait en boucle (statut Restarting) ; « no » le laisse « Exited (0) ».
+    # certificats TLS internes PROPRES à l'installation (clé générée au 1er
+    # démarrage par volume/certs/generate-certs.sh) ; l'ancienne image publique
+    # itechuw/certgen embarquait la même clé privée pour tous. Conteneur
+    # « one-shot » : génère si besoin puis s'arrête (Exited (0)).
+    image: eclipse-temurin:21-jre
+    entrypoint: ["/bin/bash", "/opt/oe-certs/generate-certs.sh"]
     restart: "no"
     environment:
       - KEYSTORE_PW="kspass"
       - TRUSTSTORE_PW="tspass"
+      - CERT_CN=${OE_CERT_CN:-localhost}
+      - CERT_SAN=${OE_CERT_SAN:-}
     networks:
       - default
     volumes:
       - key_trust-store-volume:/etc/openelis-global
       - keys-vol:/etc/ssl/private/
       - certs-vol:/etc/ssl/certs/
+      - ./volume/certs/generate-certs.sh:/opt/oe-certs/generate-certs.sh:ro
 
   database:
     container_name: openelisglobal-database
@@ -56,8 +60,10 @@ services:
     image: ghcr.io/itech-ci/openelis-global-civ:${OE_TAG:-latest}
     platform: linux/amd64
     depends_on:
-      - database
-      - certs
+      database:
+        condition: service_started
+      certs:
+        condition: service_completed_successfully
     ports:
       - "8080:8080"
       - "8443:8443"
@@ -86,8 +92,10 @@ services:
     image: ghcr.io/itech-ci/openelis-global-civ-fhir:${OE_TAG:-latest}
     platform: linux/amd64
     depends_on:
-      - database
-      - certs
+      database:
+        condition: service_started
+      certs:
+        condition: service_completed_successfully
     # Mini-HIE : le HAPI n'est PAS publié sur l'hôte/réseau. Il n'est joignable
     # qu'en interne (réseau docker "default") par OE et par le proxy nginx
     # (location /fhir/, sécurisée par jeton + IP). Ne PAS rouvrir de ports ici.
@@ -134,7 +142,8 @@ services:
       - default
     restart: unless-stopped
     depends_on:
-      - certs
+      certs:
+        condition: service_completed_successfully
 
 secrets:
   datasource.password:

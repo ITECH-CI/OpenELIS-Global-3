@@ -191,7 +191,7 @@ Pour les serveurs ayant accès à Internet, on peut tirer directement les images
 publiées sur ghcr (voir `CICD_STRATEGY_CIV.md`) sans transférer d'installeur.
 `docker-compose.civ.yml` (à la racine du repo) pointe
 backend/frontend/fhir/nginx vers `ghcr.io/itech-ci/openelis-global-civ*` ;
-postgres et certs restent tiers.
+postgres reste l'image officielle.
 
 > ⚠️ Ce compose ne recrée PAS la configuration du site (volumes `./volume/*`,
 > secrets, certs) : il suppose une installation existante (faite par
@@ -205,6 +205,21 @@ export OE_TAG=3.3.2.0
 docker compose -f docker-compose.civ.yml pull
 docker compose -f docker-compose.civ.yml up -d
 ```
+
+**Certificats TLS internes (service `certs`)** : générés au premier démarrage
+par `./volume/certs/generate-certs.sh` (image officielle
+`eclipse-temurin:21-jre`), avec une clé **propre au site**. L'ancienne image
+`itechuw/certgen` embarquait la même clé privée pour toutes les installations :
+au premier démarrage avec ce compose, ses certificats sont remplacés
+automatiquement (le navigateur signale un nouveau certificat auto-signé). Le
+service s'arrête ensuite (`Exited (0)`) ; webapp, FHIR et proxy attendent sa fin
+réussie. Options (variables d'environnement) : `OE_CERT_CN` (nom du serveur,
+défaut `localhost`), `OE_CERT_SAN` (noms supplémentaires, ex.
+`DNS:labo.exemple.ci,IP:10.0.0.5`). Renouvellement automatique 30 jours avant
+expiration (10 ans) ; régénération forcée :
+`docker compose -f docker-compose.civ.yml run --rm -e FORCE_REGEN=true certs`
+puis redémarrer webapp, FHIR et proxy. L'installeur offline n'est pas concerné
+(il génère ses propres certificats nginx).
 
 Les migrations Liquibase s'appliquent au redémarrage du webapp ; la base est
 préservée. Pour revenir en arrière, redéployer avec l'`OE_TAG` précédent (les

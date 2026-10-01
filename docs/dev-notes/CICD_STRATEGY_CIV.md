@@ -142,6 +142,13 @@
   paquets bullseye mais les renvoie en 404. `fhir/Dockerfile` installe `curl`
   avec un repli sur le dépôt principal seul. À terme : passer à une image HAPI
   plus récente (base maintenue).
+- **Service `certs` des compose** (`docker-compose.yml`,
+  `docker-compose.civ.yml`, dev) : plus d'image `itechuw/certgen` (certificats
+  et clé privée figés dans une image publique, identiques pour tous, et
+  `restart: always` qui la relançait en boucle). Script
+  `volume/certs/generate-certs.sh` sur `eclipse-temurin:21-jre` : clé propre à
+  chaque installation, idempotent, mêmes fichiers / formats / mots de passe que
+  l'ancienne image.
 - **Déclenchement de la release sur tag** : l'événement `push` du tag peut
   mettre plusieurs minutes à lancer `civ-release.yml`. Attendre (~5 min) avant
   un `workflow_dispatch` manuel, sinon deux releases tournent en parallèle
