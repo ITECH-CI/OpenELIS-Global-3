@@ -131,6 +131,24 @@
   optionnel. Limiter à amd64 réduit le temps CI.
 - **Secrets** : ghcr n'en demande aucun (GITHUB_TOKEN). Si Transifex est voulu
   côté fork, recréer les tokens ; sinon désactiver tx-\*.
+- **Le build de publication (`develop-civ`) ne construit que 2 images** (webapp,
+  frontend). Les images HAPI, proxy et dnsmasq ne sont construites qu'à la
+  release (tag `v*`) : une casse de leur Dockerfile n'apparaît qu'au moment de
+  la release (cas de la 3.3.1.2, voir ci-dessous). Pour s'en prémunir avant de
+  taguer : `docker build --platform linux/amd64 -f fhir/Dockerfile .` (idem
+  `nginx-proxy/`, `dnsmasq/`).
+- **Image HAPI sur Debian 11 « bullseye » (fin de vie août 2026)** :
+  `hapiproject/hapi:v6.6.0-tomcat` ; `security.debian.org` liste encore les
+  paquets bullseye mais les renvoie en 404. `fhir/Dockerfile` installe `curl`
+  avec un repli sur le dépôt principal seul. À terme : passer à une image HAPI
+  plus récente (base maintenue).
+- **Déclenchement de la release sur tag** : l'événement `push` du tag peut
+  mettre plusieurs minutes à lancer `civ-release.yml`. Attendre (~5 min) avant
+  un `workflow_dispatch` manuel, sinon deux releases tournent en parallèle
+  (annuler l'une des deux).
+- **Release échouée** : tant que la GitHub Release n'est pas publiée, on peut
+  corriger, supprimer le tag (`git push origin :refs/tags/vX`) puis le recréer
+  sur le commit corrigé.
 
 ## 6. TODO — tâches actionnables
 

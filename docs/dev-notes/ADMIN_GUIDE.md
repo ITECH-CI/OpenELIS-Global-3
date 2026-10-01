@@ -1,7 +1,7 @@
 # Guide Administrateur — OpenELIS Global (CILNSP)
 
-Version cible : **3.3.0.0** Fork : `ITECH-CI/OpenELIS-Global-3` (branche
-`develop`)
+Version cible : **3.3.1.2** (notes de version : `RELEASE_NOTES_CIV_3.3.1.2.md`)
+Fork : `ITECH-CI/OpenELIS-Global-3` (branche `develop`)
 
 > Ce guide couvre l'installation, l'exploitation et l'administration de
 > l'instance OpenELIS Global déployée à partir du fork CILNSP. Il s'adresse aux
@@ -245,6 +245,11 @@ mvn -q -o package -DskipTests -Dspotless.check.skip=true
 - **Modify tests** : modifie un test existant (libellés, type de résultat,
   modalités, panels associés). _Cette page a été corrigée dans la 3.3.0.0 : le
   bouton "Save" passe désormais le validator et persiste les options de liste._
+  _Depuis la 3.3.1.2, la modification reprend les valeurs ENREGISTRÉES du test
+  (plages normale / valide / critique / de rapport non arrondies, tranche d'âge
+  — « Tout âge » pour 0 → ∞ —, type de résultat, LOINC). Les chiffres
+  significatifs se règlent sur la même page (ex. Glycémie : 1 → 0.7-1.1 au lieu
+  de « 1-1 »)._
 - **Test activation** : active/désactive en masse.
 - **Test conditionnel (parent → enfant)** _(nouveau 3.3.0.0)_ : configurer un
   test enfant qui n'apparaît dans Logbook que si le test parent retourne une
@@ -274,6 +279,44 @@ mvn -q -o package -DskipTests -Dspotless.check.skip=true
 - **Rapport bacterio** : généré en A4, regroupé par culture, antibiogrammes
   masqués tant que la culture n'est pas finalisée.
 
+### 7.4 Comptes rendus et unités SI
+
+Pour les tests ayant une conversion SI
+(`Admin → Gestion des tests → Conversions SI`, propriété `siUnitConversion`), le
+compte rendu patient affiche sous le résultat la valeur SI et son unité (petite
+police, italique), et sous la plage de référence la plage SI (même format, 2
+décimales). Les tests sans conversion ne changent pas.
+
+### 7.5 Étiquettes code-barres
+
+`Admin → Configuration code-barres` : case **« Nom du patient »** (activée par
+défaut) pour imprimer ou non le nom sur les étiquettes de demande et
+d'échantillon.
+
+### 7.6 Gestion des utilisateurs
+
+- La liste affiche tous les utilisateurs filtrés (recherche, actifs,
+  administrateurs, unité) avec une seule pagination.
+- À la création, le motif d'un refus est affiché : identifiant déjà utilisé
+  (comparé sans majuscules), utilisateur de même prénom + nom existant,
+  caractère non autorisé dans l'identifiant (jeu de caractères :
+  `Admin → Configuration de validation → nom d'utilisateur` ; chiffres
+  autorisés).
+- « Toutes les permissions » coche tous les rôles d'unité affichés.
+
+### 7.7 Exports CSV
+
+- Fichiers en UTF-8 (accents corrects sous Excel), un résultat par colonne de
+  test (colonnes des tests actifs uniquement), listes limitées aux études et
+  unités actives.
+- Export de routine filtrable par unité ; export des demandes électroniques par
+  période (`Rapports → Export des demandes électroniques`).
+
+### 7.8 Plans de travail
+
+Filtres **N° labo** et **période de réception (du / au)** sur les quatre plans
+(unité, test, panel, priorité) ; l'impression reprend la liste filtrée.
+
 ---
 
 ## 8. Vérifications de santé
@@ -284,7 +327,7 @@ mvn -q -o package -DskipTests -Dspotless.check.skip=true
 # Version applicative (war)
 docker exec openelisglobal-webapp cat \
   /usr/local/tomcat/webapps/OpenELIS-Global/WEB-INF/classes/build.properties
-# attendu : project.version=3.3.0.0
+# attendu : project.version=3.3.1.2
 
 # Version DB (dernière migration)
 docker exec openelisglobal-database psql -U clinlims -d clinlims -c \
