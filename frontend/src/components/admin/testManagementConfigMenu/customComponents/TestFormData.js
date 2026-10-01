@@ -117,6 +117,7 @@ export const mapTestCatBeanToFormData = (test) => {
     uom: test.uom || "",
     loinc: test.loinc || "",
     resultType: test.resultType || "",
+    resultTypeId: test.resultTypeId || "",
     orderable: test.orderable === "Orderable" ? "Y" : "N",
     notifyResults: test.notifyResults ? "Y" : "N",
     inLabOnly: test.inLabOnly ? "Y" : "N",

@@ -333,16 +333,24 @@ export const TestStepForm = ({ initialData, mode = "add", postCall }) => {
         setSelectedUomList(selectedUom);
       }
 
-      const mappedResultType = resultTypeList.find(
-        (type) =>
-          (initialData.resultType === "R" && type.value === "Free text") ||
-          (initialData.resultType === "D" && type.value === "Select List") ||
-          (initialData.resultType === "N" && type.value === "Numeric") ||
-          (initialData.resultType === "A" && type.value === "Alphanumeric") ||
-          (initialData.resultType === "M" && type.value === "Multiselect") ||
-          (initialData.resultType === "C" &&
-            type.value === "Cascading multiselect"),
-      );
+      // par id (fourni par le serveur) : la correspondance par libellé anglais
+      // (« Numeric »…) échouait avec les libellés français de la liste
+      const mappedResultType =
+        resultTypeList.find(
+          (type) =>
+            initialData.resultTypeId &&
+            String(type.id) === String(initialData.resultTypeId),
+        ) ||
+        resultTypeList.find(
+          (type) =>
+            (initialData.resultType === "R" && type.value === "Free text") ||
+            (initialData.resultType === "D" && type.value === "Select List") ||
+            (initialData.resultType === "N" && type.value === "Numeric") ||
+            (initialData.resultType === "A" && type.value === "Alphanumeric") ||
+            (initialData.resultType === "M" && type.value === "Multiselect") ||
+            (initialData.resultType === "C" &&
+              type.value === "Cascading multiselect"),
+        );
 
       if (mappedResultType) {
         setSelectedResultTypeList(mappedResultType);

@@ -299,6 +299,9 @@ function TestModifyEntry() {
           {selectedTestIdToEdit ? (
             <>
               <TestStepForm
+                // remonté à chaque test choisi : le formulaire ne lit initialData
+                // qu'au premier rendu (useState), il gardait sinon le test précédent
+                key={selectedTestIdToEdit}
                 initialData={mapTestCatBeanToFormData(
                   testMonifyList?.testCatBeanList?.find(
                     (test) => test.id === selectedTestIdToEdit,

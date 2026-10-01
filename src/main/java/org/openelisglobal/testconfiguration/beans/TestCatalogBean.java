@@ -27,6 +27,9 @@ public class TestCatalogBean {
     private String sampleType;
     private String panel;
     private String resultType;
+    // id du type de résultat (le code « N », « D »… et le libellé localisé ne
+    // permettent pas de le retrouver de façon fiable côté écran)
+    private String resultTypeId;
     private String uom = "n/a";
     private String significantDigits = "n/a";
     private String loinc;
@@ -226,5 +229,13 @@ public class TestCatalogBean {
 
     public void setAntimicrobialResistance(boolean antimicrobialResistance) {
         this.antimicrobialResistance = antimicrobialResistance;
+    }
+
+    public String getResultTypeId() {
+        return resultTypeId;
+    }
+
+    public void setResultTypeId(String resultTypeId) {
+        this.resultTypeId = resultTypeId;
     }
 }

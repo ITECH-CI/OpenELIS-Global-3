@@ -156,6 +156,9 @@ public class TestModifyEntryRestController extends BaseController {
             bean.setTestUnit(testService.getTestSectionName(test));
             bean.setPanel(createPanelList(testService, test));
             bean.setResultType(resultType);
+            org.openelisglobal.typeoftestresult.valueholder.TypeOfTestResult typeOfResult = SpringContext
+                    .getBean(TypeOfTestResultService.class).getTypeOfTestResultByType(resultType);
+            bean.setResultTypeId(typeOfResult == null ? null : typeOfResult.getId());
             // Tous les types d'échantillon du test (pas seulement le premier).
             bean.setSampleType(testService.getAllSampleTypesDisplay(test));
             bean.setOrderable(test.getOrderable() ? "Orderable" : "Not orderable");
