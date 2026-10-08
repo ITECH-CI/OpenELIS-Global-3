@@ -10,6 +10,7 @@ import java.sql.Timestamp;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -203,6 +204,24 @@ public class FhirTransformServiceImpl implements FhirTransformService {
     @Transactional
     @Async
     @Override
+    public AsyncResult<Bundle> transformPersistOrganizations(List<String> organizationIds)
+            throws FhirLocalPersistingException {
+        FhirOperations fhirOperations = new FhirOperations();
+        CountingTempIdGenerator tempIdGenerator = new CountingTempIdGenerator();
+        for (String organizationId : organizationIds) {
+            // entité gérée : l'UUID éventuellement attribué par la transformation est
+            // enregistré à la fin de la transaction.
+            Organization organization = organizationService.get(organizationId);
+            this.addToOperations(fhirOperations, tempIdGenerator, transformToFhirOrganization(organization));
+            this.addToOperations(fhirOperations, tempIdGenerator, transformToFhirLocation(organization));
+        }
+        Bundle responseBundle = fhirPersistanceService.createUpdateFhirResourcesInFhirStore(fhirOperations);
+        return new AsyncResult<>(responseBundle);
+    }
+
+    @Transactional
+    @Async
+    @Override
     public AsyncResult<Bundle> transformPersistPatients(List<String> patientIds) throws FhirLocalPersistingException {
         LogEvent.logTrace(this.getClass().getSimpleName(), "transformPersistPatients",
                 "transformPersistPatients called");
@@ -250,6 +269,8 @@ public class FhirTransformServiceImpl implements FhirTransformService {
         Map<String, DiagnosticReport> diagnosticReports = new HashMap<>();
         Map<String, Observation> observations = new HashMap<>();
         Map<String, Practitioner> requesters = new HashMap<>();
+        Map<String, org.hl7.fhir.r4.model.Organization> requesterOrganizations = new HashMap<>();
+        Map<String, org.hl7.fhir.r4.model.Location> requesterLocations = new HashMap<>();
         for (String sampleId : sampleIds) {
             LogEvent.logDebug(this.getClass().getSimpleName(), "transformPersistObjectsUnderSamples",
                     "transforming sampleId: " + sampleId);
@@ -295,6 +316,15 @@ public class FhirTransformServiceImpl implements FhirTransformService {
             }
 
             if (sample != null) {
+                // Sites demandeurs AVANT les ServiceRequest (qui les référencent) : même
+                // transaction FHIR, donc jamais de référence vers une Organization absente
+                // du HAPI (intégrité référentielle à l'écriture).
+                for (Organization organization : requesterOrganizationsOf(sample, true)) {
+                    org.hl7.fhir.r4.model.Organization fhirOrganization = transformToFhirOrganization(organization);
+                    requesterOrganizations.put(fhirOrganization.getIdElement().getIdPart(), fhirOrganization);
+                    org.hl7.fhir.r4.model.Location fhirLocation = transformToFhirLocation(organization);
+                    requesterLocations.put(fhirLocation.getIdElement().getIdPart(), fhirLocation);
+                }
                 Task task = this.transformToTask(sample);
                 if (tasks.containsKey(task.getIdElement().getIdPart())) {
                     // LogEvent.logWarn(this.getClass().getSimpleName(),
@@ -421,6 +451,12 @@ public class FhirTransformServiceImpl implements FhirTransformService {
         for (Practitioner requester : requesters.values()) {
             this.addToOperations(fhirOperations, tempIdGenerator, requester);
         }
+        for (org.hl7.fhir.r4.model.Organization organization : requesterOrganizations.values()) {
+            this.addToOperations(fhirOperations, tempIdGenerator, organization);
+        }
+        for (org.hl7.fhir.r4.model.Location location : requesterLocations.values()) {
+            this.addToOperations(fhirOperations, tempIdGenerator, location);
+        }
 
         Bundle responseBundle = fhirPersistanceService.createUpdateFhirResourcesInFhirStore(fhirOperations);
         return new AsyncResult<>(responseBundle);
@@ -524,6 +560,7 @@ public class FhirTransformServiceImpl implements FhirTransformService {
         FhirOperations fhirOperations = new FhirOperations();
         org.hl7.fhir.r4.model.Organization fhirOrg = transformToFhirOrganization(organization);
         this.addToOperations(fhirOperations, tempIdGenerator, fhirOrg);
+        this.addToOperations(fhirOperations, tempIdGenerator, transformToFhirLocation(organization));
         Bundle responseBundle = fhirPersistanceService.createUpdateFhirResourcesInFhirStore(fhirOperations);
     }
 
@@ -569,6 +606,14 @@ public class FhirTransformServiceImpl implements FhirTransformService {
             Practitioner requester = transformProviderToPractitioner(updateData.getProvider().getId());
             this.addToOperations(fhirOperations, tempIdGenerator, requester);
             orderEntryObjects.requester = requester;
+        }
+
+        // Sites demandeurs, dans la même transaction que les ServiceRequest qui les
+        // référencent. Transaction en lecture seule : on n'attribue pas d'UUID ici
+        // (il ne serait pas enregistré) ; l'organisation en a reçu un à sa création.
+        for (Organization organization : requesterOrganizationsOf(updateData.getSample(), false)) {
+            this.addToOperations(fhirOperations, tempIdGenerator, transformToFhirOrganization(organization));
+            this.addToOperations(fhirOperations, tempIdGenerator, transformToFhirLocation(organization));
         }
 
         // Specimens and service requests
@@ -697,7 +742,9 @@ public class FhirTransformServiceImpl implements FhirTransformService {
         return contactPoints;
     }
 
-    private Task transformToTask(String sampleId) {
+    @Override
+    @Transactional(readOnly = true)
+    public Task transformToTask(String sampleId) {
         return this.transformToTask(sampleService.get(sampleId));
     }
 
@@ -760,6 +807,12 @@ public class FhirTransformServiceImpl implements FhirTransformService {
             }
         }
         task.setAuthoredOn(sample.getEnteredDate());
+        // Site demandeur : Task.requester accepte une Organization en R4.
+        Organization requesterSite = sampleService.getOrganizationRequester(sample,
+                TableIdService.getInstance().REFERRING_ORG_TYPE_ID);
+        if (requesterSite != null && requesterSite.getFhirUuid() != null) {
+            task.setRequester(this.createReferenceFor(ResourceType.Organization, requesterSite.getFhirUuidAsString()));
+        }
         task.setPriority(mapTaskPriority(sample.getPriority()));
         task.addIdentifier(
                 this.createIdentifier(fhirConfig.getOeFhirSystem() + "/order_uuid", sample.getFhirUuidAsString()));
@@ -1026,8 +1079,69 @@ public class FhirTransformServiceImpl implements FhirTransformService {
         return serviceRequestsForSampleItem;
     }
 
-    private ServiceRequest transformToServiceRequest(String anlaysisId) {
+    @Override
+    @Transactional(readOnly = true)
+    public ServiceRequest transformToServiceRequest(String anlaysisId) {
         return transformToServiceRequest(analysisService.get(anlaysisId));
+    }
+
+    /**
+     * Organisations demandeuses d'un bon (site demandeur et service demandeur),
+     * telles que {@link #transformToServiceRequest(Analysis)} les référence dans
+     * {@code locationReference}.
+     *
+     * @param assignMissingUuid attribuer un fhir_uuid à une organisation qui n'en a
+     *                          pas (uniquement dans une transaction en écriture,
+     *                          sinon l'UUID ne serait pas enregistré et la
+     *                          référence pointerait sur un id éphémère) ; sinon,
+     *                          une organisation sans UUID est ignorée, comme dans
+     *                          le ServiceRequest.
+     */
+    private List<Organization> requesterOrganizationsOf(Sample sample, boolean assignMissingUuid) {
+        List<Organization> organizations = new ArrayList<>();
+        if (sample == null || sample.getId() == null) {
+            return organizations;
+        }
+        for (String typeId : Arrays.asList(TableIdService.getInstance().REFERRING_ORG_TYPE_ID,
+                TableIdService.getInstance().REFERRING_ORG_DEPARTMENT_TYPE_ID)) {
+            Organization organization = sampleService.getOrganizationRequester(sample, typeId);
+            if (organization == null) {
+                continue;
+            }
+            if (organization.getFhirUuid() == null && assignMissingUuid) {
+                organization.setFhirUuid(UUID.randomUUID());
+            }
+            if (organization.getFhirUuid() != null) {
+                organizations.add(organization);
+            }
+        }
+        return organizations;
+    }
+
+    /**
+     * Date de la demande, pour {@code ServiceRequest.authoredOn} : la date de
+     * demande saisie sur le bon (observation {@code requestDate}), sinon la date de
+     * saisie de l'échantillon. Jamais l'heure de la transformation : une
+     * re-transformation redonne la même date. Précision au jour, les deux sources
+     * n'ayant pas d'heure.
+     */
+    DateTimeType requestDateOf(Sample sample) {
+        String requestDate = observationHistoryService.getValueForSample(ObservationType.REQUEST_DATE, sample.getId());
+        if (!GenericValidator.isBlankOrNull(requestDate)) {
+            try {
+                return new DateTimeType(parseDisplayDate(requestDate.trim()), TemporalPrecisionEnum.DAY);
+            } catch (RuntimeException e) {
+                LogEvent.logWarn(this.getClass().getSimpleName(), "requestDateOf", "date de demande illisible ("
+                        + requestDate + ") pour l'échantillon " + sample.getId() + " : date de saisie utilisée");
+            }
+        }
+        return sample.getEnteredDate() == null ? null
+                : new DateTimeType(sample.getEnteredDate(), TemporalPrecisionEnum.DAY);
+    }
+
+    /** Date saisie au format d'affichage de l'instance (dépend de la locale). */
+    Date parseDisplayDate(String displayDate) {
+        return DateUtil.convertStringDateToSqlDate(displayDate);
     }
 
     private ServiceRequest transformToServiceRequest(Analysis analysis) {
@@ -1063,21 +1177,22 @@ public class FhirTransformServiceImpl implements FhirTransformService {
             LogEvent.logWarn(this.getClass().getSimpleName(), "transformToServiceRequest",
                     "analyse sans sampleItem/sample (id=" + analysis.getId() + ") : ServiceRequest minimal produit.");
             serviceRequest.setStatus(ServiceRequestStatus.UNKNOWN);
-            serviceRequest.setAuthoredOn(new Date());
             return serviceRequest;
         }
         serviceRequest.setRequisition(
                 this.createIdentifier(fhirConfig.getOeFhirSystem() + "/samp_labNo", sample.getAccessionNumber()));
-        // Référence typée Organization (et non Location) : ce sont des Organizations
-        // OE, produites comme telles ; typer 'Location/<uuid>' donnait une référence
-        // non résolue (aucune ressource Location de cet UUID n'existe).
+        // Site demandeur. En R4, ServiceRequest.locationReference n'accepte que
+        // Reference(Location) : le HAPI rejette une Organization (HAPI-0931, 422) et
+        // avec elle tout le lot de l'échantillon. On référence donc la Location du
+        // site, dont managingOrganization pointe sur l'Organization ; les deux sont
+        // écrites dans la même transaction (voir requesterOrganizationsOf).
         if (organization != null && organization.getFhirUuid() != null) {
-            serviceRequest.addLocationReference(
-                    this.createReferenceFor(ResourceType.Organization, organization.getFhirUuidAsString()));
+            serviceRequest
+                    .addLocationReference(this.createReferenceFor(ResourceType.Location, locationIdFor(organization)));
         }
         if (organizationDepartment != null && organizationDepartment.getFhirUuid() != null) {
             serviceRequest.addLocationReference(
-                    this.createReferenceFor(ResourceType.Organization, organizationDepartment.getFhirUuidAsString()));
+                    this.createReferenceFor(ResourceType.Location, locationIdFor(organizationDepartment)));
         }
 
         List<ElectronicOrder> eOrders = electronicOrderService.getElectronicOrdersByExternalId(sample.getReferringId());
@@ -1117,7 +1232,10 @@ public class FhirTransformServiceImpl implements FhirTransformService {
             serviceRequest.addCategory(transformSampleProgramToCodeableConcept(program));
         }
         serviceRequest.setPriority(mapServiceRequestPriority(sample.getPriority()));
-        serviceRequest.setAuthoredOn(new Date());
+        DateTimeType authoredOn = requestDateOf(sample);
+        if (authoredOn != null) {
+            serviceRequest.setAuthoredOnElement(authoredOn);
+        }
         for (Note note : noteService.getNotes(analysis)) {
             serviceRequest.addNote(transformNoteToAnnotation(note));
         }
@@ -1200,7 +1318,9 @@ public class FhirTransformServiceImpl implements FhirTransformService {
         return specimen;
     }
 
-    private Specimen transformToSpecimen(String sampleItemId) {
+    @Override
+    @Transactional(readOnly = true)
+    public Specimen transformToSpecimen(String sampleItemId) {
         return transformToSpecimen(sampleItemService.get(sampleItemId));
     }
 
@@ -1232,7 +1352,13 @@ public class FhirTransformServiceImpl implements FhirTransformService {
             specimen.addCondition(rejectCondition);
         }
         specimen.setType(transformTypeOfSampleToCodeableConcept(sampleItem.getTypeOfSample()));
-        specimen.setReceivedTime(new Date());
+        // Heure de réception réelle (et non celle de la transformation) : absente si
+        // l'échantillon n'a pas de réception enregistrée.
+        Timestamp receivedTimestamp = sampleItem.getSample() != null ? sampleItem.getSample().getReceivedTimestamp()
+                : null;
+        if (receivedTimestamp != null) {
+            specimen.setReceivedTime(receivedTimestamp);
+        }
         specimen.setCollection(transformToCollection(sampleItem.getCollectionDate(), sampleItem.getCollector()));
 
         for (Analysis analysis : analysisService.getAnalysesBySampleItem(sampleItem)) {
@@ -1543,21 +1669,19 @@ public class FhirTransformServiceImpl implements FhirTransformService {
     private void addToOperations(FhirOperations fhirOperations, TempIdGenerator tempIdGenerator, Resource resource) {
         LogEvent.logTrace(this.getClass().getSimpleName(), "addToOperations", "addToOperations called");
 
+        // Clé = "Type/id" et non l'id seul : des ressources de types différents
+        // partagent un id (le DiagnosticReport d'un échantillon a l'UUID du
+        // sample_item, comme son Specimen). Avec l'id seul, le DR remplaçait le
+        // Specimen dans le lot, qui n'était alors plus jamais mis à jour.
         if (this.setTempIdIfMissing(resource, tempIdGenerator)) {
-            if (fhirOperations.createResources.containsKey(resource.getIdElement().getIdPart())) {
-                // LogEvent.logWarn("", "",
-                // "collision on id: " + resource.getResourceType() + "/" +
-                // resource.getIdElement().getIdPart());
-            }
-            fhirOperations.createResources.put(resource.getIdElement().getIdPart(), resource);
+            fhirOperations.createResources.put(operationKey(resource), resource);
         } else {
-            if (fhirOperations.updateResources.containsKey(resource.getIdElement().getIdPart())) {
-                // LogEvent.logWarn("", "",
-                // "collision on id: " + resource.getResourceType() + "/" +
-                // resource.getIdElement().getIdPart());
-            }
-            fhirOperations.updateResources.put(resource.getIdElement().getIdPart(), resource);
+            fhirOperations.updateResources.put(operationKey(resource), resource);
         }
+    }
+
+    private static String operationKey(Resource resource) {
+        return resource.fhirType() + "/" + resource.getIdElement().getIdPart();
     }
 
     // Code LOINC générique de compte-rendu de laboratoire, posé sur le
@@ -1633,6 +1757,18 @@ public class FhirTransformServiceImpl implements FhirTransformService {
 
         diagnosticReport.setCode(new CodeableConcept().addCoding(new Coding().setSystem("http://loinc.org")
                 .setCode(LOINC_LAB_REPORT_CODE).setDisplay(LOINC_LAB_REPORT_DISPLAY)));
+
+        // effective = prélèvement de l'échantillon ; issued = dernière validation
+        // de ses analyses. Tirées de la base : stables d'une transformation à l'autre.
+        Date collected = sampleItem.getCollectionDate() != null ? sampleItem.getCollectionDate()
+                : sample != null ? sample.getCollectionDate() : null;
+        if (collected != null) {
+            diagnosticReport.setEffective(new DateTimeType(collected));
+        }
+        analyses.stream()
+                .filter(a -> a.getReleasedDate() != null
+                        && statusService.matches(a.getStatusId(), AnalysisStatus.Finalized))
+                .map(Analysis::getReleasedDate).max(Date::compareTo).ifPresent(diagnosticReport::setIssued);
 
         return diagnosticReport;
     }
@@ -2281,14 +2417,53 @@ public class FhirTransformServiceImpl implements FhirTransformService {
                 "transformToFhirOrganization called");
 
         org.hl7.fhir.r4.model.Organization fhirOrganization = new org.hl7.fhir.r4.model.Organization();
-        fhirOrganization
-                .setId(organization.getFhirUuid() == null ? organization.getId() : organization.getFhirUuidAsString());
+        // Id FHIR = fhir_uuid, jamais l'id de base (qui changerait d'une instance à
+        // l'autre et collisionnerait). Une organisation sans UUID (antérieure au
+        // rattrapage) en reçoit un.
+        if (organization.getFhirUuid() == null) {
+            organization.setFhirUuid(UUID.randomUUID());
+        }
+        fhirOrganization.setId(organization.getFhirUuidAsString());
         fhirOrganization.setName(organization.getOrganizationName());
-        fhirOrganization.setActive(organization.getIsActive() == IActionConstants.YES ? true : false);
+        // equals et non == : is_active vient de la base, ce n'est pas la constante
+        // internée (== donnait active=false pour une organisation active).
+        fhirOrganization.setActive(IActionConstants.YES.equals(organization.getIsActive()));
         this.setFhirOrganizationIdentifiers(fhirOrganization, organization);
         this.setFhirAddressInfo(fhirOrganization, organization);
         this.setFhirOrganizationTypes(fhirOrganization, organization);
         return fhirOrganization;
+    }
+
+    /**
+     * Id FHIR de la Location d'un site : dérivé, de façon déterministe, de l'UUID
+     * de l'organisation (stable d'une transformation à l'autre, distinct de l'id de
+     * l'Organization).
+     */
+    String locationIdFor(Organization organization) {
+        return UUID.nameUUIDFromBytes(
+                ("Location:" + organization.getFhirUuidAsString()).getBytes(java.nio.charset.StandardCharsets.UTF_8))
+                .toString();
+    }
+
+    /**
+     * Location d'un site (référencée par ServiceRequest.locationReference), gérée
+     * par l'Organization du site.
+     */
+    @Override
+    public org.hl7.fhir.r4.model.Location transformToFhirLocation(Organization organization) {
+        if (organization.getFhirUuid() == null) {
+            organization.setFhirUuid(UUID.randomUUID());
+        }
+        org.hl7.fhir.r4.model.Location location = new org.hl7.fhir.r4.model.Location();
+        location.setId(locationIdFor(organization));
+        location.setName(organization.getOrganizationName());
+        location.setMode(org.hl7.fhir.r4.model.Location.LocationMode.INSTANCE);
+        location.setStatus(IActionConstants.YES.equals(organization.getIsActive())
+                ? org.hl7.fhir.r4.model.Location.LocationStatus.ACTIVE
+                : org.hl7.fhir.r4.model.Location.LocationStatus.INACTIVE);
+        location.setManagingOrganization(
+                this.createReferenceFor(ResourceType.Organization, organization.getFhirUuidAsString()));
+        return location;
     }
 
     @Override
@@ -2339,7 +2514,10 @@ public class FhirTransformServiceImpl implements FhirTransformService {
             fhirOrganization.addIdentifier(new Identifier().setSystem(fhirConfig.getOeFhirSystem() + "/org_cliaNum")
                     .setValue(organization.getCliaNum()));
         }
-        if (!GenericValidator.isBlankOrNull(organization.getShortName())) {
+        // short_name vaut par défaut la chaîne littérale "" (deux guillemets) en base :
+        // ce n'est pas un identifiant.
+        if (!GenericValidator.isBlankOrNull(organization.getShortName())
+                && !"\"\"".equals(organization.getShortName().trim())) {
             fhirOrganization.addIdentifier(new Identifier().setSystem(fhirConfig.getOeFhirSystem() + "/org_shortName")
                     .setValue(organization.getShortName()));
         }

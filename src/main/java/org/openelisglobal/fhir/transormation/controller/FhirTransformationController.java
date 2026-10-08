@@ -11,6 +11,8 @@ import org.openelisglobal.common.log.LogEvent;
 import org.openelisglobal.dataexchange.fhir.exception.FhirLocalPersistingException;
 import org.openelisglobal.dataexchange.fhir.exception.FhirPersistanceException;
 import org.openelisglobal.dataexchange.fhir.service.FhirTransformService;
+import org.openelisglobal.organization.service.OrganizationService;
+import org.openelisglobal.organization.valueholder.Organization;
 import org.openelisglobal.patient.valueholder.Patient;
 import org.openelisglobal.sample.service.SampleService;
 import org.openelisglobal.sample.valueholder.Sample;
@@ -26,6 +28,8 @@ public class FhirTransformationController extends BaseController {
     private SampleService sampleService;
     @Autowired
     private SampleHumanService sampleHumanService;
+    @Autowired
+    private OrganizationService organizationService;
     @Autowired
     private FhirTransformService fhirTransformService;
 
@@ -52,10 +56,77 @@ public class FhirTransformationController extends BaseController {
                     "processs already running");
             return info;
         }
-        info.checkAll = checkAll;
-        info.batchSize = batchSize;
-        info.threads = threads;
-        info.waitForResults = waitForResults;
+        try {
+            info.checkAll = checkAll;
+            info.batchSize = batchSize;
+            info.threads = threads;
+            info.waitForResults = waitForResults;
+            transformPersistFhirPatientsBatches();
+        } finally {
+            // Sans ce finally, le verrou n'était JAMAIS libéré après /PatientToFhir :
+            // tout appel suivant (OEToFhir compris) rendait l'info figée sans rien faire
+            // jusqu'au redémarrage de la webapp.
+            endProcess();
+        }
+        return info;
+    }
+
+    /**
+     * Rattrapage des organisations : écrit toutes les organisations dans le HAPI
+     * (et attribue un fhir_uuid à celles qui n'en ont pas). À lancer avant le
+     * rattrapage des échantillons, dont les ServiceRequest les référencent ;
+     * {@code /OEToFhir?checkAll=true} l'enchaîne de lui-même.
+     */
+    @GetMapping("/OrganizationToFhir")
+    public TransformationInfo transformPersistFhirOrganizations(@RequestParam(defaultValue = "100") int batchSize,
+            @RequestParam(defaultValue = "true") boolean waitForResults) {
+        if (inProcess()) {
+            LogEvent.logWarn(this.getClass().getSimpleName(), "transformPersistFhirOrganizations",
+                    "processs already running");
+            return info;
+        }
+        try {
+            info.checkAll = true;
+            info.batchSize = batchSize;
+            info.threads = 1;
+            info.waitForResults = waitForResults;
+            transformPersistOrganizationBatches();
+            info.phase = "Finished";
+        } finally {
+            endProcess();
+        }
+        return info;
+    }
+
+    private void transformPersistOrganizationBatches() {
+        info.objectType = "Organization";
+        info.phase = "Fetching";
+        List<Organization> organizations = organizationService.getAll();
+        LogEvent.logInfo(this.getClass().getSimpleName(), "transformPersistOrganizationBatches",
+                "organizations to convert: " + organizations.size());
+        List<String> organizationIds = new ArrayList<>();
+        info.phase = "Batch Transforming";
+        for (int i = 0; i < organizations.size(); ++i) {
+            organizationIds.add(organizations.get(i).getId());
+            if (organizationIds.size() >= info.batchSize || i + 1 == organizations.size()) {
+                try {
+                    Future<Bundle> promise = fhirTransformService.transformPersistOrganizations(organizationIds);
+                    ++info.batches;
+                    if (info.waitForResults) {
+                        promise.get();
+                    }
+                } catch (Exception e) {
+                    ++info.batchFailure;
+                    LogEvent.logError(e);
+                    LogEvent.logError(this.getClass().getSimpleName(), "transformPersistOrganizationBatches",
+                            "error with organization batch ending at " + i);
+                }
+                organizationIds = new ArrayList<>();
+            }
+        }
+    }
+
+    private void transformPersistFhirPatientsBatches() {
         info.objectType = "Patient";
         info.phase = "Fetching";
 
@@ -103,8 +174,6 @@ public class FhirTransformationController extends BaseController {
         }
         info.phase = "Finished";
         LogEvent.logDebug(this.getClass().getSimpleName(), "transformPersistFhirPatients", "finished all batches");
-
-        return info;
     }
 
     @GetMapping("/OEToFhir")
@@ -131,6 +200,11 @@ public class FhirTransformationController extends BaseController {
 
     private void transformPersistFhirObjects() {
         try {
+            // Rattrapage complet : les organisations (sites demandeurs) d'abord, pour
+            // que les ServiceRequest réécrits ensuite les trouvent dans le HAPI.
+            if (info.checkAll) {
+                transformPersistOrganizationBatches();
+            }
             info.objectType = "Patient";
             info.phase = "Fetching";
             List<Patient> patients;

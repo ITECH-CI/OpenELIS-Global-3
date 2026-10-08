@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+    <!--
+        Toute organisation doit porter un fhir_uuid : c'est son id FHIR, et la
+        condition pour que le ServiceRequest d'un échantillon référence son site
+        demandeur (locationReference). Seul l'écran d'administration en attribuait ;
+        les organisations créées à la saisie d'un échantillon n'en avaient pas.
+        Désormais attribué à la création (OrganizationServiceImpl) ; ce changeset
+        rattrape l'existant. UUID v4 construit à partir de md5 (sans extension
+        pgcrypto / uuid-ossp). Écriture dans le HAPI : /OrganizationToFhir, ou
+        /OEToFhir?checkAll=true qui l'enchaîne avant les échantillons.
+    -->
+    <changeSet author="pkomena" id="assign-organization-fhir-uuid-1">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="1">SELECT CASE WHEN count(*) &gt; 0 THEN 1 ELSE 0 END
+                FROM clinlims.organization WHERE fhir_uuid IS NULL</sqlCheck>
+        </preConditions>
+        <sql>
+            UPDATE clinlims.organization
+               SET fhir_uuid = (substr(h, 1, 8) || '-' || substr(h, 9, 4) || '-4' || substr(h, 14, 3) || '-'
+                                || substr('89ab', (get_byte(decode(substr(h, 17, 2), 'hex'), 0) % 4) + 1, 1)
+                                || substr(h, 18, 3) || '-' || substr(h, 21, 12))::uuid,
+                   lastupdated = now()
+              FROM (SELECT id AS oid, md5(random()::text || clock_timestamp()::text || id::text) AS h
+                      FROM clinlims.organization WHERE fhir_uuid IS NULL) g
+             WHERE id = g.oid;
+        </sql>
+    </changeSet>
+</databaseChangeLog>

@@ -1,6 +1,7 @@
 package org.openelisglobal.organization.service;
 
 import java.util.List;
+import java.util.UUID;
 import org.openelisglobal.common.action.IActionConstants;
 import org.openelisglobal.common.exception.LIMSDuplicateRecordException;
 import org.openelisglobal.common.service.AuditableBaseObjectServiceImpl;
@@ -103,6 +104,7 @@ public class OrganizationServiceImpl extends AuditableBaseObjectServiceImpl<Orga
                 && getBaseObjectDAO().duplicateOrganizationExists(organization)) {
             throw new LIMSDuplicateRecordException("Duplicate record exists for " + organization.getOrganizationName());
         }
+        ensureFhirUuid(organization);
         return super.insert(organization);
     }
 
@@ -112,6 +114,7 @@ public class OrganizationServiceImpl extends AuditableBaseObjectServiceImpl<Orga
                 && getBaseObjectDAO().duplicateOrganizationExists(organization)) {
             throw new LIMSDuplicateRecordException("Duplicate record exists for " + organization.getOrganizationName());
         }
+        ensureFhirUuid(organization);
         return super.update(organization);
     }
 
@@ -121,7 +124,31 @@ public class OrganizationServiceImpl extends AuditableBaseObjectServiceImpl<Orga
                 && getBaseObjectDAO().duplicateOrganizationExists(organization)) {
             throw new LIMSDuplicateRecordException("Duplicate record exists for " + organization.getOrganizationName());
         }
+        ensureFhirUuid(organization);
         return super.save(organization);
+    }
+
+    /**
+     * Toute organisation porte un fhir_uuid : c'est son id FHIR, et la condition
+     * pour qu'un ServiceRequest référence son site demandeur. Attribué ici, au
+     * point de passage commun à tous les chemins de création (saisie d'échantillon,
+     * commande, modification, non-conformité, import de demandes, écran
+     * d'administration). Sur un objet détaché qui n'en porte pas, on reprend celui
+     * déjà en base plutôt que d'en générer un nouveau (l'id FHIR ne doit jamais
+     * changer).
+     */
+    private void ensureFhirUuid(Organization organization) {
+        if (organization.getFhirUuid() != null) {
+            return;
+        }
+        if (organization.getId() != null) {
+            UUID existing = getBaseObjectDAO().get(organization.getId()).map(Organization::getFhirUuid).orElse(null);
+            if (existing != null) {
+                organization.setFhirUuid(existing);
+                return;
+            }
+        }
+        organization.setFhirUuid(UUID.randomUUID());
     }
 
     @Override

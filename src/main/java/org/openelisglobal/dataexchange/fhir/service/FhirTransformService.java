@@ -68,6 +68,31 @@ public interface FhirTransformService {
 
     Future<Bundle> transformPersistPatients(List<String> patientIds) throws FhirLocalPersistingException;
 
+    /**
+     * Écrit (création ou mise à jour) les organisations {@code organizationIds}
+     * dans le HAPI, en une transaction ; attribue un fhir_uuid à celles qui n'en
+     * ont pas. Rattrapage : à passer AVANT les échantillons qui les référencent.
+     */
+    Future<Bundle> transformPersistOrganizations(List<String> organizationIds) throws FhirLocalPersistingException;
+
+    /** ServiceRequest FHIR d'une analyse, tel qu'il est écrit dans le HAPI. */
+    org.hl7.fhir.r4.model.ServiceRequest transformToServiceRequest(String analysisId);
+
+    /**
+     * Specimen FHIR d'un échantillon (sample_item), tel qu'il est écrit dans le
+     * HAPI.
+     */
+    org.hl7.fhir.r4.model.Specimen transformToSpecimen(String sampleItemId);
+
+    /** Task FHIR d'un bon (sample), telle qu'elle est écrite dans le HAPI. */
+    org.hl7.fhir.r4.model.Task transformToTask(String sampleId);
+
+    /**
+     * Location d'un site demandeur (cible de ServiceRequest.locationReference),
+     * gérée par l'Organization du site.
+     */
+    org.hl7.fhir.r4.model.Location transformToFhirLocation(Organization organization);
+
     Practitioner transformNameToPractitioner(String practitionerName);
 
     Reference createReferenceFor(ResourceType resourceType, String id);

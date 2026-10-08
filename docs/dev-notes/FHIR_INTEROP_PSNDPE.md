@@ -93,7 +93,8 @@ apparaît sur les Observation numériques re-transformées après ce changement.
   (ajustable via la property, sans recompilation).
 - **Backfill** (à faire après déploiement) : voir la procédure détaillée
   ci-dessous.
-- **Organization** : non peuplée aujourd'hui — voir ci-dessous.
+- **Site demandeur** : Organization + Location, voir ci-dessous (lot BDM pilote,
+  octobre 2026).
 
 ## Backfill (re-transformation de l'existant) — procédure vérifiée
 
@@ -124,25 +125,78 @@ tant qu'une précédente est marquée « en cours » (garde `inProcess()` /
 verrou, tout nouvel appel `OEToFhir`/`PatientToFhir` **renvoie immédiatement**
 (<0,1 s) l'`info` figé (ex. `phase=Finished`, `objectType=Patient`) **sans rien
 faire** — symptôme : aucun log de transformation, `batchSize` = valeur par
-défaut et non celle demandée. **Contournement : redémarrer la webapp**
-(réinitialise `info.running`), puis relancer le backfill. (Correctif possible :
-réinitialiser le verrou sur timeout / au boot — non fait ici.)
+défaut et non celle demandée. **Cause trouvée (corrigée en octobre 2026)** :
+`/PatientToFhir` ne libérait jamais le verrou, même après une exécution réussie.
+Le verrou est désormais libéré en fin d'exécution (y compris sur erreur) par
+`/PatientToFhir`, `/OEToFhir` et `/OrganizationToFhir`. Sur une version
+antérieure, le contournement reste de redémarrer la webapp.
 
-## Organization (non peuplée)
+### Rattrapage des organisations (sites demandeurs)
 
-Aucune ressource `Organization` n'est aujourd'hui exposée
-(`GET /fhir/Organization?_summary=count` → 0), alors que
-ServiceRequest/DiagnosticReport peuvent référencer une organisation référente.
-La transformation métier→FHIR d'OpenELIS ne produit une `Organization` que dans
-certains flux (référence, `transformToFhirOrganization`). Si l'IG national exige
-une `Organization` résoluble (ex. laboratoire émetteur, établissement
-demandeur), il faudra :
+À passer **avant** celui des échantillons, dont les ServiceRequest et Task
+référencent les sites :
 
-- soit peupler une organisation « établissement » par défaut et la référencer
-  sur les ressources émises,
-- soit renseigner les organisations demandeuses/référentes dans OpenELIS pour
-  qu'elles soient transformées. À cadrer avec l'équipe interop selon les
-  cardinalités de l'IG.
+1. Au démarrage, le changeset `assign-organization-fhir-uuid-1` attribue un
+   `fhir_uuid` aux organisations qui n'en ont pas (automatique).
+2. `GET /OrganizationToFhir?batchSize=200` écrit toutes les organisations et
+   leur Location dans le HAPI. Mesuré en dev : 1 694 organisations, 9 lots, 42
+   s.
+3. `GET /OEToFhir?checkAll=true&waitForResults=true` réécrit ensuite patients et
+   échantillons. Ce même appel enchaîne de lui-même l'étape 2 en premier : il
+   suffit à lui seul.
+
+Contrôle : `GET /fhir/Organization?_summary=count` et
+`GET /fhir/Location?_summary=count` > 0.
+
+## Site demandeur (Organization + Location)
+
+Une instance OpenELIS est un laboratoire ; le **site demandeur** d'un
+échantillon (centre de santé, hôpital) est une organisation OE de type «
+referring clinic ». Il est exposé ainsi :
+
+| Ressource                       | Champ                  | Valeur                                                    |
+| ------------------------------- | ---------------------- | --------------------------------------------------------- |
+| `Task` (une par bon)            | `requester`            | `Organization/<fhir_uuid du site>`                        |
+| `ServiceRequest` (une par test) | `locationReference`    | `Location/<id dérivé du site>`                            |
+| `Location`                      | `managingOrganization` | `Organization/<fhir_uuid du site>`                        |
+| `Organization`                  | —                      | nom, `active`, identifiants `org_uuid` / `org_code`, type |
+
+- **Pourquoi une Location** : en R4, `ServiceRequest.locationReference`
+  n'accepte que `Reference(Location)`. Le HAPI 6.6 rejette une Organization sur
+  ce champ (HAPI-0931, 422), et avec elle **tout le lot FHIR de l'échantillon**.
+  C'était le cas depuis la 3.3.1.0 pour les sites créés depuis l'écran
+  d'administration (les seuls à avoir un UUID).
+- **Id de la Location** : UUID déterministe dérivé de celui de l'organisation
+  (`UUID.nameUUIDFromBytes("Location:" + fhir_uuid)`), stable d'une
+  transformation à l'autre.
+- **Écriture** : l'Organization et sa Location partent dans la **même
+  transaction** que les ServiceRequest et la Task qui les référencent (saisie,
+  validation, rattrapage). Une organisation est aussi réécrite depuis l'écran
+  d'administration des organisations. Un échec d'écriture FHIR ne fait jamais
+  échouer la saisie (transformation asynchrone, tracée dans `#FhirSyncMonitor`).
+- **UUID** : toute organisation reçoit un `fhir_uuid` à sa création, quel que
+  soit le chemin (`OrganizationServiceImpl`), et le garde.
+- **Lecture côté connecteur** :
+  - `GET /fhir/Task?...&_include=Task:requester` → Task + Organization du site ;
+  - depuis un ServiceRequest :
+    `GET /fhir/Location/<id>?_include=Location:organization` (le ServiceRequest
+    n'a pas de paramètre de recherche `location` en R4, donc pas de `_include`
+    direct).
+- **Hors périmètre** : l'identité du laboratoire lui-même (performer,
+  Organization « labo », code DHIS2) est déclarée par la configuration du
+  connecteur de la BDM, pas par OpenELIS.
+
+## Dates
+
+- `ServiceRequest.authoredOn` = date de la demande saisie sur le bon
+  (observation `requestDate`), sinon date de saisie de l'échantillon ; précision
+  au jour.
+- `Specimen.receivedTime` = date et heure de réception de l'échantillon ; absent
+  si non renseigné.
+- `DiagnosticReport.effective[x]` = prélèvement de l'échantillon ;
+  `DiagnosticReport.issued` = dernière validation de ses analyses.
+- Plus aucune de ces dates ne vaut l'heure de la transformation : un rattrapage
+  ne les décale plus.
 
 ## Provisionner le compte de service LECTURE (connecteur)
 
@@ -152,8 +206,9 @@ Via l'écran admin `#FhirGateway` (ou l'API) :
    `POST /rest/fhir-gateway/clients?name=Connecteur-PSNDPE`.
 2. Restreindre au périmètre lecture : politique du client → ressources
    autorisées
-   `Patient,ServiceRequest,Observation,DiagnosticReport,Practitioner,Organization,Specimen`
-   (+ quota si besoin).
+   `Patient,Practitioner,Specimen,ServiceRequest,Task,DiagnosticReport,Observation,Organization,Location`
+   (`Task` : lue par le connecteur de la BDM ; `Location` : cible de
+   `ServiceRequest.locationReference`) (+ quota si besoin).
 3. Émettre un jeton : `POST /rest/fhir-gateway/clients/{id}/tokens` → jeton en
    clair une seule fois.
 4. Fournir au connecteur : URL de base `https://<host>/fhir/`, header
