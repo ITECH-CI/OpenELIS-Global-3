@@ -1,9 +1,9 @@
 # OpenELIS CIV 3.3.1.2 — notes de version
 
-Publiée le 01/10/2026 (tag `v3.3.1.2`, GitHub Release avec l'installeur
-offline). Cette version corrige les constats remontés par les utilisateurs après
-les exercices de restauration et de saisie de routine (LNSP, CHU Angré, AIBEF),
-et fiabilise la restauration d'une base.
+Publiée le 01/10/2026, republiée le 08/10/2026 (tag `v3.3.1.2`, GitHub Release
+avec l'installeur offline). Cette version corrige les constats remontés par les
+utilisateurs après les exercices de restauration et de saisie de routine (LNSP,
+CHU Angré, AIBEF), et fiabilise la restauration d'une base.
 
 ## À faire après la mise à jour
 
@@ -15,6 +15,11 @@ et fiabilise la restauration d'une base.
 3. **Tests à plage décimale** (ex. Glycémie 0.7-1.1 affichée « 1-1 ») : ajuster
    les chiffres significatifs dans
    `Admin → Gestion des tests → Modifier les tests`.
+4. **Sites qui exposent leurs données FHIR** (BDM, mini-HIE) : lancer le
+   rattrapage
+   `GET /api/OpenELIS-Global/OEToFhir?checkAll=true&waitForResults=true`
+   (session admin), puis créer le client de passerelle (`#FhirGateway`). Voir
+   `EXPLOITATION_PASSERELLE_FHIR.md`.
 
 ## Corrections importantes
 
@@ -45,6 +50,16 @@ et fiabilise la restauration d'une base.
   - message d'erreur générique au lieu du motif ;
   - double pagination et totaux faux ;
   - accents cassés (« RÃ©sultats »).
+- **Échanges FHIR** :
+  - le lot FHIR d'un échantillon était rejeté par le serveur FHIR quand son site
+    demandeur avait été créé depuis l'écran d'administration (référence de type
+    non valide) ;
+  - le Specimen n'était plus mis à jour dès qu'un compte rendu existait (date de
+    réception, statut) ;
+  - dates de demande et de réception remplacées par l'heure de la transformation
+    ;
+  - organisation exposée inactive alors qu'elle est active ;
+  - rattrapage bloqué après un `/PatientToFhir` (verrou jamais libéré).
 - **Modifier les tests** : limites, tranche d'âge, type de résultat et LOINC
   repris tels qu'enregistrés (avant : valeurs arrondies réécrites à la
   sauvegarde, « Nouveau-né » par défaut, type non sélectionné).
@@ -62,6 +77,13 @@ et fiabilise la restauration d'une base.
 - **Saisie des résultats numériques** : la virgule est acceptée et convertie en
   point ; l'alerte « hors plage valide » s'affiche en quittant le champ et non
   plus pendant la frappe.
+- **Passerelle FHIR** dans l'installeur : `https://<hôte>/fhir/` en lecture pour
+  les tiers autorisés (jeton par client, ressources autorisées, journal
+  d'accès), liens de pagination sur l'hôte public.
+- **Site demandeur exposé en FHIR** : `Task.requester` et
+  `ServiceRequest.locationReference` (Location gérée par l'Organization du site)
+  ; toute organisation reçoit un identifiant FHIR à sa création ; rattrapage
+  `/OrganizationToFhir`.
 - **Script de restauration** `restore_OpenELIS.sh`, installé dans
   `/var/lib/openelis-global/` : dump de sécurité, restauration, remise à zéro et
   reconstruction du FHIR, vérifications (voir `INSTALL_CIV.md` §4).
@@ -72,3 +94,5 @@ et fiabilise la restauration d'une base.
   triggers existants).
 - `allow-digits-in-username-charset-1` : ajoute `0-9` aux caractères autorisés
   dans les identifiants (sans toucher une valeur déjà personnalisée).
+- `assign-organization-fhir-uuid-1` : attribue un identifiant FHIR aux
+  organisations qui n'en ont pas.
