@@ -225,6 +225,76 @@ Les migrations Liquibase s'appliquent au redémarrage du webapp ; la base est
 préservée. Pour revenir en arrière, redéployer avec l'`OE_TAG` précédent (les
 images versionnées restent disponibles sur ghcr).
 
+### 3.3 Migrer une instance déployée hors installeur
+
+Cas d'un serveur monté à la main avec un `docker-compose.yml` (par exemple le
+dossier `OpenELIS-Global_3.2.0.2_docker_installer`, images éventuellement
+renommées `itechuw/*`). `setup_OpenELIS.py -m update` ne convient pas : il
+suppose les secrets et la configuration de l'installeur. On fait une
+**installation neuve puis une restauration** de la base. Procédure validée le
+08/10/2026 sur la recette `openelisv3.itech-civ.org` (coupure d'environ 30 min ;
+un autre service du serveur, SIGDEP3, est resté en marche).
+
+**Relevé préalable** (sans coupure) :
+
+- clé de chiffrement de l'ancien déploiement : `encryption.general.password`
+  dans le `common.properties` monté en secret (souvent
+  `./volumes/properties/common.properties`). **À reprendre** : sinon les mots de
+  passe chiffrés de la base restaurée deviennent illisibles ;
+- certificat public éventuel, et sa chaîne complète (§7) ;
+- sous-réseau de l'ancien réseau docker : l'installeur utilise `172.20.1.0/24`.
+  S'il est déjà pris par l'ancien compose, ce dernier doit être arrêté (`down`)
+  avant l'installation ;
+- ports occupés par les autres services du serveur (l'installeur publie 80 et
+  443 uniquement) ;
+- compteurs de référence (`sample`, `patient`, `analysis`, `result`).
+
+**Étapes** :
+
+```bash
+# 1. gel et sauvegarde (ancien dossier)
+sudo docker stop openelisglobal-webapp
+sudo docker exec openelisglobal-database pg_dump -U clinlims -d clinlims -Fc > ~/migration/clinlims.dump
+sudo tar czf ~/migration/ancien_deploiement.tgz docker-compose.yml volumes/properties volumes/tomcat volumes/nginx
+
+# 2. arrêt de l'ancienne pile (les données restent sur disque : retour arrière possible)
+sudo docker compose down
+
+# 3. AVANT install.sh : clé de chiffrement et certificat
+sudo mkdir -p /var/lib/openelis-global/config /etc/openelis-global
+sudo grep -m1 '^encryption.general.password=' volumes/properties/common.properties | cut -d= -f2- \
+  | tr -d '\r\n' | sudo tee /var/lib/openelis-global/config/ENCRYPTION_KEY >/dev/null
+sudo chmod 600 /var/lib/openelis-global/config/ENCRYPTION_KEY
+sudo cp fullchain.pem /etc/openelis-global/nginx.cert.pem    # chaîne complète, cf. §7
+sudo cp privkey.pem   /etc/openelis-global/nginx.key.pem
+
+# 4. installation (mode en ligne si nom de domaine public), puis restauration
+cd ~/OpenELIS-Global_<version>_Installer && sudo ./install.sh
+sudo docker restart openelisglobal-database          # demandé en fin d'installation
+sudo /var/lib/openelis-global/restore_OpenELIS.sh ~/migration/clinlims.dump
+```
+
+**Contrôles** :
+
+- clé reprise : l'empreinte de `encryption.general.password` dans
+  `/var/lib/openelis-global/secrets/common.properties` doit être celle de
+  l'ancien fichier (`... | cut -d= -f2- | tr -d '\r\n' | sha256sum`). Si la clé
+  a été déposée **après** `install.sh`, l'installeur en a généré une autre :
+  réécrire la ligne dans `secrets/common.properties` et dans
+  `config/ENCRYPTION_KEY`, **avant** la restauration ;
+- compteurs identiques avant/après ;
+- erreurs SQL de la restauration : le script écarte celles qui sont connues et
+  sans conséquence (fonctions `crosstab` en langage C, types
+  `tablefunc_crosstab_*`, large object déjà présent) et vérifie `crosstab` ;
+- reconstruction FHIR terminée : `/api/OpenELIS-Global/OEToFhir/info` →
+  `"running":false`, `"batchFailure":0` ;
+- depuis l'extérieur : ports du HAPI et de la base non joignables ; passerelle
+  `/fhir/metadata` → 401 sans jeton ; `Verify return code: 0 (ok)` (§7).
+
+**Retour arrière** (tant que l'ancien dossier existe) :
+`sudo docker compose down` dans le dossier de l'installeur, puis
+`sudo docker compose up -d` dans l'ancien dossier.
+
 ---
 
 ## 4. Sauvegarde (backup)

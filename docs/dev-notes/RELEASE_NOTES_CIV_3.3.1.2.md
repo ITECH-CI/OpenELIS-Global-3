@@ -15,7 +15,10 @@ CHU Angré, AIBEF), et fiabilise la restauration d'une base.
 3. **Tests à plage décimale** (ex. Glycémie 0.7-1.1 affichée « 1-1 ») : ajuster
    les chiffres significatifs dans
    `Admin → Gestion des tests → Modifier les tests`.
-4. **Sites qui exposent leurs données FHIR** (BDM, mini-HIE) : lancer le
+4. **Sites en ligne avec un vrai certificat** : vérifier qu'il est servi avec sa
+   chaîne complète (`INSTALL_CIV.md` §7) ; sans l'intermédiaire, les connecteurs
+   (BDM…) refusent la connexion.
+5. **Sites qui exposent leurs données FHIR** (BDM, mini-HIE) : lancer le
    rattrapage
    `GET /api/OpenELIS-Global/OEToFhir?checkAll=true&waitForResults=true`
    (session admin), puis créer le client de passerelle (`#FhirGateway`). Voir
@@ -86,7 +89,10 @@ CHU Angré, AIBEF), et fiabilise la restauration d'une base.
 - **Site demandeur exposé en FHIR** : `Task.requester` et
   `ServiceRequest.locationReference` (Location gérée par l'Organization du site)
   ; toute organisation reçoit un identifiant FHIR à sa création ; rattrapage
-  `/OrganizationToFhir`.
+  `/OrganizationToFhir`. `Location` proposée dans la politique d'accès d'un
+  client de passerelle.
+- **Migration d'une instance montée hors installeur** vers l'installeur
+  (`INSTALL_CIV.md` §3.3), validée sur la recette.
 - **Script de restauration** `restore_OpenELIS.sh`, installé dans
   `/var/lib/openelis-global/` : dump de sécurité, restauration, remise à zéro et
   reconstruction du FHIR, vérifications (voir `INSTALL_CIV.md` §4). Il pilote
