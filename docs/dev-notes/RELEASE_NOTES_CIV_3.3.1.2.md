@@ -59,7 +59,10 @@ CHU Angré, AIBEF), et fiabilise la restauration d'une base.
   - dates de demande et de réception remplacées par l'heure de la transformation
     ;
   - organisation exposée inactive alors qu'elle est active ;
-  - rattrapage bloqué après un `/PatientToFhir` (verrou jamais libéré).
+  - rattrapage bloqué après un `/PatientToFhir` (verrou jamais libéré) ;
+  - rattrapage `OEToFhir` interrompu côté navigateur par un 504 au bout de 60 s
+    (il continuait côté serveur) : délai porté à 2 h pour les points de
+    rattrapage ; suivi par `/api/OpenELIS-Global/OEToFhir/info`.
 - **Modifier les tests** : limites, tranche d'âge, type de résultat et LOINC
   repris tels qu'enregistrés (avant : valeurs arrondies réécrites à la
   sauvegarde, « Nouveau-né » par défaut, type non sélectionné).
