@@ -86,7 +86,11 @@ CHU Angré, AIBEF), et fiabilise la restauration d'une base.
   `/OrganizationToFhir`.
 - **Script de restauration** `restore_OpenELIS.sh`, installé dans
   `/var/lib/openelis-global/` : dump de sécurité, restauration, remise à zéro et
-  reconstruction du FHIR, vérifications (voir `INSTALL_CIV.md` §4).
+  reconstruction du FHIR, vérifications (voir `INSTALL_CIV.md` §4). Il pilote
+  les conteneurs avec le compose du dossier de l'installeur (la copie d'archive
+  de `/var/lib/openelis-global/` faisait échouer la recréation des conteneurs),
+  écarte les erreurs SQL connues sans conséquence et vérifie `crosstab` (exports
+  CSV).
 
 ## Migrations de base (automatiques au démarrage)
 

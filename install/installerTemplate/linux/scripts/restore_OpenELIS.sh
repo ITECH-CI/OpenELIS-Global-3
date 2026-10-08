@@ -24,14 +24,16 @@
 #
 # Variables d'environnement (valeurs par défaut = installation standard) :
 #   OE_DIR        dossier d'installation        (/var/lib/openelis-global)
-#   COMPOSE_FILE  fichier docker compose        ($OE_DIR/docker-compose.yml)
+#   COMPOSE_FILE  fichier docker compose        (celui qui pilote les conteneurs,
+#                 lu sur leurs étiquettes ; à défaut $OE_DIR/docker-compose.yml)
 #   DB_CONTAINER  conteneur PostgreSQL          (openelisglobal-database)
 #   OE_URL        URL de l'application         (https://localhost/api/OpenELIS-Global)
 #
 set -uo pipefail
 
 OE_DIR="${OE_DIR:-/var/lib/openelis-global}"
-COMPOSE_FILE="${COMPOSE_FILE:-$OE_DIR/docker-compose.yml}"
+COMPOSE_FILE="${COMPOSE_FILE:-}"
+COMPOSE_PROJECT=""
 DB_CONTAINER="${DB_CONTAINER:-openelisglobal-database}"
 OE_CONTAINER="${OE_CONTAINER:-openelisglobal-webapp}"
 FHIR_CONTAINER="${FHIR_CONTAINER:-external-fhir-api}"
@@ -86,9 +88,23 @@ mkdir -p "$BACKUP_DIR" && chmod 700 "$BACKUP_DIR"
     echo "Impossible d'écrire le journal dans $BACKUP_DIR (lancer avec sudo)"
     exit 1
 }
-[ -f "$COMPOSE_FILE" ] || die "Fichier docker compose introuvable : $COMPOSE_FILE (variable COMPOSE_FILE)"
 docker ps --format '{{.Names}}' | grep -qx "$DB_CONTAINER" ||
     die "Le conteneur base de données '$DB_CONTAINER' n'est pas démarré (docker start $DB_CONTAINER)"
+
+# Le compose qui pilote RÉELLEMENT les conteneurs est celui du dossier de
+# l'installeur ; le docker-compose.yml de $OE_DIR n'en est qu'une copie
+# d'archive. Avec la copie, docker compose crée un AUTRE projet, dont les
+# conteneurs entrent en conflit de nom avec ceux en service (échec de l'étape 5).
+# On lit donc le fichier et le projet sur les étiquettes du conteneur base de
+# données, qui tourne pendant toute la restauration.
+compose_label() { docker inspect -f "{{index .Config.Labels \"$1\"}}" "$DB_CONTAINER" 2>/dev/null; }
+COMPOSE_PROJECT=$(compose_label com.docker.compose.project)
+if [ -z "$COMPOSE_FILE" ]; then
+    COMPOSE_FILE=$(compose_label com.docker.compose.project.config_files)
+    COMPOSE_FILE=${COMPOSE_FILE%%,*}
+    [ -n "$COMPOSE_FILE" ] && [ -f "$COMPOSE_FILE" ] || COMPOSE_FILE="$OE_DIR/docker-compose.yml"
+fi
+[ -f "$COMPOSE_FILE" ] || die "Fichier docker compose introuvable : $COMPOSE_FILE (variable COMPOSE_FILE)"
 
 # format du dump : gzip ? custom (signature PGDMP) ? texte ?
 if gzip -t "$DUMP" 2>/dev/null; then
@@ -156,11 +172,28 @@ else
     # les autres erreurs sont comptées ci-dessous
     "${READER[@]}" | docker exec -i "$DB_CONTAINER" psql -U "$DB_USER" -d "$DB_NAME" -q >/dev/null 2>"$ERRLOG"
 fi
-REAL_ERRORS=$(grep -E "ERROR|ERREUR" "$ERRLOG" | grep -v -E 'schema "clinlims" already exists|le schéma « clinlims » existe déjà' | wc -l | tr -d ' ')
+# Erreurs connues et sans conséquence, écartées du décompte :
+# - le schéma clinlims recréé juste avant ;
+# - les fonctions/types de l'extension tablefunc (crosstab) qu'un ancien site
+#   avait en copie dans clinlims : l'utilisateur clinlims ne peut pas créer de
+#   fonction en langage C, mais l'extension est déjà fournie dans public
+#   (vérifié ci-dessous) ;
+# - un large object déjà présent (stockage partagé de la base, utilisé par HAPI
+#   dont les tables sont remises à zéro à l'étape 4).
+BENIGN='schema "clinlims" already exists|le schéma « clinlims » existe déjà|permission denied for language c|droit refusé pour le langage c|type "tablefunc_crosstab_[0-9]+" already exists|le type « tablefunc_crosstab_[0-9]+ » existe déjà|pg_largeobject_metadata_oid_index'
+BENIGN_ERRORS=$(grep -E "ERROR|ERREUR" "$ERRLOG" | grep -c -E "$BENIGN")
+REAL_ERRORS=$(grep -E "ERROR|ERREUR" "$ERRLOG" | grep -v -E "$BENIGN" | wc -l | tr -d ' ')
 RESTORED=$(psql_db -c "SELECT count(*) FROM clinlims.sample" 2>/dev/null || echo "?")
-say "      $RESTORED demandes restaurées, $REAL_ERRORS erreur(s) SQL (détail : $ERRLOG)"
+say "      $RESTORED demandes restaurées, $REAL_ERRORS erreur(s) SQL ($BENIGN_ERRORS connue(s) sans conséquence écartée(s) ; détail : $ERRLOG)"
 [ "$RESTORED" != "?" ] || die "La table sample est absente après restauration : dump invalide ? Retour arrière : $SAFETY"
 [ "$REAL_ERRORS" -eq 0 ] || say "      ⚠️  Vérifier les erreurs ci-dessus avant de remettre le site en service."
+# crosstab (extension tablefunc) : indispensable aux exports CSV
+if psql_db -c "SELECT * FROM crosstab('SELECT ''a''::text, ''x''::text, ''1''::text') AS t(k text, x text)" >/dev/null 2>&1; then
+    say "      crosstab (exports CSV) : OK"
+else
+    say "      ⚠️  crosstab indisponible : les exports CSV échoueront. Correctif :"
+    say "         docker exec $DB_CONTAINER psql -U postgres -d $DB_NAME -c \"CREATE EXTENSION IF NOT EXISTS tablefunc SCHEMA public\""
+fi
 
 # --------------------------------------------------------------- 4. tables FHIR
 if $KEEP_FHIR; then
@@ -183,7 +216,8 @@ fi
 
 # ------------------------------------------------ 5. recréation des conteneurs
 say "\n[5/6] Recréation des conteneurs $OE_SERVICE et $FHIR_SERVICE"
-docker compose -f "$COMPOSE_FILE" up -d --force-recreate "$OE_SERVICE" "$FHIR_SERVICE" >>"$LOG" 2>&1 ||
+docker compose -f "$COMPOSE_FILE" ${COMPOSE_PROJECT:+-p "$COMPOSE_PROJECT"} up -d --force-recreate \
+    "$OE_SERVICE" "$FHIR_SERVICE" >>"$LOG" 2>&1 ||
     die "Échec de docker compose up (voir $LOG)"
 
 say "      Attente du démarrage (migrations de base comprises, jusqu'à 15 min)…"

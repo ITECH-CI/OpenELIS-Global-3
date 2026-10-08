@@ -312,13 +312,22 @@ Il enchaîne, en demandant confirmation (taper `RESTAURER`) :
    ce fichier) ;
 2. arrêt de `openelisglobal-webapp` et `external-fhir-api` ;
 3. schéma `clinlims` vierge puis restauration (texte, `.gz` ou format custom) ;
-   les erreurs SQL sont comptées et journalisées ;
+   les erreurs SQL sont comptées et journalisées. Les erreurs connues et sans
+   conséquence sont décomptées à part : schéma déjà présent, fonctions et types
+   `crosstab` (`permission denied for language c`, `tablefunc_crosstab_*`, déjà
+   fournis par l'extension `tablefunc` dans `public`), large object déjà
+   présent. Le script vérifie ensuite que `crosstab`, indispensable aux exports
+   CSV, répond ;
 4. **remise à zéro des tables FHIR** (`hfj_`, `trm_`, `mpi_`, `npm_`, `bt2_`) :
    HAPI les recrée au démarrage. Indispensable pour les anciens dumps qui
    contiennent des données FHIR sans leurs large objects (`--keep-fhir` pour les
    conserver) ;
 5. **recréation** des conteneurs webapp et FHIR
-   (`docker compose up --force-recreate`) et attente du démarrage ;
+   (`docker compose up --force-recreate`) et attente du démarrage. Le script
+   utilise le compose qui pilote réellement les conteneurs (lu sur leurs
+   étiquettes, c'est-à-dire celui du dossier de l'installeur), et non la copie
+   d'archive de `/var/lib/openelis-global/` ; forçable par
+   `COMPOSE_FILE=<chemin>` ;
 6. **reconstruction FHIR** depuis les données métier (proposée ; sinon ouvrir en
    administrateur
    `https://<serveur>/api/OpenELIS-Global/OEToFhir?checkAll=true`).
