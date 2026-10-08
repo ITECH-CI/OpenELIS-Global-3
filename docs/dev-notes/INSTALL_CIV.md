@@ -464,6 +464,25 @@ Choisir le mode **en ligne** à l'install (question « mode de déploiement ») 
 
 ### Utiliser votre vrai certificat
 
+⚠️ **`nginx.cert.pem` doit contenir la chaîne complète** : le certificat du site
+**suivi** du ou des certificats intermédiaires de l'autorité (fichier «
+fullchain » / « ca-bundle »). Avec le seul certificat du site, les navigateurs
+s'en sortent, mais les clients techniques (curl/OpenSSL, Java, Python :
+connecteurs FHIR, BDM…) refusent la connexion
+(`unable to get local issuer certificate`). Vérification et correction :
+
+```bash
+# un seul certificat dans le fichier ? alors la chaîne manque
+grep -c "BEGIN CERTIFICATE" nginx.cert.pem
+# récupérer l'intermédiaire à l'adresse indiquée dans le certificat (CA Issuers)
+AIA=$(openssl x509 -in nginx.cert.pem -noout -text | grep -o 'CA Issuers - URI:[^ ]*' | cut -d: -f2-)
+curl -fsS "$AIA" -o inter.der && openssl x509 -inform DER -in inter.der -out inter.pem
+openssl verify -untrusted inter.pem nginx.cert.pem          # doit afficher OK
+cat nginx.cert.pem inter.pem > fullchain.pem                # à déposer en nginx.cert.pem
+# contrôle depuis l'extérieur : « Verify return code: 0 (ok) »
+echo | openssl s_client -connect <domaine>:443 -servername <domaine> 2>/dev/null | grep "Verify return code"
+```
+
 Deux façons, au choix :
 
 **A. Le déposer AVANT l'install** (recommandé) — l'installeur détecte les PEM
