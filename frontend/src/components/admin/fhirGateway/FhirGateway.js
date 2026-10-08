@@ -82,6 +82,7 @@ function FhirGateway() {
     "Task",
     "Practitioner",
     "Organization",
+    "Location",
     "Encounter",
     "Questionnaire",
     "QuestionnaireResponse",

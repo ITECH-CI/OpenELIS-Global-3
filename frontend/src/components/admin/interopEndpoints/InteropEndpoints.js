@@ -81,7 +81,7 @@ const FHIR_RESOURCES = [
       "?requisition=http://openelis-global.org/samp_labNo|<n° de bon>  ·  ?identifier=…/analysis_uuid|<uuid>",
     idSystem:
       "requisition = samp_labNo (bon) · identifier = analysis_uuid (test)",
-    desc: "Une demande par analyse ; toutes les demandes d'un bon partagent la même requisition (n° de labo). status par test.",
+    desc: "Une demande par analyse ; toutes les demandes d'un bon partagent la même requisition (n° de labo). status par test. authoredOn = date de la demande. locationReference = Location du site demandeur.",
   },
   {
     type: "DiagnosticReport",
@@ -109,7 +109,7 @@ const FHIR_RESOURCES = [
     search:
       "?identifier=http://openelis-global.org/order_accessionNumber|<n° de bon>",
     idSystem: "identifier = order_uuid + order_accessionNumber (samp_labNo)",
-    desc: "Suivi du bon (workflow labo). basedOn = les ServiceRequest ; output = les DiagnosticReport par échantillon.",
+    desc: "Suivi du bon (workflow labo). basedOn = les ServiceRequest ; output = les DiagnosticReport par échantillon. requester = Organization du site demandeur (_include=Task:requester).",
   },
   {
     type: "Practitioner",
@@ -119,9 +119,18 @@ const FHIR_RESOURCES = [
   },
   {
     type: "Organization",
-    search: "?identifier=<system DATIM/local>|<code>",
-    idSystem: "datim_org_code / identifiant local",
-    desc: "Structure demandeuse / site référant.",
+    search:
+      "?identifier=http://openelis-global.org/org_uuid|<uuid>  ·  ?identifier=…/org_code|<code>",
+    idSystem:
+      "identifier = org_uuid (+ org_code, org_shortName s'ils existent)",
+    desc: "Site demandeur (centre de santé, hôpital). Référencée par Task.requester et Location.managingOrganization.",
+  },
+  {
+    type: "Location",
+    search:
+      "?organization=Organization/<uuid>  ·  /Location/<id>?_include=Location:organization",
+    idSystem: "id dérivé de l'org_uuid du site",
+    desc: "Lieu du site demandeur, cible de ServiceRequest.locationReference (en R4 ce champ n'accepte que Location). managingOrganization = l'Organization du site.",
   },
 ];
 
