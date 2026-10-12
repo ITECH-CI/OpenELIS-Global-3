@@ -64,6 +64,8 @@ public class OrganizationFhirUuidTest {
         organizationService.insert(organization);
 
         assertNotNull(organization.getFhirUuid());
+        // créée hors synchronisation du référentiel : hors référentiel
+        assertEquals("LEGACY", organization.getRefStatut());
     }
 
     @Test

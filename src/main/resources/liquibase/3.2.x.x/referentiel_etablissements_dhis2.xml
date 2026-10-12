@@ -132,6 +132,21 @@
             splitStatements="false" encoding="UTF-8" />
     </changeSet>
 
+    <!-- Site demandeur : uniquement les établissements du référentiel. L'écran
+         de saisie n'accepte plus de nom libre et le serveur refuse de créer un
+         site à partir d'un nom libre (SiteDemandeurReferentiel). -->
+    <changeSet author="pkomena" id="referentiel-etablissements-saisie-libre-1">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="1">SELECT count(*) FROM clinlims.site_information
+                WHERE name = 'restrictFreeTextRefSiteEntry' AND coalesce(value, '') &lt;&gt; 'true'</sqlCheck>
+        </preConditions>
+        <update schemaName="clinlims" tableName="site_information">
+            <column name="value" value="true" />
+            <column name="lastupdated" valueComputed="now()" />
+            <where>name = 'restrictFreeTextRefSiteEntry'</where>
+        </update>
+    </changeSet>
+
     <!-- Rejouée quand la version change : reporter ici la version du fichier
          (etablissements_mfl.meta.json, champ « version »). -->
     <changeSet author="pkomena" id="referentiel-etablissements-synchronisation-1" runOnChange="true">

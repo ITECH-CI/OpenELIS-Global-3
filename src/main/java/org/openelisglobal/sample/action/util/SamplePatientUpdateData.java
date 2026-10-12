@@ -43,6 +43,7 @@ import org.openelisglobal.observationhistory.service.ObservationHistoryServiceIm
 import org.openelisglobal.observationhistory.valueholder.ObservationHistory;
 import org.openelisglobal.observationhistory.valueholder.ObservationHistory.ValueType;
 import org.openelisglobal.organization.service.OrganizationService;
+import org.openelisglobal.organization.util.SiteDemandeurReferentiel;
 import org.openelisglobal.organization.valueholder.Organization;
 import org.openelisglobal.patient.util.PatientUtil;
 import org.openelisglobal.person.service.PersonService;
@@ -460,6 +461,8 @@ public class SamplePatientUpdateData {
         } else if (!GenericValidator.isBlankOrNull(orderItem.getNewRequesterName())) {
 
             if (confirmNewRequesterName(orderItem.getNewRequesterName())) {
+                // site hors référentiel : refusé si la saisie libre est interdite
+                SiteDemandeurReferentiel.verifierCreationAutorisee(orderItem.getNewRequesterName());
                 // will be corrected after newOrg is persisted
                 requester = createSiteRequester("0", TableIdService.getInstance().ORGANIZATION_REQUESTER_TYPE_ID);
 

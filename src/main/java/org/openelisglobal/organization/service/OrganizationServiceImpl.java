@@ -105,6 +105,12 @@ public class OrganizationServiceImpl extends AuditableBaseObjectServiceImpl<Orga
             throw new LIMSDuplicateRecordException("Duplicate record exists for " + organization.getOrganizationName());
         }
         ensureFhirUuid(organization);
+        // créée hors synchronisation du référentiel (écran d'administration,
+        // demande électronique, ordre FHIR entrant…) : hors référentiel tant
+        // qu'elle n'est pas réconciliée avec un établissement MFL
+        if (organization.getRefStatut() == null) {
+            organization.setRefStatut("LEGACY");
+        }
         return super.insert(organization);
     }
 

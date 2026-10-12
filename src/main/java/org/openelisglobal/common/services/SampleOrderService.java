@@ -31,6 +31,7 @@ import org.openelisglobal.observationhistory.service.ObservationHistoryServiceIm
 import org.openelisglobal.observationhistory.valueholder.ObservationHistory;
 import org.openelisglobal.observationhistory.valueholder.ObservationHistory.ValueType;
 import org.openelisglobal.organization.service.OrganizationService;
+import org.openelisglobal.organization.util.SiteDemandeurReferentiel;
 import org.openelisglobal.organization.valueholder.Organization;
 import org.openelisglobal.patient.valueholder.Patient;
 import org.openelisglobal.person.service.PersonService;
@@ -463,6 +464,8 @@ public class SampleOrderService {
                 return;
             }
         } else {
+            // site hors référentiel : refusé si la saisie libre est interdite
+            SiteDemandeurReferentiel.verifierCreationAutorisee(sampleOrder.getReferringSiteName());
             org = new Organization();
             org.setIsActive("Y");
             org.setMlsSentinelLabFlag("N");
@@ -503,6 +506,8 @@ public class SampleOrderService {
 
         Organization org = null;
         if (!GenericValidator.isBlankOrNull(sampleOrder.getReferringSiteName())) {
+            // site hors référentiel : refusé si la saisie libre est interdite
+            SiteDemandeurReferentiel.verifierCreationAutorisee(sampleOrder.getReferringSiteName());
             org = new Organization();
             org.setIsActive("Y");
             org.setMlsSentinelLabFlag("N");

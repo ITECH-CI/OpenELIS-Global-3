@@ -86,6 +86,16 @@ référentiel donnent lieu à une décision.
 Les noms de plus de 80 caractères (taille de `organization.name`) sont remplacés
 par le nom court, ou tronqués.
 
+## Site demandeur : pas de saisie libre
+
+La migration active `restrictFreeTextRefSiteEntry` : à la saisie d'un
+échantillon (et en saisie par lot, en modification d'ordonnance), le site
+demandeur se choisit uniquement dans la liste ; le serveur refuse aussi de créer
+un site à partir d'un nom libre envoyé directement (`SiteDemandeurReferentiel`).
+Une organisation créée autrement (écran d'administration, demande électronique
+ou ordre FHIR d'un tiers) reçoit le statut `LEGACY` : elle apparaît dans l'écran
+pour être réconciliée.
+
 ## Réconciliation manuelle (fusion)
 
 Pour corriger ce que la règle automatique ne peut pas trancher : un site
