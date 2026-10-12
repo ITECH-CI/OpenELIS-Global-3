@@ -32,6 +32,7 @@ import java.sql.Timestamp;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.UUID;
+import org.hl7.fhir.r4.model.DiagnosticReport;
 import org.hl7.fhir.r4.model.Location;
 import org.hl7.fhir.r4.model.ServiceRequest;
 import org.hl7.fhir.r4.model.Specimen;
@@ -97,6 +98,8 @@ public class FhirBdmsPiloteTest {
     private org.openelisglobal.note.service.NoteService noteService;
     @Mock
     private FhirPersistanceService fhirPersistanceService;
+    @Mock
+    private org.openelisglobal.siteinformation.service.SiteInformationService siteInformationService;
 
     @InjectMocks
     private FhirTransformServiceImpl fhirTransformService;
@@ -345,5 +348,54 @@ public class FhirBdmsPiloteTest {
 
         verify(fhirPersistanceService).createUpdateFhirResourcesInFhirStore(operations.capture());
         assertEquals(2, operations.getValue().updateResources.size());
+    }
+
+    private Organization configureLaboratorySite(String siteIdValue) {
+        org.openelisglobal.siteinformation.valueholder.SiteInformation siteId = new org.openelisglobal.siteinformation.valueholder.SiteInformation();
+        siteId.setValue(siteIdValue);
+        when(siteInformationService.getSiteInformationByName("siteId")).thenReturn(siteId);
+        Organization laboratory = organization("Y");
+        laboratory.setId("3028");
+        when(organizationService.getOrganizationById("3028")).thenReturn(laboratory);
+        return laboratory;
+    }
+
+    @Test
+    public void transformToTask_siteIdSet_shouldHaveLaboratoryOwner() {
+        Organization laboratory = configureLaboratorySite("3028");
+        when(sampleService.get("1")).thenReturn(sample);
+        when(sample.getStatusId()).thenReturn("1");
+
+        Task task = fhirTransformService.transformToTask("1");
+
+        assertEquals("Organization/" + laboratory.getFhirUuidAsString(), task.getOwner().getReference());
+    }
+
+    @Test
+    public void transformSampleItemToDiagnosticReport_siteIdSet_shouldHaveLaboratoryPerformer() {
+        Organization laboratory = configureLaboratorySite("3028");
+
+        DiagnosticReport report = fhirTransformService.transformSampleItemToDiagnosticReport(sampleItem, null);
+
+        assertEquals(1, report.getPerformer().size());
+        assertEquals("Organization/" + laboratory.getFhirUuidAsString(), report.getPerformerFirstRep().getReference());
+    }
+
+    @Test
+    public void laboratorySite_siteIdEmpty_shouldEmitNoOwnerNorPerformer() {
+        configureLaboratorySite(" ");
+        when(sampleService.get("1")).thenReturn(sample);
+        when(sample.getStatusId()).thenReturn("1");
+
+        assertNull(fhirTransformService.laboratorySite());
+        assertFalse(fhirTransformService.transformToTask("1").hasOwner());
+        assertFalse(fhirTransformService.transformSampleItemToDiagnosticReport(sampleItem, null).hasPerformer());
+    }
+
+    @Test
+    public void laboratorySite_unknownOrganization_shouldBeNull() {
+        configureLaboratorySite("999999");
+
+        assertNull(fhirTransformService.laboratorySite());
     }
 }

@@ -154,12 +154,14 @@ Une instance OpenELIS est un laboratoire ; le **site demandeur** d'un
 échantillon (centre de santé, hôpital) est une organisation OE de type «
 referring clinic ». Il est exposé ainsi :
 
-| Ressource                       | Champ                  | Valeur                                                    |
-| ------------------------------- | ---------------------- | --------------------------------------------------------- |
-| `Task` (une par bon)            | `requester`            | `Organization/<fhir_uuid du site>`                        |
-| `ServiceRequest` (une par test) | `locationReference`    | `Location/<id dérivé du site>`                            |
-| `Location`                      | `managingOrganization` | `Organization/<fhir_uuid du site>`                        |
-| `Organization`                  | —                      | nom, `active`, identifiants `org_uuid` / `org_code`, type |
+| Ressource                       | Champ                  | Valeur                                                                                                          |
+| ------------------------------- | ---------------------- | --------------------------------------------------------------------------------------------------------------- |
+| `Task` (une par bon)            | `requester`            | `Organization/<fhir_uuid du site>`                                                                              |
+| `ServiceRequest` (une par test) | `locationReference`    | `Location/<id dérivé du site>`                                                                                  |
+| `Location`                      | `managingOrganization` | `Organization/<fhir_uuid du site>`                                                                              |
+| `Organization`                  | —                      | nom du ministère, `active`, identifiants `org_uuid` / `org_shortName` (code d'établissement à 5 chiffres), type |
+| `Task`                          | `owner`                | `Organization/<fhir_uuid>` du **laboratoire** (`siteId`)                                                        |
+| `DiagnosticReport`              | `performer`            | `Organization/<fhir_uuid>` du **laboratoire** (`siteId`)                                                        |
 
 - **Pourquoi une Location** : en R4, `ServiceRequest.locationReference`
   n'accepte que `Reference(Location)`. Le HAPI 6.6 rejette une Organization sur
@@ -182,9 +184,16 @@ referring clinic ». Il est exposé ainsi :
     `GET /fhir/Location/<id>?_include=Location:organization` (le ServiceRequest
     n'a pas de paramètre de recherche `location` en R4, donc pas de `_include`
     direct).
-- **Hors périmètre** : l'identité du laboratoire lui-même (performer,
-  Organization « labo », code DHIS2) est déclarée par la configuration du
-  connecteur de la BDM, pas par OpenELIS.
+- **Code d'établissement** : `organization.short_name` porte le code à 5
+  chiffres du référentiel national (liste du ministère, DHIS2), exposé comme
+  identifiant `http://openelis-global.org/org_shortName` ; il n'est émis que
+  s'il est renseigné. OpenELIS reste neutre : la BDM fait la correspondance
+  `org_shortName` → référentiel. Chargement, règles de rattachement, mise à jour
+  du référentiel et rattrapage : `REFERENTIEL_ETABLISSEMENTS.md`.
+- **Laboratoire** : l'organisation désignée par `siteId` (`site_information`,
+  domaine `siteIdentity`) est `Task.owner` et `DiagnosticReport.performer` ;
+  elle porte elle aussi son code d'établissement. `siteId` vide ou organisation
+  introuvable : rien n'est émis (avertissement au démarrage).
 
 ## Dates
 

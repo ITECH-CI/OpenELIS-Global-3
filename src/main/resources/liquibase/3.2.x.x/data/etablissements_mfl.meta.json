@@ -1,0 +1,20 @@
+{
+  "source": "MASTER LIST DES ETABLISSEMENTS SANITAIRES.xlsx",
+  "sheet": "MASTER LIST",
+  "sha256": "29a08fcfbb1727401f986f51be1505c7caa4e8b8b4e3ec3800ce1860eb369004",
+  "extracted_on": "2026-10-05",
+  "version": "MASTER LIST DES ETABLISSEMENTS SANITAIRES.xlsx#29a08fcfbb17+Liste ETABLISSEMENT par Région et District (1).xls#55715db6d45f",
+  "rows": 5487,
+  "header_row": 6,
+  "complement": {
+    "source": "Liste ETABLISSEMENT par Région et District (1).xls",
+    "sha256": "55715db6d45fafb0ab99d86353939d81618d39888c5878f4f399c5bc3893e66d",
+    "fusion": {
+      "meme etablissement": 3878,
+      "nouvel etablissement": 1607,
+      "doublon d'identifiant (non retenu)": 29,
+      "MFL absent de la liste DHIS2": 2,
+      "nom DHIS2 different du nom MFL": 748
+    }
+  }
+}

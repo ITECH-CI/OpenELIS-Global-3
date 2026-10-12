@@ -82,6 +82,15 @@
         </property>
         <property name="fhirUuid" column="fhir_uuid"
             type="java.util.UUID" />
+        <!-- Référentiel national des établissements : MFL, FUSIONNE, LEGACY ;
+            REGION, DISTRICT, ETABLISSEMENT ; organisation qui a reçu l'historique (fusion).
+            Écrits par la synchronisation et la fusion (fonctions SQL), lus par l'application. -->
+        <property name="refStatut" column="ref_statut"
+            type="java.lang.String" />
+        <property name="refNiveau" column="ref_niveau"
+            type="java.lang.String" />
+        <property name="fusionneDans" column="fusionne_dans"
+            type="org.openelisglobal.hibernate.resources.usertype.LIMSStringNumberUserType" />
 
         <set name="organizationTypes"
             table="organization_organization_type" cascade="all" lazy="true"

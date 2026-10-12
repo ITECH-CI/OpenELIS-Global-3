@@ -101,6 +101,13 @@ public class Organization extends EnumValueItemImpl implements SimpleBaseEntity<
     private Set<OrganizationType> organizationTypes;
     private UUID fhirUuid;
 
+    // Référentiel national des établissements (DHIS2 / MFL) : statut (MFL,
+    // FUSIONNE, LEGACY), niveau (REGION, DISTRICT, ETABLISSEMENT) et, pour une
+    // organisation fusionnée, celle qui a reçu son historique.
+    private String refStatut;
+    private String refNiveau;
+    private String fusionneDans;
+
     public Organization() {
         super();
         organization = new ValueHolder();
@@ -324,5 +331,29 @@ public class Organization extends EnumValueItemImpl implements SimpleBaseEntity<
     @JsonIgnore
     public String getFhirUuidAsString() {
         return fhirUuid == null ? "" : fhirUuid.toString();
+    }
+
+    public String getRefStatut() {
+        return refStatut;
+    }
+
+    public void setRefStatut(String refStatut) {
+        this.refStatut = refStatut;
+    }
+
+    public String getRefNiveau() {
+        return refNiveau;
+    }
+
+    public void setRefNiveau(String refNiveau) {
+        this.refNiveau = refNiveau;
+    }
+
+    public String getFusionneDans() {
+        return fusionneDans;
+    }
+
+    public void setFusionneDans(String fusionneDans) {
+        this.fusionneDans = fusionneDans;
     }
 }

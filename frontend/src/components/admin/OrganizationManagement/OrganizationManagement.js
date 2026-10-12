@@ -34,6 +34,11 @@ import {
 import { FormattedMessage, injectIntl, useIntl } from "react-intl";
 import PageBreadCrumb from "../../common/PageBreadCrumb.js";
 import ActionPaginationButtonType from "../../common/ActionPaginationButtonType.js";
+import {
+  FusionsRecentes,
+  OrganizationReconciliationModal,
+  StatutReferentiel,
+} from "./OrganizationReconciliation.js";
 
 let breadcrumbs = [
   { label: "home.label", link: "/" },
@@ -69,6 +74,25 @@ function OrganizationManagement() {
     useState();
   const [organizationsManagmentListShow, setOrganizationsManagmentListShow] =
     useState([]);
+  // Réconciliation avec le référentiel des établissements (fusion)
+  const [fusionOuverte, setFusionOuverte] = useState(false);
+  const [versionFusions, setVersionFusions] = useState(0);
+
+  const apresFusion = (messageId) => {
+    setFusionOuverte(false);
+    setVersionFusions((v) => v + 1);
+    setNotificationVisible(true);
+    addNotification({
+      title: intl.formatMessage({ id: "notification.title" }),
+      message: intl.formatMessage({ id: messageId }),
+      kind: NotificationKinds.success,
+    });
+    setSelectedRowIds([]);
+    getFromOpenElisServer(
+      `/rest/OrganizationMenu?paging=${paging}&startingRecNo=${startingRecNo}`,
+      handleMenuItems,
+    );
+  };
 
   function deleteDeactivateOrganizationManagament(event) {
     event.preventDefault();
@@ -178,6 +202,12 @@ function OrganizationManagement() {
             streetAddress: item.streetAddress || "",
             city: item.city || "",
             cliaNumber: item.cliaNum || "",
+            refStatut: item.refStatut || "",
+            refNiveau: item.refNiveau
+              ? intl.formatMessage({
+                  id: "organization.referentiel.niveau." + item.refNiveau,
+                })
+              : "",
           };
         });
       const newOrganizationsManagementListArray = Object.values(
@@ -242,6 +272,12 @@ function OrganizationManagement() {
       );
     } else if (cell.info.header === "active") {
       return <TableCell key={cell.id}>{cell.value.toString()}</TableCell>;
+    } else if (cell.info.header === "refStatut") {
+      return (
+        <TableCell key={cell.id}>
+          <StatutReferentiel statut={cell.value} />
+        </TableCell>
+      );
     } else {
       return <TableCell key={cell.id}>{cell.value}</TableCell>;
     }
@@ -285,6 +321,20 @@ function OrganizationManagement() {
           addButtonRedirectLink={`/MasterListsPage#organizationEdit?ID=0`}
           modifyButtonRedirectLink={`/MasterListsPage#organizationEdit?ID=`}
           type="type2"
+        />
+        <Button
+          kind="tertiary"
+          size="sm"
+          disabled={selectedRowIds.length !== 1}
+          onClick={() => setFusionOuverte(true)}
+        >
+          <FormattedMessage id="organization.referentiel.fusion.bouton" />
+        </Button>
+        <OrganizationReconciliationModal
+          open={fusionOuverte}
+          sourceId={selectedRowIds[0]}
+          onClose={() => setFusionOuverte(false)}
+          onDone={() => apresFusion("organization.referentiel.fusion.succes")}
         />
         <br />
         <div className="orderLegendBody">
@@ -352,6 +402,18 @@ function OrganizationManagement() {
                       key: "active",
                       header: intl.formatMessage({
                         id: "organization.isActive",
+                      }),
+                    },
+                    {
+                      key: "refStatut",
+                      header: intl.formatMessage({
+                        id: "organization.referentiel.statut",
+                      }),
+                    },
+                    {
+                      key: "refNiveau",
+                      header: intl.formatMessage({
+                        id: "organization.referentiel.niveau",
                       }),
                     },
                     {
@@ -471,6 +533,13 @@ function OrganizationManagement() {
                       { id: "pagination.page" },
                       { page: pagesUnknown ? "" : page },
                     )
+                  }
+                />
+                <br />
+                <FusionsRecentes
+                  version={versionFusions}
+                  onAnnulee={() =>
+                    apresFusion("organization.referentiel.annuler.succes")
                   }
                 />
               </Column>

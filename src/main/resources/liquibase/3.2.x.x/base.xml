@@ -173,6 +173,8 @@ file="add_study_modifier_menu.xml" />
         file="allow_digits_in_username.xml" />
     <include relativeToChangelogFile="true"
         file="assign_organization_fhir_uuid.xml" />
+    <include relativeToChangelogFile="true"
+        file="referentiel_etablissements_dhis2.xml" />
 
 
 </databaseChangeLog>

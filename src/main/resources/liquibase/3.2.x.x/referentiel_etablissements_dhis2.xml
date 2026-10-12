@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+    <!--
+        Référentiel national des établissements (liste du ministère, DHIS2 / MFL).
+
+        - charge la liste (data/etablissements_mfl.csv) dans ref_etablissement_dhis2 ;
+        - ajoute à organization : ref_statut (MFL / FUSIONNE / LEGACY), ref_niveau
+          (REGION / DISTRICT / ETABLISSEMENT), fusionne_dans ; hiérarchie par org_id ;
+        - synchronise : régions et districts du MFL, rattachement des
+          établissements existants (code + nom cohérent), fusion des doublons,
+          création des absents, désactivation des sites hors référentiel ;
+        - chaque décision est tracée (ref_etablissement_rapprochement), chaque
+          fusion journalisée (ref_fusion_reference) : tout est annulable.
+
+        Règles détaillées, réconciliation manuelle, mise à jour du référentiel,
+        annulation : docs/dev-notes/REFERENTIEL_ETABLISSEMENTS.md. Fonctions :
+        sql/referentiel_etablissements.sql.
+
+        MISE À JOUR du référentiel : remplacer les deux fichiers de data/, puis
+        reporter la version dans le changeset referentiel-etablissements-
+        synchronisation-1 (rejoué au démarrage suivant), puis
+        /OEToFhir?checkAll=true.
+    -->
+
+    <changeSet author="pkomena" id="referentiel-etablissements-tables-1">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists schemaName="clinlims" tableName="ref_etablissement_dhis2" />
+            </not>
+        </preConditions>
+        <createTable schemaName="clinlims" tableName="ref_etablissement_dhis2">
+            <column name="facility_code" type="varchar(5)">
+                <constraints primaryKey="true" nullable="false" />
+            </column>
+            <column name="nom_dhis2" type="varchar(255)" />
+            <column name="nom_court" type="varchar(255)" />
+            <column name="nom_long" type="varchar(255)" />
+            <column name="statut" type="varchar(10)" />
+            <column name="region_code" type="varchar(10)" />
+            <column name="region_libelle" type="varchar(100)" />
+            <column name="district_code" type="varchar(10)" />
+            <column name="district_libelle" type="varchar(100)" />
+            <column name="origine" type="varchar(50)" />
+        </createTable>
+        <createTable schemaName="clinlims" tableName="ref_etablissement_rapprochement">
+            <column name="id" type="bigserial">
+                <constraints primaryKey="true" nullable="false" />
+            </column>
+            <column name="org_id" type="numeric(10,0)" />
+            <column name="facility_code" type="varchar(5)" />
+            <column name="decision" type="varchar(30)" />
+            <column name="motif" type="varchar(255)" />
+            <column name="ancien_nom" type="varchar(80)" />
+            <column name="ancien_short_name" type="varchar(15)" />
+            <column name="ancien_actif" type="varchar(1)" />
+            <column name="version" type="varchar(100)" />
+            <column name="date_decision" type="timestamp" defaultValueComputed="now()" />
+        </createTable>
+    </changeSet>
+
+    <!-- Rechargé quand le fichier change (runOnChange : la somme de contrôle
+         couvre le contenu du CSV). Codes lus comme TEXTE : zéros de tête gardés. -->
+    <changeSet author="pkomena" id="referentiel-etablissements-chargement-1" runOnChange="true">
+        <loadUpdateData schemaName="clinlims" tableName="ref_etablissement_dhis2"
+            file="data/etablissements_mfl.csv" relativeToChangelogFile="true"
+            separator="," quotchar="&quot;" encoding="UTF-8" primaryKey="facility_code">
+            <column name="facility_code" header="facility_code" type="STRING" />
+            <column name="nom_long" header="nom_long" type="STRING" />
+            <column name="nom_court" header="nom_court" type="STRING" />
+            <column name="statut" header="statut" type="STRING" />
+            <column name="region_code" header="region_code" type="STRING" />
+            <column name="region_libelle" header="region_libelle" type="STRING" />
+            <column name="district_code" header="district_code" type="STRING" />
+            <column name="district_libelle" header="district_libelle" type="STRING" />
+            <column name="code_etablissement" header="code_etablissement" type="SKIP" />
+            <column name="ancien_code_dhis2" header="ancien_code_dhis2" type="SKIP" />
+            <column name="code_dhis2_lu" header="code_dhis2_lu" type="SKIP" />
+            <column name="nom_dhis2" header="nom_dhis2" type="STRING" />
+            <column name="origine" header="origine" type="STRING" />
+        </loadUpdateData>
+    </changeSet>
+
+    <!-- Statut, niveau et fusion des organisations ; suivi des décisions ; journal
+         des références déplacées par une fusion (permet de l'annuler). -->
+    <changeSet author="pkomena" id="referentiel-etablissements-colonnes-1">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists schemaName="clinlims" tableName="organization" columnName="ref_statut" />
+            </not>
+        </preConditions>
+        <addColumn schemaName="clinlims" tableName="organization">
+            <column name="ref_statut" type="varchar(10)"
+                remarks="MFL (créée depuis la liste du ministère), FUSIONNE (réconciliée avec un établissement MFL), LEGACY (hors référentiel)" />
+            <column name="ref_niveau" type="varchar(15)"
+                remarks="REGION, DISTRICT, ETABLISSEMENT ; organisation parente (org_id) : district d'un établissement, région d'un district" />
+            <column name="fusionne_dans" type="numeric(10,0)"
+                remarks="organisation qui a reçu l'historique de celle-ci (fusion)" />
+        </addColumn>
+        <addColumn schemaName="clinlims" tableName="ref_etablissement_rapprochement">
+            <column name="cible_id" type="bigint" />
+            <column name="ancien_org_parent" type="numeric(10,0)" />
+            <column name="ancien_ref_statut" type="varchar(10)" />
+            <column name="ancien_ref_niveau" type="varchar(15)" />
+        </addColumn>
+        <createTable schemaName="clinlims" tableName="ref_fusion_reference">
+            <column name="id" type="bigserial">
+                <constraints primaryKey="true" nullable="false" />
+            </column>
+            <column name="fusion_id" type="bigint" />
+            <column name="table_name" type="varchar(60)" />
+            <column name="pk_colonnes" type="varchar(100)" />
+            <column name="pk_valeurs" type="varchar(100)" />
+            <column name="colonne" type="varchar(60)" />
+            <column name="ancienne_valeur" type="varchar(100)" />
+            <column name="nouvelle_valeur" type="varchar(100)" />
+            <column name="operation" type="varchar(10)" />
+        </createTable>
+        <createIndex schemaName="clinlims" tableName="ref_fusion_reference" indexName="ref_fusion_reference_fusion_idx">
+            <column name="fusion_id" />
+        </createIndex>
+        <createIndex schemaName="clinlims" tableName="organization" indexName="organization_ref_statut_niveau_idx">
+            <column name="ref_niveau" />
+            <column name="ref_statut" />
+        </createIndex>
+    </changeSet>
+
+    <changeSet author="pkomena" id="referentiel-etablissements-fonctions-1" runOnChange="true">
+        <sqlFile path="sql/referentiel_etablissements.sql" relativeToChangelogFile="true"
+            splitStatements="false" encoding="UTF-8" />
+    </changeSet>
+
+    <!-- Rejouée quand la version change : reporter ici la version du fichier
+         (etablissements_mfl.meta.json, champ « version »). -->
+    <changeSet author="pkomena" id="referentiel-etablissements-synchronisation-1" runOnChange="true">
+        <sql splitStatements="false">SELECT * FROM clinlims.sync_referentiel_etablissements('2026-10-05 MASTER LIST#29a08fcfbb17 + Liste par Region et District#55715db6d45f')</sql>
+    </changeSet>
+</databaseChangeLog>

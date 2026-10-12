@@ -175,6 +175,8 @@ public class FhirTransformServiceImpl implements FhirTransformService {
     @Autowired
     private OrganizationService organizationService;
     @Autowired
+    private org.openelisglobal.siteinformation.service.SiteInformationService siteInformationService;
+    @Autowired
     private FhirUtil fhirUtil;
     @Autowired
     private org.openelisglobal.bacteriology.service.BacteriologyOrganismService bacteriologyOrganismService;
@@ -198,6 +200,44 @@ public class FhirTransformServiceImpl implements FhirTransformService {
             } else if ("village".equals(addressPart.getPartName())) {
                 ADDRESS_PART_VILLAGE_ID = addressPart.getId();
             }
+        }
+        try {
+            if (laboratorySite() == null) {
+                LogEvent.logWarn(this.getClass().getSimpleName(), "initializeGlobalVariables",
+                        "siteId non renseigné ou organisation introuvable : Task.owner et"
+                                + " DiagnosticReport.performer (laboratoire) ne seront pas émis");
+            }
+        } catch (RuntimeException e) {
+            LogEvent.logWarn(this.getClass().getSimpleName(), "initializeGlobalVariables",
+                    "site du laboratoire (siteId) illisible : " + e.getMessage());
+        }
+    }
+
+    /**
+     * Organisation où l'instance est installée (le laboratoire) : propriété
+     * {@code siteId} de site_information. null si non renseignée, introuvable ou
+     * sans identifiant FHIR.
+     */
+    Organization laboratorySite() {
+        org.openelisglobal.siteinformation.valueholder.SiteInformation siteId = siteInformationService
+                .getSiteInformationByName("siteId");
+        if (siteId == null || GenericValidator.isBlankOrNull(siteId.getValue())) {
+            return null;
+        }
+        Organization site = organizationService.getOrganizationById(siteId.getValue().trim());
+        return site != null && site.getFhirUuid() != null ? site : null;
+    }
+
+    /**
+     * Ajoute au lot l'Organization (et sa Location) du laboratoire, cible de
+     * Task.owner et DiagnosticReport.performer : la référence est toujours
+     * résoluble dans le HAPI.
+     */
+    private void addLaboratorySite(FhirOperations fhirOperations, TempIdGenerator tempIdGenerator) {
+        Organization site = laboratorySite();
+        if (site != null) {
+            this.addToOperations(fhirOperations, tempIdGenerator, transformToFhirOrganization(site));
+            this.addToOperations(fhirOperations, tempIdGenerator, transformToFhirLocation(site));
         }
     }
 
@@ -458,6 +498,7 @@ public class FhirTransformServiceImpl implements FhirTransformService {
             this.addToOperations(fhirOperations, tempIdGenerator, location);
         }
 
+        addLaboratorySite(fhirOperations, tempIdGenerator);
         Bundle responseBundle = fhirPersistanceService.createUpdateFhirResourcesInFhirStore(fhirOperations);
         return new AsyncResult<>(responseBundle);
     }
@@ -646,6 +687,7 @@ public class FhirTransformServiceImpl implements FhirTransformService {
         // TODO location?
         // TODO create encounter?
 
+        addLaboratorySite(fhirOperations, tempIdGenerator);
         Bundle responseBundle = fhirPersistanceService.createUpdateFhirResourcesInFhirStore(fhirOperations);
 
         if (useReferral) {
@@ -812,6 +854,11 @@ public class FhirTransformServiceImpl implements FhirTransformService {
                 TableIdService.getInstance().REFERRING_ORG_TYPE_ID);
         if (requesterSite != null && requesterSite.getFhirUuid() != null) {
             task.setRequester(this.createReferenceFor(ResourceType.Organization, requesterSite.getFhirUuidAsString()));
+        }
+        // Laboratoire qui exécute le bon : Task.owner (Organization en R4).
+        Organization laboratory = laboratorySite();
+        if (laboratory != null) {
+            task.setOwner(this.createReferenceFor(ResourceType.Organization, laboratory.getFhirUuidAsString()));
         }
         task.setPriority(mapTaskPriority(sample.getPriority()));
         task.addIdentifier(
@@ -1544,6 +1591,7 @@ public class FhirTransformServiceImpl implements FhirTransformService {
         }
         addGroupedDiagnosticReports(samplesToReport.values(), fhirOperations, tempIdGenerator);
 
+        addLaboratorySite(fhirOperations, tempIdGenerator);
         Bundle responseBundle = fhirPersistanceService.createUpdateFhirResourcesInFhirStore(fhirOperations);
     }
 
@@ -1663,6 +1711,7 @@ public class FhirTransformServiceImpl implements FhirTransformService {
             this.addToOperations(fhirOperations, tempIdGenerator, task);
         }
 
+        addLaboratorySite(fhirOperations, tempIdGenerator);
         Bundle responseBundle = fhirPersistanceService.createUpdateFhirResourcesInFhirStore(fhirOperations);
     }
 
@@ -1713,7 +1762,7 @@ public class FhirTransformServiceImpl implements FhirTransformService {
      *                             (isolats/antibiogramme bactério déjà transformés)
      *                             ; peut être null/vide.
      */
-    private DiagnosticReport transformSampleItemToDiagnosticReport(SampleItem sampleItem,
+    DiagnosticReport transformSampleItemToDiagnosticReport(SampleItem sampleItem,
             List<Reference> extraObservationRefs) {
         LogEvent.logTrace(this.getClass().getSimpleName(), "transformSampleItemToDiagnosticReport",
                 "transformSampleItemToDiagnosticReport called");
@@ -1757,6 +1806,13 @@ public class FhirTransformServiceImpl implements FhirTransformService {
 
         diagnosticReport.setCode(new CodeableConcept().addCoding(new Coding().setSystem("http://loinc.org")
                 .setCode(LOINC_LAB_REPORT_CODE).setDisplay(LOINC_LAB_REPORT_DISPLAY)));
+
+        // Laboratoire qui produit le rapport.
+        Organization laboratory = laboratorySite();
+        if (laboratory != null) {
+            diagnosticReport
+                    .addPerformer(this.createReferenceFor(ResourceType.Organization, laboratory.getFhirUuidAsString()));
+        }
 
         // effective = prélèvement de l'échantillon ; issued = dernière validation
         // de ses analyses. Tirées de la base : stables d'une transformation à l'autre.
