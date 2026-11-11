@@ -377,12 +377,10 @@ public class FhirTransformServiceImpl implements FhirTransformService {
 
                 Optional<Task> referringTask = getReferringTaskForSample(sample);
                 if (referringTask.isPresent()) {
-                    updateReferringTaskWithTaskInfo(referringTask.get(), task);
-                    if (tasks.containsKey(referringTask.get().getIdElement().getIdPart())) {
-                        // LogEvent.logWarn(this.getClass().getSimpleName(),
-                        // "transformPersistObjectsUnderSamples",
-                        // "referring task collision with id: " +
-                        // referringTask.get().getIdElement().getIdPart());
+                    // Étape de la demande reçue : la Task reçue est réécrite seulement si
+                    // elle avance.
+                    if (updateReferringTaskWithTaskInfo(referringTask.get(), task)) {
+                        tasks.put(referringTask.get().getIdElement().getIdPart(), referringTask.get());
                     }
                 }
             }
@@ -628,8 +626,7 @@ public class FhirTransformServiceImpl implements FhirTransformService {
         this.addToOperations(fhirOperations, tempIdGenerator, task);
 
         Optional<Task> referringTask = getReferringTaskForSample(updateData.getSample());
-        if (referringTask.isPresent()) {
-            updateReferringTaskWithTaskInfo(referringTask.get(), task);
+        if (referringTask.isPresent() && updateReferringTaskWithTaskInfo(referringTask.get(), task)) {
             this.addToOperations(fhirOperations, tempIdGenerator, referringTask.get());
         }
 
@@ -697,16 +694,15 @@ public class FhirTransformServiceImpl implements FhirTransformService {
         }
     }
 
-    private void updateReferringTaskWithTaskInfo(Task referringTask, Task task) {
+    // Reporte sur la Task de la demande reçue l'étape du bon d'OpenELIS (status et
+    // businessStatus) : échantillon reçu, en analyse, résultat disponible (compte
+    // rendu en output), refusée, annulée. Un état ne recule jamais et un état
+    // terminal n'est jamais remplacé. Renvoie vrai si la Task reçue a changé.
+    boolean updateReferringTaskWithTaskInfo(Task referringTask, Task task) {
         LogEvent.logTrace(this.getClass().getSimpleName(), "updateReferringTaskWithTaskInfo",
                 "updateReferringTaskWithTaskInfo called");
 
-        if (TaskStatus.COMPLETED.equals(task.getStatus())) {
-            referringTask.setStatus(TaskStatus.COMPLETED);
-            task.getOutput().forEach(outPut -> {
-                referringTask.addOutput(outPut);
-            });
-        }
+        return ReceivedTaskProgress.applyOrderTask(referringTask, task);
     }
 
     private void updateReferringServiceRequestWithSampleInfo(Sample sample, ServiceRequest serviceRequest) {
@@ -1692,13 +1688,14 @@ public class FhirTransformServiceImpl implements FhirTransformService {
             if (referringTask.isPresent()) {
                 if (referingTaskMap.containsKey(referringTask.get().getIdElement().getIdPart())) {
                     Task existingReferingTask = referingTaskMap.get(referringTask.get().getIdElement().getIdPart());
-                    updateReferringTaskWithTaskInfo(existingReferingTask, task);
-                    referingTaskMap.put(existingReferingTask.getIdElement().getIdPart(), existingReferingTask);
-                    this.addToOperations(fhirOperations, tempIdGenerator, existingReferingTask);
+                    if (updateReferringTaskWithTaskInfo(existingReferingTask, task)) {
+                        this.addToOperations(fhirOperations, tempIdGenerator, existingReferingTask);
+                    }
                 } else {
-                    updateReferringTaskWithTaskInfo(referringTask.get(), task);
                     referingTaskMap.put(referringTask.get().getIdElement().getIdPart(), referringTask.get());
-                    this.addToOperations(fhirOperations, tempIdGenerator, referringTask.get());
+                    if (updateReferringTaskWithTaskInfo(referringTask.get(), task)) {
+                        this.addToOperations(fhirOperations, tempIdGenerator, referringTask.get());
+                    }
                 }
             }
             Optional<ServiceRequest> referingServiceRequest = getReferringServiceRequestForSample(sample);

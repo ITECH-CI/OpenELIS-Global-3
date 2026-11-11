@@ -461,6 +461,7 @@ public class FhirApiWorkFlowServiceImpl implements FhirApiWorkflowService {
         TaskResult taskResult = null;
         if (localObjects.task.getStatus() == null || localObjects.task.getStatus().equals(TaskStatus.REQUESTED)) {
             Boolean taskOrderAcceptedFlag = false;
+            boolean onlyAlreadyReceived = !serviceRequestList.isEmpty();
             Set<String> rejectionReasons = new LinkedHashSet<>();
             for (ServiceRequest serviceRequest : serviceRequestList) {
 
@@ -477,28 +478,64 @@ public class FhirApiWorkFlowServiceImpl implements FhirApiWorkflowService {
                 } else if (worker.getStatusReason() != null) {
                     rejectionReasons.add(worker.getStatusReason());
                 }
+                if (taskResult != TaskResult.DUPLICATE_ORDER) {
+                    onlyAlreadyReceived = false;
+                }
             }
             if (serviceRequestList.isEmpty()) {
                 rejectionReasons.add("demande d'examen absente");
             }
 
-            TaskStatus taskStatus = taskOrderAcceptedFlag ? TaskStatus.ACCEPTED : TaskStatus.REJECTED;
+            // Une Task remise à « requested » (Task réécrite à l'identique par le
+            // demandeur) dont toutes les demandes sont déjà dans OpenELIS n'est pas
+            // refusée : elle reprend l'étape du bon d'OpenELIS.
+            TaskStatus taskStatus = taskOrderAcceptedFlag || onlyAlreadyReceived ? TaskStatus.ACCEPTED
+                    : TaskStatus.REJECTED;
             localObjects.task.setStatus(taskStatus);
             // Motif du refus (court, sans donnée nominative), relayé par la plateforme
             // au demandeur.
             CodeableConcept statusReason = statusReasonFor(taskStatus, rejectionReasons);
             localObjects.task.setStatusReason(statusReason);
+            CodeableConcept businessStatus = ReceivedTaskProgress
+                    .businessStatus(taskStatus == TaskStatus.ACCEPTED ? ReceivedTaskProgress.Etape.ACCEPTEE
+                            : ReceivedTaskProgress.Etape.REFUSEE);
+            localObjects.task.setBusinessStatus(businessStatus);
+            if (onlyAlreadyReceived && !taskOrderAcceptedFlag) {
+                restoreProgressFromOrderTask(localObjects.task);
+                businessStatus = localObjects.task.getBusinessStatus();
+            }
             if (remoteStoreUpdateStatus.isPresent() && remoteStoreUpdateStatus.get()) {
                 LogEvent.logTrace(this.getClass().getSimpleName(), "beginTaskPath",
                         "updating remote status to " + taskStatus);
-                remoteTask.setStatus(taskStatus);
+                remoteTask.setStatus(localObjects.task.getStatus());
                 remoteTask.setStatusReason(statusReason == null ? null : statusReason.copy());
+                remoteTask.setBusinessStatus(businessStatus.copy());
                 sourceFhirClient.update().resource(remoteTask).execute();
             }
             IGenericClient localFhirClient = fhirUtil.getFhirClient(localFhirStorePath);
             localFhirClient.update().resource(localObjects.task).execute();
             // taskBasedOnRemoteTask.setStatus(taskStatus);
             // localFhirClient.update().resource(taskBasedOnRemoteTask).execute();
+        }
+    }
+
+    // Étape du bon d'OpenELIS déjà saisi pour cette demande (sa Task porte partOf =
+    // la Task reçue). Sans effet si le bon n'existe pas encore ; ne fait jamais
+    // échouer la relève.
+    private void restoreProgressFromOrderTask(Task receivedTask) {
+        try {
+            Bundle bundle = fhirUtil.getFhirClient(localFhirStorePath).search().forResource(Task.class)
+                    .where(Task.PART_OF.hasId(ResourceType.Task + "/" + receivedTask.getIdElement().getIdPart()))
+                    .returnBundle(Bundle.class).execute();
+            for (BundleEntryComponent entry : bundle.getEntry()) {
+                if (entry.getResource() instanceof Task) {
+                    ReceivedTaskProgress.applyOrderTask(receivedTask, (Task) entry.getResource());
+                }
+            }
+        } catch (RuntimeException e) {
+            LogEvent.logWarn(this.getClass().getSimpleName(), "restoreProgressFromOrderTask",
+                    "étape du bon non reprise pour la Task " + receivedTask.getIdElement().getIdPart() + " : "
+                            + e.getMessage());
         }
     }
 
