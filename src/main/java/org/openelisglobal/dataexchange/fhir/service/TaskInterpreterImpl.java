@@ -3,9 +3,12 @@ package org.openelisglobal.dataexchange.fhir.service;
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.hl7v2.HL7Exception;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import org.apache.commons.validator.GenericValidator;
 import org.hl7.fhir.r4.model.Address;
+import org.hl7.fhir.r4.model.Coding;
 import org.hl7.fhir.r4.model.ContactPoint;
 import org.hl7.fhir.r4.model.DateType;
 import org.hl7.fhir.r4.model.Enumerations.AdministrativeGender;
@@ -20,6 +23,7 @@ import org.openelisglobal.common.log.LogEvent;
 import org.openelisglobal.common.services.ITestIdentityService;
 import org.openelisglobal.common.services.TestIdentityService;
 import org.openelisglobal.common.util.DateUtil;
+import org.openelisglobal.dataexchange.fhir.CmuIdentifiers;
 import org.openelisglobal.dataexchange.fhir.FhirConfig;
 import org.openelisglobal.dataexchange.order.action.IOrderInterpreter.InterpreterResults;
 import org.openelisglobal.dataexchange.order.action.IOrderInterpreter.OrderType;
@@ -143,29 +147,64 @@ public class TaskInterpreterImpl implements TaskInterpreter {
         orderType = OrderType.REQUEST;
     }
 
-    private Test createTestFromFHIR(ServiceRequest serviceRequest) throws HL7Exception {
-        LogEvent.logDebug(this.getClass().getSimpleName(), "createTestFromFHIR", "start");
+    private static final String LOINC_SYSTEM = "http://loinc.org";
 
-        String loincCode = "";
-        String system = "";
-        Integer i = 0;
-        List<Test> tests = null;
-        while (i < serviceRequest.getCode().getCoding().size()) {
-            system = serviceRequest.getCode().getCoding().get(i).getSystemElement().toString();
-            if (system.equalsIgnoreCase("UriType[http://loinc.org]")) {
-                loincCode = serviceRequest.getCode().getCoding().get(i).getCodeElement().toString();
-                if (!GenericValidator.isBlankOrNull(loincCode)) {
-                    tests = testService.getTestsByLoincCode(loincCode);
-                    if (tests.size() != 0) {
-                        return tests.get(0);
-                    }
+    // Codes LOINC demandés par le ServiceRequest, dans l'ordre.
+    private List<String> requestedLoincCodes(ServiceRequest serviceRequest) {
+        List<String> codes = new ArrayList<>();
+        for (Coding coding : serviceRequest.getCode().getCoding()) {
+            if (LOINC_SYSTEM.equalsIgnoreCase(coding.getSystem())) {
+                if (!GenericValidator.isBlankOrNull(coding.getCode())) {
+                    codes.add(coding.getCode().trim());
                 } else {
-
-                    LogEvent.logWarn(this.getClass().getSimpleName(), "createTestFromFHIR",
+                    LogEvent.logWarn(this.getClass().getSimpleName(), "requestedLoincCodes",
                             "loinc code is missing a value in SR: " + serviceRequest.getIdElement().getIdPart());
                 }
             }
-            i++;
+        }
+        return codes;
+    }
+
+    // org.openelisglobal.loinc.equivalences : « demandé=équivalent », séparés par
+    // des virgules ou des points-virgules (ex. 20447-9=25836-8).
+    static Map<String, String> parseLoincEquivalences(String setting) {
+        Map<String, String> equivalences = new HashMap<>();
+        if (GenericValidator.isBlankOrNull(setting)) {
+            return equivalences;
+        }
+        for (String pair : setting.split("[,;]")) {
+            String[] parts = pair.split("=");
+            if (parts.length == 2 && !parts[0].trim().isEmpty() && !parts[1].trim().isEmpty()) {
+                equivalences.put(parts[0].trim(), parts[1].trim());
+            }
+        }
+        return equivalences;
+    }
+
+    // Code à essayer quand le code demandé ne correspond à rien (une seule fois :
+    // l'équivalent d'un équivalent n'est pas suivi).
+    private String equivalentOf(String loincCode) {
+        return parseLoincEquivalences(fhirConfig.getLoincEquivalences()).get(loincCode);
+    }
+
+    private Test createTestFromFHIR(ServiceRequest serviceRequest) throws HL7Exception {
+        LogEvent.logDebug(this.getClass().getSimpleName(), "createTestFromFHIR", "start");
+
+        for (String loincCode : requestedLoincCodes(serviceRequest)) {
+            Test found = firstTestForLoinc(loincCode);
+            if (found == null) {
+                String equivalent = equivalentOf(loincCode);
+                if (equivalent != null) {
+                    found = firstTestForLoinc(equivalent);
+                    if (found != null) {
+                        LogEvent.logInfo(this.getClass().getSimpleName(), "createTestFromFHIR",
+                                "LOINC " + loincCode + " demandé, test trouvé sous l'équivalent " + equivalent);
+                    }
+                }
+            }
+            if (found != null) {
+                return found;
+            }
         }
 
         LogEvent.logDebug(this.getClass().getSimpleName(), "createTestFromFHIR",
@@ -173,29 +212,29 @@ public class TaskInterpreterImpl implements TaskInterpreter {
         return null;
     }
 
-    private Panel createPanelFromFHIR(ServiceRequest serviceRequest) throws HL7Exception {
-        LogEvent.logDebug(this.getClass().getSimpleName(), "createTestFromFHIR", "start");
+    private Test firstTestForLoinc(String loincCode) {
+        List<Test> tests = testService.getTestsByLoincCode(loincCode);
+        return tests == null || tests.isEmpty() ? null : tests.get(0);
+    }
 
-        String loincCode = "";
-        String system = "";
-        Integer i = 0;
-        Panel panel = null;
-        while (i < serviceRequest.getCode().getCoding().size()) {
-            system = serviceRequest.getCode().getCoding().get(i).getSystemElement().toString();
-            if (system.equalsIgnoreCase("UriType[http://loinc.org]")) {
-                loincCode = serviceRequest.getCode().getCoding().get(i).getCodeElement().toString();
-                if (!GenericValidator.isBlankOrNull(loincCode)) {
-                    panel = panelService.getPanelByLoincCode(loincCode);
-                    return panel;
-                } else {
-                    LogEvent.logWarn(this.getClass().getSimpleName(), "createTestFromFHIR",
-                            "loinc code is missing a value in SR: " + serviceRequest.getIdElement().getIdPart());
+    private Panel createPanelFromFHIR(ServiceRequest serviceRequest) throws HL7Exception {
+        LogEvent.logDebug(this.getClass().getSimpleName(), "createPanelFromFHIR", "start");
+
+        List<String> codes = requestedLoincCodes(serviceRequest);
+        if (!codes.isEmpty()) {
+            // Comme avant : seul le premier code LOINC est cherché comme panel.
+            String loincCode = codes.get(0);
+            Panel found = panelService.getPanelByLoincCode(loincCode);
+            if (found == null) {
+                String equivalent = equivalentOf(loincCode);
+                if (equivalent != null) {
+                    found = panelService.getPanelByLoincCode(equivalent);
                 }
             }
-            i++;
+            return found;
         }
 
-        LogEvent.logDebug(this.getClass().getSimpleName(), "createTestFromFHIR",
+        LogEvent.logDebug(this.getClass().getSimpleName(), "createPanelFromFHIR",
                 "no panel found for SR: " + serviceRequest.getIdElement().getIdPart());
         return null;
     }
@@ -220,6 +259,16 @@ public class TaskInterpreterImpl implements TaskInterpreter {
             }
             if ((fhirConfig.getOeFhirSystem() + "/pat_subjectNumber").equals(identifier.getSystem())) {
                 messagePatient.setSubjectNumber(identifier.getValue());
+            }
+        }
+        // Numéro CMU reçu (système national ou anciens OID), normalisé et conforme :
+        // enregistré dans le type d'identité "CMU", et dans le nationalId (qui porte
+        // le numéro CMU dans les écrans) s'il est vide.
+        String cmu = CmuIdentifiers.incomingCmu(patient, fhirConfig);
+        if (cmu != null) {
+            messagePatient.setCmuNumber(cmu);
+            if (GenericValidator.isBlankOrNull(messagePatient.getNationalId())) {
+                messagePatient.setNationalId(cmu);
             }
         }
         // TODO set fhirUUID of message patient
@@ -349,6 +398,8 @@ public class TaskInterpreterImpl implements TaskInterpreter {
                         && (panel == null
                                 || !getTestIdentityService().doesActivePanelExistForLoinc(panel.getLoinc()))) {
                     results.add(InterpreterResults.UNSUPPORTED_TESTS);
+                    // Codes demandés, pour le motif de refus (statusReason).
+                    unsupportedTests = requestedLoincCodes(serviceRequest);
                 }
             }
         }

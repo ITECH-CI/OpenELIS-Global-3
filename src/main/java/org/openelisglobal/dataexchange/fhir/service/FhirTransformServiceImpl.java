@@ -75,6 +75,7 @@ import org.openelisglobal.common.util.ConfigurationProperties;
 import org.openelisglobal.common.util.ConfigurationProperties.Property;
 import org.openelisglobal.common.util.DateUtil;
 import org.openelisglobal.common.util.validator.GenericValidator;
+import org.openelisglobal.dataexchange.fhir.CmuIdentifiers;
 import org.openelisglobal.dataexchange.fhir.FhirConfig;
 import org.openelisglobal.dataexchange.fhir.FhirUtil;
 import org.openelisglobal.dataexchange.fhir.exception.FhirLocalPersistingException;
@@ -97,6 +98,7 @@ import org.openelisglobal.organization.valueholder.OrganizationType;
 import org.openelisglobal.patient.action.IPatientUpdate;
 import org.openelisglobal.patient.action.bean.PatientManagementInfo;
 import org.openelisglobal.patient.service.PatientService;
+import org.openelisglobal.patient.util.CmuNumber;
 import org.openelisglobal.patient.valueholder.Patient;
 import org.openelisglobal.person.valueholder.Person;
 import org.openelisglobal.provider.service.ProviderService;
@@ -939,7 +941,7 @@ public class FhirTransformServiceImpl implements FhirTransformService {
         org.hl7.fhir.r4.model.Patient fhirPatient = new org.hl7.fhir.r4.model.Patient();
         String subjectNumber = patientService.getSubjectNumber(patient);
         String nationalId = patientService.getNationalId(patient);
-        String cmuNumber = patientService.getCMUNumber(patient);
+        String cmuNumber = conformingCmuNumber(patient, true);
         String guid = patientService.getGUID(patient);
         String stNumber = patientService.getSTNumber(patient);
         String uuid = patient.getFhirUuidAsString();
@@ -993,17 +995,20 @@ public class FhirTransformServiceImpl implements FhirTransformService {
             patientSearchResults.setPatientID(fhirPatient.getIdElement().getIdPart());
         }
 
+        // Numéro CMU reçu sous l'un des systèmes acceptés (national, OID 1.3 ou 1.2),
+        // normalisé et conforme : il alimente le nationalId, qui porte le numéro CMU
+        // dans OpenELIS (et que l'enregistrement du patient recopie dans le type
+        // d'identité "CMU").
+        String incomingCmu = CmuIdentifiers.incomingCmu(fhirPatient, fhirConfig);
+        if (incomingCmu != null) {
+            patientSearchResults.setNationalId(incomingCmu);
+        }
         for (Identifier identifier : fhirPatient.getIdentifier()) {
             String system = identifier.getSystem();
             String value = identifier.getValue();
 
             if ("http://openelis-global.org/pat_nationalId".equals(system)) {
-                patientSearchResults.setNationalId(value);
-            } else if (!GenericValidator.isBlankOrNull(fhirConfig.getCmuIdentifierSystem())
-                    && fhirConfig.getCmuIdentifierSystem().equals(system)) {
-                // Un patient entrant identifié par son matricule CMU (OID national)
-                // alimente le nationalId OE (qui héberge ce code), sauf s'il est déjà posé.
-                if (GenericValidator.isBlankOrNull(patientSearchResults.getNationalId())) {
+                if (incomingCmu == null) {
                     patientSearchResults.setNationalId(value);
                 }
             } else if ("http://openelis-global.org/pat_guid".equals(system)) {
@@ -1094,12 +1099,16 @@ public class FhirTransformServiceImpl implements FhirTransformService {
         if (!GenericValidator.isBlankOrNull(nationalId)) {
             identifierList.add(createIdentifier(fhirConfig.getOeFhirSystem() + "/pat_nationalId", nationalId));
         }
-        // Matricule CMU/CNAM exposé avec l'OID national (clé de rapprochement
-        // inter-systèmes PSNDPE), en plus des identifiants OpenELIS internes. Émis
-        // seulement si un system OID est configuré et le matricule présent.
-        if (!GenericValidator.isBlankOrNull(cmuNumber)
-                && !GenericValidator.isBlankOrNull(fhirConfig.getCmuIdentifierSystem())) {
-            identifierList.add(createIdentifier(fhirConfig.getCmuIdentifierSystem(), cmuNumber));
+        // Numéro CMU (déjà normalisé et conforme, cf. conformingCmuNumber) sous le
+        // système national, et la même valeur sous l'ancien OID (compatibilité).
+        if (!GenericValidator.isBlankOrNull(cmuNumber)) {
+            if (!GenericValidator.isBlankOrNull(fhirConfig.getCmuIdentifierSystem())) {
+                identifierList.add(createIdentifier(fhirConfig.getCmuIdentifierSystem(), cmuNumber));
+            }
+            String compat = fhirConfig.getCmuIdentifierSystemCompat();
+            if (!GenericValidator.isBlankOrNull(compat) && !compat.equals(fhirConfig.getCmuIdentifierSystem())) {
+                identifierList.add(createIdentifier(compat, cmuNumber));
+            }
         }
         if (!GenericValidator.isBlankOrNull(stNumber)) {
             identifierList.add(createIdentifier(fhirConfig.getOeFhirSystem() + "/pat_stNumber", stNumber));
@@ -1816,8 +1825,7 @@ public class FhirTransformServiceImpl implements FhirTransformService {
 
         // effective = prélèvement de l'échantillon ; issued = dernière validation
         // de ses analyses. Tirées de la base : stables d'une transformation à l'autre.
-        Date collected = sampleItem.getCollectionDate() != null ? sampleItem.getCollectionDate()
-                : sample != null ? sample.getCollectionDate() : null;
+        Date collected = collectionDateOf(sampleItem);
         if (collected != null) {
             diagnosticReport.setEffective(new DateTimeType(collected));
         }
@@ -1897,6 +1905,24 @@ public class FhirTransformServiceImpl implements FhirTransformService {
                 || statusService.matches(analysis.getStatusId(), AnalysisStatus.BiologistRejected)
                 || statusService.matches(analysis.getStatusId(), AnalysisStatus.TechnicalRejected)
                 || statusService.matches(analysis.getStatusId(), AnalysisStatus.SampleRejected);
+    }
+
+    // Date du prélèvement : celle de l'échantillon, à défaut celle du bon ; null
+    // si aucune.
+    static Date collectionDateOf(SampleItem sampleItem) {
+        if (sampleItem == null) {
+            return null;
+        }
+        if (sampleItem.getCollectionDate() != null) {
+            return sampleItem.getCollectionDate();
+        }
+        Sample sample = sampleItem.getSample();
+        return sample != null ? sample.getCollectionDate() : null;
+    }
+
+    private static void setEffectiveCollectionDate(Observation observation, SampleItem sampleItem) {
+        Date collected = collectionDateOf(sampleItem);
+        observation.setEffective(collected == null ? null : new DateTimeType(collected));
     }
 
     private DiagnosticReport genNewDiagnosticReport(SampleItem sampleItem) {
@@ -2054,15 +2080,11 @@ public class FhirTransformServiceImpl implements FhirTransformService {
         if (obsPatientRef != null) {
             observation.setSubject(obsPatientRef);
         }
-        // observation.setIssued(result.getOriginalLastupdated());
-        observation.setIssued(analysis.getReleasedDate()); // update to get Released Date instead of commpleted date
-        // observation.setEffective(new
-        // DateTimeType(result.getLastupdated()));
-        if (analysis.getReleasedDate() != null) {
-            observation.setEffective(new DateTimeType(analysis.getReleasedDate()));
-        } else {
-            observation.setEffective(new DateTimeType(analysis.getStartedDate()));
-        }
+        // issued = date de validation ; effective = date du prélèvement (comme
+        // DiagnosticReport.effective), absente si inconnue. Tirées de la base :
+        // une nouvelle transformation ne les change pas.
+        observation.setIssued(analysis.getReleasedDate());
+        setEffectiveCollectionDate(observation, sampleItem);
         // referenceRange : les bornes normales du résultat existent en OE
         // (min/maxNormal) — les exposer quand présentes (donnée clinique utile).
         if (result.getMinNormal() != null || result.getMaxNormal() != null) {
@@ -2167,8 +2189,8 @@ public class FhirTransformServiceImpl implements FhirTransformService {
             if (patientRef != null) {
                 isolate.setSubject(patientRef);
             }
+            setEffectiveCollectionDate(isolate, sampleItem);
             if (analysis.getReleasedDate() != null) {
-                isolate.setEffective(new DateTimeType(analysis.getReleasedDate()));
                 isolate.setIssued(analysis.getReleasedDate());
             }
             // Caractéristiques de l'organisme en composants (données réellement
@@ -2299,8 +2321,8 @@ public class FhirTransformServiceImpl implements FhirTransformService {
         if (patientRef != null) {
             obs.setSubject(patientRef);
         }
+        setEffectiveCollectionDate(obs, analysis.getSampleItem());
         if (analysis.getReleasedDate() != null) {
-            obs.setEffective(new DateTimeType(analysis.getReleasedDate()));
             obs.setIssued(analysis.getReleasedDate());
         }
         // Composants quantitatifs : diamètre d'inhibition (mm) et CMI.
@@ -2407,8 +2429,8 @@ public class FhirTransformServiceImpl implements FhirTransformService {
         if (patientRef != null) {
             obs.setSubject(patientRef);
         }
+        setEffectiveCollectionDate(obs, analysis.getSampleItem());
         if (analysis.getReleasedDate() != null) {
-            obs.setEffective(new DateTimeType(analysis.getReleasedDate()));
             obs.setIssued(analysis.getReleasedDate());
         }
         // Détails par flore identifiée : Gram, mode de regroupement, autre
@@ -2717,12 +2739,31 @@ public class FhirTransformServiceImpl implements FhirTransformService {
             return null;
         }
         Reference reference = createReferenceFor(ResourceType.Patient, patient.getFhirUuidAsString());
-        String cmuNumber = patientService.getCMUNumber(patient);
+        String cmuNumber = conformingCmuNumber(patient, false);
         if (!GenericValidator.isBlankOrNull(cmuNumber)
                 && !GenericValidator.isBlankOrNull(fhirConfig.getCmuIdentifierSystem())) {
             reference.setIdentifier(createIdentifier(fhirConfig.getCmuIdentifierSystem(), cmuNumber));
         }
         return reference;
+    }
+
+    // Numéro CMU émis : valeur de getCMUNumber normalisée (espaces, tirets et
+    // points
+    // retirés) si elle est conforme, sinon null. Une valeur mal formée sous le
+    // système national ferait refuser tout l'échantillon par la plateforme : elle
+    // n'est donc pas émise, et l'avertissement ne cite que l'identifiant interne du
+    // patient, jamais la valeur.
+    String conformingCmuNumber(Patient patient, boolean warnIfNonConforming) {
+        String raw = patientService.getCMUNumber(patient);
+        if (CmuNumber.isBlank(raw)) {
+            return null;
+        }
+        String cmu = CmuNumber.conformingOrNull(raw, fhirConfig.getCmuFormat());
+        if (cmu == null && warnIfNonConforming) {
+            LogEvent.logWarn(this.getClass().getSimpleName(), "conformingCmuNumber",
+                    "numéro CMU non conforme, non émis en FHIR (patient id=" + patient.getId() + ")");
+        }
+        return cmu;
     }
 
     // Mappe la priorité métier OE (OrderPriority) vers la priorité FHIR. OE
@@ -2824,7 +2865,8 @@ public class FhirTransformServiceImpl implements FhirTransformService {
         identifier.setValue(value);
 
         if (Objects.equals(system, fhirConfig.getOeFhirSystem() + "/pat_nationalId")
-                || Objects.equals(system, fhirConfig.getCmuIdentifierSystem())) {
+                || Objects.equals(system, fhirConfig.getCmuIdentifierSystem())
+                || Objects.equals(system, fhirConfig.getCmuIdentifierSystemCompat())) {
             identifier.setUse(Identifier.IdentifierUse.OFFICIAL);
         } else {
             identifier.setUse(Identifier.IdentifierUse.USUAL);

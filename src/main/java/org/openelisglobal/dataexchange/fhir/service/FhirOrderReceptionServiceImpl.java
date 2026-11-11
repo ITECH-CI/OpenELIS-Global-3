@@ -203,7 +203,11 @@ public class FhirOrderReceptionServiceImpl implements FhirOrderReceptionService 
                     fhirPersistanceService.createUpdateFhirResourcesInFhirStore(taskOps);
                     accepted++;
                 } else {
-                    details.append(sr.getIdElement().getIdPart()).append('=').append(result).append(' ');
+                    details.append(sr.getIdElement().getIdPart()).append('=').append(result);
+                    if (worker.getStatusReason() != null) {
+                        details.append(" (").append(worker.getStatusReason()).append(')');
+                    }
+                    details.append(' ');
                 }
             } catch (Exception e) {
                 LogEvent.logError(this.getClass().getSimpleName(), "receiveOrderBundle",

@@ -40,9 +40,10 @@ public interface PatientService extends BaseObjectService<Patient, String> {
     String getNationalId(Patient patient);
 
     /**
-     * Numéro d'assuré CMU/CNAM du patient : valeur du type d'identité "CMU" si
-     * présent, sinon repli sur le nationalId (qui héberge historiquement ce code).
-     * Renvoie "" si aucun.
+     * Numéro CMU du patient (= matricule CNAM = n° de sécurité sociale) : valeur du
+     * type d'identité "CMU" si présente (brute, à normaliser et contrôler par
+     * l'appelant), sinon repli sur le nationalId (qui héberge historiquement ce
+     * numéro) seulement s'il est conforme, normalisé. Renvoie "" si aucun.
      */
     String getCMUNumber(Patient patient);
 

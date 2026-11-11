@@ -38,10 +38,10 @@ public class FhirPatientIdentifierTest extends BaseWebContextSensitiveTest {
     @Test
     public void createIdentifier_cmuSystem_shouldBeOfficial() {
         String cmuSystem = fhirConfig.getCmuIdentifierSystem();
-        Identifier identifier = fhirTransformService.createIdentifier(cmuSystem, "90909000000");
+        Identifier identifier = fhirTransformService.createIdentifier(cmuSystem, "9992611000001");
 
         assertEquals(cmuSystem, identifier.getSystem());
-        assertEquals("90909000000", identifier.getValue());
+        assertEquals("9992611000001", identifier.getValue());
         assertEquals(Identifier.IdentifierUse.OFFICIAL, identifier.getUse());
     }
 
@@ -62,10 +62,12 @@ public class FhirPatientIdentifierTest extends BaseWebContextSensitiveTest {
     }
 
     /**
-     * L'OID national CMU par défaut doit être celui attendu par l'interop PSNDPE.
+     * Système national du numéro CMU par défaut ; l'ancien OID reste émis en
+     * compatibilité.
      */
     @Test
-    public void cmuIdentifierSystem_defaultShouldBeNationalOid() {
-        assertEquals("urn:oid:1.3.6.1.4.1.53864.1.3", fhirConfig.getCmuIdentifierSystem());
+    public void cmuIdentifierSystem_defaultShouldBeNationalSystem() {
+        assertEquals("https://hie.ci/patient/cmu", fhirConfig.getCmuIdentifierSystem());
+        assertEquals("urn:oid:1.3.6.1.4.1.53864.1.3", fhirConfig.getCmuIdentifierSystemCompat());
     }
 }

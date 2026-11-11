@@ -2491,5 +2491,8 @@
   "organization.referentiel.annulee": "Undone",
   "organization.referentiel.annuler": "Undo merge",
   "organization.referentiel.annuler.confirmer": "Undo this merge? Records will go back to their original organization.",
-  "organization.referentiel.annuler.succes": "Merge undone."
+  "organization.referentiel.annuler.succes": "Merge undone.",
+  "patient.cmu.label": "CMU number (CNAM number, social security number)",
+  "patient.cmu.placeholder": "13 digits",
+  "patient.cmu.invalid": "Invalid CMU number: 13 digits expected (spaces, dashes and dots are ignored)."
 }

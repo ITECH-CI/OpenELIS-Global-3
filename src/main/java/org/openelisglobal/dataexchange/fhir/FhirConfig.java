@@ -30,14 +30,37 @@ public class FhirConfig {
     @Value("${org.openelisglobal.oe.fhir.system:http://openelis-global.org}")
     private String oeFhirSystem;
 
-    // System (OID national) du numéro d'assuré CMU/CNAM, exposé sur
-    // Patient.identifier
-    // pour le rapprochement inter-systèmes (interop PSNDPE). Configurable ; vide =
-    // n'expose pas d'identifiant CMU avec OID national. Valeur cible par défaut :
-    // urn:oid:1.3.6.1.4.1.53864.1.3 (à confirmer avec l'équipe interop).
+    // Numéro CMU de l'assuré (= matricule CNAM = n° de sécurité sociale), émis sur
+    // Patient.identifier et Reference.identifier. Système national du numéro CMU ;
+    // vide = numéro CMU non émis.
     @Getter
-    @Value("${org.openelisglobal.cmu.identifier.system:urn:oid:1.3.6.1.4.1.53864.1.3}")
+    @Value("${org.openelisglobal.cmu.identifier.system:https://hie.ci/patient/cmu}")
     private String cmuIdentifierSystem;
+
+    // Même valeur émise aussi sous l'ancien OID, pour la compatibilité des
+    // consommateurs existants. Vide = non émis.
+    @Getter
+    @Value("${org.openelisglobal.cmu.identifier.system.compat:urn:oid:1.3.6.1.4.1.53864.1.3}")
+    private String cmuIdentifierSystemCompat;
+
+    // Format du numéro CMU après normalisation (espaces, tirets et points retirés).
+    // Vide = ^[0-9]{13}$ (CmuNumber.DEFAULT_FORMAT).
+    @Getter
+    @Value("${org.openelisglobal.cmu.format:}")
+    private String cmuFormat;
+
+    // Systèmes qui donnent le numéro CMU d'un patient reçu (demandes
+    // électroniques, recherche de patient).
+    @Getter
+    @Value("${org.openelisglobal.cmu.identifier.systems.accepted:https://hie.ci/patient/cmu,urn:oid:1.3.6.1.4.1.53864.1.3,urn:oid:1.3.6.1.4.1.53864.1.2}")
+    private String[] cmuAcceptedSystems;
+
+    // Équivalences de codes LOINC pour les demandes reçues, « demandé=équivalent »
+    // séparées par des virgules (ex. 20447-9=25836-8). Un code sans test est
+    // cherché une seule fois sous son équivalent. Vide par défaut.
+    @Getter
+    @Value("${org.openelisglobal.loinc.equivalences:}")
+    private String loincEquivalences;
 
     @Getter
     @Value("${org.openelisglobal.fhirstore.uri:}")

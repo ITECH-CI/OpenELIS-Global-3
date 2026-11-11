@@ -17,6 +17,8 @@ public class MessagePatient {
     private String guid;
     private String obNumber;
     private String nationalId;
+    // Numéro CMU normalisé et conforme (type d'identité "CMU"), ou null.
+    private String cmuNumber;
     private String pcNumber;
     private String stNumber;
     private String externalId;
@@ -66,6 +68,14 @@ public class MessagePatient {
 
     public void setNationalId(String nationalId) {
         this.nationalId = nationalId;
+    }
+
+    public String getCmuNumber() {
+        return cmuNumber;
+    }
+
+    public void setCmuNumber(String cmuNumber) {
+        this.cmuNumber = cmuNumber;
     }
 
     public String getPcNumber() {

@@ -2006,5 +2006,8 @@
   "organization.referentiel.annulee": "Annulée",
   "organization.referentiel.annuler": "Annuler la fusion",
   "organization.referentiel.annuler.confirmer": "Annuler cette fusion ? Les données retrouveront leur organisation d'origine.",
-  "organization.referentiel.annuler.succes": "Fusion annulée."
+  "organization.referentiel.annuler.succes": "Fusion annulée.",
+  "patient.cmu.label": "Numéro CMU (matricule CNAM, n° de sécurité sociale)",
+  "patient.cmu.placeholder": "13 chiffres",
+  "patient.cmu.invalid": "Numéro CMU non conforme : 13 chiffres attendus (espaces, tirets et points ignorés)."
 }

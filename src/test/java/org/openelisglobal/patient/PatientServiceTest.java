@@ -396,14 +396,15 @@ public class PatientServiceTest extends BaseWebContextSensitiveTest {
 
     /**
      * En l'absence d'un type d'identité dédié "CMU" (non présent dans le jeu de
-     * test), le numéro CMU/CNAM retombe sur le nationalId qui héberge ce code
-     * (interop PSNDPE).
+     * test), le numéro CMU retombe sur le nationalId qui héberge ce code, mais
+     * seulement s'il a le format d'un numéro CMU (13 chiffres) : "1234" n'en est
+     * pas un.
      */
     @Test
-    public void getCMUNumber_shouldFallBackToNationalId() throws Exception {
+    public void getCMUNumber_shouldNotFallBackToNonConformingNationalId() throws Exception {
         Patient pat = patientService.get("1");
 
-        Assert.assertEquals("1234", patientService.getCMUNumber(pat));
+        Assert.assertEquals("", patientService.getCMUNumber(pat));
     }
 
     @Test

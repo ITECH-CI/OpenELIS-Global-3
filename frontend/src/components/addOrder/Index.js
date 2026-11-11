@@ -13,6 +13,7 @@ import AddSample from "./AddSample";
 import OrderEntryAdditionalQuestions from "./OrderEntryAdditionalQuestions";
 import OrderSuccessMessage from "./OrderSuccessMessage";
 import PatientInfo from "./PatientInfo";
+import { cmuForSubmit } from "../utils/CmuNumber";
 import "./add-order.scss";
 let breadcrumbs = [
   { label: "home.label", link: "/" },
@@ -688,6 +689,10 @@ const Index = () => {
     }
 
     setIsSubmitting(true);
+    // Numéro CMU (champ nationalId) envoyé normalisé s'il est conforme.
+    orderFormValues.patientProperties.nationalId = cmuForSubmit(
+      orderFormValues.patientProperties.nationalId,
+    );
     if ("years" in orderFormValues.patientProperties) {
       delete orderFormValues.patientProperties.years;
     }

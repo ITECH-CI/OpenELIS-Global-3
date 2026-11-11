@@ -7,10 +7,12 @@ import ca.uhn.fhir.rest.gclient.IQuery;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import org.apache.commons.validator.GenericValidator;
 import org.hl7.fhir.instance.model.api.IBaseBundle;
@@ -459,6 +461,7 @@ public class FhirApiWorkFlowServiceImpl implements FhirApiWorkflowService {
         TaskResult taskResult = null;
         if (localObjects.task.getStatus() == null || localObjects.task.getStatus().equals(TaskStatus.REQUESTED)) {
             Boolean taskOrderAcceptedFlag = false;
+            Set<String> rejectionReasons = new LinkedHashSet<>();
             for (ServiceRequest serviceRequest : serviceRequestList) {
 
                 TaskWorker worker = new TaskWorker(remoteTask,
@@ -471,15 +474,25 @@ public class FhirApiWorkFlowServiceImpl implements FhirApiWorkflowService {
                 taskResult = worker.handleOrderRequest();
                 if (taskResult == TaskResult.OK) {
                     taskOrderAcceptedFlag = true; // at least one order was accepted per Piotr 5/14/2020
+                } else if (worker.getStatusReason() != null) {
+                    rejectionReasons.add(worker.getStatusReason());
                 }
+            }
+            if (serviceRequestList.isEmpty()) {
+                rejectionReasons.add("demande d'examen absente");
             }
 
             TaskStatus taskStatus = taskOrderAcceptedFlag ? TaskStatus.ACCEPTED : TaskStatus.REJECTED;
             localObjects.task.setStatus(taskStatus);
+            // Motif du refus (court, sans donnée nominative), relayé par la plateforme
+            // au demandeur.
+            CodeableConcept statusReason = statusReasonFor(taskStatus, rejectionReasons);
+            localObjects.task.setStatusReason(statusReason);
             if (remoteStoreUpdateStatus.isPresent() && remoteStoreUpdateStatus.get()) {
                 LogEvent.logTrace(this.getClass().getSimpleName(), "beginTaskPath",
                         "updating remote status to " + taskStatus);
                 remoteTask.setStatus(taskStatus);
+                remoteTask.setStatusReason(statusReason == null ? null : statusReason.copy());
                 sourceFhirClient.update().resource(remoteTask).execute();
             }
             IGenericClient localFhirClient = fhirUtil.getFhirClient(localFhirStorePath);
@@ -487,6 +500,15 @@ public class FhirApiWorkFlowServiceImpl implements FhirApiWorkflowService {
             // taskBasedOnRemoteTask.setStatus(taskStatus);
             // localFhirClient.update().resource(taskBasedOnRemoteTask).execute();
         }
+    }
+
+    static CodeableConcept statusReasonFor(TaskStatus taskStatus, Set<String> rejectionReasons) {
+        if (taskStatus != TaskStatus.REJECTED) {
+            return null;
+        }
+        String text = rejectionReasons == null || rejectionReasons.isEmpty() ? "demande non conforme"
+                : String.join(" ; ", rejectionReasons);
+        return new CodeableConcept().setText(text);
     }
 
     private Task getLocalTaskBasedOnTask(Task remoteTask, String remoteStorePath) {
