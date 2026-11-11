@@ -111,3 +111,9 @@ jour, prime sur `common.properties`), puis
    avec leur numéro CMU et les Observations avec la date du prélèvement :
    `https://<serveur>/api/OpenELIS-Global/OEToFhir?checkAll=true` (suivi :
    `/OEToFhir/info`, jusqu'à `"running":false`).
+
+## Limites connues
+
+- `POST /fhir-in/order` est refusé (403) par la passerelle, qui n'accepte en
+  écriture que le `PUT` décrit ci-dessus. Cette voie n'est pas utilisée par la
+  plateforme, qui dépose ses demandes par la passerelle puis la relève.
