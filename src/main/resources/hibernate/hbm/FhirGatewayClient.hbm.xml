@@ -39,6 +39,14 @@
             <column name="rate_limit_per_min" not-null="false" />
         </property>
 
+        <property name="allowWrite" type="java.lang.String">
+            <column name="allow_write" length="1" not-null="true" />
+        </property>
+
+        <property name="writeIdPrefix" type="java.lang.String">
+            <column name="write_id_prefix" length="32" not-null="false" />
+        </property>
+
         <property name="createdAt" type="timestamp">
             <column name="created_at" not-null="false" />
         </property>

@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+     http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+    <!--
+        Écriture par la passerelle FHIR, désactivée par défaut :
+        - fhir_gateway_client.allow_write : 'Y' autorise PUT /fhir/<Type>/<id>
+          (et rien d'autre en écriture) pour les types autorisés du client ;
+        - fhir_gateway_client.write_id_prefix : préfixe obligatoire des
+          identifiants écrits (ex. 'bdms-').
+        Idempotent (preConditions).
+    -->
+
+    <changeSet author="itechciv" id="fhir-gateway-client-write-policy-1">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists schemaName="clinlims" tableName="fhir_gateway_client"
+                    columnName="allow_write" />
+            </not>
+        </preConditions>
+        <addColumn schemaName="clinlims" tableName="fhir_gateway_client">
+            <column name="allow_write" type="VARCHAR(1)" defaultValue="N">
+                <constraints nullable="false" />
+            </column>
+            <column name="write_id_prefix" type="VARCHAR(32)">
+                <constraints nullable="true" />
+            </column>
+        </addColumn>
+        <rollback>
+            <dropColumn schemaName="clinlims" tableName="fhir_gateway_client"
+                columnName="write_id_prefix" />
+            <dropColumn schemaName="clinlims" tableName="fhir_gateway_client"
+                columnName="allow_write" />
+        </rollback>
+    </changeSet>
+</databaseChangeLog>

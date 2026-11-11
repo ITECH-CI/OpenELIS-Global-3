@@ -66,6 +66,10 @@ function FhirGateway() {
   const [policyResources, setPolicyResources] = useState([]);
   const [policyRateLimit, setPolicyRateLimit] = useState("");
   const [savingPolicy, setSavingPolicy] = useState(false);
+  // Écriture par la passerelle : PUT /fhir/<Type>/<id> seulement, identifiants
+  // préfixés ; un seul tiers peut écrire.
+  const [policyAllowWrite, setPolicyAllowWrite] = useState(false);
+  const [policyWritePrefix, setPolicyWritePrefix] = useState("");
 
   // Phase C : journal d'audit des accès (modal).
   const [accessLogOpen, setAccessLogOpen] = useState(false);
@@ -318,6 +322,37 @@ function FhirGateway() {
     setPolicyRateLimit(
       client.rateLimitPerMin != null ? String(client.rateLimitPerMin) : "",
     );
+    setPolicyAllowWrite(client.allowWrite === true);
+    setPolicyWritePrefix(client.writeIdPrefix || "");
+  };
+
+  // Enregistre la politique d'écriture ; onDone(ok, message d'erreur du serveur).
+  const saveWritePolicy = (client, onDone) => {
+    const params = new URLSearchParams();
+    params.append("allowWrite", policyAllowWrite ? "true" : "false");
+    if (policyWritePrefix.trim() !== "") {
+      params.append("writeIdPrefix", policyWritePrefix.trim());
+    }
+    fetch(
+      config.serverBaseUrl +
+        `/rest/fhir-gateway/clients/${client.id}/write-policy?${params.toString()}`,
+      {
+        credentials: "include",
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRF-Token": localStorage.getItem("CSRF"),
+        },
+        body: JSON.stringify({}),
+      },
+    )
+      .then((response) =>
+        response
+          .json()
+          .catch(() => ({}))
+          .then((body) => onDone(response.ok, body && body.error)),
+      )
+      .catch(() => onDone(false, null));
   };
 
   const togglePolicyResource = (resource, checked) => {
@@ -341,18 +376,33 @@ function FhirGateway() {
     postExpectOk(
       `/rest/fhir-gateway/clients/${policyClient.id}/policy?${params.toString()}`,
       (ok) => {
-        setSavingPolicy(false);
         if (ok) {
-          notify(
-            intl.formatMessage({
-              id: "fhir.gateway.policy.saved",
-              defaultMessage: "Politique d'accès enregistrée.",
-            }),
-            NotificationKinds.success,
-          );
-          setPolicyClient(null);
-          loadClients();
+          saveWritePolicy(policyClient, (writeOk, writeError) => {
+            setSavingPolicy(false);
+            if (writeOk) {
+              notify(
+                intl.formatMessage({
+                  id: "fhir.gateway.policy.saved",
+                  defaultMessage: "Politique d'accès enregistrée.",
+                }),
+                NotificationKinds.success,
+              );
+              setPolicyClient(null);
+            } else {
+              notify(
+                writeError ||
+                  intl.formatMessage({
+                    id: "fhir.gateway.policy.error",
+                    defaultMessage:
+                      "Échec de l'enregistrement de la politique.",
+                  }),
+                NotificationKinds.error,
+              );
+            }
+            loadClients();
+          });
         } else {
+          setSavingPolicy(false);
           notify(
             intl.formatMessage({
               id: "fhir.gateway.policy.error",
@@ -575,7 +625,20 @@ function FhirGateway() {
                       <TableRow>
                         <TableCell>{client.name}</TableCell>
                         <TableCell>{client.description}</TableCell>
-                        <TableCell>{statusTag(client.active)}</TableCell>
+                        <TableCell>
+                          {statusTag(client.active)}
+                          {client.allowWrite && (
+                            <Tag type="purple" size="sm">
+                              <FormattedMessage
+                                id="fhir.gateway.client.write"
+                                defaultMessage="Écriture"
+                              />
+                              {client.writeIdPrefix
+                                ? ` (${client.writeIdPrefix})`
+                                : ""}
+                            </Tag>
+                          )}
+                        </TableCell>
                         <TableCell>
                           <div
                             style={{
@@ -847,6 +910,34 @@ function FhirGateway() {
               value={policyRateLimit}
               onChange={(e) => setPolicyRateLimit(e.target.value)}
             />
+            <div style={{ marginTop: "1.5rem" }}>
+              <Checkbox
+                id="fhirGatewayAllowWrite"
+                labelText={intl.formatMessage({
+                  id: "fhir.gateway.policy.write.label",
+                  defaultMessage:
+                    "Autoriser l'écriture (PUT /fhir/<Type>/<id> seulement, types cochés ci-dessus)",
+                })}
+                checked={policyAllowWrite}
+                onChange={(e) => setPolicyAllowWrite(e.target.checked)}
+              />
+              <TextInput
+                id="fhirGatewayWritePrefix"
+                labelText={intl.formatMessage({
+                  id: "fhir.gateway.policy.writePrefix.label",
+                  defaultMessage:
+                    "Préfixe obligatoire des identifiants écrits (ex. bdms-)",
+                })}
+                helperText={intl.formatMessage({
+                  id: "fhir.gateway.policy.writePrefix.helper",
+                  defaultMessage:
+                    "Un seul tiers peut écrire. POST, DELETE, PATCH et les identifiants hors préfixe restent refusés.",
+                })}
+                value={policyWritePrefix}
+                disabled={!policyAllowWrite}
+                onChange={(e) => setPolicyWritePrefix(e.target.value)}
+              />
+            </div>
           </>
         )}
       </Modal>

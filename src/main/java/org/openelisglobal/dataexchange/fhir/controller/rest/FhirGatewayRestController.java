@@ -94,6 +94,8 @@ public class FhirGatewayRestController {
             row.put("active", "Y".equals(c.getIsActive()));
             row.put("allowedResources", c.getAllowedResources());
             row.put("rateLimitPerMin", c.getRateLimitPerMin());
+            row.put("allowWrite", "Y".equals(c.getAllowWrite()));
+            row.put("writeIdPrefix", c.getWriteIdPrefix());
             out.add(row);
         }
         return out;
@@ -112,6 +114,25 @@ public class FhirGatewayRestController {
         row.put("id", client.getId());
         row.put("name", client.getName());
         return ResponseEntity.ok(row);
+    }
+
+    /**
+     * Politique d'écriture d'un tiers : PUT /fhir/&lt;Type&gt;/&lt;id&gt; pour ses
+     * types autorisés, identifiants préfixés par writeIdPrefix. Un seul tiers peut
+     * écrire. 400 avec un message si la demande est refusée.
+     */
+    @PostMapping("/clients/{clientId}/write-policy")
+    public ResponseEntity<Map<String, String>> updateClientWritePolicy(@PathVariable String clientId,
+            @RequestParam("allowWrite") boolean allowWrite,
+            @RequestParam(value = "writeIdPrefix", required = false) String writeIdPrefix) {
+        try {
+            fhirGatewayTokenService.updateClientWritePolicy(clientId, allowWrite, writeIdPrefix);
+            return ResponseEntity.ok(new HashMap<>());
+        } catch (IllegalArgumentException e) {
+            Map<String, String> body = new HashMap<>();
+            body.put("error", e.getMessage());
+            return ResponseEntity.badRequest().body(body);
+        }
     }
 
     /** Active/désactive un tiers (désactiver bloque tous ses jetons). */

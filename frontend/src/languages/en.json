@@ -2494,5 +2494,9 @@
   "organization.referentiel.annuler.succes": "Merge undone.",
   "patient.cmu.label": "CMU number (CNAM number, social security number)",
   "patient.cmu.placeholder": "13 digits",
-  "patient.cmu.invalid": "Invalid CMU number: 13 digits expected (spaces, dashes and dots are ignored)."
+  "patient.cmu.invalid": "Invalid CMU number: 13 digits expected (spaces, dashes and dots are ignored).",
+  "fhir.gateway.policy.write.label": "Allow writes (PUT /fhir/<Type>/<id> only, for the types checked above)",
+  "fhir.gateway.policy.writePrefix.label": "Required prefix of written ids (e.g. bdms-)",
+  "fhir.gateway.policy.writePrefix.helper": "Only one client can write. POST, DELETE, PATCH and ids without the prefix stay refused.",
+  "fhir.gateway.client.write": "Write"
 }

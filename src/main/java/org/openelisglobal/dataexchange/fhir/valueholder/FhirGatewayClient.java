@@ -44,6 +44,14 @@ public class FhirGatewayClient extends BaseObject<String> {
     // illimité.
     private Integer rateLimitPerMin;
 
+    // Écriture autorisée ("Y"/"N", "N" par défaut) : seulement PUT
+    // /fhir/<Type>/<id>, pour un type autorisé et un identifiant qui commence par
+    // writeIdPrefix.
+    private String allowWrite = "N";
+
+    // Préfixe obligatoire des identifiants écrits (ex. "bdms-").
+    private String writeIdPrefix;
+
     private Timestamp createdAt;
 
     @Override
@@ -94,6 +102,22 @@ public class FhirGatewayClient extends BaseObject<String> {
 
     public void setRateLimitPerMin(Integer rateLimitPerMin) {
         this.rateLimitPerMin = rateLimitPerMin;
+    }
+
+    public String getAllowWrite() {
+        return allowWrite;
+    }
+
+    public void setAllowWrite(String allowWrite) {
+        this.allowWrite = allowWrite;
+    }
+
+    public String getWriteIdPrefix() {
+        return writeIdPrefix;
+    }
+
+    public void setWriteIdPrefix(String writeIdPrefix) {
+        this.writeIdPrefix = writeIdPrefix;
     }
 
     public Timestamp getCreatedAt() {

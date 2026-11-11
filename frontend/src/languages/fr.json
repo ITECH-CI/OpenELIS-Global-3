@@ -2009,5 +2009,9 @@
   "organization.referentiel.annuler.succes": "Fusion annulée.",
   "patient.cmu.label": "Numéro CMU (matricule CNAM, n° de sécurité sociale)",
   "patient.cmu.placeholder": "13 chiffres",
-  "patient.cmu.invalid": "Numéro CMU non conforme : 13 chiffres attendus (espaces, tirets et points ignorés)."
+  "patient.cmu.invalid": "Numéro CMU non conforme : 13 chiffres attendus (espaces, tirets et points ignorés).",
+  "fhir.gateway.policy.write.label": "Autoriser l'écriture (PUT /fhir/<Type>/<id> seulement, types cochés ci-dessus)",
+  "fhir.gateway.policy.writePrefix.label": "Préfixe obligatoire des identifiants écrits (ex. bdms-)",
+  "fhir.gateway.policy.writePrefix.helper": "Un seul tiers peut écrire. POST, DELETE, PATCH et les identifiants hors préfixe restent refusés.",
+  "fhir.gateway.client.write": "Écriture"
 }
