@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+     http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+    <!--
+      « Nouvelle demande » : droit distinct « Enregistrer des demandes »
+      (module LocalOrderEntry), séparé de la saisie d'échantillon et sans accès
+      aux résultats. L'URL de création est déclarée pour ce module (sans le
+      préfixe /rest, retiré par l'intercepteur de modules avant la comparaison) :
+      seuls ses titulaires (et l'administrateur) peuvent créer une demande. La fonction
+      elle-même reste désactivée tant que
+      org.openelisglobal.eorder.saisieLocale.enabled vaut false. Idempotent.
+    -->
+    <changeSet author="itechciv" id="add-local-order-entry-role-1">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">
+                SELECT COUNT(*) FROM clinlims.system_module WHERE name = 'LocalOrderEntry'
+            </sqlCheck>
+        </preConditions>
+        <insert schemaName="clinlims" tableName="system_module">
+            <column name="id" valueSequenceNext="system_module_seq" />
+            <column name="name" value="LocalOrderEntry" />
+            <column name="description" value="Enregistrer des demandes (saisie locale)" />
+        </insert>
+        <insert tableName="system_module_url" schemaName="clinlims">
+            <column name="id" valueSequenceNext="system_module_url_seq" />
+            <column name="url_path" value="/LocalOrderEntry" />
+            <column name="system_module_id"
+                valueComputed="(SELECT id FROM clinlims.system_module WHERE name = 'LocalOrderEntry')" />
+        </insert>
+    </changeSet>
+
+    <changeSet author="itechciv" id="add-local-order-entry-role-2">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">
+                SELECT COUNT(*) FROM clinlims.system_role WHERE name = 'Enregistrer des demandes'
+            </sqlCheck>
+        </preConditions>
+        <insert tableName="system_role" schemaName="clinlims">
+            <column name="id" valueSequenceNext="system_role_seq" />
+            <column name="name" value="Enregistrer des demandes" />
+            <column name="description" value="Enregistrer des demandes d'examen, sans saisie d'échantillon ni résultats" />
+            <column name="is_grouping_role" value="false" />
+            <column name="grouping_parent"
+                valueComputed="(SELECT id FROM clinlims.system_role WHERE name = 'Global Roles')" />
+            <column name="display_key" value="role.localOrderEntry" />
+            <column name="active" value="true" />
+            <column name="editable" value="false" />
+        </insert>
+        <insert tableName="system_role_module" schemaName="clinlims">
+            <column name="id" valueSequenceNext="system_role_module_seq" />
+            <column name="has_select" value="Y" />
+            <column name="has_add" value="Y" />
+            <column name="has_update" value="Y" />
+            <column name="system_role_id"
+                valueComputed="(SELECT id FROM clinlims.system_role WHERE name = 'Enregistrer des demandes')" />
+            <column name="system_module_id"
+                valueComputed="(SELECT id FROM clinlims.system_module WHERE name = 'LocalOrderEntry')" />
+        </insert>
+    </changeSet>
+</databaseChangeLog>

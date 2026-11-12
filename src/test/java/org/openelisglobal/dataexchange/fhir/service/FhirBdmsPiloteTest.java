@@ -73,6 +73,7 @@ import org.openelisglobal.typeofsample.valueholder.TypeOfSample;
 public class FhirBdmsPiloteTest {
 
     private static final String OE_SYSTEM = "http://openelis-global.org";
+    private static final ca.uhn.fhir.context.FhirContext FHIR = ca.uhn.fhir.context.FhirContext.forR4();
     private static final String REFERRING_ORG_TYPE_ID = "5";
     private static final String REFERRING_DEPARTMENT_TYPE_ID = "10";
 
@@ -100,6 +101,8 @@ public class FhirBdmsPiloteTest {
     private FhirPersistanceService fhirPersistanceService;
     @Mock
     private org.openelisglobal.siteinformation.service.SiteInformationService siteInformationService;
+    @Mock
+    private org.openelisglobal.dataexchange.fhir.FhirUtil fhirUtil;
 
     @InjectMocks
     private FhirTransformServiceImpl fhirTransformService;
@@ -113,6 +116,7 @@ public class FhirBdmsPiloteTest {
     @Before
     public void setUp() throws Exception {
         when(fhirConfig.getOeFhirSystem()).thenReturn(OE_SYSTEM);
+        when(fhirUtil.getFhirParser()).thenAnswer(invocation -> FHIR.newJsonParser());
         when(organizationService.get(any())).thenAnswer(invocation -> {
             Organization organization = new Organization();
             organization.setOrganizationTypes(new HashSet<>());
@@ -397,5 +401,59 @@ public class FhirBdmsPiloteTest {
         configureLaboratorySite("999999");
 
         assertNull(fhirTransformService.laboratorySite());
+    }
+
+    private org.openelisglobal.dataexchange.order.valueholder.ElectronicOrder electronicOrder(String data,
+            org.openelisglobal.dataexchange.order.valueholder.ElectronicOrderOrigine origine) {
+        org.openelisglobal.dataexchange.order.valueholder.ElectronicOrder eOrder = new org.openelisglobal.dataexchange.order.valueholder.ElectronicOrder();
+        eOrder.setId("41");
+        eOrder.setType(org.openelisglobal.dataexchange.order.valueholder.ElectronicOrderType.FHIR);
+        eOrder.setOrigine(origine);
+        eOrder.setData(data);
+        return eOrder;
+    }
+
+    @Test
+    public void transformToServiceRequest_localOrderWithVenue_shouldEmitEncounterIdentifierWithoutBasedOn() {
+        when(sample.getReferringId()).thenReturn("local-demo-1");
+        String data = "{\"resourceType\":\"Task\",\"id\":\"local-demo\",\"status\":\"requested\","
+                + "\"intent\":\"order\",\"encounter\":{\"identifier\":{\"system\":\"" + OE_SYSTEM
+                + "/venue\",\"value\":\"V-DEMO-001\"}}}";
+        when(electronicOrderService.getElectronicOrdersByExternalId("local-demo-1")).thenReturn(Arrays.asList(
+                electronicOrder(data, org.openelisglobal.dataexchange.order.valueholder.ElectronicOrderOrigine.SAISIE_LOCALE)));
+
+        ServiceRequest serviceRequest = fhirTransformService.transformToServiceRequest("21");
+
+        assertEquals(OE_SYSTEM + "/venue", serviceRequest.getEncounter().getIdentifier().getSystem());
+        assertEquals("V-DEMO-001", serviceRequest.getEncounter().getIdentifier().getValue());
+        assertFalse(serviceRequest.getEncounter().hasReference());
+        // la demande locale n'existe pas dans le serveur FHIR : pas de basedOn
+        assertFalse(serviceRequest.hasBasedOn());
+    }
+
+    @Test
+    public void transformToServiceRequest_localOrderWithoutVenue_shouldHaveNoEncounter() {
+        when(sample.getReferringId()).thenReturn("local-demo-1");
+        when(electronicOrderService.getElectronicOrdersByExternalId("local-demo-1")).thenReturn(Arrays.asList(
+                electronicOrder("{\"resourceType\":\"Task\",\"id\":\"local-demo\"}",
+                        org.openelisglobal.dataexchange.order.valueholder.ElectronicOrderOrigine.SAISIE_LOCALE)));
+
+        ServiceRequest serviceRequest = fhirTransformService.transformToServiceRequest("21");
+
+        assertFalse(serviceRequest.hasEncounter());
+        assertFalse(serviceRequest.hasBasedOn());
+    }
+
+    @Test
+    public void transformToServiceRequest_platformOrder_shouldKeepBasedOnTheReceivedRequest() {
+        when(sample.getReferringId()).thenReturn("bdms-sr-1");
+        when(electronicOrderService.getElectronicOrdersByExternalId("bdms-sr-1")).thenReturn(Arrays.asList(
+                electronicOrder("{\"resourceType\":\"Task\",\"id\":\"bdms-t1\"}",
+                        org.openelisglobal.dataexchange.order.valueholder.ElectronicOrderOrigine.PLATEFORME)));
+
+        ServiceRequest serviceRequest = fhirTransformService.transformToServiceRequest("21");
+
+        assertEquals("ServiceRequest/bdms-sr-1", serviceRequest.getBasedOnFirstRep().getReference());
+        assertFalse(serviceRequest.hasEncounter());
     }
 }

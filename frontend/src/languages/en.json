@@ -2549,5 +2549,18 @@
   "receivedOrders.detail.none": "None.",
   "examChoice.heading": "Sample for the requested tests",
   "examChoice.explanation": "These tests can be done on several sample types and the order does not say which. Choose the sample for each.",
-  "examChoice.notPlaced": "Tests to add by hand: "
+  "examChoice.notPlaced": "Tests to add by hand: ",
+  "localOrder.new": "New order",
+  "localOrder.title": "New order",
+  "localOrder.save": "Save the order",
+  "localOrder.patient.search": "Patient (CMU number, name or internal number)",
+  "localOrder.patient": "Patient found",
+  "localOrder.patient.create": "Patient not found?",
+  "localOrder.patient.createLink": "Create the patient (new tab), then search again",
+  "localOrder.prescriber.lastName": "Prescriber: last name",
+  "localOrder.prescriber.firstName": "Prescriber: first name",
+  "localOrder.venue": "Visit number (optional)",
+  "localOrder.required": "Choose a patient and at least one test.",
+  "localOrder.error": "The order could not be saved.",
+  "localOrder.created": "Order {number} saved: it is waiting to be taken in charge."
 }

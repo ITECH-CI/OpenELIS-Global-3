@@ -77,6 +77,23 @@ public class FhirConfig {
     @Value("${org.openelisglobal.eorder.categorie.extension:}")
     private String eorderCategorieExtension;
 
+    // « Nouvelle demande » (saisie locale d'une demande par un opérateur hors du
+    // laboratoire) : désactivée par défaut.
+    @Getter
+    @Value("${org.openelisglobal.eorder.saisieLocale.enabled:false}")
+    private boolean eorderLocalEntryEnabled;
+
+    // Système de l'identifiant de venue (numéro de venue d'une demande saisie
+    // localement, émis en ServiceRequest.encounter.identifier). Vide :
+    // <oeFhirSystem>/venue.
+    @Value("${org.openelisglobal.eorder.venue.identifier.system:}")
+    private String venueIdentifierSystem;
+
+    public String getVenueIdentifierSystem() {
+        return venueIdentifierSystem == null || venueIdentifierSystem.trim().isEmpty() ? oeFhirSystem + "/venue"
+                : venueIdentifierSystem.trim();
+    }
+
     @Getter
     @Value("${org.openelisglobal.fhirstore.uri:}")
     private String localFhirStorePath;

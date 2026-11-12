@@ -52,7 +52,9 @@ import org.openelisglobal.dataexchange.fhir.FhirConfig;
 import org.openelisglobal.dataexchange.fhir.FhirUtil;
 import org.openelisglobal.dataexchange.fhir.service.FhirPersistanceService;
 import org.openelisglobal.dataexchange.order.valueholder.ElectronicOrder;
+import org.openelisglobal.dataexchange.order.valueholder.ElectronicOrderOrigine;
 import org.openelisglobal.dataexchange.service.order.ElectronicOrderService;
+import org.openelisglobal.dataexchange.service.order.LocalOrderEntryServiceImpl;
 import org.openelisglobal.internationalization.MessageUtil;
 import org.openelisglobal.organization.service.OrganizationService;
 import org.openelisglobal.panel.service.PanelService;
@@ -118,6 +120,10 @@ public class LabOrderSearchProvider extends BaseQueryProvider {
     private Program program = null;
 
     private List<ElectronicOrder> eOrders = null;
+    // Demande saisie localement : rien dans le serveur FHIR, tout est lu sur les
+    // demandes électroniques (Task locale dans data).
+    private boolean localOrder = false;
+    private List<ElectronicOrder> localOrders = new ArrayList<>();
     private ElectronicOrder eOrder = null;
     private ExternalOrderStatus eOrderStatus = null;
 
@@ -152,29 +158,18 @@ public class LabOrderSearchProvider extends BaseQueryProvider {
             eOrder = eOrders.get(eOrders.size() - 1);
             eOrderStatus = SpringContext.getBean(IStatusService.class)
                     .getExternalOrderStatusForID(eOrder.getStatusId());
+            localOrder = eOrder.getOrigine() == ElectronicOrderOrigine.SAISIE_LOCALE;
+            if (localOrder) {
+                prepareLocalOrder();
+            } else {
 
-            IGenericClient localFhirClient = fhirUtil.getFhirClient(fhirConfig.getLocalFhirStorePath());
+                IGenericClient localFhirClient = fhirUtil.getFhirClient(fhirConfig.getLocalFhirStorePath());
 
-            // Recherche par id de ressource (RES_ID = numéro d'ordre). Indépendante des
-            // stores distants : les ordres reçus en PUSH (mini-HIE) n'ont pas de remote
-            // store path, donc cette recherche doit tourner même quand la liste est vide.
-            Bundle srBundle = (Bundle) localFhirClient.search().forResource(ServiceRequest.class)
-                    .where(ServiceRequest.RES_ID.exactly().code(orderNumber)).include(ServiceRequest.INCLUDE_SPECIMEN)
-                    .execute();
-            for (BundleEntryComponent bundleComponent : srBundle.getEntry()) {
-                if (bundleComponent.hasResource()
-                        && ResourceType.ServiceRequest.equals(bundleComponent.getResource().getResourceType())) {
-                    serviceRequest = (ServiceRequest) bundleComponent.getResource();
-                }
-                if (bundleComponent.hasResource()
-                        && ResourceType.Specimen.equals(bundleComponent.getResource().getResourceType())) {
-                    specimen = (Specimen) bundleComponent.getResource();
-                }
-            }
-
-            for (String remotePath : fhirConfig.getRemoteStorePaths()) {
-                srBundle = (Bundle) localFhirClient.search().forResource(ServiceRequest.class)
-                        .where(ServiceRequest.IDENTIFIER.exactly().systemAndIdentifier(remotePath, orderNumber))
+                // Recherche par id de ressource (RES_ID = numéro d'ordre). Indépendante des
+                // stores distants : les ordres reçus en PUSH (mini-HIE) n'ont pas de remote
+                // store path, donc cette recherche doit tourner même quand la liste est vide.
+                Bundle srBundle = (Bundle) localFhirClient.search().forResource(ServiceRequest.class)
+                        .where(ServiceRequest.RES_ID.exactly().code(orderNumber))
                         .include(ServiceRequest.INCLUDE_SPECIMEN).execute();
                 for (BundleEntryComponent bundleComponent : srBundle.getEntry()) {
                     if (bundleComponent.hasResource()
@@ -186,99 +181,98 @@ public class LabOrderSearchProvider extends BaseQueryProvider {
                         specimen = (Specimen) bundleComponent.getResource();
                     }
                 }
-            }
-            if (serviceRequest != null) {
-                LogEvent.logDebug(this.getClass().getSimpleName(), "processRequest",
-                        "found matching serviceRequest " + serviceRequest.getIdElement().getIdPart());
-            } else {
-                LogEvent.logDebug(this.getClass().getSimpleName(), "processRequest", "no matching serviceRequest");
-            }
 
-            patient = localFhirClient.read() //
-                    .resource(Patient.class) //
-                    .withId(serviceRequest.getSubject().getReferenceElement().getIdPart()) //
-                    .execute();
-
-            if (patient != null) {
-                LogEvent.logDebug(this.getClass().getSimpleName(), "processRequest",
-                        "found matching patient " + patient.getIdElement().getIdPart());
-            } else {
-                LogEvent.logDebug(this.getClass().getSimpleName(), "processRequest", "no matching patient");
-            }
-
-            // task = fhirUtil.getFhirParser().parseResource(Task.class, eOrder.getData());
-
-            // task = (Task) localFhirClient.search()//
-            // .forResource(Task.class)//
-            // .where(Task.BASED_ON.hasAnyOfIds(serviceRequest.getId()))//
-            // .returnBundle(Bundle.class)//
-            // .execute().getEntryFirstRep().getResource();
-            task = fhirPersistanceService.getTaskBasedOnServiceRequest(orderNumber).orElseThrow();
-
-            if (task != null) {
-                LogEvent.logDebug(this.getClass().getSimpleName(), "processRequest",
-                        "found matching task " + task.getIdElement().getIdPart());
-            } else {
-                LogEvent.logDebug(this.getClass().getSimpleName(), "processRequest", "no matching task");
-            }
-
-            // QuestionnaireResponse (renseignements cliniques additionnels reçus d'un
-            // tiers) : rattaché au ServiceRequest via based-on (cf
-            // FhirOrderReceptionServiceImpl). S'il référence un Questionnaire connu, on en
-            // déduit le programme OE (Program.questionnaireUUID) pour pré-remplir le
-            // formulaire d'entrée d'échantillon.
-            resolveQuestionnaireResponseAndProgram(localFhirClient);
-
-            if (!GenericValidator
-                    .isBlankOrNull(task.getRestriction().getRecipientFirstRep().getReferenceElement().getIdPart())) {
-                try {
-                    referringOrganization = localFhirClient.read() //
-                            .resource(Organization.class) //
-                            .withId(task.getRestriction().getRecipientFirstRep().getReferenceElement().getIdPart()) //
-                            .execute();
-                    LogEvent.logDebug(this.getClass().getSimpleName(), "processRequest",
-                            "found matching organization " + referringOrganization.getIdElement().getIdPart());
-                } catch (ResourceNotFoundException e) {
-                    LogEvent.logWarn(this.getClass().getSimpleName(), "processRequest", "no matching organization");
+                for (String remotePath : fhirConfig.getRemoteStorePaths()) {
+                    srBundle = (Bundle) localFhirClient.search().forResource(ServiceRequest.class)
+                            .where(ServiceRequest.IDENTIFIER.exactly().systemAndIdentifier(remotePath, orderNumber))
+                            .include(ServiceRequest.INCLUDE_SPECIMEN).execute();
+                    for (BundleEntryComponent bundleComponent : srBundle.getEntry()) {
+                        if (bundleComponent.hasResource() && ResourceType.ServiceRequest
+                                .equals(bundleComponent.getResource().getResourceType())) {
+                            serviceRequest = (ServiceRequest) bundleComponent.getResource();
+                        }
+                        if (bundleComponent.hasResource()
+                                && ResourceType.Specimen.equals(bundleComponent.getResource().getResourceType())) {
+                            specimen = (Specimen) bundleComponent.getResource();
+                        }
+                    }
                 }
-            }
-
-            if (!GenericValidator
-                    .isBlankOrNull(serviceRequest.getLocationReferenceFirstRep().getReferenceElement().getIdPart())) {
-                try {
-                    location = localFhirClient.read() //
-                            .resource(Location.class) //
-                            .withId(serviceRequest.getLocationReferenceFirstRep().getReferenceElement().getIdPart()) //
-                            .execute();
+                if (serviceRequest != null) {
                     LogEvent.logDebug(this.getClass().getSimpleName(), "processRequest",
-                            "found matching location " + referringOrganization.getIdElement().getIdPart());
-                } catch (ResourceNotFoundException e) {
-                    LogEvent.logWarn(this.getClass().getSimpleName(), "processRequest", "no matching location");
+                            "found matching serviceRequest " + serviceRequest.getIdElement().getIdPart());
+                } else {
+                    LogEvent.logDebug(this.getClass().getSimpleName(), "processRequest", "no matching serviceRequest");
                 }
-            }
 
-            if (!GenericValidator.isBlankOrNull(task.getOwner().getReferenceElement().getIdPart())
-                    && task.getOwner().getReference().contains(ResourceType.Practitioner.toString())) {
-                try {
-                    requesterPerson = localFhirClient.read() //
-                            .resource(Practitioner.class) //
-                            .withId(task.getOwner().getReferenceElement().getIdPart()) //
-                            .execute();
+                patient = localFhirClient.read() //
+                        .resource(Patient.class) //
+                        .withId(serviceRequest.getSubject().getReferenceElement().getIdPart()) //
+                        .execute();
+
+                if (patient != null) {
                     LogEvent.logDebug(this.getClass().getSimpleName(), "processRequest",
-                            "found matching requester " + requesterPerson.getIdElement().getIdPart());
-                } catch (ResourceNotFoundException e) {
-                    LogEvent.logWarn(this.getClass().getSimpleName(), "processRequest", "no matching requester");
+                            "found matching patient " + patient.getIdElement().getIdPart());
+                } else {
+                    LogEvent.logDebug(this.getClass().getSimpleName(), "processRequest", "no matching patient");
                 }
-            }
 
-            if (requesterPerson == null) {
-                if (!GenericValidator.isBlankOrNull(serviceRequest.getRequester().getReferenceElement().getIdPart())
-                        && serviceRequest.getRequester().getReference()
-                                .contains(ResourceType.Practitioner.toString())) {
+                // task = fhirUtil.getFhirParser().parseResource(Task.class, eOrder.getData());
+
+                // task = (Task) localFhirClient.search()//
+                // .forResource(Task.class)//
+                // .where(Task.BASED_ON.hasAnyOfIds(serviceRequest.getId()))//
+                // .returnBundle(Bundle.class)//
+                // .execute().getEntryFirstRep().getResource();
+                task = fhirPersistanceService.getTaskBasedOnServiceRequest(orderNumber).orElseThrow();
+
+                if (task != null) {
+                    LogEvent.logDebug(this.getClass().getSimpleName(), "processRequest",
+                            "found matching task " + task.getIdElement().getIdPart());
+                } else {
+                    LogEvent.logDebug(this.getClass().getSimpleName(), "processRequest", "no matching task");
+                }
+
+                // QuestionnaireResponse (renseignements cliniques additionnels reçus d'un
+                // tiers) : rattaché au ServiceRequest via based-on (cf
+                // FhirOrderReceptionServiceImpl). S'il référence un Questionnaire connu, on en
+                // déduit le programme OE (Program.questionnaireUUID) pour pré-remplir le
+                // formulaire d'entrée d'échantillon.
+                resolveQuestionnaireResponseAndProgram(localFhirClient);
+
+                if (!GenericValidator.isBlankOrNull(
+                        task.getRestriction().getRecipientFirstRep().getReferenceElement().getIdPart())) {
+                    try {
+                        referringOrganization = localFhirClient.read() //
+                                .resource(Organization.class) //
+                                .withId(task.getRestriction().getRecipientFirstRep().getReferenceElement().getIdPart()) //
+                                .execute();
+                        LogEvent.logDebug(this.getClass().getSimpleName(), "processRequest",
+                                "found matching organization " + referringOrganization.getIdElement().getIdPart());
+                    } catch (ResourceNotFoundException e) {
+                        LogEvent.logWarn(this.getClass().getSimpleName(), "processRequest", "no matching organization");
+                    }
+                }
+
+                if (!GenericValidator.isBlankOrNull(
+                        serviceRequest.getLocationReferenceFirstRep().getReferenceElement().getIdPart())) {
+                    try {
+                        location = localFhirClient.read() //
+                                .resource(Location.class) //
+                                .withId(serviceRequest.getLocationReferenceFirstRep().getReferenceElement().getIdPart()) //
+                                .execute();
+                        LogEvent.logDebug(this.getClass().getSimpleName(), "processRequest",
+                                "found matching location " + referringOrganization.getIdElement().getIdPart());
+                    } catch (ResourceNotFoundException e) {
+                        LogEvent.logWarn(this.getClass().getSimpleName(), "processRequest", "no matching location");
+                    }
+                }
+
+                if (!GenericValidator.isBlankOrNull(task.getOwner().getReferenceElement().getIdPart())
+                        && task.getOwner().getReference().contains(ResourceType.Practitioner.toString())) {
                     try {
                         requesterPerson = localFhirClient.read() //
                                 .resource(Practitioner.class) //
-                                .withId(serviceRequest.getRequester().getReferenceElement().getIdPart()) //
+                                .withId(task.getOwner().getReferenceElement().getIdPart()) //
                                 .execute();
                         LogEvent.logDebug(this.getClass().getSimpleName(), "processRequest",
                                 "found matching requester " + requesterPerson.getIdElement().getIdPart());
@@ -287,19 +281,37 @@ public class LabOrderSearchProvider extends BaseQueryProvider {
                     }
                 }
 
-            }
+                if (requesterPerson == null) {
+                    if (!GenericValidator.isBlankOrNull(serviceRequest.getRequester().getReferenceElement().getIdPart())
+                            && serviceRequest.getRequester().getReference()
+                                    .contains(ResourceType.Practitioner.toString())) {
+                        try {
+                            requesterPerson = localFhirClient.read() //
+                                    .resource(Practitioner.class) //
+                                    .withId(serviceRequest.getRequester().getReferenceElement().getIdPart()) //
+                                    .execute();
+                            LogEvent.logDebug(this.getClass().getSimpleName(), "processRequest",
+                                    "found matching requester " + requesterPerson.getIdElement().getIdPart());
+                        } catch (ResourceNotFoundException e) {
+                            LogEvent.logWarn(this.getClass().getSimpleName(), "processRequest",
+                                    "no matching requester");
+                        }
+                    }
 
-            if (specimen != null && !GenericValidator
-                    .isBlankOrNull(specimen.getCollection().getCollector().getReferenceElement().getIdPart())) {
-                try {
-                    collector = localFhirClient.read() //
-                            .resource(Practitioner.class) //
-                            .withId(specimen.getCollection().getCollector().getReferenceElement().getIdPart()) //
-                            .execute();
-                    LogEvent.logDebug(this.getClass().getSimpleName(), "processRequest",
-                            "found matching collector " + requesterPerson.getIdElement().getIdPart());
-                } catch (ResourceNotFoundException e) {
-                    LogEvent.logWarn(this.getClass().getSimpleName(), "processRequest", "no matching collector");
+                }
+
+                if (specimen != null && !GenericValidator
+                        .isBlankOrNull(specimen.getCollection().getCollector().getReferenceElement().getIdPart())) {
+                    try {
+                        collector = localFhirClient.read() //
+                                .resource(Practitioner.class) //
+                                .withId(specimen.getCollection().getCollector().getReferenceElement().getIdPart()) //
+                                .execute();
+                        LogEvent.logDebug(this.getClass().getSimpleName(), "processRequest",
+                                "found matching collector " + requesterPerson.getIdElement().getIdPart());
+                    } catch (ResourceNotFoundException e) {
+                        LogEvent.logWarn(this.getClass().getSimpleName(), "processRequest", "no matching collector");
+                    }
                 }
             }
         }
@@ -322,6 +334,52 @@ public class LabOrderSearchProvider extends BaseQueryProvider {
         ajaxServlet.sendData(xml.toString(), result, request, response);
     }
 
+    private void prepareLocalOrder() {
+        serviceRequest = null;
+        specimen = null;
+        patient = null;
+        requesterPerson = null;
+        referringOrganization = null;
+        location = null;
+        collector = null;
+        questionnaireResponse = null;
+        program = null;
+        task = parseTask(eOrder);
+        String taskId = electronicOrderService.getTaskId(eOrder);
+        localOrders = taskId == null ? new ArrayList<>()
+                : new ArrayList<>(electronicOrderService.getRoutineElectronicOrdersByTaskId(taskId));
+        if (localOrders.isEmpty()) {
+            localOrders.add(eOrder);
+        }
+        if (task == null) {
+            task = new Task();
+        }
+    }
+
+    private Task parseTask(ElectronicOrder order) {
+        try {
+            return fhirUtil.getFhirParser().parseResource(Task.class, order.getData());
+        } catch (RuntimeException e) {
+            return null;
+        }
+    }
+
+    // Examens d'une demande saisie localement : test OpenELIS en Task.focus.
+    private void getLocalTests(List<Request> tests) {
+        String system = LocalOrderEntryServiceImpl.testIdSystem(fhirConfig);
+        for (ElectronicOrder order : localOrders) {
+            Task orderTask = parseTask(order);
+            if (orderTask == null || !orderTask.getFocus().hasIdentifier()
+                    || !system.equals(orderTask.getFocus().getIdentifier().getSystem())) {
+                continue;
+            }
+            Test test = testService.get(orderTask.getFocus().getIdentifier().getValue());
+            if (test != null) {
+                tests.add(new Request(test.getName(), test.getLoinc(), "", test.getId()));
+            }
+        }
+    }
+
     private String createSearchResultXML(String orderNumber, StringBuilder xml) {
 
         String success = VALID;
@@ -335,7 +393,7 @@ public class LabOrderSearchProvider extends BaseQueryProvider {
         }
 
         patientGuid = getPatientGuid(eOrder);
-        for (Identifier identifier : patient.getIdentifier()) {
+        for (Identifier identifier : patient == null ? new ArrayList<Identifier>() : patient.getIdentifier()) {
             if (identifier.hasSystem()) {
                 // if
                 // (identifier.getSystem().equalsIgnoreCase("https://isanteplusdemo.com/openmrs/ws/fhir2/"))
@@ -459,6 +517,11 @@ public class LabOrderSearchProvider extends BaseQueryProvider {
             organization = organizationService
                     .getOrganizationByFhirId(task.getLocation().getReferenceElement().getIdPart());
         }
+        // Établissement en restriction.recipient (demande saisie localement)
+        if (organization == null && task.getRestriction().hasRecipient()) {
+            organization = organizationService.getOrganizationByFhirId(
+                    task.getRestriction().getRecipientFirstRep().getReferenceElement().getIdPart());
+        }
 
         if (organization != null) {
             XMLUtil.appendKeyValue("fhir-id", organization.getFhirUuidAsString(), xml);
@@ -513,6 +576,9 @@ public class LabOrderSearchProvider extends BaseQueryProvider {
                 requesterValuesMap.put(PROVIDER_PERSON_ID, provider.getPerson().getId());
             }
         }
+        if (localOrder) {
+            addLocalPrescriber(requesterValuesMap);
+        }
         xml.append("<requester>");
         XMLUtil.appendKeyValue(PROVIDER_ID, requesterValuesMap.get(PROVIDER_ID), xml);
         XMLUtil.appendKeyValue(PROVIDER_PERSON_ID, requesterValuesMap.get(PROVIDER_PERSON_ID), xml);
@@ -524,7 +590,23 @@ public class LabOrderSearchProvider extends BaseQueryProvider {
         xml.append("</requester>");
     }
 
+    // Prescripteur saisi avec la demande locale (contenu dans la Task).
+    private void addLocalPrescriber(Map<String, String> requesterValuesMap) {
+        for (org.hl7.fhir.r4.model.Resource contained : task.getContained()) {
+            if (contained instanceof Practitioner) {
+                Practitioner prescriber = (Practitioner) contained;
+                requesterValuesMap.put(PROVIDER_LAST_NAME, prescriber.getNameFirstRep().getFamily());
+                requesterValuesMap.put(PROVIDER_FIRST_NAME, prescriber.getNameFirstRep().getGivenAsSingleString());
+                return;
+            }
+        }
+    }
+
     private void getTestsAndPanels(List<Request> tests, List<Request> panels, String orderMessage) {
+        if (localOrder) {
+            getLocalTests(tests);
+            return;
+        }
         getTestsAndPanels(tests, panels, serviceRequest, specimen);
         // Les autres examens de la même demande (même Task) : la prise en charge les
         // reprend tous dans un seul bon.
@@ -675,7 +757,12 @@ public class LabOrderSearchProvider extends BaseQueryProvider {
 
     private void createMapsForTests(List<Request> testRequests) {
         for (Request testRequest : testRequests) {
-            List<Test> tests = testService.getActiveTestsByLoinc(testRequest.getLoinc());
+            List<Test> tests = testRequest.getTestId() != null
+                    ? new ArrayList<>(java.util.Arrays.asList(testService.get(testRequest.getTestId())))
+                    : testService.getActiveTestsByLoinc(testRequest.getLoinc());
+            if (tests == null || tests.isEmpty() || tests.get(0) == null) {
+                continue;
+            }
 
             Test singleTest = tests.get(0);
             List<TypeOfSample> sampleTypes = typeOfSampleService.getTypeOfSampleForTest(singleTest.getId());
@@ -1032,11 +1119,23 @@ public class LabOrderSearchProvider extends BaseQueryProvider {
         private String name;
         private String loinc;
         private String sampleType;
+        // test OpenELIS déjà connu (demande saisie localement) : pas de recherche
+        // par code LOINC
+        private String testId;
 
         public Request(String name, String loinc, String sampleType) {
             this.name = name;
             this.loinc = loinc;
             this.sampleType = sampleType;
+        }
+
+        public Request(String name, String loinc, String sampleType, String testId) {
+            this(name, loinc, sampleType);
+            this.testId = testId;
+        }
+
+        public String getTestId() {
+            return testId;
         }
 
         public String getSampleType() {

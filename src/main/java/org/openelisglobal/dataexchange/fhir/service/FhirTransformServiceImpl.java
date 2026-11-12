@@ -1254,6 +1254,15 @@ public class FhirTransformServiceImpl implements FhirTransformService {
 
         if (eOrders.size() <= 0) {
             serviceRequest.setIntent(ServiceRequestIntent.ORIGINALORDER);
+        } else if (eOrders.get(eOrders.size() - 1)
+                .getOrigine() == org.openelisglobal.dataexchange.order.valueholder.ElectronicOrderOrigine.SAISIE_LOCALE) {
+            // Demande saisie localement : elle n'existe pas dans le serveur FHIR (pas de
+            // basedOn) ; son numéro de venue sort en référence logique.
+            serviceRequest.setIntent(ServiceRequestIntent.ORDER);
+            Identifier venue = localVenueIdentifier(eOrders.get(eOrders.size() - 1));
+            if (venue != null) {
+                serviceRequest.setEncounter(new Reference().setIdentifier(venue));
+            }
         } else if (ElectronicOrderType.FHIR.equals(eOrders.get(eOrders.size() - 1).getType())) {
             serviceRequest.addBasedOn(this.createReferenceFor(ResourceType.ServiceRequest, sample.getReferringId()));
             serviceRequest.setIntent(ServiceRequestIntent.ORDER);
@@ -1934,6 +1943,22 @@ public class FhirTransformServiceImpl implements FhirTransformService {
             }
         }
         return false;
+    }
+
+    // Numéro de venue d'une demande saisie localement (Task.encounter.identifier de
+    // electronic_order.data), ou null.
+    Identifier localVenueIdentifier(ElectronicOrder eOrder) {
+        try {
+            Task localTask = fhirUtil.getFhirParser().parseResource(Task.class, eOrder.getData());
+            if (localTask.hasEncounter() && localTask.getEncounter().hasIdentifier()
+                    && localTask.getEncounter().getIdentifier().hasValue()) {
+                return localTask.getEncounter().getIdentifier().copy();
+            }
+        } catch (RuntimeException e) {
+            LogEvent.logWarn(this.getClass().getSimpleName(), "localVenueIdentifier",
+                    "numéro de venue illisible pour la demande " + eOrder.getId());
+        }
+        return null;
     }
 
     /** true si l'analyse est dans un état terminal d'annulation/rejet. */

@@ -79,7 +79,11 @@ const stepTagType = (etape) => {
   }
 };
 
-const ReceivedOrders = ({ refreshMs = REFRESH_MS, newOrderButton = null }) => {
+const ReceivedOrders = ({
+  refreshMs = REFRESH_MS,
+  newOrderButton = null,
+  reloadKey = 0,
+}) => {
   const intl = useIntl();
   const { notificationVisible, setNotificationVisible, addNotification } =
     useContext(NotificationContext);
@@ -121,7 +125,8 @@ const ReceivedOrders = ({ refreshMs = REFRESH_MS, newOrderButton = null }) => {
         }
       },
     );
-  }, [filters, page, pageSize]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filters, page, pageSize, reloadKey]);
 
   useEffect(() => {
     load();

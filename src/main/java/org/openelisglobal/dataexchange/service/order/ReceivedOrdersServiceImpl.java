@@ -308,6 +308,21 @@ public class ReceivedOrdersServiceImpl implements ReceivedOrdersService {
             return null;
         }
         Reference requester = task.getRequester();
+        // demande saisie localement : prescripteur contenu dans la Task
+        if (requester.hasReference() && requester.getReference().startsWith("#")) {
+            String containedId = requester.getReference().substring(1);
+            for (org.hl7.fhir.r4.model.Resource contained : task.getContained()) {
+                if (contained instanceof org.hl7.fhir.r4.model.Practitioner
+                        && containedId.equals(contained.getIdElement().getIdPart().replace("#", ""))) {
+                    org.hl7.fhir.r4.model.HumanName name = ((org.hl7.fhir.r4.model.Practitioner) contained)
+                            .getNameFirstRep();
+                    String text = ((name.hasFamily() ? name.getFamily() : "") + " " + name.getGivenAsSingleString())
+                            .trim();
+                    return text.isEmpty() ? null : text;
+                }
+            }
+            return null;
+        }
         if (ResourceType.Practitioner.name().equals(requester.getReferenceElement().getResourceType())) {
             try {
                 Provider provider = providerService

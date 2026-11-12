@@ -407,7 +407,7 @@ export default function App() {
                   path="/ElectronicOrders"
                   exact
                   component={() => <ReceivedOrdersPage />}
-                  role={Roles.RECEPTION}
+                  role={[Roles.RECEPTION, Roles.LOCAL_ORDER_ENTRY]}
                 />
                 <SecureRoute
                   path="/StudyElectronicOrders"

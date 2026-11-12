@@ -2064,5 +2064,18 @@
   "receivedOrders.detail.none": "Aucun.",
   "examChoice.heading": "Échantillon des examens demandés",
   "examChoice.explanation": "Ces examens peuvent se faire sur plusieurs types d'échantillon et la demande n'en indique pas. Choisissez l'échantillon de chacun.",
-  "examChoice.notPlaced": "Examens à ajouter à la main : "
+  "examChoice.notPlaced": "Examens à ajouter à la main : ",
+  "localOrder.new": "Nouvelle demande",
+  "localOrder.title": "Nouvelle demande",
+  "localOrder.save": "Enregistrer la demande",
+  "localOrder.patient.search": "Patient (numéro CMU, nom ou numéro interne)",
+  "localOrder.patient": "Patient trouvé",
+  "localOrder.patient.create": "Patient absent ?",
+  "localOrder.patient.createLink": "Créer le patient (nouvel onglet), puis le rechercher",
+  "localOrder.prescriber.lastName": "Prescripteur : nom",
+  "localOrder.prescriber.firstName": "Prescripteur : prénom",
+  "localOrder.venue": "Numéro de venue (facultatif)",
+  "localOrder.required": "Choisissez un patient et au moins un examen.",
+  "localOrder.error": "La demande n'a pas pu être enregistrée.",
+  "localOrder.created": "Demande {number} enregistrée : elle attend sa prise en charge."
 }
