@@ -6,6 +6,7 @@ import ca.uhn.fhir.rest.client.api.IGenericClient;
 import ca.uhn.fhir.rest.gclient.IQuery;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -80,6 +81,15 @@ public class FhirApiWorkFlowServiceImpl implements FhirApiWorkflowService {
     private OrganizationService organizationService;
     @Autowired
     private ProviderService providerService;
+    @Autowired
+    private RequesterCancellationService requesterCancellationService;
+
+    // Dernière relève des annulations, par serveur. Au démarrage : les dernières 24
+    // h
+    // (rejouer une annulation est sans effet).
+    private final Map<String, Date> lastCancellationPoll = new java.util.concurrent.ConcurrentHashMap<>();
+    private static final long CANCELLATION_FIRST_WINDOW_MS = 24L * 60 * 60 * 1000;
+    private static final long CANCELLATION_OVERLAP_MS = 2L * 60 * 1000;
 
     @Value("${org.openelisglobal.fhirstore.uri}")
     private String localFhirStorePath;
@@ -104,6 +114,13 @@ public class FhirApiWorkFlowServiceImpl implements FhirApiWorkflowService {
                 } catch (RuntimeException e) {
                     LogEvent.logError(this.getClass().getSimpleName(), "processWorkflow",
                             "could not process Task import workflow using remote address: " + remoteStorePath);
+                    LogEvent.logError(this.getClass().getSimpleName(), "processWorkflow", e.getMessage());
+                }
+                try {
+                    beginTaskCancellationPath(remoteStorePath);
+                } catch (RuntimeException e) {
+                    LogEvent.logError(this.getClass().getSimpleName(), "processWorkflow",
+                            "could not process Task cancellation workflow using remote address: " + remoteStorePath);
                     LogEvent.logError(this.getClass().getSimpleName(), "processWorkflow", e.getMessage());
                 }
                 try {
@@ -369,6 +386,71 @@ public class FhirApiWorkFlowServiceImpl implements FhirApiWorkflowService {
                     new ReferralResultsImportObjects());
             importObjects.diagnosticReport = diagnosticReport;
             resultImportByServiceRequest.putIfAbsent(srId, importObjects);
+        }
+    }
+
+    /**
+     * Annulations venues du demandeur : Task cancelled, owner = le laboratoire,
+     * identifiant au préfixe réservé à la plateforme, modifiées depuis la dernière
+     * relève. Ne crée ni ne réactive jamais une demande.
+     */
+    private void beginTaskCancellationPath(String remoteStorePath) {
+        if (fhirConfig.getRemoteStoreIdentifier().isEmpty()) {
+            return;
+        }
+        String prefix = fhirConfig.getEorderPlateformeIdPrefix();
+        if (prefix == null || prefix.trim().isEmpty()) {
+            return;
+        }
+        Date pollStart = new Date();
+        Date since = lastCancellationPoll.getOrDefault(remoteStorePath,
+                new Date(pollStart.getTime() - CANCELLATION_FIRST_WINDOW_MS));
+        IGenericClient sourceFhirClient = fhirUtil.getFhirClient(remoteStorePath);
+        Bundle bundle = sourceFhirClient.search().forResource(Task.class).returnBundle(Bundle.class)
+                .where(Task.STATUS.exactly().code(TaskStatus.CANCELLED.toCode()))
+                .where(Task.OWNER.hasAnyOfIds(fhirConfig.getRemoteStoreIdentifier()))
+                .lastUpdated(new ca.uhn.fhir.rest.param.DateRangeParam(since, null)).execute();
+        while (bundle != null) {
+            for (BundleEntryComponent entry : bundle.getEntry()) {
+                if (entry.getResource() instanceof Task) {
+                    Task task = (Task) entry.getResource();
+                    if (task.getIdElement().getIdPart() != null
+                            && task.getIdElement().getIdPart().startsWith(prefix.trim())) {
+                        processRequesterCancellation(task, sourceFhirClient);
+                    }
+                }
+            }
+            bundle = bundle.getLink(IBaseBundle.LINK_NEXT) == null ? null
+                    : sourceFhirClient.loadPage().next(bundle).execute();
+        }
+        lastCancellationPoll.put(remoteStorePath, new Date(pollStart.getTime() - CANCELLATION_OVERLAP_MS));
+    }
+
+    private void processRequesterCancellation(Task task, IGenericClient sourceFhirClient) {
+        try {
+            List<String> orderNumbers = new ArrayList<>();
+            for (ServiceRequest serviceRequest : getBasedOnServiceRequestsFromServer(sourceFhirClient, task)) {
+                String orderNumber = serviceRequest.hasIdentifier() ? serviceRequest.getIdentifierFirstRep().getValue()
+                        : null;
+                orderNumber = orderNumber != null ? orderNumber : serviceRequest.getIdElement().getIdPart();
+                // même numéro que la demande électronique (TaskInterpreter : 60 derniers
+                // caractères)
+                if (orderNumber != null && orderNumber.length() > 60) {
+                    orderNumber = orderNumber.substring(orderNumber.length() - 60);
+                }
+                orderNumbers.add(orderNumber);
+            }
+            RequesterCancellationService.Outcome outcome = requesterCancellationService.applyRequesterCancellation(task,
+                    orderNumbers);
+            if (outcome != RequesterCancellationService.Outcome.NO_EFFECT
+                    && outcome != RequesterCancellationService.Outcome.LABORATORY_CANCELLATION) {
+                LogEvent.logInfo(this.getClass().getSimpleName(), "processRequesterCancellation",
+                        "Task " + task.getIdElement().getIdPart() + " annulée par le demandeur : " + outcome);
+            }
+        } catch (RuntimeException e) {
+            LogEvent.logError(this.getClass().getSimpleName(), "processRequesterCancellation",
+                    "annulation non appliquée pour la Task " + task.getIdElement().getIdPart() + " : "
+                            + e.getMessage());
         }
     }
 

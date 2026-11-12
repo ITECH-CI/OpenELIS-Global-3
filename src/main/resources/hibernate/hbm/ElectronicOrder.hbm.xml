@@ -91,6 +91,10 @@
                 <param name="useNamed">true</param>
             </type>
         </property>
+        <property name="requesterCancelledAt"
+            type="java.sql.Timestamp">
+            <column name="annulation_demandeur" not-null="false" />
+        </property>
         <property name="organizationId"
             type="org.openelisglobal.hibernate.resources.usertype.LIMSStringNumberUserType">
             <column name="organization_id" precision="10" not-null="false" />

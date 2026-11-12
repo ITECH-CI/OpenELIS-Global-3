@@ -82,6 +82,8 @@ public class ElectronicOrder extends BaseObject<String> {
     // SAISIE_LOCALE), posées à la réception.
     private ElectronicOrderCategorie categorie;
     private ElectronicOrderOrigine origine;
+    // Annulation par le demandeur (Task de la plateforme passée à cancelled).
+    private Timestamp requesterCancelledAt;
 
     public ElectronicOrder() {
         patient = new ValueHolder();
@@ -239,5 +241,13 @@ public class ElectronicOrder extends BaseObject<String> {
      */
     public boolean isRoutine() {
         return categorie == ElectronicOrderCategorie.ROUTINE;
+    }
+
+    public Timestamp getRequesterCancelledAt() {
+        return requesterCancelledAt;
+    }
+
+    public void setRequesterCancelledAt(Timestamp requesterCancelledAt) {
+        this.requesterCancelledAt = requesterCancelledAt;
     }
 }
