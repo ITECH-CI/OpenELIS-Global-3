@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+     http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+    <!--
+      « Demandes reçues » (/rest/ReceivedOrders, /count, /detail) : réservée,
+      comme l'écran des demandes électroniques qu'elle remplace, aux titulaires
+      du module ElectronicOrderView, et ouverte aux titulaires du droit
+      « Enregistrer des demandes » (LocalOrderEntry). Sans déclaration, une URL
+      /rest est ouverte à tout utilisateur connecté. Chemins sans le préfixe
+      /rest (retiré par l'intercepteur de modules). Idempotent : une
+      déclaration existante n'est pas dupliquée, un module absent est ignoré.
+    -->
+    <changeSet author="itechciv" id="declare-received-orders-urls-1">
+        <sql splitStatements="false">
+            INSERT INTO clinlims.system_module_url (id, url_path, system_module_id)
+            SELECT nextval('clinlims.system_module_url_seq'), u.url_path, m.id
+              FROM (VALUES ('/ReceivedOrders'), ('/ReceivedOrders/count'), ('/ReceivedOrders/detail')) AS u(url_path)
+             CROSS JOIN clinlims.system_module m
+             WHERE m.name IN ('ElectronicOrderView', 'LocalOrderEntry')
+               AND NOT EXISTS (SELECT 1 FROM clinlims.system_module_url x
+                                WHERE x.url_path = u.url_path AND x.system_module_id = m.id);
+        </sql>
+    </changeSet>
+</databaseChangeLog>

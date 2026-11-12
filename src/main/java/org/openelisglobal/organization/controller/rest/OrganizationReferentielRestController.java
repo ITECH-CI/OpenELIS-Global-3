@@ -18,8 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 /**
  * Réconciliation manuelle des organisations avec le référentiel national des
  * établissements : recherche, aperçu, fusion, annulation. Réservé aux
- * administrateurs (URL non déclarée pour un rôle :
- * ModuleAuthenticationInterceptor n'y laisse passer que l'administrateur).
+ * administrateurs (AdminOnlyRestInterceptor).
  */
 @RestController
 @RequestMapping("/rest/organization-referentiel")

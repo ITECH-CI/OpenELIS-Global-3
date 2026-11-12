@@ -5,15 +5,14 @@ import org.openelisglobal.dataexchange.service.order.ReceivedOrdersService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * Fenêtre « Demandes reçues » : liste, compteur, détail. Le refus et
- * l'annulation passent par /rest/rejectElectronicOrders et
- * /rest/cancelElectronicOrders.
+ * Fenêtre « Demandes reçues » : liste, compteur, détail. URL déclarées pour les
+ * modules ElectronicOrderView et LocalOrderEntry. Le refus et l'annulation
+ * passent par /rest/rejectElectronicOrders et /rest/cancelElectronicOrders.
  */
 @RestController
 @RequestMapping("/rest/ReceivedOrders")
@@ -45,8 +44,10 @@ public class ReceivedOrdersRestController {
         return Map.of("toProcess", receivedOrdersService.countToProcess());
     }
 
-    @GetMapping("/{electronicOrderId}/detail")
-    public ResponseEntity<Map<String, Object>> detail(@PathVariable String electronicOrderId) {
+    // Chemin fixe (identifiant en paramètre) : la déclaration des URL pour les
+    // modules se fait par chemin exact.
+    @GetMapping("/detail")
+    public ResponseEntity<Map<String, Object>> detail(@RequestParam("id") String electronicOrderId) {
         Map<String, Object> detail = receivedOrdersService.detail(electronicOrderId);
         return detail.isEmpty() ? ResponseEntity.notFound().build() : ResponseEntity.ok(detail);
     }

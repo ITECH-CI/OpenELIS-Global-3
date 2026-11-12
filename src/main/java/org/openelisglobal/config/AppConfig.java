@@ -20,6 +20,7 @@ import org.openelisglobal.fhir.springserialization.QuestionnaireDeserializer;
 import org.openelisglobal.fhir.springserialization.QuestionnaireResponseDeserializer;
 import org.openelisglobal.fhir.springserialization.QuestionnaireResponseSerializer;
 import org.openelisglobal.fhir.springserialization.QuestionnaireSerializer;
+import org.openelisglobal.interceptor.AdminOnlyRestInterceptor;
 import org.openelisglobal.interceptor.CommonPageAttributesInterceptor;
 import org.openelisglobal.interceptor.UrlErrorsInterceptor;
 import org.openelisglobal.internationalization.GlobalLocaleResolver;
@@ -69,6 +70,8 @@ public class AppConfig implements WebMvcConfigurer {
     @Autowired
     UrlErrorsInterceptor urlLocatedErrorsInterceptor;
     @Autowired
+    AdminOnlyRestInterceptor adminOnlyRestInterceptor;
+    @Autowired
     CommonPageAttributesInterceptor pageAttributesInterceptor;
     @Autowired
     LocaleChangeInterceptor localeChangeInterceptor;
@@ -99,6 +102,11 @@ public class AppConfig implements WebMvcConfigurer {
                 .excludePathPatterns(SecurityConfig.LOGIN_PAGES) //
                 .excludePathPatterns(SecurityConfig.RESOURCE_PAGES) //
                 .excludePathPatterns(SecurityConfig.AUTH_OPEN_PAGES);
+        // Administration de la passerelle FHIR et du référentiel : administrateur
+        // seulement (une URL /rest non déclarée serait sinon ouverte à tout utilisateur
+        // connecté).
+        registry.addInterceptor(adminOnlyRestInterceptor).addPathPatterns(AdminOnlyRestInterceptor.ADMIN_ONLY_PATHS)
+                .excludePathPatterns(AdminOnlyRestInterceptor.EXCLUDED_PATHS);
         // TO DO ,we need to have a better way to handle user roles for rest controllers
         // .excludePathPatterns(SecurityConfig.REST_CONTROLLERS);
         // .excludePathPatterns(SecurityConfig.CLIENT_CERTIFICATE_PAGES);

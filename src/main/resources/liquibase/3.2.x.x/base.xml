@@ -185,6 +185,8 @@ file="add_study_modifier_menu.xml" />
         file="add_result_correction_date.xml" />
     <include relativeToChangelogFile="true"
         file="add_local_order_entry_role.xml" />
+    <include relativeToChangelogFile="true"
+        file="declare_received_orders_urls.xml" />
 
 
 </databaseChangeLog>

@@ -220,7 +220,7 @@ const ReceivedOrders = ({
   const openDetail = (row) => {
     setDetail({ row, loading: true });
     getFromOpenElisServer(
-      "/rest/ReceivedOrders/" + row.id + "/detail",
+      "/rest/ReceivedOrders/detail?id=" + encodeURIComponent(row.id),
       (response) => setDetail({ row, loading: false, data: response || {} }),
     );
   };
