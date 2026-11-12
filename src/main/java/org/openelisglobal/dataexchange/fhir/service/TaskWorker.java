@@ -88,7 +88,53 @@ public class TaskWorker {
         return checkResult;
     }
 
+    private TaskResult lastResult;
+
     public TaskResult handleOrderRequest() throws IllegalStateException {
+        lastResult = handleOrder();
+        return lastResult;
+    }
+
+    /**
+     * Motif court d'un refus (Task.statusReason), relayé par la plateforme au
+     * demandeur ; {@code null} si la demande est acceptée. Ne contient jamais de
+     * donnée nominative.
+     */
+    public String getStatusReason() {
+        if (lastResult == null || lastResult == TaskResult.OK) {
+            return null;
+        }
+        if (lastResult == TaskResult.DUPLICATE_ORDER) {
+            return "demande déjà reçue";
+        }
+        if (lastResult == TaskResult.NON_CANCELABLE_ORDER) {
+            return "annulation impossible";
+        }
+        InterpreterResults first = interpretResults == null || interpretResults.isEmpty() ? null
+                : interpretResults.get(0);
+        if (first == null) {
+            return "demande non conforme";
+        }
+        switch (first) {
+        case UNSUPPORTED_TESTS:
+            List<String> codes = interpreter == null ? null : interpreter.getUnsupportedTests();
+            return codes == null || codes.isEmpty() ? "examen non reconnu : aucun code LOINC"
+                    : "examen non reconnu : LOINC " + String.join(", ", codes);
+        case MISSING_PATIENT_GUID:
+        case MISSING_PATIENT_IDENTIFIER:
+            return "patient non identifiable";
+        case MISSING_PATIENT_DOB:
+            return "date de naissance du patient absente";
+        case MISSING_PATIENT_GENDER:
+            return "sexe du patient absent";
+        case MISSING_ORDER_NUMBER:
+            return "numéro de demande absent";
+        default:
+            return "demande non conforme";
+        }
+    }
+
+    private TaskResult handleOrder() throws IllegalStateException {
         if (interpreter == null || persister == null || existanceChecker == null) {
             throw new IllegalStateException("Interpreter, existanceChecker or persister have not been set");
         }

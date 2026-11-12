@@ -26,6 +26,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import org.apache.commons.validator.GenericValidator;
 import org.openelisglobal.common.log.LogEvent;
 import org.openelisglobal.common.service.BaseObjectServiceImpl;
@@ -116,9 +118,9 @@ public class FhirGatewayTokenServiceImpl extends BaseObjectServiceImpl<FhirGatew
             if (client == null || !"Y".equals(client.getIsActive())) {
                 client = null;
                 status = 401;
-            } else if (!isReadMethod(method)) {
-                // Le mini-HIE en lecture n'autorise que GET/HEAD ; toute écriture est
-                // refusée (la réception d'ordres passe par /fhir-in, pas par /fhir).
+            } else if (!isReadMethod(method) && !isAllowedWrite(client, method, requestUri)) {
+                // Lecture seule (GET/HEAD), sauf pour un client autorisé à écrire :
+                // PUT /fhir/<Type>/<id> seulement (isAllowedWrite).
                 status = 403;
             } else if (!isResourceAllowed(client, resourceType)) {
                 status = 403;
@@ -134,6 +136,51 @@ public class FhirGatewayTokenServiceImpl extends BaseObjectServiceImpl<FhirGatew
         }
         writeAccessLog(client, method, resourceType, requestUri, status);
         return status;
+    }
+
+    // Préfixe et identifiant FHIR : lettres, chiffres, tiret et point.
+    private static final Pattern WRITE_PREFIX = Pattern.compile("[A-Za-z0-9\\-.]{1,32}");
+    private static final Pattern WRITE_PATH = Pattern.compile("^/fhir/([A-Z][A-Za-z]{0,63})/([A-Za-z0-9\\-.]{1,64})$");
+
+    /**
+     * Écriture autorisée : client avec {@code allowWrite=Y} et un préfixe, méthode
+     * PUT, URI exactement /fhir/&lt;Type&gt;/&lt;id&gt; sans chaîne de requête,
+     * type listé explicitement dans les types autorisés du client, identifiant qui
+     * commence par le préfixe. Tout le reste (POST, DELETE, PATCH, transaction,
+     * mise à jour conditionnelle, historique, opération) est refusé. La décision
+     * porte sur la méthode et l'URI : la sous-requête d'authentification de nginx
+     * ne voit pas le corps.
+     */
+    boolean isAllowedWrite(FhirGatewayClient client, String method, String requestUri) {
+        if (client == null || !"Y".equals(client.getAllowWrite()) || !"PUT".equalsIgnoreCase(method)
+                || requestUri == null) {
+            return false;
+        }
+        String prefix = client.getWriteIdPrefix();
+        if (prefix == null || !WRITE_PREFIX.matcher(prefix).matches()) {
+            return false;
+        }
+        Matcher matcher = WRITE_PATH.matcher(requestUri);
+        if (!matcher.matches()) {
+            return false;
+        }
+        String type = matcher.group(1);
+        String id = matcher.group(2);
+        return id.startsWith(prefix) && id.length() > prefix.length() && isResourceListed(client, type);
+    }
+
+    // Type listé explicitement (pour l'écriture, une liste vide n'autorise rien).
+    private boolean isResourceListed(FhirGatewayClient client, String resourceType) {
+        String allowed = client.getAllowedResources();
+        if (GenericValidator.isBlankOrNull(allowed)) {
+            return false;
+        }
+        for (String r : allowed.split(",")) {
+            if (r.trim().equals(resourceType)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private boolean isReadMethod(String method) {
@@ -286,6 +333,36 @@ public class FhirGatewayTokenServiceImpl extends BaseObjectServiceImpl<FhirGatew
         // Normalise la liste CSV (trim, retire les entrées vides) ; null/vide = tous.
         client.setAllowedResources(normalizeCsv(allowedResources));
         client.setRateLimitPerMin(rateLimitPerMin != null && rateLimitPerMin > 0 ? rateLimitPerMin : null);
+        client.setSysUserId("1");
+        clientDAO.update(client);
+    }
+
+    @Override
+    @Transactional
+    public void updateClientWritePolicy(String clientId, boolean allowWrite, String writeIdPrefix) {
+        FhirGatewayClient client = clientDAO.get(clientId).orElse(null);
+        if (client == null) {
+            return;
+        }
+        String prefix = writeIdPrefix == null ? null : writeIdPrefix.trim();
+        if (GenericValidator.isBlankOrNull(prefix)) {
+            prefix = null;
+        } else if (!WRITE_PREFIX.matcher(prefix).matches()) {
+            throw new IllegalArgumentException("préfixe invalide : lettres, chiffres, tiret et point (32 au plus)");
+        }
+        if (allowWrite) {
+            if (prefix == null) {
+                throw new IllegalArgumentException("un préfixe d'identifiant est obligatoire pour écrire");
+            }
+            for (FhirGatewayClient other : clientDAO.getAll()) {
+                if (!other.getId().equals(client.getId()) && "Y".equals(other.getAllowWrite())) {
+                    throw new IllegalArgumentException(
+                            "le client « " + other.getName() + " » a déjà l'écriture : un seul client peut écrire");
+                }
+            }
+        }
+        client.setAllowWrite(allowWrite ? "Y" : "N");
+        client.setWriteIdPrefix(prefix);
         client.setSysUserId("1");
         clientDAO.update(client);
     }

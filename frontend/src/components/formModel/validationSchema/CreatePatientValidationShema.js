@@ -1,4 +1,5 @@
 import * as Yup from "yup";
+import { isCmuAccepted } from "../../utils/CmuNumber";
 
 // Build the patient validation schema, making subjectNumber / nationalId
 // conditionally required according to the site_information config flags
@@ -8,6 +9,7 @@ import * as Yup from "yup";
 // not yet wired the configuration in.
 export const buildCreatePatientValidationSchema = (
   configurationProperties = {},
+  messages = {},
 ) => {
   const isRequired = (flag) => String(flag) === "true";
 
@@ -16,7 +18,25 @@ export const buildCreatePatientValidationSchema = (
     subjectNumber = subjectNumber.required("Subject number required");
   }
 
-  let nationalId = Yup.string();
+  // nationalId porte le numéro CMU : vide accepté, sinon 13 chiffres après
+  // normalisation (espaces, tirets et points ignorés). Avec
+  // cmuNewPatientsOnly (saisie de demande), un patient déjà enregistré n'est
+  // pas bloqué par un ancien numéro non conforme.
+  let nationalId = Yup.string().test(
+    "cmu-format",
+    messages.cmuInvalid ||
+      "Numéro CMU non conforme : 13 chiffres attendus (espaces, tirets et points ignorés).",
+    function (value) {
+      const parent = this.parent || {};
+      const existing =
+        (parent.patientPK != null && String(parent.patientPK).trim() !== "") ||
+        (parent.guid != null && String(parent.guid).trim() !== "");
+      if (messages.cmuNewPatientsOnly && existing) {
+        return true;
+      }
+      return isCmuAccepted(value);
+    },
+  );
   if (isRequired(configurationProperties.PATIENT_NATIONAL_ID_REQUIRED)) {
     nationalId = nationalId.required("National ID required");
   }
@@ -49,7 +69,11 @@ export const buildCreatePatientValidationSchema = (
   });
 };
 
-// Backward-compatible default export (no conditional required fields).
-const CreatePatientValidationSchema = buildCreatePatientValidationSchema();
+// Backward-compatible default export (no conditional required fields), used
+// by the order entry schema: the CMU format is enforced for new patients only.
+const CreatePatientValidationSchema = buildCreatePatientValidationSchema(
+  {},
+  { cmuNewPatientsOnly: true },
+);
 
 export default CreatePatientValidationSchema;

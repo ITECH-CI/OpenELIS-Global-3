@@ -35,6 +35,7 @@ import org.openelisglobal.organization.service.OrganizationService;
 import org.openelisglobal.organization.valueholder.Organization;
 import org.openelisglobal.patient.action.IPatientUpdate.PatientUpdateStatus;
 import org.openelisglobal.patient.service.PatientTypeService;
+import org.openelisglobal.patient.util.CmuNumber;
 import org.openelisglobal.patient.valueholder.PatientContact;
 import org.openelisglobal.patientidentity.valueholder.PatientIdentity;
 import org.openelisglobal.patienttype.valueholder.PatientType;
@@ -297,6 +298,9 @@ public class PatientManagementInfo implements Serializable {
         if (nationalId == null || nationalId.isEmpty()) {
             // add empty string to avoid null issues
             this.nationalId = "";
+        } else if (CmuNumber.conforms(nationalId, null)) {
+            // Numéro CMU saisi avec espaces, tirets ou points : enregistré normalisé.
+            this.nationalId = CmuNumber.normalize(nationalId);
         } else {
             this.nationalId = nationalId;
         }

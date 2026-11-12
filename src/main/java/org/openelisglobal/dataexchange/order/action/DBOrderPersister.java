@@ -33,6 +33,7 @@ import org.openelisglobal.dataexchange.service.order.ElectronicOrderService;
 import org.openelisglobal.internationalization.MessageUtil;
 import org.openelisglobal.notifications.dao.NotificationDAO;
 import org.openelisglobal.notifications.entity.Notification;
+import org.openelisglobal.patient.service.PatientCmuLookupService;
 import org.openelisglobal.patient.service.PatientContactService;
 import org.openelisglobal.patient.service.PatientService;
 import org.openelisglobal.patient.valueholder.Patient;
@@ -63,6 +64,7 @@ public class DBOrderPersister implements IOrderPersister {
     private String IDENTITY_OBNUMBER_ID;
     private String IDENTITY_PCNUMBER_ID;
     private String IDENTITY_SUBJECTNUMBER_ID;
+    private String IDENTITY_CMU_ID;
 
     @Autowired
     private ElectronicOrderService eOrderService;
@@ -78,6 +80,8 @@ public class DBOrderPersister implements IOrderPersister {
     private PatientService patientService;
     @Autowired
     private PatientContactService patientContactService;
+    @Autowired
+    private PatientCmuLookupService patientCmuLookupService;
     @Autowired
     private PersonAddressService personAddressService;
     @Autowired
@@ -103,6 +107,7 @@ public class DBOrderPersister implements IOrderPersister {
         IDENTITY_OBNUMBER_ID = getIdentityType(identityTypeService, "OB_NUMBER");
         IDENTITY_PCNUMBER_ID = getIdentityType(identityTypeService, "PC_NUMBER");
         IDENTITY_SUBJECTNUMBER_ID = getIdentityType(identityTypeService, "SUBJECT");
+        IDENTITY_CMU_ID = getIdentityType(identityTypeService, "CMU");
         List<AddressPart> partList = addressPartService.getAll();
         for (AddressPart addressPart : partList) {
             if ("department".equals(addressPart.getPartName())) {
@@ -124,10 +129,60 @@ public class DBOrderPersister implements IOrderPersister {
         patient = patientService.getPatientForGuid(orderPatient.getGuid());
         patient = patient == null ? patientService.getPatientByExternalId(orderPatient.getExternalId()) : patient;
         if (patient == null) {
+            // Pas de doublon : un patient qui porte déjà ce numéro CMU est repris.
+            patient = findPatientByCmu(orderPatient.getCmuNumber());
+            if (patient != null) {
+                completeCmuMatchedPatient(orderPatient, patient);
+                return;
+            }
             createNewPatient(orderPatient);
         } else {
             updatePatient(orderPatient, patient);
         }
+    }
+
+    // Patient existant portant ce numéro CMU (normalisé), ou null. S'il y en a
+    // plusieurs, le plus ancien est repris ; ils ne sont pas fusionnés.
+    private Patient findPatientByCmu(String cmuNumber) {
+        if (GenericValidator.isBlankOrNull(cmuNumber)) {
+            return null;
+        }
+        List<String> ids = patientCmuLookupService.findPatientIdsByCmu(cmuNumber);
+        if (ids == null || ids.isEmpty()) {
+            return null;
+        }
+        if (ids.size() > 1) {
+            LogEvent.logWarn(this.getClass().getSimpleName(), "findPatientByCmu",
+                    ids.size() + " patients portent le même numéro CMU (ids " + String.join(", ", ids)
+                            + ") ; le plus ancien est repris, sans fusion");
+        }
+        return patientService.get(ids.get(0));
+    }
+
+    // Patient repris par son numéro CMU : son identité et ses données ne sont pas
+    // réécrites par la demande (pas de fusion automatique) ; seuls le type
+    // d'identité "CMU" et, s'il est vide, le nationalId sont complétés.
+    private void completeCmuMatchedPatient(MessagePatient orderPatient, Patient patient) {
+        List<PatientIdentity> identityList = patientService.getIdentityList(patient);
+        if (IDENTITY_CMU_ID != null && !hasIdentity(identityList, IDENTITY_CMU_ID)) {
+            updateIdentityIfNeeded(IDENTITY_CMU_ID, orderPatient.getCmuNumber(), patient.getId(), identityList,
+                    identityService);
+        }
+        if (GenericValidator.isBlankOrNull(patient.getNationalId())) {
+            patient.setNationalId(orderPatient.getCmuNumber());
+            patient.setSysUserId(SERVICE_USER_ID);
+            patientService.update(patient);
+        }
+    }
+
+    private boolean hasIdentity(List<PatientIdentity> identityList, String identityTypeId) {
+        for (PatientIdentity identity : identityList) {
+            if (identityTypeId.equals(identity.getIdentityTypeId())
+                    && !GenericValidator.isBlankOrNull(identity.getIdentityData())) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private void persistContact(MessagePatient orderPatient, Patient patient) {
@@ -188,6 +243,7 @@ public class DBOrderPersister implements IOrderPersister {
         addIdentityIfAppropriate(IDENTITY_OBNUMBER_ID, orderPatient.getObNumber(), identities);
         addIdentityIfAppropriate(IDENTITY_PCNUMBER_ID, orderPatient.getPcNumber(), identities);
         addIdentityIfAppropriate(IDENTITY_SUBJECTNUMBER_ID, orderPatient.getSubjectNumber(), identities);
+        addIdentityIfAppropriate(IDENTITY_CMU_ID, orderPatient.getCmuNumber(), identities);
 
         personService.insert(person);
         patientService.insert(patient);
@@ -233,6 +289,10 @@ public class DBOrderPersister implements IOrderPersister {
                 identityService);
         updateIdentityIfNeeded(IDENTITY_SUBJECTNUMBER_ID, orderPatient.getSubjectNumber(), patient.getId(),
                 identityList, identityService);
+        if (IDENTITY_CMU_ID != null) {
+            updateIdentityIfNeeded(IDENTITY_CMU_ID, orderPatient.getCmuNumber(), patient.getId(), identityList,
+                    identityService);
+        }
 
         updateAddressPartsIfNeeded(orderPatient, person.getId());
     }

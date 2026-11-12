@@ -64,6 +64,17 @@ public interface FhirGatewayTokenService extends BaseObjectService<FhirGatewayTo
      */
     void updateClientPolicy(String clientId, String allowedResources, Integer rateLimitPerMin);
 
+    /**
+     * Politique d'écriture du client : {@code allowWrite} autorise PUT
+     * /fhir/&lt;Type&gt;/&lt;id&gt; pour ses types autorisés, avec un identifiant
+     * qui commence par {@code writeIdPrefix} (obligatoire). Un seul client peut
+     * écrire.
+     *
+     * @throws IllegalArgumentException préfixe invalide, ou un autre client a déjà
+     *                                  l'écriture
+     */
+    void updateClientWritePolicy(String clientId, boolean allowWrite, String writeIdPrefix);
+
     // --- Audit (Phase C) ---
 
     /** Derniers accès tiers (tous clients), du plus récent au plus ancien. */

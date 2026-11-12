@@ -34,6 +34,7 @@ import CustomDatePicker from "../common/CustomDatePicker";
 import { AlertDialog, NotificationKinds } from "../common/CustomNotification";
 import CreatePatientFormValues from "../formModel/innitialValues/CreatePatientFormValues";
 import { buildCreatePatientValidationSchema } from "../formModel/validationSchema/CreatePatientValidationShema";
+import { cmuForSubmit } from "../utils/CmuNumber";
 import { ConfigurationContext, NotificationContext } from "../layout/Layout";
 import PatientFormObserver, { bacterioFields } from "./PatientFormObserver";
 
@@ -52,12 +53,15 @@ function CreatePatientForm(props) {
 
   // Validation schema rebuilt whenever the required flags change so Formik
   // enforces the same rules the backend already applies.
-  const validationSchema = useMemo(
-    () => buildCreatePatientValidationSchema(configurationProperties),
-    [configurationProperties],
-  );
-
   const intl = useIntl();
+
+  const validationSchema = useMemo(
+    () =>
+      buildCreatePatientValidationSchema(configurationProperties, {
+        cmuInvalid: intl.formatMessage({ id: "patient.cmu.invalid" }),
+      }),
+    [configurationProperties, intl],
+  );
 
   const [patientDetails, setPatientDetails] = useState(CreatePatientFormValues);
   const [healthRegions, setHealthRegions] = useState([]);
@@ -433,6 +437,7 @@ function CreatePatientForm(props) {
     setIsSubmitting(true);
 
     const patientProps = { ...values };
+    patientProps.nationalId = cmuForSubmit(patientProps.nationalId);
     [...bacterioFields, "years", "months", "days"].forEach((f) => {
       delete patientProps[f];
       delete patientProps[f + "-input"];
@@ -591,13 +596,14 @@ function CreatePatientForm(props) {
                 <Field name="nationalId">
                   {({ field }) => (
                     <TextInput
-                      type={"number"}
+                      type={"text"}
+                      inputMode={"numeric"}
                       value={values.nationalId || ""}
                       name={field.name}
                       labelText={
                         <>
                           {intl.formatMessage({
-                            id: "patient.natioanalid",
+                            id: "patient.cmu.label",
                           })}
                           {nationalIdRequired && (
                             <span className="requiredlabel">*</span>
@@ -614,7 +620,7 @@ function CreatePatientForm(props) {
                       }}
                       onChange={handleNationalIdChange}
                       placeholder={intl.formatMessage({
-                        id: "patient.information.nationalid",
+                        id: "patient.cmu.placeholder",
                       })}
                     />
                   )}

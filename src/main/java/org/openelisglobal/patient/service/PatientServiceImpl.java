@@ -21,6 +21,7 @@ import org.openelisglobal.gender.valueholder.Gender;
 import org.openelisglobal.patient.action.IPatientUpdate.PatientUpdateStatus;
 import org.openelisglobal.patient.action.bean.PatientManagementInfo;
 import org.openelisglobal.patient.dao.PatientDAO;
+import org.openelisglobal.patient.util.CmuNumber;
 import org.openelisglobal.patient.util.PatientUtil;
 import org.openelisglobal.patient.valueholder.Patient;
 import org.openelisglobal.patient.valueholder.PatientContact;
@@ -35,11 +36,16 @@ import org.openelisglobal.patienttype.valueholder.PatientPatientType;
 import org.openelisglobal.person.service.PersonService;
 import org.openelisglobal.person.valueholder.Person;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class PatientServiceImpl extends AuditableBaseObjectServiceImpl<Patient, String> implements PatientService {
+
+    // Format du numéro CMU (FhirConfig : org.openelisglobal.cmu.format).
+    @Value("${org.openelisglobal.cmu.format:}")
+    private String cmuFormat;
 
     public static final String ADDRESS_STREET = "Street";
     public static final String ADDRESS_STATE = "State";
@@ -277,12 +283,15 @@ public class PatientServiceImpl extends AuditableBaseObjectServiceImpl<Patient, 
             return "";
         }
         // Type d'identité dédié "CMU" en priorité ; repli sur le nationalId qui a
-        // historiquement servi à enregistrer le code CMU dans ce déploiement.
+        // historiquement servi à enregistrer le code CMU dans ce déploiement, mais
+        // seulement s'il a le format d'un numéro CMU (un autre numéro d'identité
+        // n'est pas un numéro CMU).
         String cmu = getIdentityInfo(patient, PATIENT_CMU_IDENTITY);
         if (!GenericValidator.isBlankOrNull(cmu)) {
             return cmu;
         }
-        return getNationalId(patient);
+        String nationalId = getNationalId(patient);
+        return CmuNumber.conforms(nationalId, cmuFormat) ? CmuNumber.normalize(nationalId) : "";
     }
 
     /*

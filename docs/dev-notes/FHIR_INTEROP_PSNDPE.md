@@ -10,27 +10,19 @@ ServiceRequest, 161 Observation, 133 DiagnosticReport, 15 Specimen.
 
 ## Rapport d'écart (exigences 1→5)
 
-| #   | Exigence                                             | Statut                | Notes                                                                                                                                                                                                                                                                                                                                                                                |
-| --- | ---------------------------------------------------- | --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| 1   | Endpoint R4 HTTPS + /metadata + ressources peuplées  | **FAIT**              | HAPI `hapiproject/hapi:v6.6.0`, R4 (4.0.1), `GET /metadata` → CapabilityStatement. Exposé en HTTPS via nginx `location /fhir/` (TLS terminé nginx ; HAPI non publié en prod). ServiceRequest/Observation/DiagnosticReport/Patient/Practitioner/Specimen peuplés. **Organization = 0** (à peupler si l'IG l'exige).                                                                   |
-| 2   | Pagination + `_lastUpdated` + `_sort`                | **FAIT** (natif HAPI) | Bundle `searchset` + liens `self`/`next` ; `_lastUpdated=ge<ts>` opérationnel ; `meta.lastUpdated` régénéré par HAPI à chaque PUT (re-transformation sur modif de résultat/commande) ; `_sort=_lastUpdated` OK. Limite : `max_page_size=200`.                                                                                                                                        |
-| 3   | Identité patient (matricule CMU/CNAM + OID national) | **FAIT (implémenté)** | Avant : le nationalId sortait uniquement avec le system OpenELIS interne. Après : identifiant CMU exposé avec l'OID national `urn:oid:1.3.6.1.4.1.53864.1.3` (configurable), `use=official`. Type d'identité dédié `CMU` + repli sur nationalId. **Validé live** (voir requête 1).                                                                                                   |
-| 4   | Codage LOINC/UCUM + statuts + références             | **PARTIEL**           | Références DiagnosticReport→Observation→ServiceRequest→Patient : **conformes**. Statuts : **conformes**. **UCUM : implémenté** (system/code UCUM sur les Quantity ; 44/49 unités mappées). **LOINC : déficit de DONNÉES** — seulement 22/368 tests ont un LOINC ; le code pose déjà le LOINC quand présent. **meta.profile** : non déclaré (en attente des URLs de profils de l'IG). |
-| 5   | Auth compte de service LECTURE                       | **DISPONIBLE**        | Gateway FHIR existante (`#FhirGateway`) : jeton opaque par client, lecture seule (GET/HEAD), restriction par ressource, quota, audit, HTTPS. Provisionner un client dédié au connecteur (procédure ci-dessous). Pas d'OAuth2/scopes (jeton opaque = équivalent fonctionnel).                                                                                                         |
+| #   | Exigence                                            | Statut                | Notes                                                                                                                                                                                                                                                                                                                                                                                |
+| --- | --------------------------------------------------- | --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 1   | Endpoint R4 HTTPS + /metadata + ressources peuplées | **FAIT**              | HAPI `hapiproject/hapi:v6.6.0`, R4 (4.0.1), `GET /metadata` → CapabilityStatement. Exposé en HTTPS via nginx `location /fhir/` (TLS terminé nginx ; HAPI non publié en prod). ServiceRequest/Observation/DiagnosticReport/Patient/Practitioner/Specimen peuplés. **Organization = 0** (à peupler si l'IG l'exige).                                                                   |
+| 2   | Pagination + `_lastUpdated` + `_sort`               | **FAIT** (natif HAPI) | Bundle `searchset` + liens `self`/`next` ; `_lastUpdated=ge<ts>` opérationnel ; `meta.lastUpdated` régénéré par HAPI à chaque PUT (re-transformation sur modif de résultat/commande) ; `_sort=_lastUpdated` OK. Limite : `max_page_size=200`.                                                                                                                                        |
+| 3   | Identité patient (numéro CMU, système national)     | **FAIT (implémenté)** | Numéro CMU (= matricule CNAM = n° de sécurité sociale) émis sous `https://hie.ci/patient/cmu`, et sous `urn:oid:1.3.6.1.4.1.53864.1.3` en compatibilité, `use=official`, seulement s'il est conforme (13 chiffres après normalisation). Lu à l'entrée sous les trois systèmes acceptés. Voir « Numéro CMU » ci-dessous.                                                              |
+| 4   | Codage LOINC/UCUM + statuts + références            | **PARTIEL**           | Références DiagnosticReport→Observation→ServiceRequest→Patient : **conformes**. Statuts : **conformes**. **UCUM : implémenté** (system/code UCUM sur les Quantity ; 44/49 unités mappées). **LOINC : déficit de DONNÉES** — seulement 22/368 tests ont un LOINC ; le code pose déjà le LOINC quand présent. **meta.profile** : non déclaré (en attente des URLs de profils de l'IG). |
+| 5   | Auth compte de service LECTURE                      | **DISPONIBLE**        | Gateway FHIR existante (`#FhirGateway`) : jeton opaque par client, lecture seule (GET/HEAD), restriction par ressource, quota, audit, HTTPS. Provisionner un client dédié au connecteur (procédure ci-dessous). Pas d'OAuth2/scopes (jeton opaque = équivalent fonctionnel).                                                                                                         |
 
 ## Ce qui a été implémenté (diff résumé)
 
-**Exigence 3 — identité CMU/OID :**
-
-- `FhirConfig` : property `org.openelisglobal.cmu.identifier.system` (défaut
-  `urn:oid:1.3.6.1.4.1.53864.1.3`).
-- `PatientService.getCMUNumber(patient)` : type d'identité `CMU` puis repli sur
-  nationalId (qui héberge historiquement le code CMU).
-- `FhirTransformServiceImpl.createPatientIdentifiers` : ajoute l'identifiant CMU
-  avec l'OID (en plus des identifiants OE internes) ; `createIdentifier` marque
-  CMU + nationalId en `use=OFFICIAL` ; le chemin de recherche retour reconnaît
-  l'OID CMU.
-- Migration `add_cmu_patient_identity_type.xml` : type d'identité `CMU`.
+**Exigence 3 — numéro CMU :** voir la section « Numéro CMU » (règles d'émission
+et de réception, réglages, relevé de l'existant). Type d'identité `CMU` créé par
+la migration `add_cmu_patient_identity_type.xml`.
 
 **Exigence 4 — UCUM :**
 
@@ -45,8 +37,10 @@ ServiceRequest, 161 Observation, 133 DiagnosticReport, 15 Specimen.
 **Tests ajoutés :**
 
 - `FhirPatientIdentifierTest` : CMU/nationalId en `use=OFFICIAL`, system interne
-  en `USUAL`, OID par défaut correct.
-- `PatientServiceTest.getCMUNumber_*` : repli sur nationalId, null → "".
+  en `USUAL`, systèmes CMU par défaut.
+- `FhirCmuDemandesTest`, `DBOrderPersisterCmuTest`, `PatientCmuNumberTest`,
+  `CmuNumberTest` : numéro CMU émis et reçu, reprise d'un patient existant,
+  dates des Observations.
 - `UnitOfMeasureServiceTest.getUnitOfMeasureById_shouldExposeUcumCode` : code
   UCUM mappé et lisible.
 
@@ -55,13 +49,13 @@ ServiceRequest, 161 Observation, 133 DiagnosticReport, 15 Specimen.
 **Requête 1 (identité CMU) — VALIDÉE LIVE :**
 
 ```
-GET /fhir/Patient?identifier=urn:oid:1.3.6.1.4.1.53864.1.3|<matricule>
+GET /fhir/Patient?identifier=https://hie.ci/patient/cmu|<numéro CMU>
 ```
 
-→ renvoie le(s) patient(s) portant ce matricule CMU (testé avec `90909000000` →
-2 patients ; 8 patients au total portent l'identifiant CMU `use=official`). NB :
-les patients doivent avoir été (re)transformés après le déploiement de ce
-changement (`GET /PatientToFhir?checkAll=true` pour un backfill).
+→ renvoie le(s) patient(s) portant ce numéro CMU (la même recherche sous
+`urn:oid:1.3.6.1.4.1.53864.1.3` reste possible). NB : les patients doivent avoir
+été (re)transformés après la mise à jour (`GET /OEToFhir?checkAll=true`, ou
+`GET /PatientToFhir?checkAll=true` pour les patients seuls).
 
 **Requête 2 (DiagnosticReport paginé + liens + subject CMU) :**
 
@@ -89,8 +83,6 @@ apparaît sur les Observation numériques re-transformées après ce changement.
 - **meta.profile** : à déclarer une fois les URLs de profils de l'IG national
   fournies (point d'injection identifié : à chaque
   `new ServiceRequest/Observation/DiagnosticReport`).
-- **OID CMU** : confirmer `urn:oid:1.3.6.1.4.1.53864.1.3` avec l'équipe interop
-  (ajustable via la property, sans recompilation).
 - **Backfill** (à faire après déploiement) : voir la procédure détaillée
   ci-dessous.
 - **Site demandeur** : Organization + Location, voir ci-dessous (lot BDM pilote,
@@ -195,6 +187,106 @@ referring clinic ». Il est exposé ainsi :
   elle porte elle aussi son code d'établissement. `siteId` vide ou organisation
   introuvable : rien n'est émis (avertissement au démarrage).
 
+## Numéro CMU
+
+Le numéro CMU, le matricule CNAM et le numéro de sécurité sociale sont le même
+numéro, celui de l'assuré. Son système national est
+`https://hie.ci/patient/cmu`, le seul système `https://hie.ci/...` utilisé par
+OpenELIS.
+
+**Valeur.** Celle du type d'identité `CMU` du patient, sinon celle du
+`nationalId` (le champ « Numéro CMU » des écrans) si elle est conforme. Elle est
+normalisée (espaces, tirets et points retirés), puis contrôlée : 13 chiffres.
+
+**Émission** (`Patient.identifier`, et `Reference.identifier` des références au
+patient) :
+
+- valeur conforme : `https://hie.ci/patient/cmu|<valeur>`, et la même valeur
+  sous `urn:oid:1.3.6.1.4.1.53864.1.3` pour les consommateurs existants ;
+- valeur non conforme : aucun des deux (une valeur mal formée sous le système
+  national ferait refuser tout l'échantillon). `pat_nationalId` reste émis. Un
+  avertissement est journalisé avec l'identifiant interne du patient, jamais la
+  valeur.
+
+**Réception** (demandes électroniques, recherche de patient) : un identifiant
+sous `https://hie.ci/patient/cmu`, `urn:oid:1.3.6.1.4.1.53864.1.3` ou
+`urn:oid:1.3.6.1.4.1.53864.1.2` donne le numéro CMU, s'il est conforme une fois
+normalisé. Il est enregistré dans le type d'identité `CMU` et, s'il est vide,
+dans le `nationalId`. Avant de créer le patient d'une demande reçue, OpenELIS
+cherche un patient qui porte déjà ce numéro (type `CMU` ou `nationalId`,
+comparés normalisés) et le reprend : seuls son numéro CMU et, s'il est vide, son
+`nationalId` sont complétés, le reste de sa fiche n'est pas modifié. Si
+plusieurs patients portent ce numéro, le plus ancien est repris ; ils ne sont
+pas fusionnés.
+
+**Saisie.** Le formulaire patient refuse un numéro non conforme, avec un message
+; le champ vide est accepté. En saisie de demande, un patient déjà enregistré
+avec un ancien numéro non conforme n'est pas bloqué.
+
+**Réglages** (défauts entre parenthèses) :
+
+| Réglage                                              | Rôle                                                                                        |
+| ---------------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| `org.openelisglobal.cmu.identifier.system`           | système national (`https://hie.ci/patient/cmu`) ; vide : numéro CMU non émis                |
+| `org.openelisglobal.cmu.identifier.system.compat`    | même valeur émise aussi sous ce système (`urn:oid:1.3.6.1.4.1.53864.1.3`) ; vide : non émis |
+| `org.openelisglobal.cmu.format`                      | format après normalisation (`^[0-9]{13}$`)                                                  |
+| `org.openelisglobal.cmu.identifier.systems.accepted` | systèmes lus à l'entrée (les trois ci-dessus, séparés par des virgules)                     |
+
+Sur une instance installée, un réglage se change dans `secrets/extra.properties`
+(conservé par les mises à jour), puis redémarrage de l'application.
+
+### Relevé de l'existant
+
+Compte les patients selon leur numéro CMU. Rien n'est corrigé ni fusionné ;
+seuls des nombres sortent. Les statuts 1 et 3 sont émis ; 2 est un numéro saisi
+comme CMU mais mal formé, à corriger dans la fiche ; 4 est un autre numéro
+d'identité ou un numéro CMU mal formé. La seconde requête compte les numéros
+conformes portés par plusieurs patients.
+
+```sql
+-- Relevé des numéros CMU des patients : uniquement des nombres.
+WITH valeurs AS (
+    SELECT p.id,
+           regexp_replace(coalesce((
+               SELECT pi.identity_data
+                 FROM clinlims.patient_identity pi
+                 JOIN clinlims.patient_identity_type t ON t.id = pi.identity_type_id
+                WHERE t.identity_type = 'CMU' AND pi.patient_id = p.id
+                  AND coalesce(trim(pi.identity_data), '') <> ''
+                ORDER BY pi.id DESC LIMIT 1), ''), '[[:space:].-]', '', 'g') AS type_cmu,
+           regexp_replace(coalesce(p.national_id, ''), '[[:space:].-]', '', 'g') AS national_id
+      FROM clinlims.patient p
+)
+SELECT CASE
+           WHEN type_cmu ~ '^[0-9]{13}$' THEN '1 conforme (type CMU)'
+           WHEN type_cmu <> '' THEN '2 non conforme (type CMU, non émis)'
+           WHEN national_id ~ '^[0-9]{13}$' THEN '3 conforme (nationalId seul)'
+           WHEN national_id <> '' THEN '4 nationalId non conforme (non émis)'
+           ELSE '5 absent'
+       END AS statut,
+       count(*) AS patients
+  FROM valeurs
+ GROUP BY 1
+ ORDER BY 1;
+
+-- Numéros CMU conformes portés par plusieurs patients (non fusionnés).
+WITH valeurs AS (
+    SELECT p.id,
+           regexp_replace(coalesce((
+               SELECT pi.identity_data
+                 FROM clinlims.patient_identity pi
+                 JOIN clinlims.patient_identity_type t ON t.id = pi.identity_type_id
+                WHERE t.identity_type = 'CMU' AND pi.patient_id = p.id
+                  AND coalesce(trim(pi.identity_data), '') <> ''
+                ORDER BY pi.id DESC LIMIT 1), p.national_id, ''), '[[:space:].-]', '', 'g') AS cmu
+      FROM clinlims.patient p
+), partages AS (
+    SELECT cmu, count(*) AS n FROM valeurs
+     WHERE cmu ~ '^[0-9]{13}$' GROUP BY cmu HAVING count(*) > 1
+)
+SELECT count(*) AS numeros_partages, coalesce(sum(n), 0) AS patients_concernes FROM partages;
+```
+
 ## Dates
 
 - `ServiceRequest.authoredOn` = date de la demande saisie sur le bon
@@ -204,6 +296,9 @@ referring clinic ». Il est exposé ainsi :
   si non renseigné.
 - `DiagnosticReport.effective[x]` = prélèvement de l'échantillon ;
   `DiagnosticReport.issued` = dernière validation de ses analyses.
+- `Observation.effective[x]` = prélèvement de l'échantillon (à défaut celui du
+  bon ; absent si aucun), y compris isolats, antibiogrammes et flore de
+  bactériologie ; `Observation.issued` = validation de l'analyse.
 - Plus aucune de ces dates ne vaut l'heure de la transformation : un rattrapage
   ne les décale plus.
 
