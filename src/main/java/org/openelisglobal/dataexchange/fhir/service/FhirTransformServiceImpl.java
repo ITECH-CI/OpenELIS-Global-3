@@ -459,6 +459,9 @@ public class FhirTransformServiceImpl implements FhirTransformService {
             }
             if (results != null) {
                 for (Result result : results) {
+                    if (withheldDuringRevalidation(result)) {
+                        continue;
+                    }
                     Observation observation = this.transformResultToObservation(result);
                     if (observations.containsKey(observation.getIdElement().getIdPart())) {
                         // LogEvent.logWarn(this.getClass().getSimpleName(),
@@ -1573,12 +1576,16 @@ public class FhirTransformServiceImpl implements FhirTransformService {
         CountingTempIdGenerator tempIdGenerator = new CountingTempIdGenerator();
         FhirOperations fhirOperations = new FhirOperations();
         for (ResultSet resultSet : actionDataSet.getNewResults()) {
-            Observation observation = transformResultToObservation(resultSet.result.getId());
-            this.addToOperations(fhirOperations, tempIdGenerator, observation);
+            Result result = resultService.get(resultSet.result.getId());
+            if (!withheldDuringRevalidation(result)) {
+                this.addToOperations(fhirOperations, tempIdGenerator, transformResultToObservation(result));
+            }
         }
         for (ResultSet resultSet : actionDataSet.getModifiedResults()) {
-            Observation observation = this.transformResultToObservation(resultSet.result.getId());
-            this.addToOperations(fhirOperations, tempIdGenerator, observation);
+            Result result = resultService.get(resultSet.result.getId());
+            if (!withheldDuringRevalidation(result)) {
+                this.addToOperations(fhirOperations, tempIdGenerator, transformResultToObservation(result));
+            }
         }
 
         // Samples touchés ayant au moins une analyse finalisée → 1 DR groupé chacun
@@ -1662,8 +1669,10 @@ public class FhirTransformServiceImpl implements FhirTransformService {
         }
 
         for (Result result : resultUpdateList) {
-            Observation observation = this.transformResultToObservation(result.getId());
-            this.addToOperations(fhirOperations, tempIdGenerator, observation);
+            Result current = resultService.get(result.getId());
+            if (!withheldDuringRevalidation(current)) {
+                this.addToOperations(fhirOperations, tempIdGenerator, transformResultToObservation(current));
+            }
         }
 
         // Samples touchés ayant au moins une analyse finalisée → 1 DR groupé chacun.
@@ -1779,7 +1788,12 @@ public class FhirTransformServiceImpl implements FhirTransformService {
 
         DiagnosticReport diagnosticReport = genNewDiagnosticReport(sampleItem);
 
-        diagnosticReport.setStatus(aggregateDiagnosticReportStatus(analyses));
+        DiagnosticReportStatus reportStatus = aggregateDiagnosticReportStatus(analyses);
+        if ((reportStatus == DiagnosticReportStatus.FINAL || reportStatus == DiagnosticReportStatus.PARTIAL)
+                && anyCorrectedValidatedResult(analyses)) {
+            reportStatus = DiagnosticReportStatus.CORRECTED;
+        }
+        diagnosticReport.setStatus(reportStatus);
 
         CodeableConcept category = sampleItemDisciplineCategory(analyses);
         if (category != null) {
@@ -1896,6 +1910,32 @@ public class FhirTransformServiceImpl implements FhirTransformService {
         return anyStarted ? DiagnosticReportStatus.PRELIMINARY : DiagnosticReportStatus.REGISTERED;
     }
 
+    /**
+     * Résultat d'une analyse remise « à valider » après avoir été validée (elle a
+     * une date de validation) : sa nouvelle valeur n'est pas émise tant qu'elle
+     * n'est pas revalidée ; le serveur FHIR garde la dernière version validée.
+     */
+    boolean withheldDuringRevalidation(Result result) {
+        Analysis analysis = result == null ? null : result.getAnalysis();
+        return analysis != null && analysis.getReleasedDate() != null
+                && !statusService.matches(analysis.getStatusId(), AnalysisStatus.Finalized)
+                && !isCancelledOrRejected(analysis);
+    }
+
+    // Un résultat validé et marqué corrigé rend son compte rendu corrected.
+    private boolean anyCorrectedValidatedResult(List<Analysis> analyses) {
+        for (Analysis analysis : analyses) {
+            if (statusService.matches(analysis.getStatusId(), AnalysisStatus.Finalized)) {
+                for (Result result : resultService.getResultsByAnalysis(analysis)) {
+                    if (result.getCorrectionDate() != null) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
     /** true si l'analyse est dans un état terminal d'annulation/rejet. */
     private boolean isCancelledOrRejected(Analysis analysis) {
         return statusService.matches(analysis.getStatusId(), AnalysisStatus.Canceled)
@@ -2006,7 +2046,9 @@ public class FhirTransformServiceImpl implements FhirTransformService {
         // we may need to add detection for when result is changed and add those status
         // to list
         if (result.getAnalysis().getStatusId().equals(statusService.getStatusID(AnalysisStatus.Finalized))) {
-            observation.setStatus(ObservationStatus.FINAL);
+            // Valeur changée après une validation, puis revalidée : corrected.
+            observation.setStatus(
+                    result.getCorrectionDate() != null ? ObservationStatus.CORRECTED : ObservationStatus.FINAL);
         } else if (analysis != null && isCancelledOrRejected(analysis)) {
             // Analyse annulée/rejetée : résultat non exploitable (spec SHR). Le
             // dataAbsentReason est posé plus bas si aucune valeur n'est produite.

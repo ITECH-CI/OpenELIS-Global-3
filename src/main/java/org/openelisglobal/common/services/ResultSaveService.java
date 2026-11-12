@@ -16,6 +16,7 @@
 
 package org.openelisglobal.common.services;
 
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -69,6 +70,30 @@ public class ResultSaveService {
         this.analysis = analysis;
     }
 
+    // Le résultat était-il déjà validé avant cette modification ? Renseigné par
+    // l'appelant, qui le sait avant de changer le statut ou la date de validation
+    // de l'analyse ; à défaut : l'analyse a une date de validation.
+    private Boolean previouslyValidated;
+
+    public void setPreviouslyValidated(boolean previouslyValidated) {
+        this.previouslyValidated = previouslyValidated;
+    }
+
+    boolean isPreviouslyValidated() {
+        if (previouslyValidated != null) {
+            return previouslyValidated;
+        }
+        return analysis != null && analysis.getReleasedDate() != null;
+    }
+
+    // Marque un résultat déjà validé dont la valeur change (statut FHIR corrected
+    // une fois revalidé). La première date de correction est conservée.
+    private void markCorrectedIfPreviouslyValidated(Result result) {
+        if (isPreviouslyValidated() && result.getCorrectionDate() == null) {
+            result.setCorrectionDate(new Timestamp(System.currentTimeMillis()));
+        }
+    }
+
     public void setCurrentUserId(String currentUserId) {
         this.currentUserId = currentUserId;
     }
@@ -86,6 +111,7 @@ public class ResultSaveService {
                     JSONObject jsonResult = (JSONObject) parser.parse(serviceBean.getMultiSelectResultValues());
 
                     List<Result> existingResults = resultService.getResultsByAnalysis(analysis);
+                    hadExistingResults = !existingResults.isEmpty();
                     for (Object key : jsonResult.keySet()) {
                         getResultsForMultiSelect(results, existingResults, serviceBean, (String) key,
                                 (String) jsonResult.get(key), isQualifiedResult);
@@ -164,6 +190,8 @@ public class ResultSaveService {
         return results;
     }
 
+    private boolean hadExistingResults;
+
     private void getResultsForMultiSelect(List<Result> results, List<Result> existingResults,
             ResultSaveBean serviceBean, String key, String value, boolean isQualifiedResult) {
         int groupingKey = Integer.parseInt(key);
@@ -195,6 +223,11 @@ public class ResultSaveService {
             setNewResultValues(serviceBean, result);
             setAnalyteForResult(result);
             setStandardResultValues(resultAsString, result);
+            // Choix multiple : une nouvelle sélection sur un résultat déjà validé est
+            // une correction.
+            if (hadExistingResults) {
+                markCorrectedIfPreviouslyValidated(result);
+            }
             result.setSortOrder(getResultSortOrder(result.getValue()));
             result.setGrouping(groupingKey);
 
@@ -272,6 +305,7 @@ public class ResultSaveService {
             LogEvent.logInfo(this.getClass().getSimpleName(), "setStandardResultValues", "Result value changed - Old: ["
                     + result.getValue() + "] New: [" + value + "] ResultId: " + result.getId());
             updatedResult = true;
+            markCorrectedIfPreviouslyValidated(result);
         }
         result.setValue(value);
         result.setSysUserId(currentUserId);

@@ -383,6 +383,10 @@ public class ResultValidationController extends BaseResultValidationController {
                 Analysis analysis = analysisService.get(analysisItem.getAnalysisId());
                 analysis.setSysUserId(getSysUserId(request));
 
+                // Déjà validé avant cette validation (avant la nouvelle date de validation).
+                boolean previouslyValidated = analysis.getReleasedDate() != null || SpringContext
+                        .getBean(IStatusService.class).matches(analysis.getStatusId(), AnalysisStatus.Finalized);
+
                 if (!analysisIdList.contains(analysis.getId())) {
 
                     if (analysisItem.getIsAccepted()) {
@@ -404,7 +408,7 @@ public class ResultValidationController extends BaseResultValidationController {
                 createNeededNotes(analysisItem, analysis, noteUpdateList);
 
                 if (areResults(analysisItem)) {
-                    List<Result> results = createResultFromAnalysisItem(analysisItem, analysis, analysis,
+                    List<Result> results = createResultFromAnalysisItem(analysisItem, analysis, previouslyValidated,
                             noteUpdateList, deletableList);
                     for (Result result : results) {
                         resultUpdateList.add(result);
@@ -552,11 +556,12 @@ public class ResultValidationController extends BaseResultValidationController {
         return analysis;
     }
 
-    private List<Result> createResultFromAnalysisItem(AnalysisItem analysisItem, Analysis analysis, Analysis analysis2,
-            List<Note> noteUpdateList, List<Result> deletableList) {
+    private List<Result> createResultFromAnalysisItem(AnalysisItem analysisItem, Analysis analysis,
+            boolean previouslyValidated, List<Note> noteUpdateList, List<Result> deletableList) {
 
         ResultSaveBean bean = ResultSaveBeanAdapter.fromAnalysisItem(analysisItem);
         ResultSaveService resultSaveService = new ResultSaveService(analysis, getSysUserId(request));
+        resultSaveService.setPreviouslyValidated(previouslyValidated);
         List<Result> results = resultSaveService.createResultsFromTestResultItem(bean, deletableList);
         if (analysisService.patientReportHasBeenDone(analysis) && resultSaveService.isUpdatedResult()) {
             // Ne plus enregistrer la note "Résultat corrigé"

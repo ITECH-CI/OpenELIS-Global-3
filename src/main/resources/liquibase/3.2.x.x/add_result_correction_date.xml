@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+    <!--
+      Résultat corrigé : date à laquelle la valeur d'un résultat déjà validé a
+      changé. Un résultat marqué et validé sort en FHIR avec le statut corrected,
+      et son compte rendu aussi. La base est la seule source de cette information
+      (une reconstruction du serveur FHIR la retrouve). Idempotent.
+    -->
+    <changeSet id="add_result_correction_date" author="itechciv">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="result" columnName="correction_date" schemaName="clinlims"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="result" schemaName="clinlims">
+            <column name="correction_date" type="TIMESTAMP"/>
+        </addColumn>
+    </changeSet>
+</databaseChangeLog>

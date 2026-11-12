@@ -181,6 +181,8 @@ file="add_study_modifier_menu.xml" />
         file="add_eorder_category_origin.xml" />
     <include relativeToChangelogFile="true"
         file="add_eorder_requester_cancellation.xml" />
+    <include relativeToChangelogFile="true"
+        file="add_result_correction_date.xml" />
 
 
 </databaseChangeLog>
