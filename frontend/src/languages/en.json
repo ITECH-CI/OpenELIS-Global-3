@@ -2498,5 +2498,11 @@
   "fhir.gateway.policy.write.label": "Allow writes (PUT /fhir/<Type>/<id> only, for the types checked above)",
   "fhir.gateway.policy.writePrefix.label": "Required prefix of written ids (e.g. bdms-)",
   "fhir.gateway.policy.writePrefix.helper": "Only one client can write. POST, DELETE, PATCH and ids without the prefix stay refused.",
-  "fhir.gateway.client.write": "Write"
+  "fhir.gateway.client.write": "Write",
+  "eorder.button.reject": "Refuse",
+  "eorder.button.cancelOrder": "Cancel order",
+  "eorder.close.reason": "Reason (sent to the requester)",
+  "eorder.close.reason.required": "Choose a reason.",
+  "eorder.close.rejected": "Order refused.",
+  "eorder.close.cancelled": "Order cancelled."
 }

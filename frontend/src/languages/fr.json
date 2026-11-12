@@ -2013,5 +2013,11 @@
   "fhir.gateway.policy.write.label": "Autoriser l'écriture (PUT /fhir/<Type>/<id> seulement, types cochés ci-dessus)",
   "fhir.gateway.policy.writePrefix.label": "Préfixe obligatoire des identifiants écrits (ex. bdms-)",
   "fhir.gateway.policy.writePrefix.helper": "Un seul tiers peut écrire. POST, DELETE, PATCH et les identifiants hors préfixe restent refusés.",
-  "fhir.gateway.client.write": "Écriture"
+  "fhir.gateway.client.write": "Écriture",
+  "eorder.button.reject": "Refuser",
+  "eorder.button.cancelOrder": "Annuler la demande",
+  "eorder.close.reason": "Motif (transmis au demandeur)",
+  "eorder.close.reason.required": "Choisissez un motif.",
+  "eorder.close.rejected": "Demande refusée.",
+  "eorder.close.cancelled": "Demande annulée."
 }

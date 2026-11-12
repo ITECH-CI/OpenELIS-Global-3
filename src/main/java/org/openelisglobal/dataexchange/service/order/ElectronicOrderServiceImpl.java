@@ -153,6 +153,9 @@ public class ElectronicOrderServiceImpl extends AuditableBaseObjectServiceImpl<E
     @Transactional(readOnly = true)
     public List<ElectronicOrder> searchForElectronicOrders(ElectronicOrderViewForm form) {
         switch (form.getSearchType()) {
+        case TO_PROCESS:
+            return getAllElectronicOrdersByTimestampAndStatus(null, null,
+                    statusService.getStatusID(ExternalOrderStatus.Entered), SortOrder.LAST_UPDATED_ASC);
         case IDENTIFIER:
             IGenericClient fhirClient = fhirUtil.getFhirClient(fhirConfig.getLocalFhirStorePath());
             Bundle searchBundle = fhirClient.search().forResource(ServiceRequest.class)

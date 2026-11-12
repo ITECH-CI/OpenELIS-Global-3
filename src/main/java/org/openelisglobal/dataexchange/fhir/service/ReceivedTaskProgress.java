@@ -126,6 +126,23 @@ public final class ReceivedTaskProgress {
     }
 
     /**
+     * Refus ou annulation décidé par le laboratoire sur une demande pas encore
+     * prise en charge : status, businessStatus et motif court (jamais de donnée
+     * nominative). Sans effet sur une Task déjà terminale. Renvoie vrai si la Task
+     * a changé.
+     */
+    public static boolean closeByLaboratory(Task received, Etape etape, String reasonText) {
+        if (received == null || (etape != Etape.REFUSEE && etape != Etape.ANNULEE) || isTerminal(received)) {
+            return false;
+        }
+        received.setStatus(etape.status);
+        received.setBusinessStatus(businessStatus(etape));
+        received.setStatusReason(
+                reasonText == null || reasonText.trim().isEmpty() ? null : new CodeableConcept().setText(reasonText));
+        return true;
+    }
+
+    /**
      * Reporte sur la Task reçue l'étape de la Task du bon d'OpenELIS : compte rendu
      * en output quand le résultat est disponible, motif en cas de refus ou
      * d'annulation. Renvoie vrai si la Task reçue a changé.

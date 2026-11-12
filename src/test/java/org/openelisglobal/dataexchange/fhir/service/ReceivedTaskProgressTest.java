@@ -145,4 +145,36 @@ public class ReceivedTaskProgressTest {
         assertFalse(transformService.updateReferringTaskWithTaskInfo(received, new Task()));
         assertEquals("acceptee", step(received));
     }
+
+    @Test
+    public void laboratoryRefusal_shouldBeRefuseeWithReason() {
+        Task received = receivedAccepted();
+
+        assertTrue(ReceivedTaskProgress.closeByLaboratory(received, Etape.REFUSEE, "Demande incomplète"));
+
+        assertEquals(TaskStatus.REJECTED, received.getStatus());
+        assertEquals("refusee", step(received));
+        assertEquals("Demande incomplète", received.getStatusReason().getText());
+    }
+
+    @Test
+    public void laboratoryCancellation_shouldBeAnnulee() {
+        Task received = receivedAccepted();
+
+        assertTrue(ReceivedTaskProgress.closeByLaboratory(received, Etape.ANNULEE, "Doublon"));
+
+        assertEquals(TaskStatus.CANCELLED, received.getStatus());
+        assertEquals("annulee", step(received));
+        assertEquals("Doublon", received.getStatusReason().getText());
+    }
+
+    @Test
+    public void laboratoryClose_shouldNotTouchTerminalTask_norAcceptOtherSteps() {
+        Task received = receivedAccepted();
+        transformService.updateReferringTaskWithTaskInfo(received, finishedOrderTask());
+
+        assertFalse(ReceivedTaskProgress.closeByLaboratory(received, Etape.REFUSEE, "x"));
+        assertEquals(TaskStatus.COMPLETED, received.getStatus());
+        assertFalse(ReceivedTaskProgress.closeByLaboratory(receivedAccepted(), Etape.EN_ANALYSE, "x"));
+    }
 }
