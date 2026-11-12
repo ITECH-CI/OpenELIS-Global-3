@@ -177,6 +177,8 @@ file="add_study_modifier_menu.xml" />
         file="referentiel_etablissements_dhis2.xml" />
     <include relativeToChangelogFile="true"
         file="fhir_gateway_write_policy.xml" />
+    <include relativeToChangelogFile="true"
+        file="add_eorder_category_origin.xml" />
 
 
 </databaseChangeLog>

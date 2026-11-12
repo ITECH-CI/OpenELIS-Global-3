@@ -135,7 +135,8 @@ public class RestStudyElectronicOrdersController extends BaseController {
         String requestedPage = request.getParameter("page");
         if (GenericValidator.isBlankOrNull(requestedPage)) {
             if (form.getSearchType() != null) {
-                electronicOrders = electronicOrderService.searchStudyElectronicOrdersCombined(form);
+                electronicOrders = ElectronicOrderFilters
+                        .study(electronicOrderService.searchStudyElectronicOrdersCombined(form));
                 eOrderDisplayItems = convertToDisplayItem(electronicOrders);
                 paging.setDatabaseResults(request, form, eOrderDisplayItems);
             }

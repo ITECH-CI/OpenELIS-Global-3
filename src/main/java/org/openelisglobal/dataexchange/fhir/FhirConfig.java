@@ -62,6 +62,21 @@ public class FhirConfig {
     @Value("${org.openelisglobal.loinc.equivalences:}")
     private String loincEquivalences;
 
+    // Demandes de la plateforme : identifiant de Task réservé (préfixe d'écriture
+    // de la passerelle). Avec l'étiquette
+    // https://hie.ci/echanges/origine|plateforme,
+    // il classe la demande en origine PLATEFORME.
+    @Getter
+    @Value("${org.openelisglobal.eorder.plateforme.idPrefix:bdms-}")
+    private String eorderPlateformeIdPrefix;
+
+    // URL de l'extension (Task ou ServiceRequest) qui porte une catégorie explicite
+    // (ROUTINE, ETUDE_CV). Vide : non lue, toute demande de la plateforme est de la
+    // routine.
+    @Getter
+    @Value("${org.openelisglobal.eorder.categorie.extension:}")
+    private String eorderCategorieExtension;
+
     @Getter
     @Value("${org.openelisglobal.fhirstore.uri:}")
     private String localFhirStorePath;

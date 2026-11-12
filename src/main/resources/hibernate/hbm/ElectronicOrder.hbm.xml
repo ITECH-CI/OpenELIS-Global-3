@@ -77,6 +77,20 @@
         </property>
         <!-- Colonne renseignée hors-Liquibase par l'ancien uploader (cf. DESIGN_INTEROP_MODULE_CIV.md
             §6.1) : souvent la SEULE source fiable du site demandeur en pratique. -->
+        <property name="categorie">
+            <column name="categorie" length="20" not-null="false" />
+            <type name="org.hibernate.type.EnumType">
+                <param name="enumClass">org.openelisglobal.dataexchange.order.valueholder.ElectronicOrderCategorie</param>
+                <param name="useNamed">true</param>
+            </type>
+        </property>
+        <property name="origine">
+            <column name="origine" length="20" not-null="false" />
+            <type name="org.hibernate.type.EnumType">
+                <param name="enumClass">org.openelisglobal.dataexchange.order.valueholder.ElectronicOrderOrigine</param>
+                <param name="useNamed">true</param>
+            </type>
+        </property>
         <property name="organizationId"
             type="org.openelisglobal.hibernate.resources.usertype.LIMSStringNumberUserType">
             <column name="organization_id" precision="10" not-null="false" />
