@@ -177,4 +177,27 @@ public class ReceivedTaskProgressTest {
         assertEquals(TaskStatus.COMPLETED, received.getStatus());
         assertFalse(ReceivedTaskProgress.closeByLaboratory(receivedAccepted(), Etape.EN_ANALYSE, "x"));
     }
+
+    @Test
+    public void technicalRejection_shouldBeRefuseeWithReason_neverFailed() {
+        Task received = receivedAccepted();
+        transformService.updateReferringTaskWithTaskInfo(received, orderTask(TaskStatus.READY));
+        Task order = orderTask(TaskStatus.FAILED);
+        order.setStatusReason(new CodeableConcept().setText("échantillon insuffisant"));
+
+        assertTrue(transformService.updateReferringTaskWithTaskInfo(received, order));
+
+        assertEquals(TaskStatus.REJECTED, received.getStatus());
+        assertEquals("refusee", step(received));
+        assertEquals("échantillon insuffisant", received.getStatusReason().getText());
+    }
+
+    @Test
+    public void noOrderTaskStatus_shouldEverWriteFailedOnReceivedTask() {
+        for (TaskStatus orderStatus : TaskStatus.values()) {
+            Task received = receivedAccepted();
+            transformService.updateReferringTaskWithTaskInfo(received, orderTask(orderStatus));
+            assertFalse(orderStatus.name(), received.getStatus() == TaskStatus.FAILED);
+        }
+    }
 }

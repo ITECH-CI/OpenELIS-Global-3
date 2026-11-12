@@ -87,6 +87,8 @@ public final class ReceivedTaskProgress {
             return Etape.RESULTAT_DISPONIBLE;
         case REJECTED:
         case FAILED:
+            // Rejet biologique ou technique (TechnicalRejected → FAILED) : refusée.
+            // « failed » n'est jamais écrit sur une Task reçue.
             return Etape.REFUSEE;
         case CANCELLED:
             return Etape.ANNULEE;
