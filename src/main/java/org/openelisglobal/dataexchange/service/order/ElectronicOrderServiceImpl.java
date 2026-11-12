@@ -20,6 +20,7 @@ import org.openelisglobal.dataexchange.order.dao.ElectronicOrderDAO;
 import org.openelisglobal.dataexchange.order.form.ElectronicOrderViewForm;
 import org.openelisglobal.dataexchange.order.valueholder.ElectronicOrder;
 import org.openelisglobal.dataexchange.order.valueholder.ElectronicOrder.SortOrder;
+import org.openelisglobal.dataexchange.order.valueholder.ElectronicOrderCategorie;
 import org.openelisglobal.organization.service.OrganizationService;
 import org.openelisglobal.test.service.TestService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -273,5 +274,63 @@ public class ElectronicOrderServiceImpl extends AuditableBaseObjectServiceImpl<E
     @Override
     public int getCountOfElectronicOrdersByStatusList(List<Integer> statusIds) {
         return getBaseObjectDAO().getCountOfElectronicOrdersByStatusList(statusIds);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ElectronicOrder> getRoutineElectronicOrders(List<String> statusIds, java.sql.Timestamp from,
+            java.sql.Timestamp to) {
+        return getBaseObjectDAO().getElectronicOrdersByCategorie(ElectronicOrderCategorie.ROUTINE, statusIds, from, to);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ElectronicOrder> getActiveSiblingElectronicOrders(ElectronicOrder eOrder) {
+        List<ElectronicOrder> siblings = new ArrayList<>();
+        String taskId = getTaskId(eOrder);
+        if (eOrder == null || !eOrder.isRoutine() || taskId == null) {
+            return siblings;
+        }
+        java.util.Set<String> terminal = new java.util.HashSet<>();
+        for (ExternalOrderStatus status : java.util.Arrays.asList(ExternalOrderStatus.Cancelled,
+                ExternalOrderStatus.Completed, ExternalOrderStatus.NonConforming)) {
+            terminal.add(statusService.getStatusID(status));
+        }
+        for (ElectronicOrder candidate : getBaseObjectDAO()
+                .getElectronicOrdersByTaskId(ElectronicOrderCategorie.ROUTINE, taskId)) {
+            if (!candidate.getId().equals(eOrder.getId()) && !terminal.contains(candidate.getStatusId())
+                    && taskId.equals(getTaskId(candidate))) {
+                siblings.add(candidate);
+            }
+        }
+        return siblings;
+    }
+
+    @Override
+    public String getTaskId(ElectronicOrder eOrder) {
+        if (eOrder == null || GenericValidator.isBlankOrNull(eOrder.getData())) {
+            return null;
+        }
+        try {
+            com.fasterxml.jackson.databind.JsonNode node = new com.fasterxml.jackson.databind.ObjectMapper()
+                    .readTree(eOrder.getData());
+            String id = node.path("id").asText(null);
+            return GenericValidator.isBlankOrNull(id) ? null : id;
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ElectronicOrder> getRoutineElectronicOrdersByTaskId(String taskId) {
+        List<ElectronicOrder> orders = new ArrayList<>();
+        for (ElectronicOrder candidate : getBaseObjectDAO()
+                .getElectronicOrdersByTaskId(ElectronicOrderCategorie.ROUTINE, taskId)) {
+            if (taskId != null && taskId.equals(getTaskId(candidate))) {
+                orders.add(candidate);
+            }
+        }
+        return orders;
     }
 }

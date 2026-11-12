@@ -87,6 +87,7 @@ public class SamplePatientUpdateData {
     private Organization newOrganization;
     private Organization currentOrganization;
     private ElectronicOrder electronicOrder = null;
+    private List<ElectronicOrder> siblingElectronicOrders = new java.util.ArrayList<>();
 
     private boolean useReceiveDateForCollectionDate = !FormFields.getInstance().useField(Field.CollectionDate);
     private String collectionDateFromReceiveDate = null;
@@ -334,6 +335,7 @@ public class SamplePatientUpdateData {
 
     private void setElectronicOrderIfNeeded(SampleOrderItem sampleOrder) {
         electronicOrder = null;
+        siblingElectronicOrders = new java.util.ArrayList<>();
         String externalOrderNumber = sampleOrder.getExternalOrderNumber();
         if (!GenericValidator.isBlankOrNull(externalOrderNumber)) {
             List<ElectronicOrder> orders = electronicOrderService.getElectronicOrdersByExternalId(externalOrderNumber);
@@ -345,8 +347,22 @@ public class SamplePatientUpdateData {
 
                 sample.setReferringId(externalOrderNumber);
                 sample.setClinicalOrderId(electronicOrder.getId());
+
+                // Demande de la plateforme : les autres examens de la même demande sont
+                // repris dans ce bon ; leurs demandes électroniques sont prises en charge
+                // avec lui.
+                siblingElectronicOrders = electronicOrderService.getActiveSiblingElectronicOrders(electronicOrder);
+                for (ElectronicOrder sibling : siblingElectronicOrders) {
+                    sibling.setStatusId(
+                            SpringContext.getBean(IStatusService.class).getStatusID(ExternalOrderStatus.Completed));
+                    sibling.setSysUserId(currentUserId);
+                }
             }
         }
+    }
+
+    public List<ElectronicOrder> getSiblingElectronicOrders() {
+        return siblingElectronicOrders;
     }
 
     public void initProvider(SampleOrderItem sampleOrder) {

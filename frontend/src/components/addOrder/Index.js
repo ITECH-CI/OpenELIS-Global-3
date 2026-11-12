@@ -14,6 +14,8 @@ import OrderEntryAdditionalQuestions from "./OrderEntryAdditionalQuestions";
 import OrderSuccessMessage from "./OrderSuccessMessage";
 import PatientInfo from "./PatientInfo";
 import { cmuForSubmit } from "../utils/CmuNumber";
+import ExamChoiceModal from "./ExamChoiceModal";
+import { applyExamChoices, normalizeExamChoices } from "./examChoices";
 import "./add-order.scss";
 let breadcrumbs = [
   { label: "home.label", link: "/" },
@@ -52,6 +54,8 @@ const Index = () => {
   const [page, setPage] = useState(firstPageNumber);
   const [orderFormValues, setOrderFormValues] = useState(SampleOrderFormValues);
   const [samples, setSamples] = useState([sampleObject]);
+  // Examens d'une demande électronique dont l'opérateur choisit l'échantillon.
+  const [examChoices, setExamChoices] = useState([]);
   const [errors, setErrors] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [phoneValidation, setPhoneValidation] = useState({
@@ -211,6 +215,7 @@ const Index = () => {
       };
       setOrderFormValues(newOrderFormValues);
       setSamples(SampleTypes);
+      setExamChoices(normalizeExamChoices(order));
 
       //TODO not translated over for 3.0 Unsure if needed
       // parseCrossPanels(
@@ -506,6 +511,24 @@ const Index = () => {
 
     return objList;
   }
+
+  const confirmExamChoices = (selectedOptions) => {
+    setSamples((current) =>
+      applyExamChoices(current, selectedOptions, (id, name, index) => {
+        const sampleType = newSampleType(id, name, index);
+        const autofill =
+          configurationProperties?.AUTOFILL_COLLECTION_DATE === "true";
+        sampleType.sampleXML.collectionDate = autofill
+          ? configurationProperties.currentDateAsText
+          : "";
+        sampleType.sampleXML.collectionTime = autofill
+          ? configurationProperties.currentTimeAsText
+          : "";
+        return sampleType;
+      }),
+    );
+    setExamChoices([]);
+  };
 
   const newSampleType = (id, name, index) => {
     return {
@@ -867,6 +890,20 @@ const Index = () => {
       <Stack gap={10}>
         <div className="pageContent">
           {notificationVisible === true ? <AlertDialog /> : ""}
+          <ExamChoiceModal
+            choices={examChoices}
+            onConfirm={confirmExamChoices}
+            onClose={() => {
+              // Rien n'est perdu en silence : l'opérateur sait quels examens restent
+              // à ajouter à la main.
+              showAlertMessage(
+                intl.formatMessage({ id: "examChoice.notPlaced" }) +
+                  examChoices.map((choice) => choice.name).join(", "),
+                NotificationKinds.warning,
+              );
+              setExamChoices([]);
+            }}
+          />
           {/* <div>{JSON.stringify(orderFormValues)}</div> */}
           <div className="orderWorkFlowDiv">
             <h2>

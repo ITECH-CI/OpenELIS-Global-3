@@ -38,6 +38,7 @@ import org.hl7.fhir.r4.model.Organization;
 import org.hl7.fhir.r4.model.Patient;
 import org.hl7.fhir.r4.model.Practitioner;
 import org.hl7.fhir.r4.model.QuestionnaireResponse;
+import org.hl7.fhir.r4.model.Reference;
 import org.hl7.fhir.r4.model.ResourceType;
 import org.hl7.fhir.r4.model.ServiceRequest;
 import org.hl7.fhir.r4.model.Specimen;
@@ -100,6 +101,9 @@ public class LabOrderSearchProvider extends BaseQueryProvider {
     private Map<TypeOfSample, PanelTestLists> typeOfSampleMap;
     private Map<Panel, List<TypeOfSample>> panelSampleTypesMap;
     private Map<String, List<TestSampleType>> testNameTestSampleTypeMap;
+    // Examens à placer par l'opérateur : plusieurs types d'échantillon possibles et
+    // aucun prélèvement reçu pour trancher.
+    private List<ExamChoice> examChoices;
 
     private Task task = null;
     private Practitioner requesterPerson = null;
@@ -372,6 +376,7 @@ public class LabOrderSearchProvider extends BaseQueryProvider {
         addSampleTypes(xml);
         addCrossPanels(xml);
         addCrosstests(xml);
+        addExamChoices(xml);
         addProgram(xml);
         addAlerts(xml, patientGuid);
         xml.append("</order>");
@@ -520,9 +525,51 @@ public class LabOrderSearchProvider extends BaseQueryProvider {
     }
 
     private void getTestsAndPanels(List<Request> tests, List<Request> panels, String orderMessage) {
-        // OML_O21 hapiMsg = (OML_O21) p.parse(orderMessage);
-        // ORC commonOrderSegment = hapiMsg.getORDER().getORC();
-        // pass loinc
+        getTestsAndPanels(tests, panels, serviceRequest, specimen);
+        // Les autres examens de la même demande (même Task) : la prise en charge les
+        // reprend tous dans un seul bon.
+        for (ServiceRequest sibling : siblingServiceRequests()) {
+            getTestsAndPanels(tests, panels, sibling, specimenOf(sibling));
+        }
+    }
+
+    private List<ServiceRequest> siblingServiceRequests() {
+        List<ServiceRequest> siblings = new ArrayList<>();
+        if (task == null || serviceRequest == null) {
+            return siblings;
+        }
+        String mainId = serviceRequest.getIdElement().getIdPart();
+        IGenericClient localFhirClient = fhirUtil.getFhirClient(fhirConfig.getLocalFhirStorePath());
+        for (Reference basedOn : task.getBasedOn()) {
+            String id = basedOn.getReferenceElement().getIdPart();
+            if (GenericValidator.isBlankOrNull(id) || id.equals(mainId)
+                    || !ResourceType.ServiceRequest.name().equals(basedOn.getReferenceElement().getResourceType())) {
+                continue;
+            }
+            try {
+                siblings.add(localFhirClient.read().resource(ServiceRequest.class).withId(id).execute());
+            } catch (RuntimeException e) {
+                LogEvent.logWarn(this.getClass().getSimpleName(), "siblingServiceRequests",
+                        "examen " + id + " de la demande introuvable : " + e.getMessage());
+            }
+        }
+        return siblings;
+    }
+
+    private Specimen specimenOf(ServiceRequest request) {
+        if (!request.hasSpecimen()) {
+            return null;
+        }
+        try {
+            return fhirUtil.getFhirClient(fhirConfig.getLocalFhirStorePath()).read().resource(Specimen.class)
+                    .withId(request.getSpecimenFirstRep().getReferenceElement().getIdPart()).execute();
+        } catch (RuntimeException e) {
+            return null;
+        }
+    }
+
+    private void getTestsAndPanels(List<Request> tests, List<Request> panels, ServiceRequest serviceRequest,
+            Specimen specimen) {
         String loinc = "";
         String sampleTypeAbbreviation = "";
         for (Coding code : serviceRequest.getCode().getCoding()) {
@@ -593,10 +640,9 @@ public class LabOrderSearchProvider extends BaseQueryProvider {
             }
         }
         if (test != null) {
-            if (typeOfSample == null) {
-                typeOfSample = typeOfSampleService.getTypeOfSampleForTest(test.getId()).get(0);
-            }
-            tests.add(new Request(test.getName(), loinc, typeOfSample.getLocalizedName()));
+            // Type d'échantillon indiqué seulement s'il vient du prélèvement reçu ; sinon
+            // le choix revient à l'opérateur quand le test en admet plusieurs.
+            tests.add(new Request(test.getName(), loinc, typeOfSample == null ? "" : typeOfSample.getLocalizedName()));
             return;
         }
         panel = panelService.getPanelByLoincCode(loinc);
@@ -604,13 +650,8 @@ public class LabOrderSearchProvider extends BaseQueryProvider {
             LogEvent.logDebug(this.getClass().getSimpleName(), "addToTestOrPanel",
                     "panel matching loinc is: " + panel.getDescription());
 
-            if (typeOfSample == null) {
-                typeOfSample = typeOfSampleService.getTypeOfSampleForPanelId(panel.getId()).get(0);
-                LogEvent.logDebug(this.getClass().getSimpleName(), "addToTestOrPanel",
-                        "typeOfSample matching for panel is: " + typeOfSample.getDescription());
-
-            }
-            panels.add(new Request(panel.getPanelName(), loinc, typeOfSample.getLocalizedName()));
+            panels.add(new Request(panel.getPanelName(), loinc,
+                    typeOfSample == null ? "" : typeOfSample.getLocalizedName()));
         }
 
     }
@@ -619,6 +660,7 @@ public class LabOrderSearchProvider extends BaseQueryProvider {
         typeOfSampleMap = new HashMap<>();
         panelSampleTypesMap = new HashMap<>();
         testNameTestSampleTypeMap = new HashMap<>();
+        examChoices = new ArrayList<>();
 
         createMapsForTests(testRequests);
 
@@ -637,8 +679,22 @@ public class LabOrderSearchProvider extends BaseQueryProvider {
 
             Test singleTest = tests.get(0);
             List<TypeOfSample> sampleTypes = typeOfSampleService.getTypeOfSampleForTest(singleTest.getId());
+            if (sampleTypes.isEmpty()) {
+                continue;
+            }
             TypeOfSample singleSampleType = sampleTypes.get(0);
             boolean hasSingleSampleType = sampleTypes.size() == 1 && tests.size() == 1;
+
+            if (tests.size() == 1 && sampleTypes.size() > 1) {
+                TypeOfSample hinted = matchingSampleType(sampleTypes, testRequest.getSampleType());
+                if (hinted != null) {
+                    hasSingleSampleType = true;
+                    singleSampleType = hinted;
+                } else {
+                    examChoices.add(ExamChoice.forTests(testRequest.getName(), tests,
+                            test -> typeOfSampleService.getTypeOfSampleForTest(test.getId())));
+                }
+            }
 
             if (tests.size() > 1) {
                 if (!GenericValidator.isBlankOrNull(testRequest.getSampleType())) {
@@ -656,6 +712,8 @@ public class LabOrderSearchProvider extends BaseQueryProvider {
                 }
 
                 if (!hasSingleSampleType) {
+                    examChoices.add(ExamChoice.forTests(testRequest.getName(), tests,
+                            test -> typeOfSampleService.getTypeOfSampleForTest(test.getId())));
                     List<TestSampleType> testSampleTypeList = testNameTestSampleTypeMap.get(testRequest.getName());
 
                     if (testSampleTypeList == null) {
@@ -696,6 +754,9 @@ public class LabOrderSearchProvider extends BaseQueryProvider {
 
             if (panel != null) {
                 List<TypeOfSample> typeOfSamples = typeOfSampleService.getTypeOfSampleForPanelId(panel.getId());
+                if (typeOfSamples.isEmpty()) {
+                    continue;
+                }
                 boolean hasSingleSampleType = typeOfSamples.size() == 1;
                 TypeOfSample singleTypeOfSample = typeOfSamples.get(0);
 
@@ -721,6 +782,9 @@ public class LabOrderSearchProvider extends BaseQueryProvider {
                     panelTestLists.addPanel(panel);
                 } else {
                     panelSampleTypesMap.put(panel, typeOfSamples);
+                    final Panel choicePanel = panel;
+                    examChoices.add(ExamChoice.forPanel(panelRequest.getName(), panel, typeOfSamples,
+                            type -> getTestsForPanelAndType(choicePanel.getId(), type.getId())));
                 }
             }
         }
@@ -842,6 +906,26 @@ public class LabOrderSearchProvider extends BaseQueryProvider {
         xml.append("</crosssampletype>");
     }
 
+    private static TypeOfSample matchingSampleType(List<TypeOfSample> sampleTypes, String hint) {
+        if (GenericValidator.isBlankOrNull(hint)) {
+            return null;
+        }
+        for (TypeOfSample sampleType : sampleTypes) {
+            if (hint.equals(sampleType.getLocalizedName()) || hint.equals(sampleType.getDescription())) {
+                return sampleType;
+            }
+        }
+        return null;
+    }
+
+    private void addExamChoices(StringBuilder xml) {
+        xml.append("<examChoices>");
+        for (ExamChoice choice : examChoices) {
+            choice.appendXml(xml);
+        }
+        xml.append("</examChoices>");
+    }
+
     private void addCrosstests(StringBuilder xml) {
         xml.append("<crosstests>");
         for (String testName : testNameTestSampleTypeMap.keySet()) {
@@ -896,14 +980,15 @@ public class LabOrderSearchProvider extends BaseQueryProvider {
             return panels;
         }
 
+        // Un même examen demandé deux fois dans la demande n'apparaît qu'une fois.
         public void addPanel(Panel panel) {
-            if (panel != null) {
+            if (panel != null && panels.stream().noneMatch(p -> p.getId().equals(panel.getId()))) {
                 panels.add(panel);
             }
         }
 
         public void addTest(Test test) {
-            if (test != null) {
+            if (test != null && tests.stream().noneMatch(t -> t.getId().equals(test.getId()))) {
                 tests.add(test);
             }
         }

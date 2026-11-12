@@ -14,7 +14,7 @@ import AnalyserResultIndex from "./components/analyserResults/Index";
 import SampleBatchEntrySetup from "./components/batchOrderEntry/SampleBatchEntrySetup.js";
 import CytologyCaseView from "./components/cytology/CytologyCaseView";
 import CytologyDashboard from "./components/cytology/CytologyDashBoard";
-import EOrderPage from "./components/eOrder/Index";
+import ReceivedOrdersPage from "./components/eOrder/ReceivedOrdersPage";
 import VleOrder from "./components/eOrder/VleOrder";
 import LandingPage from "./components/home/LandingPage";
 import ImmunohistochemistryCaseView from "./components/immunohistochemistry/ImmunohistochemistryCaseView";
@@ -406,7 +406,7 @@ export default function App() {
                 <SecureRoute
                   path="/ElectronicOrders"
                   exact
-                  component={() => <EOrderPage />}
+                  component={() => <ReceivedOrdersPage />}
                   role={Roles.RECEPTION}
                 />
                 <SecureRoute

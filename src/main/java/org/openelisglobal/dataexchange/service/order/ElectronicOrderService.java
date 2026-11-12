@@ -64,4 +64,22 @@ public interface ElectronicOrderService extends BaseObjectService<ElectronicOrde
      * code patient), tout se résout ici directement en base, sans appel FHIR.
      */
     List<ElectronicOrder> searchStudyElectronicOrdersCombined(ElectronicOrderViewForm form);
+
+    /**
+     * Demandes de routine : cf. ElectronicOrderDAO#getElectronicOrdersByCategorie.
+     */
+    List<ElectronicOrder> getRoutineElectronicOrders(List<String> statusIds, java.sql.Timestamp from,
+            java.sql.Timestamp to);
+
+    /**
+     * Autres demandes de routine de la même Task (autres examens de la même demande
+     * de la plateforme), pas encore terminées.
+     */
+    List<ElectronicOrder> getActiveSiblingElectronicOrders(ElectronicOrder eOrder);
+
+    /** Identifiant de la Task portée par electronic_order.data, ou null. */
+    String getTaskId(ElectronicOrder eOrder);
+
+    /** Demandes de routine de la Task, de la plus ancienne à la plus récente. */
+    List<ElectronicOrder> getRoutineElectronicOrdersByTaskId(String taskId);
 }
