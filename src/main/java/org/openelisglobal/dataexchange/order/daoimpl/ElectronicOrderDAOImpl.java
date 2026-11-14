@@ -14,6 +14,7 @@
 package org.openelisglobal.dataexchange.order.daoimpl;
 
 import java.sql.Date;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Vector;
@@ -26,6 +27,7 @@ import org.openelisglobal.common.exception.LIMSRuntimeException;
 import org.openelisglobal.dataexchange.order.dao.ElectronicOrderDAO;
 import org.openelisglobal.dataexchange.order.valueholder.ElectronicOrder;
 import org.openelisglobal.dataexchange.order.valueholder.ElectronicOrder.SortOrder;
+import org.openelisglobal.dataexchange.order.valueholder.ElectronicOrderCategorie;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -590,5 +592,57 @@ public class ElectronicOrderDAOImpl extends BaseDAOImpl<ElectronicOrder, String>
             handleException(e, "getAllElectronicOrdersByStatusList");
         }
         return new ArrayList<>();
+    }
+
+    @Override
+    public List<ElectronicOrder> getElectronicOrdersByCategorie(ElectronicOrderCategorie categorie,
+            List<String> statusIds, Timestamp from, Timestamp to) {
+        StringBuilder hql = new StringBuilder("From ElectronicOrder eo WHERE eo.categorie = :categorie ");
+        if (statusIds != null && !statusIds.isEmpty()) {
+            hql.append("AND eo.statusId IN (:statusIds) ");
+        }
+        if (from != null) {
+            hql.append("AND eo.orderTimestamp >= :from ");
+        }
+        if (to != null) {
+            hql.append("AND eo.orderTimestamp <= :to ");
+        }
+        hql.append("ORDER BY eo.orderTimestamp asc, eo.id asc");
+        try {
+            Query<ElectronicOrder> query = entityManager.unwrap(Session.class).createQuery(hql.toString(),
+                    ElectronicOrder.class);
+            query.setParameter("categorie", categorie);
+            if (statusIds != null && !statusIds.isEmpty()) {
+                query.setParameterList("statusIds",
+                        statusIds.stream().map(Integer::parseInt).collect(java.util.stream.Collectors.toList()));
+            }
+            if (from != null) {
+                query.setParameter("from", from);
+            }
+            if (to != null) {
+                query.setParameter("to", to);
+            }
+            return query.list();
+        } catch (HibernateException e) {
+            handleException(e, "getElectronicOrdersByCategorie");
+        }
+        return new java.util.ArrayList<>();
+    }
+
+    @Override
+    public List<ElectronicOrder> getElectronicOrdersByTaskId(ElectronicOrderCategorie categorie, String taskId) {
+        if (GenericValidator.isBlankOrNull(taskId) || !taskId.matches("[A-Za-z0-9\\-.]{1,64}")) {
+            return new java.util.ArrayList<>();
+        }
+        String hql = "From ElectronicOrder eo WHERE eo.categorie = :categorie AND eo.data LIKE :pattern ORDER BY eo.id asc";
+        try {
+            Query<ElectronicOrder> query = entityManager.unwrap(Session.class).createQuery(hql, ElectronicOrder.class);
+            query.setParameter("categorie", categorie);
+            query.setParameter("pattern", "%\"id\":\"" + taskId + "\"%");
+            return query.list();
+        } catch (HibernateException e) {
+            handleException(e, "getElectronicOrdersByTaskId");
+        }
+        return new java.util.ArrayList<>();
     }
 }

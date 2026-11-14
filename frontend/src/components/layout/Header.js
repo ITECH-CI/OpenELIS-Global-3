@@ -83,6 +83,24 @@ function OEHeader(props) {
       : console.log("User not authenticated, not getting menu");
   }, [userSessionDetails.authenticated]);
 
+  // Compteur des demandes reçues à traiter, à côté du menu des demandes
+  // électroniques de routine ; rafraîchi toutes les 60 s.
+  const [receivedOrdersToProcess, setReceivedOrdersToProcess] = useState(0);
+  useEffect(() => {
+    if (!userSessionDetails.authenticated) {
+      return undefined;
+    }
+    const loadCount = () =>
+      getFromOpenElisServer("/rest/ReceivedOrders/count", (res) =>
+        setReceivedOrdersToProcess(
+          res && Number.isInteger(res.toProcess) ? res.toProcess : 0,
+        ),
+      );
+    loadCount();
+    const timer = setInterval(loadCount, 60000);
+    return () => clearInterval(timer);
+  }, [userSessionDetails.authenticated]);
+
   const panelSwitchLabel = () => {
     return userSessionDetails.authenticated ? "User" : "Lang";
   };
@@ -413,9 +431,29 @@ function OEHeader(props) {
 
   const renderSideNavMenuItemLabel = (menuItem, level) => {
     const fontPercent = 100 - 5 * (level - 1) + "%";
+    const showCount =
+      receivedOrdersToProcess > 0 &&
+      menuItem.menu.actionURL &&
+      menuItem.menu.actionURL.split("?")[0] === "/ElectronicOrders";
     return (
       <span style={{ fontSize: fontPercent }}>
         <FormattedMessage id={menuItem.menu.displayKey} />
+        {showCount && (
+          <span
+            className="received-orders-count"
+            data-testid="receivedOrdersCount"
+            style={{
+              marginLeft: "0.5rem",
+              padding: "0 0.4rem",
+              borderRadius: "0.6rem",
+              background: "#da1e28",
+              color: "#ffffff",
+              fontSize: "0.75rem",
+            }}
+          >
+            {receivedOrdersToProcess}
+          </span>
+        )}
       </span>
     );
   };

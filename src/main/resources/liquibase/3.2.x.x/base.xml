@@ -177,6 +177,16 @@ file="add_study_modifier_menu.xml" />
         file="referentiel_etablissements_dhis2.xml" />
     <include relativeToChangelogFile="true"
         file="fhir_gateway_write_policy.xml" />
+    <include relativeToChangelogFile="true"
+        file="add_eorder_category_origin.xml" />
+    <include relativeToChangelogFile="true"
+        file="add_eorder_requester_cancellation.xml" />
+    <include relativeToChangelogFile="true"
+        file="add_result_correction_date.xml" />
+    <include relativeToChangelogFile="true"
+        file="add_local_order_entry_role.xml" />
+    <include relativeToChangelogFile="true"
+        file="declare_received_orders_urls.xml" />
 
 
 </databaseChangeLog>

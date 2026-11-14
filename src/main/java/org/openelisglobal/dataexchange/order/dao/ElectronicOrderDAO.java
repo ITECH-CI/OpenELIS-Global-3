@@ -20,6 +20,7 @@ import org.openelisglobal.common.dao.BaseDAO;
 import org.openelisglobal.common.exception.LIMSRuntimeException;
 import org.openelisglobal.dataexchange.order.valueholder.ElectronicOrder;
 import org.openelisglobal.dataexchange.order.valueholder.ElectronicOrder.SortOrder;
+import org.openelisglobal.dataexchange.order.valueholder.ElectronicOrderCategorie;
 
 public interface ElectronicOrderDAO extends BaseDAO<ElectronicOrder, String> {
 
@@ -62,4 +63,15 @@ public interface ElectronicOrderDAO extends BaseDAO<ElectronicOrder, String> {
     int getCountOfElectronicOrdersByStatusList(List<Integer> statusIds);
 
     List<ElectronicOrder> getAllElectronicOrdersByStatusList(List<Integer> statusIds, SortOrder sortOrder);
+
+    /**
+     * Demandes d'une catégorie, filtrées par statut (liste vide : tous) et par date
+     * de réception (bornes nulles : sans borne), de la plus ancienne à la plus
+     * récente.
+     */
+    List<ElectronicOrder> getElectronicOrdersByCategorie(ElectronicOrderCategorie categorie, List<String> statusIds,
+            Timestamp from, Timestamp to);
+
+    /** Demandes de la catégorie dont la Task (electronic_order.data) a cet id. */
+    List<ElectronicOrder> getElectronicOrdersByTaskId(ElectronicOrderCategorie categorie, String taskId);
 }

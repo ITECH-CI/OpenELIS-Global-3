@@ -84,7 +84,7 @@ public class ElectronicOrdersController extends BaseController {
             List<ElectronicOrder> electronicOrders;
             List<ElectronicOrderDisplayItem> eOrderDisplayItems;
 
-            electronicOrders = electronicOrderService.searchForElectronicOrders(form);
+            electronicOrders = ElectronicOrderFilters.routine(electronicOrderService.searchForElectronicOrders(form));
             eOrderDisplayItems = convertToDisplayItem(electronicOrders, form.getUseAllInfo());
 
             form.setSearchFinished(true);

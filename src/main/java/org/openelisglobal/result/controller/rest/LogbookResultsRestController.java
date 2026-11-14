@@ -678,6 +678,11 @@ public class LogbookResultsRestController extends LogbookResultsBaseController {
         for (TestResultItem testResultItem : actionDataSet.getModifiedItems()) {
 
             Analysis analysis = analysisService.get(testResultItem.getAnalysisId());
+            // Déjà validé avant cette saisie : date de validation, ou analyse déjà
+            // finalisée (validation automatique quand « valider tous les résultats » est
+            // désactivé). Une valeur modifiée sera alors marquée corrigée.
+            boolean previouslyValidated = analysis.getReleasedDate() != null || SpringContext
+                    .getBean(IStatusService.class).matches(analysis.getStatusId(), AnalysisStatus.Finalized);
             analysis.setStatusId(getStatusForTestResult(testResultItem, alwaysValidate));
             analysis.setSysUserId(getSysUserId(request));
             if (!GenericValidator.isBlankOrNull(testResultItem.getTestMethod())) {
@@ -703,6 +708,7 @@ public class LogbookResultsRestController extends LogbookResultsBaseController {
 
             ResultSaveBean bean = ResultSaveBeanAdapter.fromTestResultItem(testResultItem);
             ResultSaveService resultSaveService = new ResultSaveService(analysis, getSysUserId(request));
+            resultSaveService.setPreviouslyValidated(previouslyValidated);
             // deletable Results will be written to, not read
             List<Result> results = resultSaveService.createResultsFromTestResultItem(bean,
                     actionDataSet.getDeletableResults());

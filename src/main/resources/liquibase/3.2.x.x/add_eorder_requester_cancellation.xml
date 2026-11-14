@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+    <!--
+      Date d'annulation d'une demande électronique par le demandeur (Task de la
+      plateforme passée à cancelled). Renseignée par la relève ; affichée dans la
+      liste des demandes et sur le bon déjà saisi. Idempotent.
+    -->
+    <changeSet id="add_eorder_annulation_demandeur" author="itechciv">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="electronic_order" columnName="annulation_demandeur"
+                    schemaName="clinlims"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="electronic_order" schemaName="clinlims">
+            <column name="annulation_demandeur" type="TIMESTAMP"/>
+        </addColumn>
+    </changeSet>
+</databaseChangeLog>

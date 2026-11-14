@@ -67,6 +67,10 @@ public class Result extends EnumValueItemImpl {
     private Double minNormalSi;
     private Double maxNormalSi;
 
+    // Date de correction : la valeur a changé alors que le résultat était déjà
+    // validé. Un résultat marqué et validé sort en FHIR avec le statut corrected.
+    private Timestamp correctionDate;
+
     public Result() {
         super();
         analysis = new ValueHolder();
@@ -366,5 +370,13 @@ public class Result extends EnumValueItemImpl {
     @Override
     public int hashCode() {
         return Objects.hash(id);
+    }
+
+    public Timestamp getCorrectionDate() {
+        return correctionDate;
+    }
+
+    public void setCorrectionDate(Timestamp correctionDate) {
+        this.correctionDate = correctionDate;
     }
 }

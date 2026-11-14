@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+    <!--
+      Catégorie et origine d'une demande électronique :
+      - categorie : ROUTINE (fenêtre « Demandes reçues ») ou ETUDE_CV (écran des
+        demandes d'étude charge virale) ;
+      - origine : PLATEFORME, SIGDEP ou SAISIE_LOCALE.
+      Posées à la réception (TaskWorker). Les demandes existantes sont classées
+      d'après leur Task : étiquette https://hie.ci/echanges/origine|plateforme ou
+      identifiant bdms-… = PLATEFORME / ROUTINE ; les autres = SIGDEP / ETUDE_CV.
+      Idempotent : colonnes ajoutées si absentes, seules les lignes sans catégorie
+      sont classées.
+    -->
+
+    <changeSet id="add_eorder_categorie" author="itechciv">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="electronic_order" columnName="categorie"
+                    schemaName="clinlims"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="electronic_order" schemaName="clinlims">
+            <column name="categorie" type="VARCHAR(20)"/>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="add_eorder_origine" author="itechciv">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="electronic_order" columnName="origine"
+                    schemaName="clinlims"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="electronic_order" schemaName="clinlims">
+            <column name="origine" type="VARCHAR(20)"/>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="classify_existing_eorders" author="itechciv">
+        <sql splitStatements="true">
+            UPDATE clinlims.electronic_order
+               SET origine = 'PLATEFORME', categorie = 'ROUTINE'
+             WHERE categorie IS NULL
+               AND (data LIKE '%"system":"https://hie.ci/echanges/origine","code":"plateforme"%'
+                    OR data LIKE '%"id":"bdms-%');
+            UPDATE clinlims.electronic_order
+               SET origine = 'SIGDEP', categorie = 'ETUDE_CV'
+             WHERE categorie IS NULL;
+        </sql>
+    </changeSet>
+
+    <changeSet id="add_eorder_categorie_index" author="itechciv">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <indexExists schemaName="clinlims" indexName="idx_electronic_order_categorie"/>
+            </not>
+        </preConditions>
+        <createIndex schemaName="clinlims" tableName="electronic_order"
+            indexName="idx_electronic_order_categorie">
+            <column name="categorie"/>
+            <column name="status_id"/>
+        </createIndex>
+    </changeSet>
+</databaseChangeLog>

@@ -2,13 +2,19 @@ package org.openelisglobal.dataexchange.fhir.service;
 
 import ca.uhn.fhir.context.FhirContext;
 import java.util.List;
+import org.hl7.fhir.r4.model.CodeableConcept;
+import org.hl7.fhir.r4.model.Coding;
+import org.hl7.fhir.r4.model.DomainResource;
+import org.hl7.fhir.r4.model.Extension;
 import org.hl7.fhir.r4.model.Patient;
 import org.hl7.fhir.r4.model.ServiceRequest;
 import org.hl7.fhir.r4.model.Task;
+import org.hl7.fhir.r4.model.Type;
 import org.openelisglobal.common.log.LogEvent;
 import org.openelisglobal.common.services.IStatusService;
 import org.openelisglobal.common.services.StatusService.ExternalOrderStatus;
 import org.openelisglobal.common.util.DateUtil;
+import org.openelisglobal.dataexchange.fhir.FhirConfig;
 import org.openelisglobal.dataexchange.order.action.IOrderExistanceChecker;
 import org.openelisglobal.dataexchange.order.action.IOrderExistanceChecker.CheckResult;
 import org.openelisglobal.dataexchange.order.action.IOrderInterpreter.InterpreterResults;
@@ -16,6 +22,8 @@ import org.openelisglobal.dataexchange.order.action.IOrderInterpreter.OrderType;
 import org.openelisglobal.dataexchange.order.action.IOrderPersister;
 import org.openelisglobal.dataexchange.order.action.MessagePatient;
 import org.openelisglobal.dataexchange.order.valueholder.ElectronicOrder;
+import org.openelisglobal.dataexchange.order.valueholder.ElectronicOrderCategorie;
+import org.openelisglobal.dataexchange.order.valueholder.ElectronicOrderOrigine;
 import org.openelisglobal.dataexchange.order.valueholder.ElectronicOrderType;
 import org.openelisglobal.sample.valueholder.OrderPriority;
 import org.openelisglobal.spring.util.SpringContext;
@@ -247,8 +255,97 @@ public class TaskWorker {
         eOrder.setType(ElectronicOrderType.FHIR);
         eOrder.setPriority(orderPriority);
         populateDisplayFields(eOrder);
+        populateCategoryAndOrigin(eOrder);
 
         persister.persist(patient, eOrder);
+    }
+
+    public static final String ORIGINE_TAG_SYSTEM = "https://hie.ci/echanges/origine";
+    public static final String ORIGINE_TAG_PLATEFORME = "plateforme";
+
+    private FhirConfig fhirConfig;
+
+    public void setFhirConfig(FhirConfig fhirConfig) {
+        this.fhirConfig = fhirConfig;
+    }
+
+    private FhirConfig getFhirConfig() {
+        if (fhirConfig == null) {
+            fhirConfig = SpringContext.getBean(FhirConfig.class);
+        }
+        return fhirConfig;
+    }
+
+    /**
+     * Catégorie et origine de la demande. Best-effort : en cas d'erreur, la demande
+     * est reçue sans catégorie (elle reste alors dans l'écran d'étude, comme
+     * avant).
+     */
+    private void populateCategoryAndOrigin(ElectronicOrder eOrder) {
+        try {
+            FhirConfig config = getFhirConfig();
+            classify(eOrder, task, serviceRequest, config.getEorderPlateformeIdPrefix(),
+                    config.getEorderCategorieExtension());
+        } catch (Exception e) {
+            LogEvent.logWarn(this.getClass().getSimpleName(), "populateCategoryAndOrigin",
+                    "catégorie et origine non renseignées (non bloquant) : " + e.getMessage());
+        }
+    }
+
+    /**
+     * Demande de la plateforme (Task étiquetée origine|plateforme, ou identifiant
+     * au préfixe réservé) : origine PLATEFORME, catégorie ROUTINE sauf catégorie
+     * explicite dans l'extension réglée. Toute autre demande vient du flux SIGDEP :
+     * origine SIGDEP, catégorie ETUDE_CV.
+     */
+    static void classify(ElectronicOrder eOrder, Task task, ServiceRequest serviceRequest, String platformIdPrefix,
+            String categoryExtensionUrl) {
+        if (isFromPlatform(task, platformIdPrefix)) {
+            eOrder.setOrigine(ElectronicOrderOrigine.PLATEFORME);
+            ElectronicOrderCategorie explicit = explicitCategory(task, categoryExtensionUrl);
+            if (explicit == null) {
+                explicit = explicitCategory(serviceRequest, categoryExtensionUrl);
+            }
+            eOrder.setCategorie(explicit != null ? explicit : ElectronicOrderCategorie.ROUTINE);
+        } else {
+            eOrder.setOrigine(ElectronicOrderOrigine.SIGDEP);
+            eOrder.setCategorie(ElectronicOrderCategorie.ETUDE_CV);
+        }
+    }
+
+    static boolean isFromPlatform(Task task, String platformIdPrefix) {
+        if (task == null) {
+            return false;
+        }
+        if (task.hasMeta()) {
+            for (Coding tag : task.getMeta().getTag()) {
+                if (ORIGINE_TAG_SYSTEM.equals(tag.getSystem())
+                        && ORIGINE_TAG_PLATEFORME.equalsIgnoreCase(tag.getCode())) {
+                    return true;
+                }
+            }
+        }
+        String id = task.getIdElement() == null ? null : task.getIdElement().getIdPart();
+        return platformIdPrefix != null && !platformIdPrefix.trim().isEmpty() && id != null
+                && id.startsWith(platformIdPrefix.trim());
+    }
+
+    private static ElectronicOrderCategorie explicitCategory(DomainResource resource, String extensionUrl) {
+        if (resource == null || extensionUrl == null || extensionUrl.trim().isEmpty()) {
+            return null;
+        }
+        Extension extension = resource.getExtensionByUrl(extensionUrl.trim());
+        if (extension == null || extension.getValue() == null) {
+            return null;
+        }
+        Type value = extension.getValue();
+        if (value instanceof Coding) {
+            return ElectronicOrderCategorie.fromCode(((Coding) value).getCode());
+        }
+        if (value instanceof CodeableConcept) {
+            return ElectronicOrderCategorie.fromCode(((CodeableConcept) value).getCodingFirstRep().getCode());
+        }
+        return value.isPrimitive() ? ElectronicOrderCategorie.fromCode(value.primitiveValue()) : null;
     }
 
     /**

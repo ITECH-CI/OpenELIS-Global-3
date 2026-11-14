@@ -389,6 +389,7 @@ export const Roles = {
   CYTOPATHOLOGIST: "Cytopathologist",
   PATHOLOGIST: "Pathologist",
   RECEPTION: "Reception",
+  LOCAL_ORDER_ENTRY: "Enregistrer des demandes",
   RESULTS: "Results",
   VALIDATION: "Validation",
   REPORTS: "Reports",

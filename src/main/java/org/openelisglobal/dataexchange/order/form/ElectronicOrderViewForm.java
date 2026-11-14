@@ -11,7 +11,9 @@ import org.openelisglobal.organization.valueholder.Organization;
 public class ElectronicOrderViewForm extends BaseForm implements IPagingForm {
 
     public enum SearchType {
-        IDENTIFIER, DATE_STATUS
+        IDENTIFIER, DATE_STATUS,
+        // demandes à traiter (statut « saisie »), de la plus ancienne à la plus récente
+        TO_PROCESS
     }
 
     private SearchType searchType;

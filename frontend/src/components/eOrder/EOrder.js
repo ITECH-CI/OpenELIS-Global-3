@@ -14,11 +14,14 @@ import {
   Button,
   Pagination,
   Link,
+  Modal,
+  Select,
+  SelectItem,
 } from "@carbon/react";
 
 import { FormattedMessage, useIntl } from "react-intl";
 import { ChevronDown, Edit, TaskAdd } from "@carbon/icons-react";
-import { getFromOpenElisServer } from "../utils/Utils";
+import { getFromOpenElisServer, postToOpenElisServer } from "../utils/Utils";
 import CustomLabNumberInput from "../common/CustomLabNumberInput";
 import { ConfigurationContext, NotificationContext } from "../layout/Layout";
 import { NotificationKinds } from "../common/CustomNotification";
@@ -34,7 +37,73 @@ const EOrder = ({ eOrders, setEOrders, eOrderRef }) => {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(100);
 
-  useEffect(() => {}, []);
+  // Refus et annulation d'une demande pas encore prise en charge, avec un motif
+  // tiré de la liste des événements qualité (relayé au demandeur).
+  const [qaEvents, setQaEvents] = useState([]);
+  const [closeAction, setCloseAction] = useState(null); // { kind, eOrder }
+  const [closeReasonId, setCloseReasonId] = useState("");
+  const [closing, setClosing] = useState(false);
+
+  useEffect(() => {
+    getFromOpenElisServer("/rest/displayList/QA_EVENTS", (res) =>
+      setQaEvents(Array.isArray(res) ? res : []),
+    );
+  }, []);
+
+  const openClose = (kind, eOrder) => {
+    setCloseReasonId("");
+    setCloseAction({ kind, eOrder });
+  };
+
+  const submitClose = () => {
+    if (!closeAction) {
+      return;
+    }
+    if (!closeReasonId) {
+      addNotification({
+        kind: NotificationKinds.error,
+        title: intl.formatMessage({ id: "notification.title" }),
+        message: intl.formatMessage({ id: "eorder.close.reason.required" }),
+      });
+      setNotificationVisible(true);
+      return;
+    }
+    const { kind, eOrder } = closeAction;
+    setClosing(true);
+    postToOpenElisServer(
+      kind === "reject"
+        ? "/rest/rejectElectronicOrders"
+        : "/rest/cancelElectronicOrders",
+      JSON.stringify({
+        externalOrderId: eOrder.externalOrderId,
+        qaEventId: closeReasonId,
+      }),
+      (status, body) => {
+        setClosing(false);
+        if (status === 200) {
+          setEOrders(eOrders.filter((o) => o.id !== eOrder.id));
+          addNotification({
+            kind: NotificationKinds.success,
+            title: intl.formatMessage({ id: "notification.title" }),
+            message: intl.formatMessage({
+              id:
+                kind === "reject"
+                  ? "eorder.close.rejected"
+                  : "eorder.close.cancelled",
+            }),
+          });
+          setCloseAction(null);
+        } else {
+          addNotification({
+            kind: NotificationKinds.error,
+            title: intl.formatMessage({ id: "notification.title" }),
+            message: (body && body.message) || String(status),
+          });
+        }
+        setNotificationVisible(true);
+      },
+    );
+  };
 
   function saveEntry(externalOrderId, labNumber) {
     window.open(
@@ -192,6 +261,24 @@ const EOrder = ({ eOrders, setEOrders, eOrderRef }) => {
                 saveEntry(electronicOrderUUID, eOrders[index].labNo);
               }}
             />
+            <Button
+              type="button"
+              kind="danger--tertiary"
+              size="sm"
+              disabled={hasRealizedStatus || !!eOrders[index].labNumber}
+              onClick={() => openClose("reject", eOrders[index])}
+            >
+              <FormattedMessage id="eorder.button.reject" />
+            </Button>
+            <Button
+              type="button"
+              kind="ghost"
+              size="sm"
+              disabled={hasRealizedStatus || !!eOrders[index].labNumber}
+              onClick={() => openClose("cancel", eOrders[index])}
+            >
+              <FormattedMessage id="eorder.button.cancelOrder" />
+            </Button>
           </span>
         </div>
       </>
@@ -384,6 +471,33 @@ const EOrder = ({ eOrders, setEOrders, eOrderRef }) => {
 
   return (
     <div ref={eOrderRef}>
+      <Modal
+        open={!!closeAction}
+        danger
+        modalHeading={intl.formatMessage({
+          id:
+            closeAction && closeAction.kind === "reject"
+              ? "eorder.button.reject"
+              : "eorder.button.cancelOrder",
+        })}
+        primaryButtonText={intl.formatMessage({ id: "label.button.confirm" })}
+        secondaryButtonText={intl.formatMessage({ id: "label.button.cancel" })}
+        primaryButtonDisabled={closing}
+        onRequestClose={() => setCloseAction(null)}
+        onRequestSubmit={submitClose}
+      >
+        <Select
+          id="eOrderCloseReason"
+          labelText={intl.formatMessage({ id: "eorder.close.reason" })}
+          value={closeReasonId}
+          onChange={(e) => setCloseReasonId(e.target.value)}
+        >
+          <SelectItem value="" text="" />
+          {qaEvents.map((o) => (
+            <SelectItem key={o.id} value={o.id} text={o.value} />
+          ))}
+        </Select>
+      </Modal>
       {eOrders.length > 0 && (
         <>
           <FormattedMessage id="eorder.instructions.enter1" /> <ChevronDown />{" "}

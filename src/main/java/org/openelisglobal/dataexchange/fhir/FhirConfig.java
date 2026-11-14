@@ -62,6 +62,38 @@ public class FhirConfig {
     @Value("${org.openelisglobal.loinc.equivalences:}")
     private String loincEquivalences;
 
+    // Demandes de la plateforme : identifiant de Task réservé (préfixe d'écriture
+    // de la passerelle). Avec l'étiquette
+    // https://hie.ci/echanges/origine|plateforme,
+    // il classe la demande en origine PLATEFORME.
+    @Getter
+    @Value("${org.openelisglobal.eorder.plateforme.idPrefix:bdms-}")
+    private String eorderPlateformeIdPrefix;
+
+    // URL de l'extension (Task ou ServiceRequest) qui porte une catégorie explicite
+    // (ROUTINE, ETUDE_CV). Vide : non lue, toute demande de la plateforme est de la
+    // routine.
+    @Getter
+    @Value("${org.openelisglobal.eorder.categorie.extension:}")
+    private String eorderCategorieExtension;
+
+    // « Nouvelle demande » (saisie locale d'une demande par un opérateur hors du
+    // laboratoire) : désactivée par défaut.
+    @Getter
+    @Value("${org.openelisglobal.eorder.saisieLocale.enabled:false}")
+    private boolean eorderLocalEntryEnabled;
+
+    // Système de l'identifiant de venue (numéro de venue d'une demande saisie
+    // localement, émis en ServiceRequest.encounter.identifier). Vide :
+    // <oeFhirSystem>/venue.
+    @Value("${org.openelisglobal.eorder.venue.identifier.system:}")
+    private String venueIdentifierSystem;
+
+    public String getVenueIdentifierSystem() {
+        return venueIdentifierSystem == null || venueIdentifierSystem.trim().isEmpty() ? oeFhirSystem + "/venue"
+                : venueIdentifierSystem.trim();
+    }
+
     @Getter
     @Value("${org.openelisglobal.fhirstore.uri:}")
     private String localFhirStorePath;

@@ -44,16 +44,17 @@ const EOrderSearch = ({
     useContext(NotificationContext);
 
   useEffect(() => {
-    getFromOpenElisServer("/rest/ElectronicOrders", handleElectronicOrders);
+    // Demandes à traiter affichées à l'ouverture (sans avertissement si vide).
+    setLoading(true);
+    getFromOpenElisServer(
+      "/rest/ElectronicOrders?searchType=TO_PROCESS&useAllInfo=false",
+      (response) => parseEOrders(response, true),
+    );
     getFromOpenElisServer(
       "/rest/displayList/ELECTRONIC_ORDER_STATUSES",
       handleOrderStatus,
     );
   }, []);
-
-  const handleElectronicOrders = (response) => {
-    console.log(response);
-  };
 
   const handleOrderStatus = (response) => {
     setStatusOptions(response);
@@ -90,8 +91,14 @@ const EOrderSearch = ({
     );
   }
 
-  const parseEOrders = (response) => {
+  const parseEOrders = (response, silent = false) => {
     setSearchCompleted(true);
+    if (!response || !(response.eOrders instanceof Array)) {
+      setHasEOrders(false);
+      setEOrders([]);
+      setLoading(false);
+      return;
+    }
     if (response && response.paging) {
       const { totalPages, currentPage } = response.paging;
       if (totalPages > 1) {
@@ -123,14 +130,14 @@ const EOrderSearch = ({
         return { ...item, id: item.electronicOrderId };
       }),
     );
-    if (eOrderRef?.current) {
+    if (eOrderRef?.current && !silent) {
       window.scrollTo({
         top: eOrderRef.current.offsetTop - 50,
         left: 0,
         behavior: "smooth",
       });
     }
-    if (response.eOrders.length == 0) {
+    if (response.eOrders.length == 0 && !silent) {
       addNotification({
         kind: NotificationKinds.warning,
         title: intl.formatMessage({ id: "notification.title" }),
@@ -222,9 +229,9 @@ const EOrderSearch = ({
       </Column>
       <Column lg={3} md={2} sm={2}>
         <CustomDatePicker
-          id={"eOrder_startDate"}
+          id={"eOrder_endDate"}
           labelText={intl.formatMessage({ id: "eorder.date.end" })}
-          value={startDate}
+          value={endDate}
           className="inputDate"
           onChange={(date) => setEndDate(date)}
         />

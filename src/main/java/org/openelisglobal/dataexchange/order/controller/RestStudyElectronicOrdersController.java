@@ -50,6 +50,7 @@ import org.openelisglobal.common.util.DateUtil;
 import org.openelisglobal.dataexchange.fhir.FhirConfig;
 import org.openelisglobal.dataexchange.fhir.FhirUtil;
 import org.openelisglobal.dataexchange.fhir.service.FhirPersistanceService;
+import org.openelisglobal.dataexchange.fhir.service.ReceivedTaskProgress;
 import org.openelisglobal.dataexchange.order.ElectronicOrderSortOrderCategoryConvertor;
 import org.openelisglobal.dataexchange.order.form.ElectronicOrderPaging;
 import org.openelisglobal.dataexchange.order.form.ElectronicOrderViewForm;
@@ -135,7 +136,8 @@ public class RestStudyElectronicOrdersController extends BaseController {
         String requestedPage = request.getParameter("page");
         if (GenericValidator.isBlankOrNull(requestedPage)) {
             if (form.getSearchType() != null) {
-                electronicOrders = electronicOrderService.searchStudyElectronicOrdersCombined(form);
+                electronicOrders = ElectronicOrderFilters
+                        .study(electronicOrderService.searchStudyElectronicOrdersCombined(form));
                 eOrderDisplayItems = convertToDisplayItem(electronicOrders);
                 paging.setDatabaseResults(request, form, eOrderDisplayItems);
             }
@@ -159,9 +161,8 @@ public class RestStudyElectronicOrdersController extends BaseController {
         // Le qaEventId (écrit dans reject_reason_id) DOIT référencer un vrai QA event :
         // sinon on stocke un FK invalide (déjà source de 500 SQLState sur ce workflow,
         // cf. dérive de schéma reject_reason_id). On valide contre la liste QA_EVENTS.
-        boolean validQaEvent = DisplayListService.getInstance().getList(ListType.QA_EVENTS).stream()
-                .anyMatch(e -> rejectForm.qaEventId.equals(e.getId()));
-        if (!validQaEvent) {
+        String qaEventLabel = qaEventLabel(rejectForm.qaEventId);
+        if (qaEventLabel == null) {
             out.put("success", false);
             out.put("message", "invalid qaEventId");
             return ResponseEntity.badRequest().body(out);
@@ -195,8 +196,17 @@ public class RestStudyElectronicOrdersController extends BaseController {
             try {
                 Optional<Task> task = fhirPersistanceService.getTaskBasedOnServiceRequest(rejectForm.externalOrderId);
                 if (task.isPresent()) {
-                    task.get().setStatus(TaskStatus.REJECTED);
-                    fhirPersistanceService.updateFhirResourceInFhirStore(task.get());
+                    // Demande de routine (plateforme) : étape « refusée » et motif relayés au
+                    // demandeur. Le commentaire libre reste dans OpenELIS.
+                    if (eOrder.isRoutine()) {
+                        if (ReceivedTaskProgress.closeByLaboratory(task.get(), ReceivedTaskProgress.Etape.REFUSEE,
+                                qaEventLabel)) {
+                            fhirPersistanceService.updateFhirResourceInFhirStore(task.get());
+                        }
+                    } else {
+                        task.get().setStatus(TaskStatus.REJECTED);
+                        fhirPersistanceService.updateFhirResourceInFhirStore(task.get());
+                    }
                 }
             } catch (Exception e) {
                 LogEvent.logWarn(this.getClass().getSimpleName(), "rejectElectronicOrder",
@@ -221,6 +231,16 @@ public class RestStudyElectronicOrdersController extends BaseController {
             out.put("message", "externalOrderId is required");
             return ResponseEntity.badRequest().body(out);
         }
+        // Motif facultatif, tiré de la liste des événements qualité.
+        String cancelReason = null;
+        if (!GenericValidator.isBlankOrNull(cancelForm.qaEventId)) {
+            cancelReason = qaEventLabel(cancelForm.qaEventId);
+            if (cancelReason == null) {
+                out.put("success", false);
+                out.put("message", "invalid qaEventId");
+                return ResponseEntity.badRequest().body(out);
+            }
+        }
         try {
             // Sélection UNIFORME (cf. saisie) : la demande actionnable la plus récente.
             // Si aucune (liste vide OU toutes terminales), on refuse : ne pas re-annuler
@@ -241,8 +261,15 @@ public class RestStudyElectronicOrdersController extends BaseController {
             try {
                 Optional<Task> task = fhirPersistanceService.getTaskBasedOnServiceRequest(cancelForm.externalOrderId);
                 if (task.isPresent()) {
-                    task.get().setStatus(TaskStatus.CANCELLED);
-                    fhirPersistanceService.updateFhirResourceInFhirStore(task.get());
+                    if (eOrder.isRoutine()) {
+                        if (ReceivedTaskProgress.closeByLaboratory(task.get(), ReceivedTaskProgress.Etape.ANNULEE,
+                                cancelReason)) {
+                            fhirPersistanceService.updateFhirResourceInFhirStore(task.get());
+                        }
+                    } else {
+                        task.get().setStatus(TaskStatus.CANCELLED);
+                        fhirPersistanceService.updateFhirResourceInFhirStore(task.get());
+                    }
                 }
             } catch (Exception e) {
                 LogEvent.logWarn(this.getClass().getSimpleName(), "cancelElectronicOrder",
@@ -450,7 +477,15 @@ public class RestStudyElectronicOrdersController extends BaseController {
     }
 
     /** Corps de la requête d'annulation d'une demande électronique. */
+    // Libellé d'un événement qualité de la liste, ou null s'il n'en fait pas
+    // partie.
+    private String qaEventLabel(String qaEventId) {
+        return DisplayListService.getInstance().getList(ListType.QA_EVENTS).stream()
+                .filter(e -> qaEventId.equals(e.getId())).map(e -> e.getValue()).findFirst().orElse(null);
+    }
+
     public static class CancelForm {
         public String externalOrderId;
+        public String qaEventId;
     }
 }

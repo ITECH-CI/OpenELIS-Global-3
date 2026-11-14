@@ -23,6 +23,7 @@ import org.openelisglobal.common.services.TableIdService;
 import org.openelisglobal.common.util.ConfigurationProperties;
 import org.openelisglobal.common.util.DateUtil;
 import org.openelisglobal.common.util.IdValuePair;
+import org.openelisglobal.dataexchange.order.valueholder.ElectronicOrder;
 import org.openelisglobal.dataexchange.service.order.ElectronicOrderService;
 import org.openelisglobal.note.service.NoteService;
 import org.openelisglobal.note.service.NoteServiceImpl.NoteType;
@@ -424,6 +425,9 @@ public class SamplePatientEntryServiceImpl implements SamplePatientEntryService 
 
         if (updateData.getElectronicOrder() != null) {
             electronicOrderService.update(updateData.getElectronicOrder());
+            for (ElectronicOrder sibling : updateData.getSiblingElectronicOrders()) {
+                electronicOrderService.update(sibling);
+            }
         }
     }
 

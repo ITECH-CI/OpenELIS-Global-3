@@ -88,5 +88,8 @@
             column="min_normal_si" />
         <property name="maxNormalSi" type="java.lang.Double"
             column="max_normal_si" />
+        <property name="correctionDate" type="java.sql.Timestamp">
+            <column name="correction_date" not-null="false" />
+        </property>
     </class>
 </hibernate-mapping>

@@ -165,6 +165,8 @@ public class FhirCmuDemandesTest {
         when(config.getCmuFormat()).thenReturn("");
         when(config.getCmuAcceptedSystems()).thenReturn(new String[] { CMU_SYSTEM, CMU_COMPAT, CMU_OLD });
         when(config.getLoincEquivalences()).thenReturn("");
+        when(config.getEorderPlateformeIdPrefix()).thenReturn("bdms-");
+        when(config.getEorderCategorieExtension()).thenReturn("");
     }
 
     private static TableIdService swapTableIdService(TableIdService replacement) throws Exception {
@@ -374,16 +376,67 @@ public class FhirCmuDemandesTest {
         assertEquals("25836-8", interpreter.getTest().getLoinc());
     }
 
+    private IOrderPersister lastPersister;
+
     private TaskWorker worker(TaskInterpreterImpl interpreter) {
-        TaskWorker worker = new TaskWorker(new Task(), "{}", demoServiceRequest("20447-9"),
+        return worker(interpreter, new Task());
+    }
+
+    private TaskWorker worker(TaskInterpreterImpl interpreter, Task task) {
+        TaskWorker worker = new TaskWorker(task, "{}", demoServiceRequest("20447-9"),
                 incomingPatient(CMU_SYSTEM, DEMO_CMU));
         IOrderExistanceChecker checker = mock(IOrderExistanceChecker.class);
         when(checker.check(any())).thenReturn(CheckResult.NOT_FOUND);
+        lastPersister = mock(IOrderPersister.class);
         worker.setInterpreter(interpreter);
         worker.setExistanceChecker(checker);
-        worker.setPersister(mock(IOrderPersister.class));
+        worker.setPersister(lastPersister);
         worker.setStatusService(mock(IStatusService.class));
+        worker.setFhirConfig(fhirConfig);
         return worker;
+    }
+
+    @Test
+    public void taskWorker_platformTask_shouldPersistRoutineFromPlatform() throws Exception {
+        when(fhirConfig.getLoincEquivalences()).thenReturn("20447-9=25836-8");
+        ITestIdentityService testIdentityService = mock(ITestIdentityService.class);
+        Task platformTask = new Task();
+        platformTask.setId("bdms-demo-1");
+        platformTask.getMeta().addTag(new Coding(TaskWorker.ORIGINE_TAG_SYSTEM, "plateforme", null));
+        TaskWorker worker = worker(
+                newInterpreter(labWithTestCodedAs("25836-8", testIdentityService), testIdentityService),
+                platformTask);
+
+        assertEquals(TaskResult.OK, worker.handleOrderRequest());
+
+        org.mockito.ArgumentCaptor<org.openelisglobal.dataexchange.order.valueholder.ElectronicOrder> persisted = org.mockito.ArgumentCaptor
+                .forClass(org.openelisglobal.dataexchange.order.valueholder.ElectronicOrder.class);
+        org.mockito.Mockito.verify(lastPersister).persist(any(), persisted.capture());
+        assertEquals(org.openelisglobal.dataexchange.order.valueholder.ElectronicOrderOrigine.PLATEFORME,
+                persisted.getValue().getOrigine());
+        assertEquals(org.openelisglobal.dataexchange.order.valueholder.ElectronicOrderCategorie.ROUTINE,
+                persisted.getValue().getCategorie());
+    }
+
+    @Test
+    public void taskWorker_sigdepTask_shouldPersistStudyFromSigdep() throws Exception {
+        when(fhirConfig.getLoincEquivalences()).thenReturn("20447-9=25836-8");
+        ITestIdentityService testIdentityService = mock(ITestIdentityService.class);
+        Task sigdepTask = new Task();
+        sigdepTask.setId("5d0c3e1a-0000-4000-8000-000000000001");
+        TaskWorker worker = worker(
+                newInterpreter(labWithTestCodedAs("25836-8", testIdentityService), testIdentityService),
+                sigdepTask);
+
+        assertEquals(TaskResult.OK, worker.handleOrderRequest());
+
+        org.mockito.ArgumentCaptor<org.openelisglobal.dataexchange.order.valueholder.ElectronicOrder> persisted = org.mockito.ArgumentCaptor
+                .forClass(org.openelisglobal.dataexchange.order.valueholder.ElectronicOrder.class);
+        org.mockito.Mockito.verify(lastPersister).persist(any(), persisted.capture());
+        assertEquals(org.openelisglobal.dataexchange.order.valueholder.ElectronicOrderOrigine.SIGDEP,
+                persisted.getValue().getOrigine());
+        assertEquals(org.openelisglobal.dataexchange.order.valueholder.ElectronicOrderCategorie.ETUDE_CV,
+                persisted.getValue().getCategorie());
     }
 
     @Test

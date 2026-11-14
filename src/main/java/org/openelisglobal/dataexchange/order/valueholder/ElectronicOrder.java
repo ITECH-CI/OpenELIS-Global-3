@@ -78,6 +78,12 @@ public class ElectronicOrder extends BaseObject<String> {
     // site demandeur en pratique (task.location/restriction sont vides pour la
     // plupart des demandes réelles observées). Lien vers organization.id.
     private String organizationId;
+    // Catégorie (ROUTINE / ETUDE_CV) et origine (PLATEFORME / SIGDEP /
+    // SAISIE_LOCALE), posées à la réception.
+    private ElectronicOrderCategorie categorie;
+    private ElectronicOrderOrigine origine;
+    // Annulation par le demandeur (Task de la plateforme passée à cancelled).
+    private Timestamp requesterCancelledAt;
 
     public ElectronicOrder() {
         patient = new ValueHolder();
@@ -211,5 +217,37 @@ public class ElectronicOrder extends BaseObject<String> {
 
     public void setOrganizationId(String organizationId) {
         this.organizationId = organizationId;
+    }
+
+    public ElectronicOrderCategorie getCategorie() {
+        return categorie;
+    }
+
+    public void setCategorie(ElectronicOrderCategorie categorie) {
+        this.categorie = categorie;
+    }
+
+    public ElectronicOrderOrigine getOrigine() {
+        return origine;
+    }
+
+    public void setOrigine(ElectronicOrderOrigine origine) {
+        this.origine = origine;
+    }
+
+    /**
+     * Demande de routine (« Demandes reçues »). Une demande sans catégorie reste
+     * dans l'écran d'étude, comme avant l'introduction de la catégorie.
+     */
+    public boolean isRoutine() {
+        return categorie == ElectronicOrderCategorie.ROUTINE;
+    }
+
+    public Timestamp getRequesterCancelledAt() {
+        return requesterCancelledAt;
+    }
+
+    public void setRequesterCancelledAt(Timestamp requesterCancelledAt) {
+        this.requesterCancelledAt = requesterCancelledAt;
     }
 }
