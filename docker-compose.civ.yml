@@ -7,7 +7,8 @@
 # Usage :
 #   OE_TAG=3.3.1.0 docker compose -f docker-compose.civ.yml pull
 #   OE_TAG=3.3.1.0 docker compose -f docker-compose.civ.yml up -d
-#   (OE_TAG par défaut = latest)
+#   OE_TAG est obligatoire : sans lui, docker compose refuse de démarrer plutôt
+#   que de tirer une image non désignée.
 #
 # NB : les montages ./volume/* et les secrets doivent exister sur le serveur
 # (fournis par l'installeur ou une install existante). Ce compose ne recrée pas
@@ -20,7 +21,7 @@ services:
     # démarrage par volume/certs/generate-certs.sh) ; l'ancienne image publique
     # itechuw/certgen embarquait la même clé privée pour tous. Conteneur
     # « one-shot » : génère si besoin puis s'arrête (Exited (0)).
-    image: eclipse-temurin:21-jre
+    image: eclipse-temurin:21.0.13_9-jre
     entrypoint: ["/bin/bash", "/opt/oe-certs/generate-certs.sh"]
     restart: "no"
     environment:
@@ -38,7 +39,7 @@ services:
 
   database:
     container_name: openelisglobal-database
-    image: postgres:14.4
+    image: postgres:14.25
     ports:
       - "15432:5432"
     restart: always
@@ -57,7 +58,7 @@ services:
 
   oe.openelis.org:
     container_name: openelisglobal-webapp
-    image: ghcr.io/itech-ci/openelis-global-civ:${OE_TAG:-latest}
+    image: ghcr.io/itech-ci/openelis-global-civ:${OE_TAG:?OE_TAG doit désigner la version à déployer, par exemple 3.3.1.4}
     platform: linux/amd64
     depends_on:
       database:
@@ -89,7 +90,7 @@ services:
 
   fhir.openelis.org:
     container_name: external-fhir-api
-    image: ghcr.io/itech-ci/openelis-global-civ-fhir:${OE_TAG:-latest}
+    image: ghcr.io/itech-ci/openelis-global-civ-fhir:${OE_TAG:?OE_TAG doit désigner la version à déployer, par exemple 3.3.1.4}
     platform: linux/amd64
     depends_on:
       database:
@@ -118,7 +119,7 @@ services:
       - source: hapi_application.yaml
 
   frontend.openelis.org:
-    image: ghcr.io/itech-ci/openelis-global-civ-frontend:${OE_TAG:-latest}
+    image: ghcr.io/itech-ci/openelis-global-civ-frontend:${OE_TAG:?OE_TAG doit désigner la version à déployer, par exemple 3.3.1.4}
     container_name: openelisglobal-front-end
     platform: linux/amd64
     networks:
@@ -129,7 +130,7 @@ services:
 
   proxy:
     container_name: openelisglobal-proxy
-    image: ghcr.io/itech-ci/openelis-global-civ-nginx:${OE_TAG:-latest}
+    image: ghcr.io/itech-ci/openelis-global-civ-nginx:${OE_TAG:?OE_TAG doit désigner la version à déployer, par exemple 3.3.1.4}
     platform: linux/amd64
     ports:
       - 80:80

@@ -254,8 +254,8 @@ git tag v3.3.1.0 && git push origin v3.3.1.0
 ### Lot C — livré
 
 - `docker-compose.civ.yml` : backend/frontend/fhir/nginx →
-  `ghcr.io/itech-ci/ openelis-global-civ*` (variable `OE_TAG`, défaut `latest`)
-  ; postgres/certs tiers. Update en ligne
+  `ghcr.io/itech-ci/ openelis-global-civ*` (variable `OE_TAG`, obligatoire) ;
+  postgres/certs tiers. Update en ligne
   `docker compose -f docker-compose.civ.yml pull && up -d`. Ne recrée pas la
   config (suppose une install existante par l'installeur).
 - `INSTALL_CIV.md` §3.2 : procédure de mise à jour EN LIGNE via ghcr (offline en

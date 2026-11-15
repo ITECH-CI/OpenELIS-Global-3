@@ -6,7 +6,7 @@ services:
         # démarrage par volume/certs/generate-certs.sh) ; l'ancienne image publique
         # itechuw/certgen embarquait la même clé privée pour tous. Conteneur
         # « one-shot » : génère si besoin puis s'arrête (Exited (0)).
-        image: eclipse-temurin:21-jre
+        image: eclipse-temurin:21.0.13_9-jre
         entrypoint: ["/bin/bash", "/opt/oe-certs/generate-certs.sh"]
         restart: "no"
         environment:
@@ -24,7 +24,7 @@ services:
 
     database:
         container_name: openelisglobal-database 
-        image: postgres:14.4
+        image: postgres:14.25
         ports:
             - "15432:5432"
         restart: always
@@ -81,7 +81,7 @@ services:
             
     fhir.openelis.org:
         container_name: external-fhir-api
-        image: itechuw/openelis-global-2-fhir:develop
+        image: itechuw/openelis-global-2-fhir@sha256:4bc0052c225870090397d65e73880c045cf493c47bcff264851380587cc0c837 # develop du 21/04/2025
         platform: linux/amd64
         depends_on:
             database:
@@ -124,7 +124,7 @@ services:
         tty: true
 
     proxy:
-        image: itechuw/openelis-global-2-proxy:develop
+        image: itechuw/openelis-global-2-proxy@sha256:121949992223c43621df30c179168f7d22396bb3f23849030dbec4fdb7e2982d # develop du 21/04/2025
         container_name: openelisglobal-proxy
         platform: linux/amd64
         ports:

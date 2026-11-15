@@ -200,7 +200,7 @@ postgres reste l'image officielle.
 
 ```bash
 # depuis un dossier contenant docker-compose.civ.yml et l'arborescence ./volume/*
-# OE_TAG = version à déployer (ex. 3.3.2.0) ; défaut = latest
+# OE_TAG = version à déployer (ex. 3.3.2.0) ; obligatoire, sans valeur par défaut
 export OE_TAG=3.3.2.0
 docker compose -f docker-compose.civ.yml pull
 docker compose -f docker-compose.civ.yml up -d

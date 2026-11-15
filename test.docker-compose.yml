@@ -2,7 +2,7 @@ version: '3.3'
 services:
   certs:
     container_name: oe-certs
-    image: itechuw/certgen:main
+    image: itechuw/certgen@sha256:4df5d09f71f764ae8db5f578726c8c0d32793429482e990268b04091f5633f68 # main du 18/11/2024
     restart: always
     environment:
       - KEYSTORE_PW="kspass"
@@ -16,7 +16,7 @@ services:
 
   database:
       container_name: openelisglobal-database 
-      image: postgres:14.4
+      image: postgres:14.25
       ports:
           - "15432:5432"
       restart: always
