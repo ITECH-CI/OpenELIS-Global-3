@@ -596,6 +596,13 @@ git submodule update --init --recursive   # dataexport requis
 Options : `--images-only` (build images sans installeur), `VERSION=x.y.z.w`
 (forcer la version).
 
+> **Prérequis de la machine de build** : Docker seulement. Le frontend se
+> construit dans son image (`frontend/Dockerfile`, étape `runtime` : Node 24,
+> `vite build`, puis nginx qui sert `dist/`) ; Node n'est nécessaire sur la
+> machine que pour travailler sur le frontend hors Docker (voir le `README.md`).
+> Les images de base sont épinglées à une version de correctif : les monter est
+> un changement explicite des Dockerfiles et des compositions.
+
 > **Plateforme** : les images sont construites/tirées en `linux/amd64` (cible =
 > serveurs Linux amd64), même si la machine de build est arm64 (Mac Apple
 > Silicon). Le `docker-compose` fixe aussi `platform: linux/amd64` sur chaque
