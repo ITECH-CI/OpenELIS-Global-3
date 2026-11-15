@@ -1,0 +1,13 @@
+diff --git a/node_modules/@carbon/styles/scss/components/data-table/_mixins.scss b/node_modules/@carbon/styles/scss/components/data-table/_mixins.scss
+index 466fb94..98b1916 100644
+--- a/node_modules/@carbon/styles/scss/components/data-table/_mixins.scss
++++ b/node_modules/@carbon/styles/scss/components/data-table/_mixins.scss
+@@ -15,7 +15,7 @@
+ @mixin sticky-header(
+   $min-width: false,
+   $max-width: 100%,
+-  $max-height: rem(300px)
++  $max-height: unquote('rem(300px)')
+ ) {
+   .#{$prefix}--data-table--max-width {
+     max-width: $max-width;
