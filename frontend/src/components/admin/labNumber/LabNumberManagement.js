@@ -1,3 +1,4 @@
+import jp from "jsonpath";
 import React, { useContext, useState, useEffect, useRef } from "react";
 import {
   Form,
@@ -78,7 +79,6 @@ function LabNumberManagement() {
   const handleFieldChange = (e) => {
     const { name, value } = e.target;
     const updatedValues = { ...labNumberValues };
-    var jp = require("jsonpath");
     jp.value(updatedValues, name, value);
     setLabNumberValues(updatedValues);
   };

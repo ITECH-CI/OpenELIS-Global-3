@@ -9,7 +9,12 @@
 /coverage
 
 # production
+/dist
+# ancienne sortie de Create React App
 /build
+
+# vite
+/.vite/
 
 # misc
 .DS_Store

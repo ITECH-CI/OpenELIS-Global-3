@@ -1,3 +1,4 @@
+import jp from "jsonpath";
 import { Copy, Edit, ViewOff } from "@carbon/icons-react";
 import {
   Button,
@@ -255,7 +256,6 @@ const Validation = (props) => {
   const handleChange = (e, rowId) => {
     const { name, id, value } = e.target;
     let form = props.results;
-    var jp = require("jsonpath");
     jp.value(form, name, value);
   };
 
@@ -263,19 +263,16 @@ const Validation = (props) => {
     console.debug("handleDatePickerChange:" + date);
     const d = new Date(date).toLocaleDateString("fr-FR");
     var form = props.results;
-    var jp = require("jsonpath");
     jp.value(form, "resultList[" + rowId + "].sentDate_", d);
   };
   const handleCheckBox = (e, rowId) => {
     const { name, id, checked } = e.target;
     let form = props.results;
-    var jp = require("jsonpath");
     jp.value(form, name, checked);
   };
 
   const handleAutomatedCheck = (checked, name) => {
     let form = props.results;
-    var jp = require("jsonpath");
     jp.value(form, name, checked);
   };
 

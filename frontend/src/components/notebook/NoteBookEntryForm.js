@@ -44,7 +44,6 @@ import {
   toBase64,
 } from "../utils/Utils";
 import SearchPatientForm from "../patient/SearchPatientForm";
-import { fil } from "date-fns/locale";
 import { Add } from "@carbon/icons-react";
 import PatientHeader from "../common/PatientHeader";
 

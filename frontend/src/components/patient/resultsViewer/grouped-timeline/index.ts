@@ -1,6 +1,9 @@
 import GroupedTimeline from "./grouped-timeline";
-import styles from "./grouped-timeline.styles.scss";
+import "./grouped-timeline.styles.scss";
 import useGetManyObstreeData from "./useObstreeData";
+
+// Feuille globale, sans module CSS : rien à exporter.
+const styles = {};
 
 export default GroupedTimeline;
 export { GroupedTimeline, styles, useGetManyObstreeData };

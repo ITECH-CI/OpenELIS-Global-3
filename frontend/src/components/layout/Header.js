@@ -1,3 +1,4 @@
+import jp from "jsonpath";
 import {
   ChevronDown,
   ChevronUp,
@@ -468,7 +469,6 @@ function OEHeader(props) {
     const newMenus = { ...menus };
     const newMenuItem = { ...menuItem };
     newMenuItem.expanded = !newMenuItem.expanded;
-    var jp = require("jsonpath");
     jp.value(newMenus, path, newMenuItem);
     setMenus(newMenus);
   };

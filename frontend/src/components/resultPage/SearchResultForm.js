@@ -1,3 +1,4 @@
+import jp from "jsonpath";
 import { ArrowLeft, ArrowRight, Copy, ErrorFilled } from "@carbon/icons-react";
 import {
   Button,
@@ -1677,7 +1678,6 @@ export function SearchResults(props) {
     // setState({value: e.target.value})
     console.debug("State updated to ", e.target.value);
     var form = { ...props.results };
-    var jp = require("jsonpath");
     jp.value(form, name, value);
     var refer = jp.query(form, "testResult[" + rowId + "].refer")[0];
     var testId = jp.query(form, "testResult[" + rowId + "].testId")[0];
@@ -1715,7 +1715,6 @@ export function SearchResults(props) {
   const handleRejectCheckBoxChange = (e, rowId) => {
     const { name, checked } = e.target;
     var form = props.results;
-    var jp = require("jsonpath");
     jp.value(form, name, checked);
     var shadowRejected = "testResult[" + rowId + "].shadowRejected";
     jp.value(form, shadowRejected, checked);
@@ -1741,7 +1740,6 @@ export function SearchResults(props) {
     if (form.testResult[rowId].referralItem) {
       if (form.testResult[rowId].referralItem.referredSendDate != date) {
         console.debug("handleDatePickerChange:" + date);
-        var jp = require("jsonpath");
         jp.value(
           form,
           "testResult[" + rowId + "].referralItem.referredSendDate",
