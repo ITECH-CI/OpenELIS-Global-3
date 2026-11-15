@@ -83,8 +83,8 @@ docker build --platform "${TARGET_PLATFORM}" -f "${PROJECT_DIR}/Dockerfile" \
   --build-arg SKIP_SPOTLESS=true \
   -t "${IMG_BACKEND}:latest" "${PROJECT_DIR}"
 
-log "Build frontend (${IMG_FRONTEND}) — Dockerfile.prod (npm build -> nginx)"
-docker build --platform "${TARGET_PLATFORM}" -f "${PROJECT_DIR}/frontend/Dockerfile.prod" \
+log "Build frontend (${IMG_FRONTEND}) — Dockerfile, étape runtime (vite build -> nginx)"
+docker build --platform "${TARGET_PLATFORM}" -f "${PROJECT_DIR}/frontend/Dockerfile" --target runtime \
   -t "${IMG_FRONTEND}:latest" "${PROJECT_DIR}/frontend"
 
 log "Build FHIR (${IMG_FHIR})"

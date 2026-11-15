@@ -31,14 +31,9 @@ fi
 #build and package application
 if [ $dockerBuild == true ]
 then
+    # Le Dockerfile du frontend est multi-étapes : sans --target, Docker
+    # construit sa dernière étape (runtime), qui est l'image de production.
     dockerfile="Dockerfile"
-    echo "checking for ${DIR}/Dockerfile.prod"
-    if [ -f "${DIR}/Dockerfile.prod" ]; then
-        echo "production dockerfile found, using Dockerfile.prod"
-        dockerfile="Dockerfile.prod"
-    else
-        echo "no production dockerfile found, defaulting to Dockerfile"
-    fi
     if [ -z "${TAG}" ]
     then
         docker build --no-cache --platform linux/amd64 --file "${dockerfile}" .

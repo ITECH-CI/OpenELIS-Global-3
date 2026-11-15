@@ -106,16 +106,23 @@ services:
 
          
     frontend.openelis.org:
-        image: itechuw/openelis-global-2-frontend-dev:develop
+        # Serveur de développement Vite (étape dev de frontend/Dockerfile),
+        # en HTTP sur le port 80 derrière le mandataire ; les sources sont
+        # montées pour le rechargement à chaud.
+        build:
+            context: ./frontend
+            target: dev
+        image: openelis-civ-frontend-dev
         container_name: openelisglobal-front-end
-        platform: linux/amd64
         networks:
             - default
         volumes:
             - './frontend/src:/app/src'
             - './frontend/public:/app/public'
+            - './frontend/index.html:/app/index.html'
         environment:
             - CHOKIDAR_USEPOLLING=true
+            - VITE_HMR_CLIENT_PORT=443
         tty: true
 
     proxy:

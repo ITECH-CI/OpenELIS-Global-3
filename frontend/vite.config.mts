@@ -48,6 +48,13 @@ export default defineConfig({
     include: /\.[jt]sx?$/,
     exclude: /node_modules/,
   },
+  // Le pré-scan des dépendances du serveur de développement lit lui aussi
+  // les sources .js : en JSX, pour la même raison.
+  optimizeDeps: {
+    rolldownOptions: {
+      moduleTypes: { ".js": "jsx" },
+    },
+  },
   resolve: {
     extensions: [".mjs", ".js", ".ts", ".jsx", ".tsx", ".json"],
     alias: [

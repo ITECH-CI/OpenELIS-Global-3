@@ -11,7 +11,7 @@
 - **Backend** : WAR `OpenELIS-Global.war`, Maven, JDK 21. Version `3.3.1.0`
   définie dans `pom.xml` (`major.minor.state.fix` = `3.3.1.0`).
 - **Frontend** : React **séparé** (PAS de `frontend-maven-plugin` → non packagé
-  dans le WAR). Image Docker propre (`frontend/Dockerfile.prod`).
+  dans le WAR). Image Docker propre (`frontend/Dockerfile`, étape `runtime`).
 - **Images custom CIV** : backend + frontend uniquement.
 - **Images upstream non touchées** : `postgres:14.4`, FHIR (HAPI), nginx-proxy,
   certgen, autoheal. (confirmé dans `docker-compose.yml` : tout en `itechuw/*`).
@@ -91,8 +91,8 @@
   - trigger : push `develop-civ` (+ `workflow_dispatch`).
   - login ghcr via `GITHUB_TOKEN` (`packages: write`).
   - build+push `ghcr.io/itech-ci/openelis-global-civ` (backend, `Dockerfile`) et
-    `...-frontend-civ` (`frontend/Dockerfile.prod`), tag `:develop-civ` +
-    `:sha-xxxx`. Multi-arch amd64/arm64 optionnel (coût CI).
+    `...-frontend-civ` (`frontend/Dockerfile`, étape `runtime`), tag
+    `:develop-civ` + `:sha-xxxx`. Multi-arch amd64/arm64 optionnel (coût CI).
 - **Effet** : images CIV disponibles au pull, fin du transport de tar pour les
   sites connectés.
 
@@ -174,7 +174,7 @@
   - build+push `ghcr.io/itech-ci/openelis-global-civ` (backend `Dockerfile`,
     `build-args: SKIP_SPOTLESS=true`) tag `:develop-civ` + `:sha-<short>`.
   - build+push `ghcr.io/itech-ci/openelis-global-civ-frontend`
-    (`frontend/Dockerfile.prod`) mêmes tags.
+    (`frontend/Dockerfile`, étape `runtime`) mêmes tags.
   - amd64 seul d'abord (ajouter arm64 plus tard si besoin Mac dev).
 - [ ] Rendre les packages ghcr **publics** (ou gérer l'auth de pull sur site).
 

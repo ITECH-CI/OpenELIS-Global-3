@@ -109,7 +109,8 @@ services:
     platform: linux/amd64
     build:
       context: ./frontend
-      dockerfile: ./Dockerfile.prod
+      dockerfile: ./Dockerfile
+      target: runtime
     container_name: openelisglobal-front-end  
     # ports:
     #   - 3000:3000
