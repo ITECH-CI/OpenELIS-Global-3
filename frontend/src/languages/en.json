@@ -2512,6 +2512,7 @@
   "receivedOrders.search": "Search (CMU number, name, order number)",
   "receivedOrders.all": "All",
   "receivedOrders.empty": "No orders.",
+  "receivedOrders.loadError": "Received orders could not be loaded (server error). The list shown may be incomplete: do not enter an order again; try again shortly or contact the administrator.",
   "receivedOrders.provisionalIdentity": "Provisional identity",
   "receivedOrders.etape.A_TRAITER": "To process",
   "receivedOrders.etape.PRISE_EN_CHARGE": "Taken in charge",

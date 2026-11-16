@@ -2027,6 +2027,7 @@
   "receivedOrders.search": "Rechercher (numéro CMU, nom, numéro de demande)",
   "receivedOrders.all": "Toutes",
   "receivedOrders.empty": "Aucune demande.",
+  "receivedOrders.loadError": "Impossible de charger les demandes reçues (erreur du serveur). La liste affichée peut être incomplète : ne ressaisissez pas une demande, réessayez dans un instant ou prévenez l'administrateur.",
   "receivedOrders.provisionalIdentity": "Identité provisoire",
   "receivedOrders.etape.A_TRAITER": "À traiter",
   "receivedOrders.etape.PRISE_EN_CHARGE": "Prise en charge",
