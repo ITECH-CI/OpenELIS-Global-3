@@ -21,7 +21,9 @@ import java.util.Vector;
 import org.apache.commons.validator.GenericValidator;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.Query;
+import org.hibernate.type.Type;
 import org.openelisglobal.common.daoimpl.BaseDAOImpl;
 import org.openelisglobal.common.exception.LIMSRuntimeException;
 import org.openelisglobal.dataexchange.order.dao.ElectronicOrderDAO;
@@ -594,6 +596,14 @@ public class ElectronicOrderDAOImpl extends BaseDAOImpl<ElectronicOrder, String>
         return new ArrayList<>();
     }
 
+    // Type déclaré par le mapping (EnumType, valeur nommée) : sans lui, Hibernate
+    // lie l'énumération comme un objet sérialisé (bytea) et PostgreSQL refuse la
+    // comparaison avec la colonne varchar.
+    private static Type categorieType(Session session) {
+        return ((SessionFactoryImplementor) session.getSessionFactory()).getMetamodel()
+                .entityPersister(ElectronicOrder.class).getPropertyType("categorie");
+    }
+
     @Override
     public List<ElectronicOrder> getElectronicOrdersByCategorie(ElectronicOrderCategorie categorie,
             List<String> statusIds, Timestamp from, Timestamp to) {
@@ -609,9 +619,9 @@ public class ElectronicOrderDAOImpl extends BaseDAOImpl<ElectronicOrder, String>
         }
         hql.append("ORDER BY eo.orderTimestamp asc, eo.id asc");
         try {
-            Query<ElectronicOrder> query = entityManager.unwrap(Session.class).createQuery(hql.toString(),
-                    ElectronicOrder.class);
-            query.setParameter("categorie", categorie);
+            Session session = entityManager.unwrap(Session.class);
+            Query<ElectronicOrder> query = session.createQuery(hql.toString(), ElectronicOrder.class);
+            query.setParameter("categorie", categorie, categorieType(session));
             if (statusIds != null && !statusIds.isEmpty()) {
                 query.setParameterList("statusIds",
                         statusIds.stream().map(Integer::parseInt).collect(java.util.stream.Collectors.toList()));
@@ -636,8 +646,9 @@ public class ElectronicOrderDAOImpl extends BaseDAOImpl<ElectronicOrder, String>
         }
         String hql = "From ElectronicOrder eo WHERE eo.categorie = :categorie AND eo.data LIKE :pattern ORDER BY eo.id asc";
         try {
-            Query<ElectronicOrder> query = entityManager.unwrap(Session.class).createQuery(hql, ElectronicOrder.class);
-            query.setParameter("categorie", categorie);
+            Session session = entityManager.unwrap(Session.class);
+            Query<ElectronicOrder> query = session.createQuery(hql, ElectronicOrder.class);
+            query.setParameter("categorie", categorie, categorieType(session));
             query.setParameter("pattern", "%\"id\":\"" + taskId + "\"%");
             return query.list();
         } catch (HibernateException e) {
