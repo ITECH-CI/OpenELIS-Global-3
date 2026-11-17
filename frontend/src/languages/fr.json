@@ -243,7 +243,7 @@
   "sidenav.label.cytology.dashboard": "Tableau de bord",
   "banner.menu.referredOut": "Referred Out",
   "menu.accession.validation": "Recherche par Ordonnance",
-  "menu.accession.validation.range": "Recherche gamme par Ordonnance",
+  "menu.accession.validation.range": "Recherche par plage de numéros d'ordonnance",
   "menu.validation.date": "Rechercher par date de test",
   "banner.menu.results.status": "Par Test, Date ou Statut",
   "banner.menu.sample": "Ordonnance",
