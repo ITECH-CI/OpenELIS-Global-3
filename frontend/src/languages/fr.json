@@ -33,7 +33,7 @@
   "report.patient.site.description": "Générer des rapports par date de résultat ou par date de l'ordonnance. La date de résultat montrera uniquement les rapports avec des résultats. Si vous sélectionnez uniquement les rapports avec des résultats, tous les rapports où tous les tests sont en cours ne seront pas générés.",
   "report.enter.patient.headline": "Générer tous les rapports pour un client",
   "report.enter.patient.headline.description": "Recherchez le patient via le numéro de laboratoire précédent, l'ID du patient (qui peut être soit le numéro d'identification unique de la santé, soit l'ID national) ou d'autres champs.",
-  "report.enter.labNumber.headline": "Générer un rapport ou une plage de rapports par numéro de numéro de laboratoire",
+  "report.enter.labNumber.headline": "Générer un rapport ou une plage de rapports par numéro de laboratoire",
   "sample.search.scanner.instructions": "Scannez ou saisissez manuellement. Pour un seul rapport, laissez le champ de droite vide",
   "sample.search.scanner.instructions2": "Scanner le code-barres de l'échantillon pour rechercher les résultats",
   "sample.search.scanner.instructions.highaccession": "Scanner le code-barres de l'échantillon pour rechercher les résultats",
