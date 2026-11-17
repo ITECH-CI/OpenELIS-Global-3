@@ -207,7 +207,7 @@
   "cytology.label.otherResult": "Autre Résultat de Diagnostic",
   "cytology.label.review": "En attente de révision cytopathologique",
   "cytology.label.confirmSelect": "Si vous sélectionnez cette option, toutes les informations de diagnostic actuelles seront supprimées",
-  "header.label.version": "Version:",
+  "header.label.version": "Version :",
   "header.label.logout": "Déconnexion",
   "header.label.selectlocale": "Sélectionner la Langue",
   "header.label.changeLab": "Changer de laboratoire",
