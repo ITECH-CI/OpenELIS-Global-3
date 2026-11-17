@@ -1979,6 +1979,7 @@
   "label.button.endDate": "Date de fin",
   "label.button.exportCSV": "Exporter en CSV",
   "label.select.placeholder": "Sélectionner...",
+  "label.withColon": "{label} :",
   "notification.report.generated": "Le rapport a été généré dans un nouvel onglet.",
   "error.dateRange.start": "Veuillez saisir la date de début et la date de fin.",
   "testconfig.ageRange.any": "Tout âge",

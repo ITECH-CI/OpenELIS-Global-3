@@ -1,6 +1,6 @@
 import React from "react";
 import { Grid, Column, Section } from "@carbon/react";
-import { FormattedMessage, useIntl } from "react-intl";
+import { useIntl } from "react-intl";
 
 /**
  * Header component displaying patient and sample information for bacteriology results
@@ -94,13 +94,21 @@ const ResultHeader = ({ testResult, totalTests }) => {
           <Column lg={4} md={4} sm={4}>
             <div style={{ marginBottom: "0.5rem" }}>
               <strong>
-                <FormattedMessage id="sample.label.labnumber" />:
+                {intl.formatMessage(
+                  { id: "label.withColon" },
+                  {
+                    label: intl.formatMessage({ id: "sample.label.labnumber" }),
+                  },
+                )}
               </strong>{" "}
               {testResult.accessionNumber || "N/A"}
             </div>
             <div style={{ marginBottom: "0.5rem" }}>
               <strong>
-                <FormattedMessage id="sample.receivedDate" />:
+                {intl.formatMessage(
+                  { id: "label.withColon" },
+                  { label: intl.formatMessage({ id: "sample.receivedDate" }) },
+                )}
               </strong>{" "}
               {formatDate(testResult.receivedDate)}
             </div>
@@ -109,13 +117,19 @@ const ResultHeader = ({ testResult, totalTests }) => {
           <Column lg={4} md={4} sm={4}>
             <div style={{ marginBottom: "0.5rem" }}>
               <strong>
-                <FormattedMessage id="patient.label" />:
+                {intl.formatMessage(
+                  { id: "label.withColon" },
+                  { label: intl.formatMessage({ id: "patient.label" }) },
+                )}
               </strong>{" "}
               {testResult.patientInfo || "N/A"}
             </div>
             <div style={{ marginBottom: "0.5rem" }}>
               <strong>
-                <FormattedMessage id="sample.type" />:
+                {intl.formatMessage(
+                  { id: "label.withColon" },
+                  { label: intl.formatMessage({ id: "sample.type" }) },
+                )}
               </strong>{" "}
               {testResult.sampleType || "N/A"}
             </div>
@@ -124,7 +138,10 @@ const ResultHeader = ({ testResult, totalTests }) => {
           <Column lg={4} md={4} sm={4}>
             <div style={{ marginBottom: "0.5rem" }}>
               <strong>
-                <FormattedMessage id="column.name.priority" />:
+                {intl.formatMessage(
+                  { id: "label.withColon" },
+                  { label: intl.formatMessage({ id: "column.name.priority" }) },
+                )}
               </strong>{" "}
               <span
                 style={{
@@ -137,7 +154,14 @@ const ResultHeader = ({ testResult, totalTests }) => {
             </div>
             <div style={{ marginBottom: "0.5rem" }}>
               <strong>
-                <FormattedMessage id="sample.entry.project.testSection" />:
+                {intl.formatMessage(
+                  { id: "label.withColon" },
+                  {
+                    label: intl.formatMessage({
+                      id: "sample.entry.project.testSection",
+                    }),
+                  },
+                )}
               </strong>{" "}
               {getTestSectionDisplay(testResult.testSectionName)}
             </div>
