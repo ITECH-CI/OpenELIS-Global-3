@@ -1855,6 +1855,12 @@
   "validation.sampleInterpretation.placeholder": "Saisir la note d'interprétation générale pour cet échantillon/demande...",
   "validation.sampleInterpretation.add": "Ajouter une interprétation",
   "validation.sampleInterpretation.hide": "Masquer l'interprétation",
+  "validation.column.accept": "Valider",
+  "validation.column.retest": "Refaire",
+  "validation.screen.accept.all": "Valider tous les résultats",
+  "validation.screen.accept.normal": "Valider tous les résultats normaux",
+  "validation.screen.retest.all": "Refaire tous les tests",
+  "validation.button.accept": "Valider",
   "label.button.reset": "Réinitialiser",
   "sample.entry.project.testSection": "Unité d'analyse",
 
