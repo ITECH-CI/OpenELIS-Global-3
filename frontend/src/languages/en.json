@@ -1643,6 +1643,7 @@
   "order.search.site.name": "Search Site Name",
   "order.site.name": "Site Name:",
   "order.step.patient.info": "Patient Info",
+  "order.step.required": "Required field",
   "order.step.program.selection": "Program Selection",
   "order.test.request.heading": "Test Request",
   "order.title": "ORDER",

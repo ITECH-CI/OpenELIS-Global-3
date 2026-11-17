@@ -869,8 +869,32 @@ const Index = () => {
     });
   };
 
+  // Champs obligatoires de l'étape « bulletin d'analyse » : on ne la quitte
+  // vers l'avant que remplie ; sinon les champs vides sont marqués.
+  const orderStepComplete = () => {
+    const items = orderFormValues.sampleOrderItems;
+    const missing = {
+      "sampleOrderItems.labNo": !items.labNo,
+      "sampleOrderItems.referringSiteName":
+        !items.referringSiteName && !items.referringSiteId,
+      "sampleOrderItems.providerLastName": !items.providerLastName,
+      "sampleOrderItems.providerFirstName": !items.providerFirstName,
+    };
+    if (Object.values(missing).some(Boolean)) {
+      setChanged({ ...changed, ...missing });
+      return false;
+    }
+    return true;
+  };
+
+  const leavesOrderStepForward = (target) =>
+    page <= orderPageNumber && target > orderPageNumber;
+
   const navigateForward = () => {
     if (page <= lastPageNumber && page >= firstPageNumber) {
+      if (leavesOrderStepForward(page + 1) && !orderStepComplete()) {
+        return;
+      }
       setPage(page + 1);
     }
   };
@@ -881,6 +905,10 @@ const Index = () => {
     }
   };
   const handleTabClickHandler = (e) => {
+    if (leavesOrderStepForward(e) && !orderStepComplete()) {
+      setPage(orderPageNumber);
+      return;
+    }
     setPage(e);
   };
 

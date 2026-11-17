@@ -418,6 +418,7 @@
   "sample.add.action": "Ajouter un échantillon",
   "order.test.request.heading": "Demande d'analyse",
   "order.step.patient.info": "Informations sur les patients",
+  "order.step.required": "Champ obligatoire",
   "order.step.program.selection": "Sélection du programme",
   "back.action.button": "Retour",
   "next.action.button": "Suivante",
