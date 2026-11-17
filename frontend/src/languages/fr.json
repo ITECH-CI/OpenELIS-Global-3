@@ -483,7 +483,7 @@
   "sample.collection.date": "Date de collecte",
   "sample.collection.time": "Heure de collecte",
   "collector.label": "Préléveur",
-  "sample.search.panel.legend.text": "Rechercher parmi les panneaux disponibles",
+  "sample.search.panel.legend.text": "Rechercher parmi les panels disponibles",
   "sample.panel.label.text": "Panneau de recherche disponible",
   "sample.panel.placeholder": "Choisissez le panneau Disponible",
   "sample.panel.search.error.msg": "Aucun panneau trouvé correspondant",
