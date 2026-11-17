@@ -1980,6 +1980,9 @@ export function SearchResults(props) {
                   //onBlur={handleBlur}
                 >
                   <DataTable
+                    noDataComponent={intl.formatMessage({
+                      id: "results.table.empty",
+                    })}
                     data={(() => {
                       const all =
                         (filteredResults ?? props.results)?.testResult || [];

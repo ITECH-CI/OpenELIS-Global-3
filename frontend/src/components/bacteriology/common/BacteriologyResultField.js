@@ -6,6 +6,7 @@ import {
   SelectItem,
   TextInput,
 } from "@carbon/react";
+import { useIntl } from "react-intl";
 
 /**
  * Reusable field component for bacteriology results
@@ -22,6 +23,7 @@ const BacteriologyResultField = ({
   placeholder = "",
   maxLength,
 }) => {
+  const intl = useIntl();
   const handleChange = (e) => {
     const newValue = e.target ? e.target.value : e;
     onChange(newValue);
@@ -38,7 +40,13 @@ const BacteriologyResultField = ({
           disabled={disabled}
           invalid={required && !value}
         >
-          <SelectItem value="" text={placeholder || "Select..."} />
+          <SelectItem
+            value=""
+            text={
+              placeholder ||
+              intl.formatMessage({ id: "label.select.placeholder" })
+            }
+          />
           {options.map((option) => (
             <SelectItem
               key={option.id}

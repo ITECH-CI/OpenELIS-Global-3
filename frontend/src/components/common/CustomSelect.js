@@ -1,7 +1,9 @@
 import React from "react";
 import { Select, SelectItem } from "@carbon/react";
+import { useIntl } from "react-intl";
 
 const CustomSelect = (props) => {
+  const intl = useIntl();
   const handleSelect = (e) => {
     const value = e.target.value;
     props.onChange(value);
@@ -16,7 +18,13 @@ const CustomSelect = (props) => {
         value={props.value ? props.value : ""}
         disabled={props.disabled}
       >
-        <SelectItem text={props.placeholder || "Select..."} value="" />
+        <SelectItem
+          text={
+            props.placeholder ||
+            intl.formatMessage({ id: "label.select.placeholder" })
+          }
+          value=""
+        />
         {props.defaultSelect && (
           <SelectItem
             text={props.defaultSelect.value}

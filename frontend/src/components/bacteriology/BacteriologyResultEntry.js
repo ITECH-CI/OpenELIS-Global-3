@@ -1,7 +1,7 @@
 import { Reset, Save } from "@carbon/icons-react";
 import { Button, ButtonSet, Form, InlineLoading, Stack } from "@carbon/react";
 import { useContext, useEffect, useState } from "react";
-import { FormattedMessage } from "react-intl";
+import { FormattedMessage, useIntl } from "react-intl";
 import { NotificationContext } from "../layout/Layout";
 import {
   getFromOpenElisServer,
@@ -22,6 +22,7 @@ const BacteriologyResultEntry = ({
   onSave,
   disabled = false,
 }) => {
+  const intl = useIntl();
   const { addNotification, setNotificationVisible } =
     useContext(NotificationContext);
 
@@ -379,7 +380,11 @@ const BacteriologyResultEntry = ({
   if (loading) {
     return (
       <div style={{ padding: "2rem", textAlign: "center" }}>
-        <InlineLoading description="Loading bacteriology results..." />
+        <InlineLoading
+          description={intl.formatMessage({
+            id: "bacteriology.loading.results",
+          })}
+        />
       </div>
     );
   }
