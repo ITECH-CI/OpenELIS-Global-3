@@ -1819,6 +1819,7 @@
   "bacteriology.antibiogram.add": "Ajouter un antibiotique",
   "bacteriology.antibiogram.empty": "Aucun antibiotique ajouté",
   "bacteriology.loading.results": "Chargement des résultats de bactériologie...",
+  "bacteriology.antibiogram.antibiotic": "Antibiotique",
   "program.ROUTINE.name": "Analyses de routine",
   "program.HIV_INIT.name": "Programme VIH - Bilan initial",
   "program.HIV_FOLLOW.name": "Programme VIH - Bilan de suivi",

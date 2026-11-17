@@ -2446,6 +2446,7 @@
   "bacteriology.antibiogram.empty": "No antibiotics added",
   "bacteriology.validation.title": "Validation of Bacteriology Results",
   "bacteriology.loading.results": "Loading bacteriology results...",
+  "bacteriology.antibiogram.antibiotic": "Antibiotic",
   "label.button.validate": "Validate",
   "testsection.bacteriology": "Bacteriology",
   "testsection.routine.bacteriology": "Routine Bacteriology",
