@@ -509,7 +509,7 @@
   "dashboard.in.progress.subtitle.label": "En attente de saisie des résultats",
   "dashboard.validation.ready.label": "Prêt pour la validation",
   "dashboard.validation.ready.subtitle.label": "En attente de validation",
-  "dashboard.complete.orders.label": "Ordonnance terminées aujourd'hui",
+  "dashboard.complete.orders.label": "Ordonnances terminées aujourd'hui",
   "dashboard.orders.subtitle.label": "Total des ordonnances terminées aujourd'hui",
   "dashboard.turn.around.label": "Délai d'exécution retardé",
   "dashboard.turn.around.subtitle.label": "Dépassement de 96 heures",
