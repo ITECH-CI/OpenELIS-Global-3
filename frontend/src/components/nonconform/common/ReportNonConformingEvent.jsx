@@ -166,7 +166,7 @@ export const ReportNonConformingEvent = () => {
     },
     {
       key: "type",
-      value: "Specimen type",
+      value: intl.formatMessage({ id: "sample.type" }),
     },
   ];
 
