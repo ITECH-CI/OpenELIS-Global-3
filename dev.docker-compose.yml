@@ -2,18 +2,25 @@ version: '3.3'
 services:
     certs:
         container_name: oe-certs 
-        image: itechuw/certgen@sha256:4df5d09f71f764ae8db5f578726c8c0d32793429482e990268b04091f5633f68 # main du 18/11/2024
-        platform: linux/amd64
-        restart: always
+        # certificats TLS internes PROPRES à l'installation (clé générée au 1er
+        # démarrage par volume/certs/generate-certs.sh) ; l'ancienne image publique
+        # itechuw/certgen embarquait la même clé privée pour tous. Conteneur
+        # « one-shot » : génère si besoin puis s'arrête (Exited (0)).
+        image: eclipse-temurin:21.0.13_9-jre
+        entrypoint: ["/bin/bash", "/opt/oe-certs/generate-certs.sh"]
+        restart: "no"
         environment:
             - KEYSTORE_PW="kspass"
             - TRUSTSTORE_PW="tspass"
+            - CERT_CN=${OE_CERT_CN:-localhost}
+            - CERT_SAN=${OE_CERT_SAN:-}
         networks:
             - default
         volumes:
             -  key_trust-store-volume:/etc/openelis-global
             -  keys-vol:/etc/ssl/private/
             -  certs-vol:/etc/ssl/certs/
+            -  ./volume/certs/generate-certs.sh:/opt/oe-certs/generate-certs.sh:ro
 
     database:
         container_name: openelisglobal-database 
@@ -44,8 +51,10 @@ services:
         # image: itechuw/openelis-global-2-dev:develop
         platform: linux/amd64
         depends_on:
-            - database
-            - certs
+            database:
+              condition: service_started
+            certs:
+              condition: service_completed_successfully
         ports:
             - "8080:8080"
             - "8443:8443"
@@ -79,8 +88,10 @@ services:
         image: itechuw/openelis-global-2-fhir@sha256:4bc0052c225870090397d65e73880c045cf493c47bcff264851380587cc0c837 # develop du 21/04/2025
         platform: linux/amd64
         depends_on:
-            - database
-            - certs
+            database:
+              condition: service_started
+            certs:
+              condition: service_completed_successfully
         ports:
             - "8081:8080"
             - "8444:8443"
@@ -140,7 +151,8 @@ services:
             - default
         restart: unless-stopped
         depends_on:
-        - certs        
+            certs:
+              condition: service_completed_successfully
             
 secrets:
   datasource.password:
