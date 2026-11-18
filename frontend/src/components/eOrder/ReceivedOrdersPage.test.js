@@ -9,13 +9,13 @@ import {
   getFromOpenElisServerWithStatus,
 } from "../utils/Utils";
 
-jest.mock("../utils/Utils", () => ({
-  getFromOpenElisServer: jest.fn(),
-  getFromOpenElisServerWithStatus: jest.fn(),
-  postToOpenElisServer: jest.fn(),
+vi.mock("../utils/Utils", () => ({
+  getFromOpenElisServer: vi.fn(),
+  getFromOpenElisServerWithStatus: vi.fn(),
+  postToOpenElisServer: vi.fn(),
 }));
-jest.mock("../common/PageBreadCrumb", () => () => null);
-jest.mock("../common/CustomDatePicker", () => () => null);
+vi.mock("../common/PageBreadCrumb", () => ({ default: () => null }));
+vi.mock("../common/CustomDatePicker", () => ({ default: () => null }));
 
 const serve = (settings) => {
   getFromOpenElisServerWithStatus.mockImplementation((url, callback) =>

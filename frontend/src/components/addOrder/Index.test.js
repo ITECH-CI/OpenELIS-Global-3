@@ -5,44 +5,50 @@ import messages from "../../languages/fr.json";
 import { ConfigurationContext, NotificationContext } from "../layout/Layout";
 import Index from "./Index";
 
-jest.mock("../utils/Utils", () => ({
-  getFromOpenElisServer: jest.fn(),
-  postToOpenElisServer: jest.fn(),
+vi.mock("../utils/Utils", () => ({
+  getFromOpenElisServer: vi.fn(),
+  postToOpenElisServer: vi.fn(),
 }));
-jest.mock("../common/PageBreadCrumb", () => () => null);
-jest.mock("./OrderEntryAdditionalQuestions", () => () => (
-  <div data-testid="stepProgram" />
-));
-jest.mock("./AddSample", () => () => <div data-testid="stepSample" />);
-jest.mock("./PatientInfo", () => () => <div data-testid="stepPatient" />);
+vi.mock("../common/PageBreadCrumb", () => ({ default: () => null }));
+vi.mock("./OrderEntryAdditionalQuestions", () => ({
+  default: () => <div data-testid="stepProgram" />,
+}));
+vi.mock("./AddSample", () => ({
+  default: () => <div data-testid="stepSample" />,
+}));
+vi.mock("./PatientInfo", () => ({
+  default: () => <div data-testid="stepPatient" />,
+}));
 // L'étape « bulletin d'analyse » expose les champs marqués et sait se remplir.
-jest.mock("./AddOrder", () => (props) => (
-  <div data-testid="stepOrder">
-    <span data-testid="marked">
-      {Object.entries(props.changed)
-        .filter(([, value]) => value)
-        .map(([key]) => key)
-        .sort()
-        .join(",")}
-    </span>
-    <button
-      onClick={() =>
-        props.setOrderFormValues({
-          ...props.orderFormValues,
-          sampleOrderItems: {
-            ...props.orderFormValues.sampleOrderItems,
-            labNo: "DEMO26000001",
-            referringSiteName: "CSU DEMO",
-            providerLastName: "DEMO",
-            providerFirstName: "Prescripteur",
-          },
-        })
-      }
-    >
-      remplir
-    </button>
-  </div>
-));
+vi.mock("./AddOrder", () => ({
+  default: (props) => (
+    <div data-testid="stepOrder">
+      <span data-testid="marked">
+        {Object.entries(props.changed)
+          .filter(([, value]) => value)
+          .map(([key]) => key)
+          .sort()
+          .join(",")}
+      </span>
+      <button
+        onClick={() =>
+          props.setOrderFormValues({
+            ...props.orderFormValues,
+            sampleOrderItems: {
+              ...props.orderFormValues.sampleOrderItems,
+              labNo: "DEMO26000001",
+              referringSiteName: "CSU DEMO",
+              providerLastName: "DEMO",
+              providerFirstName: "Prescripteur",
+            },
+          })
+        }
+      >
+        remplir
+      </button>
+    </div>
+  ),
+}));
 
 const renderWizard = () =>
   render(

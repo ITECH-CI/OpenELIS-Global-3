@@ -67,6 +67,10 @@ jobs:
         run: npx prettier ./ --check
         working-directory: frontend  
 
+      - name: Unit tests (Vitest)
+        run: npm run test
+        working-directory: frontend
+
       - name: Build OpenELIS Images and Run containers
         run: docker compose -f build.docker-compose.yml up -d --build --wait --wait-timeout 600
 
