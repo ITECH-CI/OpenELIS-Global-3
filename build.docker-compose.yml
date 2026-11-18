@@ -19,7 +19,7 @@ services:
 
   database:
       container_name: openelisglobal-database 
-      image: postgres:14.4
+      image: postgres:14.25
       ports:
           - "15432:5432"
       restart: always
@@ -109,7 +109,8 @@ services:
     platform: linux/amd64
     build:
       context: ./frontend
-      dockerfile: ./Dockerfile.prod
+      dockerfile: ./Dockerfile
+      target: runtime
     container_name: openelisglobal-front-end  
     # ports:
     #   - 3000:3000

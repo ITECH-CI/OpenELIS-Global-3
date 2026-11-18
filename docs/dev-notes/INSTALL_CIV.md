@@ -200,7 +200,7 @@ postgres reste l'image officielle.
 
 ```bash
 # depuis un dossier contenant docker-compose.civ.yml et l'arborescence ./volume/*
-# OE_TAG = version à déployer (ex. 3.3.2.0) ; défaut = latest
+# OE_TAG = version à déployer (ex. 3.3.2.0) ; obligatoire, sans valeur par défaut
 export OE_TAG=3.3.2.0
 docker compose -f docker-compose.civ.yml pull
 docker compose -f docker-compose.civ.yml up -d
@@ -595,6 +595,13 @@ git submodule update --init --recursive   # dataexport requis
 
 Options : `--images-only` (build images sans installeur), `VERSION=x.y.z.w`
 (forcer la version).
+
+> **Prérequis de la machine de build** : Docker seulement. Le frontend se
+> construit dans son image (`frontend/Dockerfile`, étape `runtime` : Node 24,
+> `vite build`, puis nginx qui sert `dist/`) ; Node n'est nécessaire sur la
+> machine que pour travailler sur le frontend hors Docker (voir le `README.md`).
+> Les images de base sont épinglées à une version de correctif : les monter est
+> un changement explicite des Dockerfiles et des compositions.
 
 > **Plateforme** : les images sont construites/tirées en `linux/amd64` (cible =
 > serveurs Linux amd64), même si la machine de build est arm64 (Mac Apple

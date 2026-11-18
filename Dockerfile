@@ -1,7 +1,7 @@
 ##
 # Build Stage
 #
-FROM maven:3-eclipse-temurin-21 AS build
+FROM maven:3.9.16-eclipse-temurin-21 AS build
 
 RUN --mount=target=/var/lib/apt/lists,type=cache,sharing=locked \
     --mount=target=/var/cache/apt,type=cache,sharing=locked \
@@ -34,7 +34,7 @@ RUN --mount=type=cache,target=/root/.m2,sharing=locked \
 ##
 # Run Stage
 #
-FROM tomcat:10-jre21
+FROM tomcat:10.1.61-jre21
 
 COPY install/createDefaultPassword.sh ./
 

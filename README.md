@@ -40,6 +40,10 @@ You can find more information on how to set up OpenELIS at our
 
 1. For development , you need to install [Java](https://openjdk.org/install/) 21
 
+1. To work on the frontend outside Docker, you need
+   [Node.js](https://nodejs.org/) 24, the version pinned in
+   [frontend/.nvmrc](./frontend/.nvmrc)
+
 ### For Offline Installation Using the OpenELIS Global2 Installer
 
 Download the OpenELIS Global Installer for each Release from the
@@ -97,8 +101,17 @@ speeds up the development process
 
     Note : For Reflecting Local changes in the Running Containers ;
 
+- The frontend container is built locally from
+  [frontend/Dockerfile](./frontend/Dockerfile) (stage `dev`, Vite dev server on
+  port 80 behind the proxy) the first time the stack starts. Rebuild it after a
+  change to `frontend/package.json`:
+
+        docker compose -f dev.docker-compose.yml build frontend.openelis.org
+
 - Any Changes to the [Front-end](./frontend/) React Source Code will be directly
-  Hot Reloaded in the UI
+  Hot Reloaded in the UI. `VITE_HMR_CLIENT_PORT` (443 in
+  `dev.docker-compose.yml`) is the port the browser uses to reach the hot reload
+  websocket through the proxy.
 - For changes to the [Back-end](./src/) Java Source code
 
   - Run the maven build again to re-build the War file
@@ -158,9 +171,19 @@ accessing any of these links, simply follow these steps:
     > environment is properly set up and running without issues.
 
         cd frontend/ # from project directory
-        npm install
-        npm run build
+        npm ci # about one minute on an empty npm cache
+        npm run check-format
+        npm run build # production bundle in frontend/dist/
+        npm run test # unit tests (Vitest)
+        npm run typecheck # TypeScript, without emitting files
+        npm run lint # ESLint on src/
         npm run cy:run # this will run e2e testing same CI
+
+1.  Run the Vite dev server outside Docker (port 80 is the default, used by the
+    proxy when the stack runs; pick another one locally)
+
+        cd frontend/
+        npm start -- --port 5173
 
 ### Pull request guidelines
 

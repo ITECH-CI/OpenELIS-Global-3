@@ -2,7 +2,7 @@ version: '3.3'
 services:
     certs:
         container_name: oe-certs 
-        image: itechuw/certgen:main
+        image: itechuw/certgen@sha256:4df5d09f71f764ae8db5f578726c8c0d32793429482e990268b04091f5633f68 # main du 18/11/2024
         platform: linux/amd64
         restart: always
         environment:
@@ -17,7 +17,7 @@ services:
 
     database:
         container_name: openelisglobal-database 
-        image: postgres:14.4
+        image: postgres:14.25
         ports:
             - "15432:5432"
         restart: always
@@ -76,7 +76,7 @@ services:
             
     fhir.openelis.org:
         container_name: external-fhir-api
-        image: itechuw/openelis-global-2-fhir:develop
+        image: itechuw/openelis-global-2-fhir@sha256:4bc0052c225870090397d65e73880c045cf493c47bcff264851380587cc0c837 # develop du 21/04/2025
         platform: linux/amd64
         depends_on:
             - database
@@ -106,20 +106,27 @@ services:
 
          
     frontend.openelis.org:
-        image: itechuw/openelis-global-2-frontend-dev:develop
+        # Serveur de développement Vite (étape dev de frontend/Dockerfile),
+        # en HTTP sur le port 80 derrière le mandataire ; les sources sont
+        # montées pour le rechargement à chaud.
+        build:
+            context: ./frontend
+            target: dev
+        image: openelis-civ-frontend-dev
         container_name: openelisglobal-front-end
-        platform: linux/amd64
         networks:
             - default
         volumes:
             - './frontend/src:/app/src'
             - './frontend/public:/app/public'
+            - './frontend/index.html:/app/index.html'
         environment:
             - CHOKIDAR_USEPOLLING=true
+            - VITE_HMR_CLIENT_PORT=443
         tty: true
 
     proxy:
-        image: itechuw/openelis-global-2-proxy:develop
+        image: itechuw/openelis-global-2-proxy@sha256:121949992223c43621df30c179168f7d22396bb3f23849030dbec4fdb7e2982d # develop du 21/04/2025
         container_name: openelisglobal-proxy
         platform: linux/amd64
         ports:

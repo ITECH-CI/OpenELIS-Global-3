@@ -1,3 +1,4 @@
+import jp from "jsonpath";
 import React from "react";
 import { Checkbox } from "@carbon/react";
 import { useIntl } from "react-intl";
@@ -61,7 +62,6 @@ export const MenuCheckBox = (props) => {
                 }
               } else {
                 let newMenuItem = { ...menuItem };
-                var jp = require("jsonpath");
                 jp.value(
                   newMenuItem,
                   path,

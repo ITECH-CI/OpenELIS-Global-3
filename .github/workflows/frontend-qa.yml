@@ -36,7 +36,8 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: ./frontend
-          file: ./frontend/Dockerfile.prod
+          file: ./frontend/Dockerfile
+          target: runtime
           push: false
 
   build-and-run-qa-tests:
@@ -49,16 +50,12 @@ jobs:
           submodules: recursive
 
       - name: Set up Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version-file: frontend/.nvmrc
 
       - name: Install dependencies
-        run: npm install
-        working-directory: frontend
-
-      - name: Install React scripts
-        run: npm install react-scripts@5.0.1 -g
+        run: npm ci
         working-directory: frontend
 
       - name: Install Google Chrome
