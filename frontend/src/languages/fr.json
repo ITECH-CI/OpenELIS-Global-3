@@ -1989,6 +1989,8 @@
   "label.withColon": "{label} :",
   "notification.report.generated": "Le rapport a été généré dans un nouvel onglet.",
   "error.dateRange.start": "Veuillez saisir la date de début et la date de fin.",
+  "error.date.future.start": "La date de début ne peut pas être postérieure à aujourd'hui.",
+  "error.date.future.end": "La date de fin ne peut pas être postérieure à aujourd'hui.",
   "testconfig.ageRange.any": "Tout âge",
   "organization.referentiel.statut": "Référentiel",
   "organization.referentiel.statut.MFL": "MFL",
