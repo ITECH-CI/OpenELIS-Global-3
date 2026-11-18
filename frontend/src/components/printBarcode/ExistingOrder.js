@@ -107,7 +107,9 @@ const ExistingOrder = () => {
             </Column>
             <Column lg={8} md={8} sm={4}>
               <CustomLabNumberInput
-                placeholder={"Enter Lab No"}
+                placeholder={intl.formatMessage({
+                  id: "placeholder.accession.number",
+                })}
                 id="labNumber"
                 name="labNumber"
                 value={accessionNumber}

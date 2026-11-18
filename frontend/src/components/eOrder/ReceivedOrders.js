@@ -485,6 +485,28 @@ const ReceivedOrders = ({
                 pageSize={pageSize}
                 pageSizes={[10, 25, 50, 100]}
                 totalItems={result.total}
+                itemsPerPageText={intl.formatMessage({
+                  id: "pagination.items-per-page",
+                })}
+                itemRangeText={(min, max, total) =>
+                  intl.formatMessage(
+                    { id: "pagination.item-range" },
+                    { min: min, max: max, total: total },
+                  )
+                }
+                pageRangeText={(_current, total) =>
+                  intl.formatMessage(
+                    { id: "pagination.page-range" },
+                    { total: total },
+                  )
+                }
+                forwardText={intl.formatMessage({ id: "pagination.forward" })}
+                backwardText={intl.formatMessage({
+                  id: "pagination.backward",
+                })}
+                pageNumberText={intl.formatMessage({
+                  id: "pagination.page-number",
+                })}
                 onChange={({ page: newPage, pageSize: newSize }) => {
                   setPage(newPage);
                   setPageSize(newSize);

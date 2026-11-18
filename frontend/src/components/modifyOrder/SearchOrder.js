@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useRef } from "react";
 import SearchPatientForm from "../patient/SearchPatientForm";
 import { Button, Column, TextInput, Grid, Form } from "@carbon/react";
-import { FormattedMessage } from "react-intl";
+import { FormattedMessage, useIntl } from "react-intl";
 import CustomLabNumberInput from "../common/CustomLabNumberInput";
 
 function SearchOrder() {
+  const intl = useIntl();
   const [selectedPatient, setSelectedPatient] = useState({});
   const componentMounted = useRef(false);
   const [accessionNumber, setAccessionNumber] = useState("");
@@ -49,7 +50,9 @@ function SearchOrder() {
             </Column>
             <Column lg={16} md={8} sm={4}>
               <CustomLabNumberInput
-                placeholder={"Enter Lab No"}
+                placeholder={intl.formatMessage({
+                  id: "placeholder.accession.number",
+                })}
                 id="labNumber"
                 name="labNumber"
                 value={accessionNumber}

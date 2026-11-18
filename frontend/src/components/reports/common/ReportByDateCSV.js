@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import {
   Form,
   FormLabel,
@@ -10,17 +10,27 @@ import {
   SelectItem,
   Loading,
 } from "@carbon/react";
+import ExportGenerationNotice from "./ExportGenerationNotice";
 import { FormattedMessage, useIntl } from "react-intl";
 import "../../Style.css";
-import { AlertDialog } from "../../common/CustomNotification";
-import CustomDatePicker from "../../common/CustomDatePicker";
+import CustomDatePicker, {
+  isFutureDisplayDate,
+} from "../../common/CustomDatePicker";
+import { ConfigurationContext } from "../../layout/Layout";
 import config from "../../../config.json";
 import { encodeDate, getFromOpenElisServer } from "../../utils/Utils";
+import { downloadReportFile } from "../../utils/ReportDownload";
 
 const ReportByDateCSV = (props) => {
   const intl = useIntl();
+  const { configurationProperties } = useContext(ConfigurationContext);
+  const dayFirst = configurationProperties.DEFAULT_DATE_LOCALE == "fr-FR";
+  const [futureDates, setFutureDates] = useState({
+    startDate: false,
+    endDate: false,
+  });
   const [loading, setLoading] = useState(false);
-  const [notificationVisible, setNotificationVisible] = useState(false);
+  const [generation, setGeneration] = useState({ status: "idle" });
   const [statusOptions, setStatusOptions] = useState([]);
 
   const [reportFormValues, setReportFormValues] = useState(() => {
@@ -43,6 +53,10 @@ const ReportByDateCSV = (props) => {
   });
 
   const handleDatePickerChangeDate = (datePicker, date) => {
+    setFutureDates((previous) => ({
+      ...previous,
+      [datePicker]: isFutureDisplayDate(date, dayFirst),
+    }));
     let updatedDate = encodeDate(date);
     let obj = null;
     switch (datePicker) {
@@ -50,12 +64,14 @@ const ReportByDateCSV = (props) => {
         obj = {
           ...reportFormValues,
           startDate: updatedDate,
+          error: "",
         };
         break;
       case "endDate":
         obj = {
           ...reportFormValues,
           endDate: updatedDate,
+          error: "",
         };
         break;
       default:
@@ -64,6 +80,17 @@ const ReportByDateCSV = (props) => {
   };
 
   const handleSubmit = () => {
+    if (futureDates.startDate || futureDates.endDate) {
+      setReportFormValues({
+        ...reportFormValues,
+        error: intl.formatMessage({
+          id: futureDates.endDate
+            ? "error.date.future.end"
+            : "error.date.future.start",
+        }),
+      });
+      return;
+    }
     if (!reportFormValues.startDate || !reportFormValues.endDate) {
       setReportFormValues({
         ...reportFormValues,
@@ -111,9 +138,15 @@ const ReportByDateCSV = (props) => {
         : `vlStudyType=${reportFormValues.studyType}`;
     const url = `${baseUrl}?${baseParams}&upperDateRange=${reportFormValues.endDate}&lowerDateRange=${reportFormValues.startDate}&${additionalParams}`;
 
-    window.open(url, "_blank");
-    setLoading(false);
-    setNotificationVisible(true);
+    setGeneration({ status: "running" });
+    downloadReportFile(url, `${props.report}.csv`)
+      .then(({ fileName, rowCount }) =>
+        setGeneration({ status: "done", fileName, rowCount }),
+      )
+      .catch((error) =>
+        setGeneration({ status: "failed", detail: error.message }),
+      )
+      .finally(() => setLoading(false));
   };
 
   useEffect(() => {
@@ -131,6 +164,17 @@ const ReportByDateCSV = (props) => {
       });
     }
   }, [props]);
+
+  // Libellés fixes renvoyés par le serveur (leur valeur pilote le filtrage de
+  // l'export) : traduits à l'affichage seulement.
+  const studyTypeLabelKeys = {
+    "Unsuppressed VL": "report.vl.unsuppressed",
+    "Suppressed VL": "report.vl.suppressed",
+  };
+  const studyTypeLabel = (value) =>
+    studyTypeLabelKeys[value]
+      ? intl.formatMessage({ id: studyTypeLabelKeys[value] })
+      : value;
 
   const dateOptions = [
     {
@@ -162,7 +206,6 @@ const ReportByDateCSV = (props) => {
           </FormLabel>
         </Column>
       </Grid>
-      {notificationVisible && <AlertDialog />}
       {loading && <Loading />}
       <Grid fullWidth={true}>
         <Column lg={16} md={6} sm={4}>
@@ -177,6 +220,9 @@ const ReportByDateCSV = (props) => {
                     defaultMessage: "Start Date",
                   })}
                   disallowFutureDate={true}
+                  futureDateErrorText={intl.formatMessage({
+                    id: "error.date.future.start",
+                  })}
                   autofillDate={true}
                   value={reportFormValues.startDate}
                   onChange={(date) =>
@@ -193,6 +239,9 @@ const ReportByDateCSV = (props) => {
                     defaultMessage: "End Date",
                   })}
                   disallowFutureDate={true}
+                  futureDateErrorText={intl.formatMessage({
+                    id: "error.date.future.end",
+                  })}
                   autofillDate={true}
                   value={reportFormValues.endDate}
                   onChange={(date) =>
@@ -218,13 +267,18 @@ const ReportByDateCSV = (props) => {
                     });
                   }}
                 >
-                  <SelectItem value="" text="Select Study Type" />
+                  <SelectItem
+                    value=""
+                    text={intl.formatMessage({
+                      id: "report.select.studttype",
+                    })}
+                  />
 
                   {statusOptions.map((statusOption) => (
                     <SelectItem
                       key={statusOption.id}
                       value={statusOption.id}
-                      text={statusOption.value}
+                      text={studyTypeLabel(statusOption.value)}
                     />
                   ))}
                 </Select>
@@ -275,12 +329,11 @@ const ReportByDateCSV = (props) => {
                 data-cy="printableVersion"
                 type="button"
                 onClick={handleSubmit}
+                disabled={generation.status === "running"}
               >
-                <FormattedMessage
-                  id="label.button.generatePrintableVersion"
-                  defaultMessage="Generate printable version"
-                />
+                <FormattedMessage id="label.button.generateFile" />
               </Button>
+              <ExportGenerationNotice generation={generation} />
             </Section>
           </Form>
         </Column>

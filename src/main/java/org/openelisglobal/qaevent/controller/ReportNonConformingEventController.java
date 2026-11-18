@@ -104,9 +104,8 @@ public class ReportNonConformingEventController extends BaseController {
 
         SystemUser systemUser = systemUserService.getUserById(form.getCurrentUserId());
         form.setName(systemUser.getFirstName() + " " + systemUser.getLastName());
-        form.setNceNumber(System.currentTimeMillis() + "");
         NcEvent event = nonConformingEventWorker.create(labOrderNumber, Arrays.asList(sampleItemIds.split(",")),
-                systemUser.getId(), form.getNceNumber());
+                systemUser.getId());
         form.setNceNumber(event.getNceNumber());
         form.setId(event.getId());
 

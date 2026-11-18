@@ -395,7 +395,9 @@ const SearchForm = (props) => {
                       <Field name="accessionNumber">
                         {({ field }) => (
                           <CustomLabNumberInput
-                            placeholder={"Enter Lab No"}
+                            placeholder={intl.formatMessage({
+                              id: "placeholder.accession.number",
+                            })}
                             name={field.name}
                             id={field.name}
                             value={values[field.name]}

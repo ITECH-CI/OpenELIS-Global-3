@@ -102,9 +102,8 @@ public class ReportNonConformEventsRestController extends BaseRestController {
             SystemUser systemUser = systemUserService.getUserById(getSysUserId(request));
             eventData.setName(systemUser.getFirstName() + " " + systemUser.getLastName());
 
-            String ncenumber = String.valueOf(System.currentTimeMillis());
             NcEvent event = nonConformingEventWorker.create(params.get("labOrderNumber"),
-                    Arrays.asList(params.get("specimenId").split(",")), systemUser.getId(), ncenumber);
+                    Arrays.asList(params.get("specimenId").split(",")), systemUser.getId());
 
             eventData.setNceNumber(event.getNceNumber());
             eventData.setId(event.getId());

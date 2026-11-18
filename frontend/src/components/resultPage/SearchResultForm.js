@@ -477,7 +477,9 @@ export function SearchResultForm(props) {
                       <Field name="accessionNumber">
                         {({ field }) => (
                           <CustomLabNumberInput
-                            placeholder="Enter Accession No."
+                            placeholder={intl.formatMessage({
+                              id: "placeholder.accession.number",
+                            })}
                             name={field.name}
                             id={field.name}
                             data-cy="enterAccession"
@@ -502,7 +504,9 @@ export function SearchResultForm(props) {
                       <Field name="startLabNo">
                         {({ field }) => (
                           <CustomLabNumberInput
-                            placeholder="Enter Accession No."
+                            placeholder={intl.formatMessage({
+                              id: "placeholder.accession.number",
+                            })}
                             name={field.name}
                             id={field.name}
                             data-cy="startAccession"
@@ -521,7 +525,9 @@ export function SearchResultForm(props) {
                       <Field name="endLabNo">
                         {({ field }) => (
                           <CustomLabNumberInput
-                            placeholder="Enter Accession No."
+                            placeholder={intl.formatMessage({
+                              id: "placeholder.accession.number",
+                            })}
                             name={field.name}
                             id={field.name}
                             data-cy="endAccession"

@@ -7,7 +7,8 @@ import org.openelisglobal.qaevent.valueholder.NcEvent;
 
 public interface NonConformingEventWorker {
 
-    NcEvent create(String labOrderId, List<String> specimens, String systemUserId, String nceNumber);
+    /** Crée l'événement et lui attribue son numéro d'ENC. */
+    NcEvent create(String labOrderId, List<String> specimens, String systemUserId);
 
     boolean update(NonConformingEventForm form);
 
