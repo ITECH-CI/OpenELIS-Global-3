@@ -9,6 +9,15 @@ on:
     branches: [develop-civ]
   workflow_dispatch:
 
+# Une publication à la fois sur develop-civ, dans l'ordre des poussées : deux
+# fusions rapprochées lançaient deux publications en parallèle, et la plus lente
+# pouvait écraser l'étiquette develop-civ avec l'image du commit précédent. Une
+# publication en attente est remplacée par la suivante, jamais interrompue en
+# cours.
+concurrency:
+  group: civ-publish-images-${{ github.ref }}
+  cancel-in-progress: false
+
 env:
   REGISTRY: ghcr.io
   # ghcr exige un namespace en minuscules ; github.repository_owner peut contenir
