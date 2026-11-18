@@ -10,15 +10,16 @@ import {
   SelectItem,
   Loading,
 } from "@carbon/react";
+import ExportGenerationNotice from "./ExportGenerationNotice";
 import { FormattedMessage, useIntl } from "react-intl";
 import "../../Style.css";
-import { AlertDialog } from "../../common/CustomNotification";
 import CustomDatePicker, {
   isFutureDisplayDate,
 } from "../../common/CustomDatePicker";
 import { ConfigurationContext } from "../../layout/Layout";
 import config from "../../../config.json";
 import { encodeDate, getFromOpenElisServer } from "../../utils/Utils";
+import { downloadReportFile } from "../../utils/ReportDownload";
 
 const ReportByDateCSV = (props) => {
   const intl = useIntl();
@@ -29,7 +30,7 @@ const ReportByDateCSV = (props) => {
     endDate: false,
   });
   const [loading, setLoading] = useState(false);
-  const [notificationVisible, setNotificationVisible] = useState(false);
+  const [generation, setGeneration] = useState({ status: "idle" });
   const [statusOptions, setStatusOptions] = useState([]);
 
   const [reportFormValues, setReportFormValues] = useState(() => {
@@ -137,9 +138,15 @@ const ReportByDateCSV = (props) => {
         : `vlStudyType=${reportFormValues.studyType}`;
     const url = `${baseUrl}?${baseParams}&upperDateRange=${reportFormValues.endDate}&lowerDateRange=${reportFormValues.startDate}&${additionalParams}`;
 
-    window.open(url, "_blank");
-    setLoading(false);
-    setNotificationVisible(true);
+    setGeneration({ status: "running" });
+    downloadReportFile(url, `${props.report}.csv`)
+      .then(({ fileName, rowCount }) =>
+        setGeneration({ status: "done", fileName, rowCount }),
+      )
+      .catch((error) =>
+        setGeneration({ status: "failed", detail: error.message }),
+      )
+      .finally(() => setLoading(false));
   };
 
   useEffect(() => {
@@ -199,7 +206,6 @@ const ReportByDateCSV = (props) => {
           </FormLabel>
         </Column>
       </Grid>
-      {notificationVisible && <AlertDialog />}
       {loading && <Loading />}
       <Grid fullWidth={true}>
         <Column lg={16} md={6} sm={4}>
@@ -323,9 +329,11 @@ const ReportByDateCSV = (props) => {
                 data-cy="printableVersion"
                 type="button"
                 onClick={handleSubmit}
+                disabled={generation.status === "running"}
               >
                 <FormattedMessage id="label.button.generateFile" />
               </Button>
+              <ExportGenerationNotice generation={generation} />
             </Section>
           </Form>
         </Column>

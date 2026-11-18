@@ -8,12 +8,13 @@ import {
   Button,
   Loading,
 } from "@carbon/react";
+import ExportGenerationNotice from "./ExportGenerationNotice";
 import { FormattedMessage, useIntl } from "react-intl";
 import "../../Style.css";
-import { AlertDialog } from "../../common/CustomNotification";
 import CustomDatePicker from "../../common/CustomDatePicker";
 import config from "../../../config.json";
 import { encodeDate } from "../../utils/Utils";
+import { downloadReportFile } from "../../utils/ReportDownload";
 
 /**
  * Export CSV par période (commandes TB par défaut ; réutilisé pour les
@@ -26,7 +27,7 @@ const TBOrderExport = ({
 }) => {
   const intl = useIntl();
   const [loading, setLoading] = useState(false);
-  const [notificationVisible, setNotificationVisible] = useState(false);
+  const [generation, setGeneration] = useState({ status: "idle" });
 
   const [reportFormValues, setReportFormValues] = useState({
     startDate: null,
@@ -80,23 +81,19 @@ const TBOrderExport = ({
     const params = `report=${report}&type=patient&upperDateRange=${reportFormValues.endDate}&lowerDateRange=${reportFormValues.startDate}`;
     const url = `${baseUrl}?${params}`;
 
-    window.open(url, "_blank");
-    setLoading(false);
-    setNotificationVisible(true);
+    setGeneration({ status: "running" });
+    downloadReportFile(url, `${report}.csv`)
+      .then(({ fileName, rowCount }) =>
+        setGeneration({ status: "done", fileName, rowCount }),
+      )
+      .catch((error) =>
+        setGeneration({ status: "failed", detail: error.message }),
+      )
+      .finally(() => setLoading(false));
   };
 
   return (
     <>
-      {notificationVisible === true ? (
-        <AlertDialog
-          title={intl.formatMessage({ id: "notification.title" })}
-          message={intl.formatMessage({ id: "notification.report.generated" })}
-          open={notificationVisible}
-          onClose={() => {
-            setNotificationVisible(false);
-          }}
-        />
-      ) : null}
       {loading && <Loading description="Loading..." />}
       <Grid fullWidth={true}>
         <Column lg={16} md={8} sm={4}>
@@ -153,9 +150,11 @@ const TBOrderExport = ({
                     onClick={handleSubmit}
                     style={{ marginTop: "2rem" }}
                     type="button"
+                    disabled={generation.status === "running"}
                   >
                     <FormattedMessage id="label.button.generateFile" />
                   </Button>
+                  <ExportGenerationNotice generation={generation} />
                 </Column>
               </Grid>
             </Form>
