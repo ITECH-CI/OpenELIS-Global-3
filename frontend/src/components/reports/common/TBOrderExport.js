@@ -154,7 +154,7 @@ const TBOrderExport = ({
                     style={{ marginTop: "2rem" }}
                     type="button"
                   >
-                    <FormattedMessage id="label.button.exportCSV" />
+                    <FormattedMessage id="label.button.generateFile" />
                   </Button>
                 </Column>
               </Grid>

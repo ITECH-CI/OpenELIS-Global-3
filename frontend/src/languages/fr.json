@@ -25,6 +25,7 @@
   "label.button.confirmAction": "Confirmer l'action",
   "label.button.confirmTitle": "Es-tu sûr ?",
   "label.button.generatePrintableVersion": "Générer une version à imprimer",
+  "label.button.generateFile": "Générer le fichier",
   "label.button.viewReport": "Voir le rapport",
   "label.routine.Reports": "Rapports routiniers",
   "label.audittrail.Reports": "Rapports de piste d'audit",

@@ -1266,6 +1266,7 @@
   "label.button.finish": "Finish",
   "label.button.finished": "Finished",
   "label.button.generatePrintableVersion": "Generate Printable Version",
+  "label.button.generateFile": "Generate file",
   "label.button.login": "Login",
   "label.button.login.sso": "Single Sign On",
   "label.button.newEntry": "New Entry",

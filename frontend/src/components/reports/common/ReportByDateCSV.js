@@ -324,10 +324,7 @@ const ReportByDateCSV = (props) => {
                 type="button"
                 onClick={handleSubmit}
               >
-                <FormattedMessage
-                  id="label.button.generatePrintableVersion"
-                  defaultMessage="Generate printable version"
-                />
+                <FormattedMessage id="label.button.generateFile" />
               </Button>
             </Section>
           </Form>
