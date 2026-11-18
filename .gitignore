@@ -71,3 +71,9 @@ oe-build-export.txt
 # Python bytecode
 __pycache__/
 *.pyc
+
+# Documentation nationale : site généré par mkdocs.civ.yml
+site-civ/
+
+# Réglages propres au poste ; .claude/settings.json, partagé, peut être suivi
+.claude/settings.local.json

@@ -1,0 +1,38 @@
+# Documentation nationale ivoirienne.
+# Volontairement distincte de mkdocs.yml, qui publie la documentation communautaire :
+# les deux arbres restent separes pour que les reprises de l'amont ne creent pas de conflit.
+site_name: OpenELIS Global, documentation nationale
+site_description: Instance nationale ivoirienne d'OpenELIS Global, programme LABQUASI II
+site_author: Programme LABQUASI II
+docs_dir: docs/civ
+site_dir: site-civ
+
+theme:
+  name: material
+  language: fr
+  features:
+    - navigation.sections
+    - navigation.top
+    - navigation.indexes
+    - toc.follow
+    - search.highlight
+  palette:
+    primary: blue grey
+    accent: deep orange
+
+nav:
+  - Accueil: index.md
+  - Guide developpeur: developpeur/index.md
+  - Guide d'installation et de deploiement: installation/index.md
+  - Guide d'administration et d'exploitation: administration/index.md
+  - Guide utilisateur: utilisateur/index.md
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.details
+  - pymdownx.superfences

@@ -1,0 +1,4 @@
+# Chaine de publication de la documentation nationale (mkdocs.civ.yml).
+# Distincte de requirements.txt, qui sert la documentation communautaire.
+mkdocs==1.6.1
+mkdocs-material==9.5.49
