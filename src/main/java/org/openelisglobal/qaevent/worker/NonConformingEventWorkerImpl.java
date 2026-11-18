@@ -18,6 +18,7 @@ import org.openelisglobal.qaevent.form.NonConformingEventForm;
 import org.openelisglobal.qaevent.service.NCEventService;
 import org.openelisglobal.qaevent.service.NceActionLogService;
 import org.openelisglobal.qaevent.service.NceCategoryService;
+import org.openelisglobal.qaevent.service.NceNumberService;
 import org.openelisglobal.qaevent.service.NceSpecimenService;
 import org.openelisglobal.qaevent.service.NceTypeService;
 import org.openelisglobal.qaevent.valueholder.NcEvent;
@@ -48,13 +49,15 @@ public class NonConformingEventWorkerImpl implements NonConformingEventWorker {
     private NceTypeService nceTypeService;
     @Autowired
     private NceActionLogService nceActionLogService;
+    @Autowired
+    private NceNumberService nceNumberService;
 
     @Override
     @Transactional
-    public NcEvent create(String labOrderId, List<String> specimens, String sysUserId, String nceNumber) {
+    public NcEvent create(String labOrderId, List<String> specimens, String sysUserId) {
         NcEvent event = new NcEvent();
         event.setSysUserId(sysUserId);
-        event.setNceNumber(nceNumber);
+        event.setNceNumber(nceNumberService.nextNceNumber());
         event.setLabOrderNumber(labOrderId);
         event = ncEventService.save(event);
         for (String specimenId : specimens) {
@@ -156,7 +159,9 @@ public class NonConformingEventWorkerImpl implements NonConformingEventWorker {
 
         SystemUser systemUser = systemUserService.getUserById(form.getCurrentUserId());
         form.setName(systemUser.getFirstName() + " " + systemUser.getLastName());
-        form.setNceNumber(System.currentTimeMillis() + "");
+        // aucun numéro tant que l'événement n'est pas retrouvé : seul create()
+        // attribue un numéro d'ENC
+        form.setNceNumber("");
         // getMatch renvoie Optional.empty() si 0 OU >1 correspondance : .orElse(null)
         // pour que le test de nullité ci-dessous fonctionne (au lieu de
         // NoSuchElementException sur un .get()).
