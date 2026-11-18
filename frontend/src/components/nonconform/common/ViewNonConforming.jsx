@@ -40,7 +40,7 @@ export const selectOptions = [
     text: "Numéro de non conformité",
   },
   {
-    text: "Numéro laboratoire",
+    text: "Numéro de laboratoire",
     value: "labNumber",
   },
 ];

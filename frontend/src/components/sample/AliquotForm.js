@@ -155,7 +155,9 @@ export function SearchSampleForm(props) {
                   <Field name="accessionNumber">
                     {({ field }) => (
                       <CustomLabNumberInput
-                        placeholder="Enter Accession No."
+                        placeholder={intl.formatMessage({
+                          id: "placeholder.accession.number",
+                        })}
                         name={field.name}
                         id={field.name}
                         data-cy="enterAccession"
