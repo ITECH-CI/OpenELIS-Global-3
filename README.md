@@ -80,24 +80,25 @@ speeds up the development process
 
          git clone https://github.com/username/OpenELIS-Global-2.git
 
-1.  innitialize and build sub modules
+1.  Initialize the sub modules
 
         cd OpenELIS-Global-2
         git submodule update --init --recursive
-        cd dataexport
+
+1.  Build the War file on your machine (JDK 21, Maven)
+
         mvn clean install -DskipTests
 
-1.  Navigate back to the repository directory:
+1.  Start the containers
 
-         cd ..
+        docker compose -f dev.docker-compose.yml up -d
 
-1.  Build the War file
-
-          mvn clean install -DskipTests
-
-1.  Start the containers to mount the locally compiled artifacts
-
-        docker-compose -f dev.docker-compose.yml up -d
+    The webapp image ([Dockerfile.dev](./Dockerfile.dev)) contains Tomcat only,
+    built for the native architecture of the machine: nothing is compiled inside
+    Docker. At each start, the container copies `target/OpenELIS-Global.war`
+    from the repository (mounted read-only) and removes the previously unpacked
+    application. It refuses to start, with an explicit message, if the War file
+    has not been built.
 
     Note : For Reflecting Local changes in the Running Containers ;
 
@@ -112,15 +113,15 @@ speeds up the development process
   Hot Reloaded in the UI. `VITE_HMR_CLIENT_PORT` (443 in
   `dev.docker-compose.yml`) is the port the browser uses to reach the hot reload
   websocket through the proxy.
-- For changes to the [Back-end](./src/) Java Source code
+- For changes to the [Back-end](./src/) Java Source code, rebuild the War file
+  and restart the webapp container (about one minute in all):
 
-  - Run the maven build again to re-build the War file
+        mvn clean install -DskipTests && docker restart openelisglobal-webapp
 
-         mvn clean install -DskipTests
+- Personal settings (ports, extra JVM options, another War file…) go in a
+  `dev.local.yml` file, ignored by Git, layered on top of the shared file:
 
-  - Recreate the Openelis webapp container
-
-        docker-compose -f dev.docker-compose.yml up -d  --no-deps --force-recreate oe.openelis.org
+        docker compose -f dev.docker-compose.yml -f dev.local.yml up -d
 
 #### The Instances can be accessed at
 

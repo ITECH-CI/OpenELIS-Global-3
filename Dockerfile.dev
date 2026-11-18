@@ -1,44 +1,9 @@
 ##
-# Build Stage
+# Image de la webapp pour la pile de développement (dev.docker-compose.yml).
 #
-FROM maven:3.9.16-eclipse-temurin-21 AS build
-
-RUN --mount=target=/var/lib/apt/lists,type=cache,sharing=locked \
-    --mount=target=/var/cache/apt,type=cache,sharing=locked \
-    rm -f /etc/apt/apt.conf.d/docker-clean \
-    && apt-get -y update \
-    && apt-get -y --no-install-recommends install \
-    git apache2-utils 
-
-
-##
-# Copy Source Code
-#
-ADD ./pom.xml /build/pom.xml
-ADD ./tools /build/tools
-ADD ./src /build/src
-
-WORKDIR /build
-
-# OE Default Password
-ARG DEFAULT_PW="adminADMIN!"
-ADD ./install/createDefaultPassword.sh /build/install/createDefaultPassword.sh
-RUN ./install/createDefaultPassword.sh -c -p ${DEFAULT_PW}
-
-
-##
-# Build the Project
-#    
-WORKDIR /build
-
-RUN --mount=type=cache,target=/root/.m2,sharing=locked \
-    mvn dependency:go-offline 
-
-RUN --mount=type=cache,target=/root/.m2,sharing=locked \
-    mvn clean install -DskipTests -Dspotless.check.skip=true
-
-##
-# Run Stage
+# Tomcat configuré, sans le WAR : il est compilé sur le poste
+# (mvn clean install -DskipTests) et copié au démarrage du conteneur par
+# install/webapp-dev-entrypoint.sh. Aucune compilation Maven dans Docker.
 #
 FROM tomcat:10.1.61-jre21
 
@@ -49,9 +14,8 @@ ADD install/createDefaultPassword.sh ./
 RUN rm -rf /usr/local/tomcat/webapps/* \ 
     /usr/local/tomcat/conf/Catalina/localhost/manager.xml
 
-#Deploy the war into tomcat image and point root to it
+#Point root to the OpenELIS application (its WAR is copied at startup)
 ADD install/tomcat-resources/ROOT.war /usr/local/tomcat/webapps/ROOT.war
-COPY --from=build /build/target/OpenELIS-Global.war /usr/local/tomcat/webapps/OpenELIS-Global.war
 
 #rewrite cataline.properties with our catalina.properties so it contains:
 #    org.apache.catalina.STRICT_SERVLET_COMPLIANCE=true

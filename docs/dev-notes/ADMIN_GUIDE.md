@@ -227,10 +227,10 @@ ORDER BY dateexecuted DESC LIMIT 20;
 Si vous compilez localement (rare en prod) :
 
 ```bash
-# Le war est bind-monté dans le conteneur via dev.docker-compose.yml
-# (ligne : - ./target/OpenELIS-Global.war:/usr/local/tomcat/webapps/OpenELIS-Global.war)
-mvn -q -o package -DskipTests -Dspotless.check.skip=true
-# Tomcat hot-déploie automatiquement (~30s)
+# dev.docker-compose.yml recopie target/OpenELIS-Global.war à chaque
+# démarrage du conteneur (install/webapp-dev-entrypoint.sh)
+mvn clean install -DskipTests && docker restart openelisglobal-webapp
+# environ une minute au total
 ```
 
 ---
@@ -364,18 +364,12 @@ SELECT setval('clinlims.system_module_seq',
 
 ### Symptôme : la version affichée dans l'interface ne change pas après build
 
-Vérifier que le war local est bien bind-monté (uniquement en dev) :
+En dev, le WAR n'est lu qu'au démarrage du conteneur : le redémarrer après le
+build, puis vérifier la date du WAR copié dans le journal :
 
 ```bash
-grep "OpenELIS-Global.war" dev.docker-compose.yml
-# Doit être DÉ-commentée :
-# - ./target/OpenELIS-Global.war:/usr/local/tomcat/webapps/OpenELIS-Global.war
-```
-
-Puis recréer le conteneur :
-
-```bash
-docker compose -f dev.docker-compose.yml up -d --force-recreate oe.openelis.org
+docker restart openelisglobal-webapp
+docker logs openelisglobal-webapp 2>&1 | grep "\[dev\] WAR copié"
 ```
 
 ### Symptôme : 500 sur `/rest/MethodCreate`
