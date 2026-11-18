@@ -1,0 +1,14 @@
+{
+  "name": "openelis-civ-docgen",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Generation Word des guides OpenELIS Cote d'Ivoire, a partir des sources Markdown",
+  "scripts": {
+    "build": "node build2.js",
+    "guides": "for f in ../../docs/civ/*/*.md; do node build2.js \"$f\"; done"
+  },
+  "dependencies": {
+    "docx": "^9.0.0",
+    "image-size": "^1.2.0"
+  }
+}
