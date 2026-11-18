@@ -1089,6 +1089,8 @@
   "reports.label.cistudyexport": "Rapport général",
   "header.label.study.ciexport": "Exporter un fichier CSV par date",
   "report.select.studttype": "Sélectionner le type d'étude",
+  "report.vl.unsuppressed": "Charge virale non supprimée",
+  "report.vl.suppressed": "Charge virale supprimée",
   "error.report.csv.study": "Veuillez sélectionner le type d'étude.",
   "error.report.csv.date": "Veuillez sélectionner le type de date.",
   "header.label.study.vlloadtrends": "Rapport d'exportation des données de charge virale",

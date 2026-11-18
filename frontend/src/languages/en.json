@@ -1865,6 +1865,8 @@
   "report.patient.site.description": "Generate reports by result date or by order date. Result date will show only reports with results.If you select only resports with results, all reports where all tests are in progress will not be generated.",
   "report.select.site": "Select Site",
   "report.select.studttype": "Select Study Type",
+  "report.vl.unsuppressed": "Unsuppressed VL",
+  "report.vl.suppressed": "Suppressed VL",
   "reporting.label.testName": "Reporting Test Name",
   "reports.auditTrail": "Audit Trail",
   "reports.export": "Export",

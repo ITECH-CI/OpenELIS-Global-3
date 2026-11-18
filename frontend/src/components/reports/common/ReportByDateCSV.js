@@ -158,6 +158,17 @@ const ReportByDateCSV = (props) => {
     }
   }, [props]);
 
+  // Libellés fixes renvoyés par le serveur (leur valeur pilote le filtrage de
+  // l'export) : traduits à l'affichage seulement.
+  const studyTypeLabelKeys = {
+    "Unsuppressed VL": "report.vl.unsuppressed",
+    "Suppressed VL": "report.vl.suppressed",
+  };
+  const studyTypeLabel = (value) =>
+    studyTypeLabelKeys[value]
+      ? intl.formatMessage({ id: studyTypeLabelKeys[value] })
+      : value;
+
   const dateOptions = [
     {
       text: "Order Date",
@@ -250,13 +261,18 @@ const ReportByDateCSV = (props) => {
                     });
                   }}
                 >
-                  <SelectItem value="" text="Select Study Type" />
+                  <SelectItem
+                    value=""
+                    text={intl.formatMessage({
+                      id: "report.select.studttype",
+                    })}
+                  />
 
                   {statusOptions.map((statusOption) => (
                     <SelectItem
                       key={statusOption.id}
                       value={statusOption.id}
-                      text={statusOption.value}
+                      text={studyTypeLabel(statusOption.value)}
                     />
                   ))}
                 </Select>
