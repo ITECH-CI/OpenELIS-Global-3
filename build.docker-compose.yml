@@ -68,11 +68,14 @@ services:
       - source: datasource.password
       - source: common.properties
     healthcheck:
-      test: ["CMD", "/healthcheck.sh"]
+      # volume/tomcat/oe_server.xml n'ouvre que le connecteur HTTPS 8443 :
+      # /healthcheck.sh (HTTP 8080, celui de l'installeur) échouait toujours.
+      test: ["CMD-SHELL", "curl -skf https://localhost:8443/api/OpenELIS-Global/health -o /dev/null"]
       timeout: 10s
       interval: 30s
       retries: 3
-      start_period: 2m
+      # base neuve : près de 1 000 migrations au premier démarrage
+      start_period: 8m
 
   fhir.openelis.org:
     container_name: external-fhir-api

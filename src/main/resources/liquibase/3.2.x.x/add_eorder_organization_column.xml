@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+    <!--
+      Établissement demandeur d'une demande électronique (organization_id,
+      propriété organizationId d'ElectronicOrder.hbm.xml).
+      Le schéma de base de l'installeur crée electronic_order sans cette colonne,
+      et aucune migration ne l'ajoutait : les instances existantes la tiennent
+      d'un schéma plus ancien. Sur une base neuve, le référentiel des
+      établissements (fonctions qui la lisent) échouait et la webapp ne
+      démarrait pas. Idempotent : colonne et index créés seulement s'ils
+      manquent, avant referentiel_etablissements_dhis2.xml.
+    -->
+
+    <changeSet id="add_eorder_organization_id" author="itechciv">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="electronic_order" columnName="organization_id"
+                    schemaName="clinlims"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="electronic_order" schemaName="clinlims">
+            <column name="organization_id" type="NUMERIC(10,0)"/>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="add_eorder_organization_id_index" author="itechciv">
+        <sql>
+            CREATE INDEX IF NOT EXISTS index_eorder_organization_id
+                ON clinlims.electronic_order (organization_id);
+        </sql>
+    </changeSet>
+</databaseChangeLog>
