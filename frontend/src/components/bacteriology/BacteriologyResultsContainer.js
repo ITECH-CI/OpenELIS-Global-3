@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from "react";
 import { Stack, Accordion, AccordionItem, Pagination } from "@carbon/react";
-import { FormattedMessage } from "react-intl";
+import { FormattedMessage, useIntl } from "react-intl";
 import BacteriologyResultEntry from "./BacteriologyResultEntry";
 
 /**
@@ -14,6 +14,7 @@ const BacteriologyResultsContainer = ({
   disabled = false,
   showAllResults = false, // Flag from backend: true = show all (patient/accession search), false = filter finalized
 }) => {
+  const intl = useIntl();
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5; // 5 ordonnances par page
 
@@ -197,6 +198,21 @@ const BacteriologyResultsContainer = ({
             totalItems={totalItems}
             pageSize={itemsPerPage}
             pageSizes={[5, 10, 20]}
+            itemsPerPageText={intl.formatMessage({
+              id: "pagination.items-per-page",
+            })}
+            itemRangeText={(min, max, total) =>
+              intl.formatMessage(
+                { id: "pagination.item-range" },
+                { min: min, max: max, total: total },
+              )
+            }
+            pageRangeText={(_current, total) =>
+              intl.formatMessage(
+                { id: "pagination.page-range" },
+                { total: total },
+              )
+            }
             onChange={({ page, pageSize }) => {
               setCurrentPage(page);
             }}

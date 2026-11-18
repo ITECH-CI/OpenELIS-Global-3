@@ -561,7 +561,10 @@ const AddOrder = (props) => {
                       ? true
                       : false
                   }
-                  invalidText={error("sampleOrderItems.labNo")}
+                  invalidText={
+                    error("sampleOrderItems.labNo") &&
+                    intl.formatMessage({ id: "order.step.required" })
+                  }
                 />
                 <div>
                   <FormattedMessage id="label.order.scan.text" />{" "}
@@ -715,6 +718,12 @@ const AddOrder = (props) => {
                 style={{ width: "!important 100%" }}
                 suggestions={siteNames.length > 0 ? siteNames : []}
                 required
+                invalid={
+                  changed["sampleOrderItems.referringSiteName"] &&
+                  !orderFormValues.sampleOrderItems.referringSiteName &&
+                  !orderFormValues.sampleOrderItems.referringSiteId
+                }
+                invalidText={intl.formatMessage({ id: "order.step.required" })}
               />
               {/* )} */}
             </Column>
@@ -804,7 +813,10 @@ const AddOrder = (props) => {
                     ? true
                     : false
                 }
-                invalidText={error("sampleOrderItems.providerLastName")}
+                invalidText={
+                  error("sampleOrderItems.providerLastName") &&
+                  intl.formatMessage({ id: "order.step.required" })
+                }
               />
             </Column>
             <Column lg={8} md={4} sm={4}>
@@ -834,7 +846,10 @@ const AddOrder = (props) => {
                     ? true
                     : false
                 }
-                invalidText={error("sampleOrderItems.providerFirstName")}
+                invalidText={
+                  error("sampleOrderItems.providerFirstName") &&
+                  intl.formatMessage({ id: "order.step.required" })
+                }
                 id="requesterFirstName"
               />
             </Column>

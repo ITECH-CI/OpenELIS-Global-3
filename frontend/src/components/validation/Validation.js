@@ -174,7 +174,7 @@ const Validation = (props) => {
     },
     {
       id: "save",
-      name: intl.formatMessage({ id: "column.name.save" }),
+      name: intl.formatMessage({ id: "validation.column.accept" }),
       cell: (row, index, column, id) => {
         return renderCell(row, index, column, id);
       },
@@ -182,7 +182,7 @@ const Validation = (props) => {
     },
     {
       id: "retest",
-      name: intl.formatMessage({ id: "column.name.retest" }),
+      name: intl.formatMessage({ id: "validation.column.retest" }),
       cell: (row, index, column, id) => {
         return renderCell(row, index, column, id);
       },
@@ -675,7 +675,9 @@ const Validation = (props) => {
             <Checkbox
               id={"saveallnormal"}
               name={"autochecks"}
-              labelText={intl.formatMessage({ id: "validation.accept.normal" })}
+              labelText={intl.formatMessage({
+                id: "validation.screen.accept.normal",
+              })}
               onChange={(e) => {
                 const nomalResults = props.results.resultList?.filter(
                   (result) =>
@@ -697,7 +699,9 @@ const Validation = (props) => {
             <Checkbox
               id={"saveallresults"}
               name={"autochecks"}
-              labelText={intl.formatMessage({ id: "validation.accept.all" })}
+              labelText={intl.formatMessage({
+                id: "validation.screen.accept.all",
+              })}
               onChange={(e) => {
                 const nomalResults = props.results.resultList?.filter(
                   (result) => !isBacteriologyResult(result),
@@ -718,7 +722,9 @@ const Validation = (props) => {
             <Checkbox
               id={"retestalltests"}
               name={"autochecks"}
-              labelText={intl.formatMessage({ id: "validation.reject.all" })}
+              labelText={intl.formatMessage({
+                id: "validation.screen.retest.all",
+              })}
               onChange={(e) => {
                 const nomalResults = props.results.resultList?.filter(
                   (result) => !isBacteriologyResult(result),
@@ -950,7 +956,7 @@ const Validation = (props) => {
                     data-testid="Save-btn"
                     disabled={isSubmitting}
                   >
-                    <FormattedMessage id="label.button.save" />
+                    <FormattedMessage id="validation.button.accept" />
                   </Button>
                 </>
               )}

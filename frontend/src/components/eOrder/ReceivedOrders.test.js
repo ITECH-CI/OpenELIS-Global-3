@@ -4,10 +4,14 @@ import { IntlProvider } from "react-intl";
 import ReceivedOrders, { formatAge } from "./ReceivedOrders";
 import { NotificationContext } from "../layout/Layout";
 import messages from "../../languages/fr.json";
-import { getFromOpenElisServer } from "../utils/Utils";
+import {
+  getFromOpenElisServer,
+  getFromOpenElisServerWithStatus,
+} from "../utils/Utils";
 
 jest.mock("../utils/Utils", () => ({
   getFromOpenElisServer: jest.fn(),
+  getFromOpenElisServerWithStatus: jest.fn(),
   postToOpenElisServer: jest.fn(),
 }));
 jest.mock("../common/PageBreadCrumb", () => () => null);
@@ -43,14 +47,11 @@ const row = (id, extra = {}) => ({
   ...extra,
 });
 
-const serve = (page) => {
-  getFromOpenElisServer.mockImplementation((url, callback) => {
-    if (url.startsWith("/rest/ReceivedOrders")) {
-      callback(page);
-    } else {
-      callback([]);
-    }
-  });
+const serve = (page, status = 200) => {
+  getFromOpenElisServer.mockImplementation((url, callback) => callback([]));
+  getFromOpenElisServerWithStatus.mockImplementation((url, callback) =>
+    callback(status, page),
+  );
 };
 
 const renderPage = () =>
@@ -69,7 +70,10 @@ const renderPage = () =>
   );
 
 describe("fenêtre « Demandes reçues »", () => {
-  beforeEach(() => getFromOpenElisServer.mockReset());
+  beforeEach(() => {
+    getFromOpenElisServer.mockReset();
+    getFromOpenElisServerWithStatus.mockReset();
+  });
 
   it("liste vide : message, aucune ligne", async () => {
     serve({ rows: [], total: 0, page: 1, pageSize: 25 });
@@ -78,11 +82,29 @@ describe("fenêtre « Demandes reçues »", () => {
     expect(queryAllByTestId("receivedOrderRow")).toHaveLength(0);
   });
 
+  it("erreur serveur : bandeau d'erreur, jamais « Aucune demande »", async () => {
+    serve("Check server logs", 500);
+    const { getByTestId, queryByTestId } = renderPage();
+    await wait(() =>
+      expect(getByTestId("receivedOrdersLoadError")).toBeTruthy(),
+    );
+    expect(queryByTestId("receivedOrdersEmpty")).toBeNull();
+  });
+
+  it("serveur injoignable : bandeau d'erreur", async () => {
+    serve(null, 0);
+    const { getByTestId, queryByTestId } = renderPage();
+    await wait(() =>
+      expect(getByTestId("receivedOrdersLoadError")).toBeTruthy(),
+    );
+    expect(queryByTestId("receivedOrdersEmpty")).toBeNull();
+  });
+
   it("ouverte d'office sur les demandes à traiter", async () => {
     serve({ rows: [], total: 0, page: 1, pageSize: 25 });
     renderPage();
     await wait(() =>
-      expect(getFromOpenElisServer).toHaveBeenCalledWith(
+      expect(getFromOpenElisServerWithStatus).toHaveBeenCalledWith(
         expect.stringContaining("etape=A_TRAITER"),
         expect.any(Function),
       ),

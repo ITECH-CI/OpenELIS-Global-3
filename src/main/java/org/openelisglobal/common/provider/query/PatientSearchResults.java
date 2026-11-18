@@ -18,7 +18,7 @@ package org.openelisglobal.common.provider.query;
 import java.math.BigDecimal;
 import org.openelisglobal.common.util.ConfigurationProperties;
 import org.openelisglobal.common.util.ConfigurationProperties.Property;
-import org.openelisglobal.common.util.DateUtil;
+import org.openelisglobal.common.util.DisplayDateFormat;
 
 public class PatientSearchResults {
 
@@ -202,13 +202,10 @@ public class PatientSearchResults {
         this.contactPhone = contactPhone;
     }
 
+    // La date saisie est au format du réglage « default date locale ». Le champ
+    // n'est pas réécrit : birthdate et DOB, sérialisés tous deux, restent égaux.
     public String getFormatedBirthDate() {
-        String format1 = "dd/MM/yyyy";
-        String format2 = "MM/dd/yyyy";
-        birthdate = ConfigurationProperties.getInstance().getPropertyValue(Property.DEFAULT_DATE_LOCALE).equals("fr-FR")
-                ? DateUtil.formatStringDate(birthdate, format1)
-                : DateUtil.formatStringDate(birthdate, format2);
-
-        return birthdate;
+        return DisplayDateFormat.reformat(birthdate, DisplayDateFormat
+                .isDayFirst(ConfigurationProperties.getInstance().getPropertyValue(Property.DEFAULT_DATE_LOCALE)));
     }
 }

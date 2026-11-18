@@ -29,6 +29,27 @@ export const getFromOpenElisServer = (endPoint, callback) => {
     });
 };
 
+// Comme getFromOpenElisServer, mais transmet aussi le statut HTTP (0 si le
+// serveur est injoignable) : l'appelant distingue une erreur d'une liste vide.
+export const getFromOpenElisServerWithStatus = (endPoint, callback) => {
+  fetch(config.serverBaseUrl + endPoint, {
+    credentials: "include",
+    method: "GET",
+  })
+    .then((response) => {
+      const contentType = response.headers.get("content-type");
+      const body =
+        contentType && contentType.indexOf("application/json") !== -1
+          ? response.json().catch(() => null)
+          : Promise.resolve(null);
+      return body.then((json) => callback(response.status, json));
+    })
+    .catch((error) => {
+      console.error(error);
+      callback(0, null);
+    });
+};
+
 export const postToOpenElisServer = (
   endPoint,
   payLoad,

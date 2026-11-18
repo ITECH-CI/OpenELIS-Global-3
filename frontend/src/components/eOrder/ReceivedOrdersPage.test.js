@@ -4,16 +4,23 @@ import { IntlProvider } from "react-intl";
 import ReceivedOrdersPage from "./ReceivedOrdersPage";
 import { NotificationContext } from "../layout/Layout";
 import messages from "../../languages/fr.json";
-import { getFromOpenElisServer } from "../utils/Utils";
+import {
+  getFromOpenElisServer,
+  getFromOpenElisServerWithStatus,
+} from "../utils/Utils";
 
 jest.mock("../utils/Utils", () => ({
   getFromOpenElisServer: jest.fn(),
+  getFromOpenElisServerWithStatus: jest.fn(),
   postToOpenElisServer: jest.fn(),
 }));
 jest.mock("../common/PageBreadCrumb", () => () => null);
 jest.mock("../common/CustomDatePicker", () => () => null);
 
-const serve = (settings) =>
+const serve = (settings) => {
+  getFromOpenElisServerWithStatus.mockImplementation((url, callback) =>
+    callback(200, { rows: [], total: 0, page: 1, pageSize: 25 }),
+  );
   getFromOpenElisServer.mockImplementation((url, callback) => {
     if (url.startsWith("/rest/LocalOrderEntrySettings")) {
       callback(settings);
@@ -23,6 +30,7 @@ const serve = (settings) =>
       callback([]);
     }
   });
+};
 
 const renderPage = () =>
   render(
@@ -40,7 +48,10 @@ const renderPage = () =>
   );
 
 describe("« Nouvelle demande »", () => {
-  beforeEach(() => getFromOpenElisServer.mockReset());
+  beforeEach(() => {
+    getFromOpenElisServer.mockReset();
+    getFromOpenElisServerWithStatus.mockReset();
+  });
 
   it("réglage à false : bouton absent", async () => {
     serve({ enabled: false, permitted: false });

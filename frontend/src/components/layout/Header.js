@@ -666,7 +666,7 @@ function OEHeader(props) {
                       <li className="userDetails">
                         <label className="cds--label">
                           {" "}
-                          <FormattedMessage id="header.label.version" />:{" "}
+                          <FormattedMessage id="header.label.version" />{" "}
                           {configurationProperties?.releaseNumber}
                         </label>
                       </li>

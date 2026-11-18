@@ -14,7 +14,7 @@ import {
   TextInput,
 } from "@carbon/react";
 import { useEffect, useState } from "react";
-import { FormattedMessage } from "react-intl";
+import { FormattedMessage, useIntl } from "react-intl";
 import { getFromOpenElisServer } from "../../utils/Utils";
 import {
   ANTIBIOGRAM_RESULTS,
@@ -29,6 +29,7 @@ const AntibiogramTable = ({
   disabled = false,
   uniqueId = "", // Optional unique identifier for multiple antibiogram tables
 }) => {
+  const intl = useIntl();
   const [antibioticList, setAntibioticList] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -78,7 +79,10 @@ const AntibiogramTable = ({
   }));
 
   const headers = [
-    { key: "antibiotic", header: "Antibiotic" },
+    {
+      key: "antibiotic",
+      header: intl.formatMessage({ id: "bacteriology.antibiogram.antibiotic" }),
+    },
     { key: "result", header: "Résultat (S/I/R)" },
     { key: "diameter", header: "Diamètre (mm)" },
     { key: "mic", header: "CMI" },

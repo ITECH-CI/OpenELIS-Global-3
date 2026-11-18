@@ -643,7 +643,9 @@ function SearchPatientForm(props) {
         isSortable
       >
         {({ rows, headers, getHeaderProps, getTableProps }) => (
-          <TableContainer title="Patient Results">
+          <TableContainer
+            title={intl.formatMessage({ id: "patient.search.results.title" })}
+          >
             <Table {...getTableProps()}>
               <TableHead>
                 <TableRow>

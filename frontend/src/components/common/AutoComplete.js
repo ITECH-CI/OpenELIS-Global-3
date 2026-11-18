@@ -144,7 +144,7 @@ function AutoComplete(props) {
         onChange={onChange}
         onKeyDown={onKeyDown}
         value={textValue}
-        invalid={invalid}
+        invalid={invalid || props.invalid === true}
         required={props.required ? props.required : false}
         invalidText={props.invalidText}
       />

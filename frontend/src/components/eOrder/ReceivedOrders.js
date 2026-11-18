@@ -5,6 +5,7 @@ import {
   Grid,
   Heading,
   InlineLoading,
+  InlineNotification,
   Modal,
   Pagination,
   Section,
@@ -25,7 +26,11 @@ import PageBreadCrumb from "../common/PageBreadCrumb";
 import CustomDatePicker from "../common/CustomDatePicker";
 import { AlertDialog, NotificationKinds } from "../common/CustomNotification";
 import { NotificationContext } from "../layout/Layout";
-import { getFromOpenElisServer, postToOpenElisServer } from "../utils/Utils";
+import {
+  getFromOpenElisServer,
+  getFromOpenElisServerWithStatus,
+  postToOpenElisServer,
+} from "../utils/Utils";
 
 // Fenêtre « Demandes reçues » : demandes de routine (plateforme, saisie
 // locale), une ligne par demande, ouverte sur les demandes à traiter et
@@ -100,6 +105,7 @@ const ReceivedOrders = ({
   const [pageSize, setPageSize] = useState(25);
   const [result, setResult] = useState({ rows: [], total: 0 });
   const [loading, setLoading] = useState(false);
+  const [loadError, setLoadError] = useState(false);
   const [qaEvents, setQaEvents] = useState([]);
   const [closeAction, setCloseAction] = useState(null); // { kind, row }
   const [closeReasonId, setCloseReasonId] = useState("");
@@ -114,14 +120,17 @@ const ReceivedOrders = ({
       }
     });
     setLoading(true);
-    getFromOpenElisServer(
+    getFromOpenElisServerWithStatus(
       "/rest/ReceivedOrders?" + params.toString(),
-      (response) => {
+      (status, response) => {
         setLoading(false);
-        if (response && Array.isArray(response.rows)) {
+        if (status === 200 && response && Array.isArray(response.rows)) {
+          setLoadError(false);
           setResult(response);
         } else {
-          setResult({ rows: [], total: 0 });
+          // Une erreur n'est jamais présentée comme une liste vide : l'agent
+          // conclurait que sa demande est perdue et la ressaisirait.
+          setLoadError(true);
         }
       },
     );
@@ -332,7 +341,17 @@ const ReceivedOrders = ({
           </Column>
           <Column lg={16} md={8} sm={4}>
             {loading && <InlineLoading />}
-            {!loading && result.rows.length === 0 && (
+            {loadError && (
+              <div data-testid="receivedOrdersLoadError">
+                <InlineNotification
+                  kind="error"
+                  title={intl.formatMessage({ id: "receivedOrders.loadError" })}
+                  hideCloseButton
+                  lowContrast
+                />
+              </div>
+            )}
+            {!loading && !loadError && result.rows.length === 0 && (
               <p data-testid="receivedOrdersEmpty">
                 <FormattedMessage id="receivedOrders.empty" />
               </p>
