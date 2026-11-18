@@ -162,7 +162,7 @@ const SampleType = ({ updateFormValues }) => {
             <Select
               id="selectSampleType"
               className="selectSampleType"
-              labelText="Sample Type"
+              labelText={intl.formatMessage({ id: "sample.type" })}
               onChange={handleFetchSampleTypeTests}
             >
               {selectedSampleTypeId === null && (

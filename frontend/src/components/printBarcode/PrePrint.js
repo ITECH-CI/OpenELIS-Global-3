@@ -282,7 +282,7 @@ const PrePrint = () => {
           <Column lg={8} md={4} sm={4}>
             <Select
               id="selectSampleType"
-              labelText="Sample Type"
+              labelText={intl.formatMessage({ id: "sample.type" })}
               onChange={(e) => {
                 handleFetchSampleTypeTests(e);
               }}
