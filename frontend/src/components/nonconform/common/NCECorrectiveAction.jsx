@@ -328,7 +328,9 @@ export const NCECorrectiveAction = () => {
                         <TableHeader key="checkbox" />
                         {headers.map((header) => (
                           <TableHeader id={header.key} key={header.key}>
-                            {header.value}
+                            {header.labelId
+                              ? intl.formatMessage({ id: header.labelId })
+                              : header.value}
                           </TableHeader>
                         ))}
                       </TableRow>

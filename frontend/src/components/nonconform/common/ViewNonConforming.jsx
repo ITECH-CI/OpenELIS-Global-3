@@ -53,6 +53,7 @@ export const headers = [
   {
     key: "nceNumber",
     value: "NCE Number",
+    labelId: "nonconform.nce.number",
   },
   {
     key: "specimen",
@@ -349,7 +350,9 @@ export const ViewNonConformingEvent = () => {
                     <TableHeader key="checkbox" />
                     {headers.map((header) => (
                       <TableHeader id={header.key} key={header.key}>
-                        {header.value}
+                        {header.labelId
+                          ? intl.formatMessage({ id: header.labelId })
+                          : header.value}
                       </TableHeader>
                     ))}
                   </TableRow>
