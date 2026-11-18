@@ -77,3 +77,6 @@ site-civ/
 
 # Réglages propres au poste ; .claude/settings.json, partagé, peut être suivi
 .claude/settings.local.json
+
+# Surcharge personnelle de la pile de développement (non partagée)
+dev.local.yml

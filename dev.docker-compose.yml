@@ -44,12 +44,16 @@ services:
             retries: 10 
             
     oe.openelis.org:
+        # Tomcat seul (Dockerfile.dev), en architecture native. Le WAR est
+        # compilé sur le poste puis recopié à chaque démarrage par
+        # install/webapp-dev-entrypoint.sh. Après une modification Java :
+        #   mvn clean install -DskipTests && docker restart openelisglobal-webapp
         container_name: openelisglobal-webapp
         build:
             context: .
             dockerfile: Dockerfile.dev
-        # image: itechuw/openelis-global-2-dev:develop
-        platform: linux/amd64
+        image: openelis-civ-webapp-dev
+        entrypoint: ["/bin/sh", "/workspace/install/webapp-dev-entrypoint.sh"]
         depends_on:
             database:
               condition: service_started
@@ -73,7 +77,8 @@ services:
             - ./volume/logs/oeLogs:/var/lib/openelis-global/logs
             - ./volume/logs/tomcatLogs/:/usr/local/tomcat/logs
             - ./volume/tomcat/oe_server.xml:/usr/local/tomcat/conf/server.xml
-            # - ./target/OpenELIS-Global.war:/usr/local/tomcat/webapps/OpenELIS-Global.war
+            # dépôt en lecture seule : WAR construit sur le poste et script de démarrage
+            - .:/workspace:ro
             - ./volume/properties/SystemConfiguration.properties:/var/lib/openelis-global/properties/SystemConfiguration.properties
             - ./volume/odoo/odoo-test-product-mapping.csv:/var/lib/openelis-global/odoo/odoo-test-product-mapping.csv
             -  lucene_index-vol:/var/lib/lucene_index
