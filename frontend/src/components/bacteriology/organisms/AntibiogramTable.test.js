@@ -4,7 +4,7 @@ import { IntlProvider } from "react-intl";
 import fr from "../../../languages/fr.json";
 import AntibiogramTable from "./AntibiogramTable";
 
-jest.mock("../../utils/Utils", () => ({
+vi.mock("../../utils/Utils", () => ({
   getFromOpenElisServer: (url, callback) => callback([]),
 }));
 
