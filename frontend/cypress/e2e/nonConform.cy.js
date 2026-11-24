@@ -128,7 +128,7 @@ describe("View New Non-Conforming Event", function () {
       nonConform.enterSearchField(patient.labNo);
       nonConform.clickSearchButton();
       // Plusieurs NCE peuvent exister pour ce n° labo : on sélectionne le 1er.
-      nonConform.selectFirstResultRadioIfPresent();
+      nonConform.selectFirstResultRadio();
     });
   });
 
@@ -181,7 +181,7 @@ describe("Corrective Actions", function () {
       nonConform.selectSearchType("labNumber");
       nonConform.enterSearchField(patient.labNo);
       nonConform.clickSearchButton();
-      nonConform.selectFirstResultRadioIfPresent();
+      nonConform.selectFirstResultRadio(nonConform.selectors.discussionDate);
     });
   });
 

@@ -26,15 +26,18 @@ describe("Order Entity", function () {
     cy.wait(1000);
     orderEntityPage.selectProgram();
     cy.wait(200);
+    // L'étape Ordonnance charge la liste des sites demandeurs (plusieurs milliers
+    // d'entrées) à son affichage : on attend la réponse avant de saisir le site.
+    cy.intercept("GET", "**/rest/SamplePatientEntry*").as("orderPreform");
     orderEntityPage.clickNextButton();
+    cy.wait("@orderPreform", { timeout: 30000 });
   });
 
   it("Step 2 - order: site, requester, lab number and dates", function () {
     cy.wait(1000);
     cy.fixture("Order").then((order) => {
       orderEntityPage.enterSiteName(order.siteName);
-      orderEntityPage.enterRequesterLastAndFirstName(
-        order.requester.fullName,
+      orderEntityPage.enterRequesterNames(
         order.requester.firstName,
         order.requester.lastName,
       );

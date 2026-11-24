@@ -435,7 +435,7 @@ export const NCECorrectiveAction = () => {
                   </span>
                 </div>
                 <div style={{ marginBottom: "10px" }}>
-                  {data.specimens[0].typeOfSample.description}
+                  {data.specimens?.[0]?.typeOfSample?.description}
                 </div>
               </Column>
               <Column lg={3} md={3} sm={3} style={{ marginBottom: "20px" }}>

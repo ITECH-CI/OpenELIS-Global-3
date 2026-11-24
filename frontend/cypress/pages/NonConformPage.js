@@ -84,15 +84,20 @@ class NonConform {
   // événements (cas fréquent en local), ils s'affichent en tableau avec des radios ;
   // avec un seul résultat, le formulaire se charge directement. On sélectionne le
   // 1er radio s'il est présent pour couvrir les deux cas.
-  selectFirstResultRadioIfPresent() {
-    cy.get("body").then(($body) => {
-      if ($body.find(this.selectors.radioButton).length) {
+  // La recherche par n° labo affiche soit la liste des NCE de l'échantillon, soit
+  // directement le formulaire quand une seule NCE correspond. On attend l'un ou
+  // l'autre, on sélectionne la 1re NCE si la liste est affichée, puis on attend le
+  // champ du formulaire de suivi (catégorie pour le suivi d'une NCE, date de
+  // discussion pour l'action corrective).
+  selectFirstResultRadio(followUpField = this.selectors.nceCategory) {
+    cy.get(`${this.selectors.radioButton}, ${followUpField}`, {
+      timeout: 15000,
+    }).then(($found) => {
+      if ($found.filter(this.selectors.radioButton).length) {
         cy.get(this.selectors.radioButton).first().click({ force: true });
-        // Le clic déclenche le chargement du formulaire de suivi (GET) : on attend
-        // que le champ catégorie apparaisse avant de poursuivre.
-        cy.get(this.selectors.nceCategory, { timeout: 15000 }).should("exist");
       }
     });
+    cy.get(followUpField, { timeout: 15000 }).should("exist");
   }
 
   // Capture le numéro de laboratoire réel du 1er résultat et le sauvegarde dans la
