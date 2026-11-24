@@ -198,13 +198,21 @@ public class PatientManagementUpdate extends ControllerUtills implements IPatien
             insertNewPatientInfo(ADDRESS_PART_VILLAGE_ID, patientInfo.getCity(), "T");
         }
 
-        if (dept == null && patientInfo.getAddressDepartment() != null
-                && !patientInfo.getAddressDepartment().equals("0")) {
+        if (dept == null && !"0".equals(patientInfo.getAddressDepartment())) {
             insertNewPatientInfo(ADDRESS_PART_DEPT_ID, patientInfo.getAddressDepartment(), "D");
         }
     }
 
+    /**
+     * Ajoute une partie d'adresse absente. Une valeur vide n'est pas enregistrée :
+     * elle n'apporte rien, et la réinsérer à chaque enregistrement d'un patient
+     * existant (saisie par lot, envois rapprochés) violait la clé primaire
+     * (person_id, address_part_id).
+     */
     private void insertNewPatientInfo(String partId, String value, String type) {
+        if (GenericValidator.isBlankOrNull(value)) {
+            return;
+        }
         PersonAddress address;
         address = new PersonAddress();
         address.setPersonId(person.getId());
