@@ -101,6 +101,12 @@ class OrderEntityPage {
     cy.get("input#siteName").clear().type(siteName);
     cy.contains(".suggestion-active", siteName).should("be.visible").click();
   }
+  // Prescripteur saisi directement (nom et prénom), sans dépendre d'un
+  // prescripteur préexistant dans la base de test.
+  enterRequesterNames(requesterFirstName, requesterLastName) {
+    cy.get("input#requesterFirstName").clear().type(requesterFirstName);
+    cy.get("input#requesterLastName").clear().type(requesterLastName);
+  }
   enterRequesterLastAndFirstName(
     fullName,
     requesterFirstName,

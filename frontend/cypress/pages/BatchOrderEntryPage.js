@@ -32,7 +32,7 @@ class BatchOrderEntry {
   }
 
   checkCreatinine() {
-    cy.contains("span", "Creatinine").click();
+    cy.contains("span", "Créatinine").click();
   }
 
   checkNextLabel() {
